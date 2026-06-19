@@ -12,7 +12,10 @@ export default defineConfig(async ({ mode }) => ({
       ? []
       : await electron({
         main: {
-          entry: 'electron/main.ts',
+          entry: {
+            main: 'electron/main.ts',
+            marketIngestionWorker: 'electron/workers/marketIngestionWorker.ts',
+          },
         },
         preload: {
           input: 'electron/preload.ts',

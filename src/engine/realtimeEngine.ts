@@ -18,12 +18,15 @@
  * Implements the contract declared in ../realtime.ts.
  */
 import type {
+  LiveAttentionSnapshot,
+  LiveAttentionTick,
   LiveAssetConfig,
   LiveAssetSnapshot,
   LiveDataFrame,
   LiveEngineSnapshot,
   LiveEngineStatus,
   LiveEntityEdge,
+  RealtimeHealth,
   LiveTick,
   LiveTickMetrics,
 } from '../realtime'
@@ -43,6 +46,8 @@ export type RealTimeDataEngineOptions = {
   syncIntervalMs?: number
   /** Static entity edges passed through on every frame. */
   entityEdges?: LiveEntityEdge[]
+  /** Targets tracked by the attention-pressure stream. Defaults to asset symbols. */
+  attentionTargets?: string[]
   /** Starting prices per symbol for the simulator. Default 100. */
   seedPrices?: Record<string, number>
   /** Reported persistence mode (set by the SQLite layer). */
@@ -63,6 +68,16 @@ type AssetState = {
   previousMinuteStamp: number
 }
 
+type AttentionState = {
+  target: string
+  samples: RingBuffer<LiveAttentionTick>
+  latestPressure: number
+  latestMentionVelocity: number
+  latestSentimentDivergenceIndex: number
+  lastTimestamp: number
+  sampleCount: number
+}
+
 /** A pluggable data source. Returns a stop function. */
 export type Feed = {
   name: string
@@ -74,13 +89,20 @@ export class RealTimeDataEngine {
   private readonly assets = new Map<string, AssetState>()
   private readonly order: string[] = []
   private readonly listeners = new Set<EngineListener>()
+  private readonly attention = new Map<string, AttentionState>()
+  private readonly attentionOrder: string[] = []
   private readonly entityEdges: LiveEntityEdge[]
   private readonly bufferSize: number
   private readonly syncIntervalMs: number
   private readonly now: () => number
 
-  /** Back-buffer: ticks accepted since the last flush. */
-  private pending: LiveTick[] = []
+  /** Double back-buffer: producers append to `pending`; flush drains the other buffer. */
+  private readonly backBufferA: LiveTick[] = []
+  private readonly backBufferB: LiveTick[] = []
+  private pending: LiveTick[] = this.backBufferA
+  private readonly attentionBackBufferA: LiveAttentionTick[] = []
+  private readonly attentionBackBufferB: LiveAttentionTick[] = []
+  private pendingAttention: LiveAttentionTick[] = this.attentionBackBufferA
   private frontFrame: LiveDataFrame | null = null
   private status: LiveEngineStatus
   private sequence = 0
@@ -117,6 +139,23 @@ export class RealTimeDataEngine {
       })
       this.order.push(config.symbol)
     }
+
+    const attentionTargets = options.attentionTargets ?? options.assets.map((asset) => asset.symbol)
+    for (const target of attentionTargets) {
+      if (this.attention.has(target)) {
+        continue
+      }
+      this.attention.set(target, {
+        target,
+        samples: new RingBuffer<LiveAttentionTick>(this.bufferSize),
+        latestPressure: 0,
+        latestMentionVelocity: 0,
+        latestSentimentDivergenceIndex: 0,
+        lastTimestamp: 0,
+        sampleCount: 0,
+      })
+      this.attentionOrder.push(target)
+    }
   }
 
   // ---- public API --------------------------------------------------------
@@ -145,12 +184,27 @@ export class RealTimeDataEngine {
     this.pending.push(tick)
   }
 
+  /** Accept a social/attention tick into its own hot back-buffer. */
+  ingestAttention(tick: LiveAttentionTick): void {
+    if (!this.attention.has(tick.target)) {
+      return
+    }
+    if (!Number.isFinite(tick.pressure) || !Number.isFinite(tick.mentionVelocity)) {
+      return
+    }
+    this.pendingAttention.push({
+      ...tick,
+      pressure: clamp(tick.pressure, 0, 100),
+      sentimentDivergenceIndex: clamp(tick.sentimentDivergenceIndex, -1, 1),
+    })
+  }
+
   registerFeed(feed: Feed): void {
     this.feeds.push(feed)
   }
 
   /** Start the flush loop and any registered feeds + the built-in simulator. */
-  start(options: { simulate?: boolean } = {}): void {
+  start(options: { simulate?: boolean; external?: boolean } = {}): void {
     if (this.running) {
       return
     }
@@ -163,7 +217,7 @@ export class RealTimeDataEngine {
       connectedFeeds.push(feed.name)
     }
 
-    const simulate = options.simulate ?? this.feeds.length === 0
+    const simulate = options.simulate ?? (!options.external && this.feeds.length === 0)
     if (simulate) {
       this.startSimulator()
       connectedFeeds.push('simulator')
@@ -172,7 +226,7 @@ export class RealTimeDataEngine {
     this.status = {
       ...this.status,
       running: true,
-      mode: this.feeds.length > 0 ? (simulate ? 'hybrid' : 'live') : 'simulated',
+      mode: options.external ? 'live' : this.feeds.length > 0 ? (simulate ? 'hybrid' : 'live') : 'simulated',
       connectedFeeds,
       error: undefined,
     }
@@ -187,8 +241,9 @@ export class RealTimeDataEngine {
     }
     this.running = false
 
-    if (this.rafHandle !== null && typeof cancelAnimationFrame === 'function') {
-      cancelAnimationFrame(this.rafHandle)
+    const cancelRaf = animationCancel()
+    if (this.rafHandle !== null && cancelRaf) {
+      cancelRaf(this.rafHandle)
     }
     this.rafHandle = null
     if (this.timerHandle !== null) {
@@ -212,14 +267,39 @@ export class RealTimeDataEngine {
     this.emit()
   }
 
+  setHealth(health: RealtimeHealth): void {
+    const mode: LiveEngineStatus['mode'] = health.replay.active
+      ? 'replay'
+      : health.sourceTrust === 'simulated'
+        ? 'simulated'
+        : 'live'
+    this.status = {
+      ...this.status,
+      mode,
+      sqliteMode: health.sqliteMode,
+      connectedFeeds: [health.activeConnectorId],
+      reconnectingFeeds: health.ingestionStatus === 'reconnecting' ? [health.activeConnectorId] : [],
+      health,
+      error: health.ingestionStatus === 'failed' ? health.connectors.find((item) => item.id === health.activeConnectorId)?.lastError : undefined,
+    }
+    if (this.frontFrame) {
+      this.frontFrame = {
+        ...this.frontFrame,
+        status: this.status,
+      }
+    }
+    this.emit()
+  }
+
   // ---- flush loop (double buffer swap) -----------------------------------
 
   private scheduleNextFlush(): void {
     if (!this.running) {
       return
     }
-    if (typeof requestAnimationFrame === 'function') {
-      this.rafHandle = requestAnimationFrame(() => this.tick())
+    const raf = animationFrame()
+    if (raf) {
+      this.rafHandle = raf(() => this.tick())
     } else {
       this.timerHandle = setTimeout(() => this.tick(), this.syncIntervalMs)
     }
@@ -232,7 +312,7 @@ export class RealTimeDataEngine {
     const now = this.now()
     if (now - this.lastSyncAt >= this.syncIntervalMs) {
       this.lastSyncAt = now
-      if (this.pending.length > 0) {
+      if (this.pending.length > 0 || this.pendingAttention.length > 0) {
         this.flush(now)
       }
     }
@@ -242,7 +322,12 @@ export class RealTimeDataEngine {
   /** Drain the back-buffer into history, rebuild the immutable front frame. */
   private flush(now: number): void {
     const batch = this.pending
-    this.pending = []
+    this.pending = batch === this.backBufferA ? this.backBufferB : this.backBufferA
+    this.pending.length = 0
+    const attentionBatch = this.pendingAttention
+    this.pendingAttention =
+      attentionBatch === this.attentionBackBufferA ? this.attentionBackBufferB : this.attentionBackBufferA
+    this.pendingAttention.length = 0
 
     for (const tick of batch) {
       const state = this.assets.get(tick.symbol)
@@ -254,10 +339,37 @@ export class RealTimeDataEngine {
       state.lastTimestamp = tick.timestamp
       state.tickCount += 1
     }
+    batch.length = 0
+
+    for (const tick of attentionBatch) {
+      const state = this.attention.get(tick.target)
+      if (!state) {
+        continue
+      }
+      state.samples.push(tick)
+      state.latestPressure = tick.pressure
+      state.latestMentionVelocity = tick.mentionVelocity
+      state.latestSentimentDivergenceIndex = tick.sentimentDivergenceIndex
+      state.lastTimestamp = tick.timestamp
+      state.sampleCount += 1
+    }
+    attentionBatch.length = 0
 
     const snapshots: LiveAssetSnapshot[] = this.order.map((symbol) => {
       const state = this.assets.get(symbol) as AssetState
       return this.snapshotFor(state, now)
+    })
+    const attentionSnapshots: LiveAttentionSnapshot[] = this.attentionOrder.map((target) => {
+      const state = this.attention.get(target) as AttentionState
+      return {
+        target: state.target,
+        pressure: round(state.latestPressure, 2),
+        mentionVelocity: round(state.latestMentionVelocity, 2),
+        sentimentDivergenceIndex: round(state.latestSentimentDivergenceIndex, 3),
+        sampleCount: state.sampleCount,
+        lastUpdated: state.lastTimestamp,
+        samples: state.samples.slice(120),
+      }
     })
 
     this.sequence += 1
@@ -265,7 +377,9 @@ export class RealTimeDataEngine {
       sequence: this.sequence,
       emittedAt: now,
       assets: snapshots,
+      attention: attentionSnapshots,
       entityEdges: this.entityEdges,
+      signals: [],
       status: this.status,
     }
     this.emit()
@@ -404,6 +518,14 @@ export class RealTimeDataEngine {
           timestamp: wall,
           source: 'simulator',
         })
+        this.ingestAttention({
+          target: symbol,
+          pressure: round(clamp(38 + Math.abs(ret) * 12_000 + (attentionSpike - 1) * 5, 0, 100), 2),
+          mentionVelocity: round(Math.max(0, attentionSpike - 0.8 + Math.abs(ret) * 1_000), 2),
+          sentimentDivergenceIndex: round(clamp(ret * 280 + (Math.random() - 0.5) * 0.18, -1, 1), 3),
+          timestamp: wall,
+          source: 'simulator',
+        })
       }
     }, Math.min(this.syncIntervalMs, 120))
   }
@@ -479,13 +601,24 @@ export function createWebSocketFeed(config: {
 }
 
 function defaultClock(): number {
-  if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
-    return performance.now()
-  }
   return Date.now()
 }
 
 function round(value: number, decimals: number): number {
   const factor = 10 ** decimals
   return Math.round(value * factor) / factor
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value))
+}
+
+function animationFrame(): ((callback: () => void) => number) | null {
+  const candidate = (globalThis as { requestAnimationFrame?: (callback: () => void) => number }).requestAnimationFrame
+  return typeof candidate === 'function' ? candidate.bind(globalThis) : null
+}
+
+function animationCancel(): ((handle: number) => void) | null {
+  const candidate = (globalThis as { cancelAnimationFrame?: (handle: number) => void }).cancelAnimationFrame
+  return typeof candidate === 'function' ? candidate.bind(globalThis) : null
 }

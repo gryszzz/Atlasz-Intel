@@ -37,8 +37,8 @@ const evidenceOptions = [
 ]
 
 function persistenceLabel(mode: PersistenceInfo['mode']): string {
-  if (mode === 'wal') return 'Local SQLite · WAL'
-  if (mode === 'jsonl-fallback') return 'Local file store'
+  if (mode === 'node:sqlite' || mode === 'better-sqlite3') return 'Local SQLite · WAL'
+  if (mode === 'json-fallback') return 'Local file store'
   return 'Browser localStorage'
 }
 

@@ -13,7 +13,7 @@ import type {
 } from './types/decision'
 
 type DesktopDb = {
-  status: () => Promise<{ mode: 'wal' | 'jsonl-fallback' }>
+  status: () => Promise<{ mode: 'node:sqlite' | 'better-sqlite3' | 'json-fallback' }>
   listDecisions: () => Promise<DecisionJournalEntry[]>
   getDecision: (id: string) => Promise<DecisionJournalEntry | null>
   saveDecision: (record: DecisionJournalEntry) => Promise<{ ok: boolean }>
@@ -93,7 +93,7 @@ function clampConviction(value: number): number {
   return Math.min(100, Math.max(0, Math.round(value)))
 }
 
-export type PersistenceInfo = { mode: 'wal' | 'jsonl-fallback' | 'localstorage' }
+export type PersistenceInfo = { mode: 'node:sqlite' | 'better-sqlite3' | 'json-fallback' | 'localstorage' }
 
 export const decisionJournal = {
   async status(): Promise<PersistenceInfo> {

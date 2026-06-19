@@ -141,6 +141,35 @@
   color: var(--faint, #61736e);
 }
 
+.rt-attention-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.rt-attention-strip > div {
+  display: grid;
+  gap: 3px;
+  border: 1px solid rgba(103, 232, 249, 0.22);
+  border-radius: 7px;
+  background: #07100f;
+  padding: 8px;
+}
+
+.rt-attention-strip span,
+.rt-attention-strip em {
+  color: var(--muted, #8ca19a);
+  font-family: var(--mono, monospace);
+  font-size: 10px;
+  font-style: normal;
+}
+
+.rt-attention-strip strong {
+  color: var(--cyan, #67e8f9);
+  font-size: 18px;
+  line-height: 1;
+}
+
 .rt-readout-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -174,6 +203,190 @@
   border: 1px dashed var(--line-soft, #18211f);
   border-radius: 7px;
   padding: 12px;
+}
+
+.rt-core {
+  display: grid;
+  gap: 10px;
+}
+
+.rt-core-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rt-core-head > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rt-core-head strong,
+.rt-signal-strip strong {
+  color: var(--white, #f7fffb);
+  font-size: 13px;
+}
+
+.rt-core-head em,
+.rt-signal-strip em {
+  color: var(--muted, #8ca19a);
+  font-family: var(--mono, monospace);
+  font-size: 10px;
+  font-style: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rt-mode {
+  border-radius: 999px;
+  border: 1px solid rgba(94, 234, 212, 0.28);
+  color: var(--green, #5eead4);
+  background: rgba(94, 234, 212, 0.08);
+  padding: 4px 8px;
+  font-family: var(--mono, monospace);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.rt-mode.replay {
+  border-color: rgba(250, 204, 21, 0.35);
+  color: var(--yellow, #facc15);
+  background: rgba(250, 204, 21, 0.09);
+}
+
+.rt-core-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.rt-metric {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--line-soft, #18211f);
+  border-radius: 7px;
+  background: #090d0c;
+  padding: 8px;
+}
+
+.rt-metric span {
+  color: var(--muted, #8ca19a);
+  font-size: 10px;
+}
+
+.rt-metric strong {
+  color: var(--white, #f7fffb);
+  font-family: var(--mono, monospace);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.rt-metric.warn strong {
+  color: var(--yellow, #facc15);
+}
+
+.rt-connector-list {
+  display: grid;
+  gap: 5px;
+}
+
+.rt-connector-list > div {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line-soft, #18211f);
+  border-radius: 7px;
+  background: #080b0a;
+  padding: 6px 8px;
+  min-width: 0;
+}
+
+.rt-connector-list > div.active {
+  border-color: rgba(94, 234, 212, 0.28);
+  background: rgba(94, 234, 212, 0.05);
+}
+
+.rt-connector-list span,
+.rt-connector-list em,
+.rt-connector-list strong {
+  font-family: var(--mono, monospace);
+  font-size: 10px;
+}
+
+.rt-connector-list span {
+  color: var(--text, #dce8e3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rt-connector-list strong {
+  color: var(--green, #5eead4);
+}
+
+.rt-connector-list em {
+  color: var(--faint, #61736e);
+  font-style: normal;
+}
+
+.rt-replay-controls,
+.rt-speed-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rt-replay-controls button,
+.rt-speed-row button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid var(--line-soft, #18211f);
+  border-radius: 7px;
+  background: #0b100f;
+  color: var(--text, #dce8e3);
+  cursor: pointer;
+  font-family: var(--mono, monospace);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 7px 8px;
+}
+
+.rt-replay-controls button:disabled,
+.rt-speed-row button:disabled,
+.rt-speed-row input:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.rt-speed-row button.active {
+  border-color: rgba(250, 204, 21, 0.42);
+  color: var(--yellow, #facc15);
+}
+
+.rt-speed-row input {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--yellow, #facc15);
+}
+
+.rt-signal-strip {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  border-radius: 7px;
+  background: rgba(127, 29, 29, 0.12);
+  padding: 8px;
+}
+
+.rt-signal-strip span {
+  color: var(--muted, #8ca19a);
+  font-size: 11px;
 }
 
 /* Graph risk-chain traversal list (rendered in the Entity Graph inspector). */

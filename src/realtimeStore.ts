@@ -18,6 +18,7 @@ export const PULSE_MODE_LABEL: Record<LiveEngineStatus['mode'], string> = {
   live: 'Live feed',
   hybrid: 'Hybrid feed',
   simulated: 'Offline simulator',
+  replay: 'Replay mode',
   stopped: 'Pulse paused',
 }
 
@@ -49,6 +50,13 @@ const seedPrices: Record<string, number> = Object.fromEntries(
 
 let engine: RealTimeDataEngine | null = null
 
+function desktopRealtime() {
+  if (typeof window === 'undefined') {
+    return null
+  }
+  return window.atlaszDesktop?.realtime ?? null
+}
+
 export function getEngine(): RealTimeDataEngine {
   if (!engine) {
     engine = new RealTimeDataEngine({
@@ -56,6 +64,7 @@ export function getEngine(): RealTimeDataEngine {
       seedPrices,
       syncIntervalMs: 100,
       bufferSize: 1000,
+      attentionTargets: [...new Set([...assetConfigs.map((asset) => asset.symbol), 'AIXR', 'LIT'])],
     })
   }
   return engine
@@ -63,6 +72,12 @@ export function getEngine(): RealTimeDataEngine {
 
 /** Start or stop the offline simulator pulse. */
 export function setPulseEnabled(enabled: boolean): void {
+  const realtime = desktopRealtime()
+  if (realtime) {
+    void (enabled ? realtime.start() : realtime.stop())
+    return
+  }
+
   const instance = getEngine()
   if (enabled) {
     instance.start({ simulate: true })
@@ -73,8 +88,30 @@ export function setPulseEnabled(enabled: boolean): void {
 
 /** Subscribe to the latest engine snapshot. Re-renders the caller per frame. */
 export function useEngineSnapshot(): LiveEngineSnapshot {
-  const [snapshot, setSnapshot] = useState<LiveEngineSnapshot>(() => getEngine().getSnapshot())
-  useEffect(() => getEngine().subscribe(setSnapshot), [])
+  const [snapshot, setSnapshot] = useState<LiveEngineSnapshot>(() => ({
+    frame: null,
+    status: defaultLiveEngineStatus,
+  }))
+
+  useEffect(() => {
+    const realtime = desktopRealtime()
+    if (realtime) {
+      let mounted = true
+      void realtime.snapshot().then((nextSnapshot) => {
+        if (mounted) {
+          setSnapshot(nextSnapshot)
+        }
+      })
+      const unsubscribe = realtime.onFrame((nextSnapshot) => setSnapshot(nextSnapshot))
+      return () => {
+        mounted = false
+        unsubscribe()
+      }
+    }
+
+    const instance = getEngine()
+    return instance.subscribe(setSnapshot)
+  }, [])
   return snapshot
 }
 

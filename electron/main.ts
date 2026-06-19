@@ -2,23 +2,34 @@ import electron from 'electron'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createPersistence } from './persistence'
+import { RealtimeService } from './realtimeService'
 import type {
   DailyBriefRecord,
   DecisionRecord,
   IntelPersistence,
   WorldHeadlineRecord,
 } from './persistence'
+import type { ConnectorId } from '../src/realtime'
 
 const { app, BrowserWindow, ipcMain, shell } = electron
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 let persistence: IntelPersistence | null = null
+let realtime: RealtimeService | null = null
 
 function requirePersistence(): IntelPersistence {
   if (!persistence) {
     persistence = createPersistence(app.getPath('userData'))
   }
   return persistence
+}
+
+function requireRealtime(): RealtimeService {
+  if (!realtime) {
+    const store = requirePersistence()
+    realtime = new RealtimeService({ persistence: store })
+  }
+  return realtime
 }
 
 function createWindow() {
@@ -94,8 +105,35 @@ ipcMain.handle('atlasz:db:decisions:due', (_event, now: number) =>
   requirePersistence().decisionsDueForReview(now),
 )
 
+// --- Local realtime data core ---------------------------------------------
+
+ipcMain.handle('atlasz:realtime:start', () => requireRealtime().start())
+ipcMain.handle('atlasz:realtime:stop', () => requireRealtime().stop())
+ipcMain.handle('atlasz:realtime:restart', (_event, connectorId?: string) =>
+  requireRealtime().restart(connectorId as ConnectorId | undefined),
+)
+ipcMain.handle('atlasz:realtime:snapshot', () => requireRealtime().snapshot())
+ipcMain.handle('atlasz:realtime:status', () => requireRealtime().status())
+ipcMain.handle('atlasz:realtime:health', () => requireRealtime().health())
+ipcMain.handle('atlasz:realtime:traverse-risk', (_event, nodeId: string) =>
+  requireRealtime().traverseRisk(nodeId),
+)
+ipcMain.handle('atlasz:realtime:replay:start', (_event, options?: { from?: number; to?: number; speed?: 1 | 2 | 5 }) =>
+  requireRealtime().replayStart(options),
+)
+ipcMain.handle('atlasz:realtime:replay:pause', () => requireRealtime().replayPause())
+ipcMain.handle('atlasz:realtime:replay:resume', () => requireRealtime().replayResume())
+ipcMain.handle('atlasz:realtime:replay:stop', () => requireRealtime().replayStop())
+ipcMain.handle('atlasz:realtime:replay:speed', (_event, speed: 1 | 2 | 5) =>
+  requireRealtime().replaySetSpeed(speed),
+)
+ipcMain.handle('atlasz:realtime:replay:seek', (_event, cursor: number) =>
+  requireRealtime().replaySeek(cursor),
+)
+
 app.whenReady().then(() => {
   requirePersistence()
+  requireRealtime()
   createWindow()
 
   app.on('activate', () => {
@@ -112,6 +150,8 @@ app.on('window-all-closed', () => {
 })
 
 app.on('before-quit', () => {
+  realtime?.close()
+  realtime = null
   persistence?.close()
   persistence = null
 })

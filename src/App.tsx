@@ -40,7 +40,7 @@ import { buildNavActions, type CommandAction } from './commandActions'
 import { DecisionJournal } from './DecisionJournal'
 import { decisionJournal } from './intelClient'
 import { riskChainFor } from './intelGraphData'
-import { LiveMarketReadout, PulseIndicator, RealtimePulsePanel } from './RealtimeWidgets'
+import { DataCorePanel, LiveMarketReadout, PulseIndicator, RealtimePulsePanel } from './RealtimeWidgets'
 import { setPulseEnabled as setEnginePulse } from './realtimeStore'
 import {
   dailyBrief,
@@ -792,7 +792,9 @@ function App() {
   ])
 
   const [pulseEnabled, setPulseEnabled] = useLocalStorageState('atlasz:intel:pulse', true)
-  const [persistenceMode, setPersistenceMode] = useState<'wal' | 'jsonl-fallback' | 'localstorage'>('localstorage')
+  const [persistenceMode, setPersistenceMode] = useState<
+    'node:sqlite' | 'better-sqlite3' | 'json-fallback' | 'localstorage'
+  >('localstorage')
 
   useEffect(() => {
     window.atlaszDesktop?.getAppMeta().then(setDesktopMeta).catch(() => setDesktopMeta(null))
@@ -1068,11 +1070,13 @@ function App() {
             <Database size={14} />
             <span>
               {desktopMeta ? desktopMeta.platform : 'Browser preview'} ·{' '}
-              {persistenceMode === 'wal'
-                ? 'SQLite WAL'
-                : persistenceMode === 'jsonl-fallback'
-                  ? 'Local file store'
-                  : 'localStorage'}
+              {persistenceMode === 'node:sqlite'
+                ? 'node:sqlite WAL'
+                : persistenceMode === 'better-sqlite3'
+                  ? 'better-sqlite3 WAL'
+                  : persistenceMode === 'json-fallback'
+                    ? 'JSON fallback'
+                    : 'localStorage'}
             </span>
           </div>
         </div>
@@ -1197,6 +1201,11 @@ function App() {
             <article className="panel">
               <PanelHeader icon={Activity} label="Realtime" title="Live pulse" />
               <RealtimePulsePanel enabled={pulseEnabled} />
+            </article>
+
+            <article className="panel">
+              <PanelHeader icon={Database} label="Data Core" title="Ingestion health + replay" />
+              <DataCorePanel />
             </article>
 
             <article className="panel">

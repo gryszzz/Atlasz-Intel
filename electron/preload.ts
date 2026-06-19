@@ -1,5 +1,6 @@
 import electron from 'electron'
 import type { DailyBriefRecord, DecisionRecord, WorldHeadlineRecord } from './persistence'
+import type { ConnectorId, LiveEngineSnapshot, ReplayState } from '../src/realtime'
 
 const { contextBridge, ipcRenderer } = electron
 
@@ -17,5 +18,26 @@ contextBridge.exposeInMainWorld('atlaszDesktop', {
     saveDecision: (record: DecisionRecord) => ipcRenderer.invoke('atlasz:db:decisions:save', record),
     deleteDecision: (id: string) => ipcRenderer.invoke('atlasz:db:decisions:delete', id),
     decisionsDueForReview: (now: number) => ipcRenderer.invoke('atlasz:db:decisions:due', now),
+  },
+  realtime: {
+    start: () => ipcRenderer.invoke('atlasz:realtime:start'),
+    stop: () => ipcRenderer.invoke('atlasz:realtime:stop'),
+    restart: (connectorId?: ConnectorId) => ipcRenderer.invoke('atlasz:realtime:restart', connectorId),
+    snapshot: () => ipcRenderer.invoke('atlasz:realtime:snapshot'),
+    status: () => ipcRenderer.invoke('atlasz:realtime:status'),
+    health: () => ipcRenderer.invoke('atlasz:realtime:health'),
+    traverseRisk: (nodeId: string) => ipcRenderer.invoke('atlasz:realtime:traverse-risk', nodeId),
+    replayStart: (options?: { from?: number; to?: number; speed?: ReplayState['speed'] }) =>
+      ipcRenderer.invoke('atlasz:realtime:replay:start', options),
+    replayPause: () => ipcRenderer.invoke('atlasz:realtime:replay:pause'),
+    replayResume: () => ipcRenderer.invoke('atlasz:realtime:replay:resume'),
+    replayStop: () => ipcRenderer.invoke('atlasz:realtime:replay:stop'),
+    replaySetSpeed: (speed: ReplayState['speed']) => ipcRenderer.invoke('atlasz:realtime:replay:speed', speed),
+    replaySeek: (cursor: number) => ipcRenderer.invoke('atlasz:realtime:replay:seek', cursor),
+    onFrame: (listener: (snapshot: LiveEngineSnapshot) => void) => {
+      const wrapped = (_event: Electron.IpcRendererEvent, snapshot: LiveEngineSnapshot) => listener(snapshot)
+      ipcRenderer.on('atlasz:realtime:frame', wrapped)
+      return () => ipcRenderer.off('atlasz:realtime:frame', wrapped)
+    },
   },
 })
