@@ -3,7 +3,7 @@
  * so only it re-renders per frame, and source trust is always labeled
  * explicitly — simulated/public/authenticated, never implied as verified truth.
  */
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ArrowDownRight, ArrowUpRight, Pause, Play, Radio, RotateCcw, StepBack } from 'lucide-react'
 import { PULSE_MODE_LABEL, useEngineSnapshot } from './realtimeStore'
 import type { RealtimeHealth, ReplayState } from './realtime'
@@ -92,6 +92,13 @@ function desktopRealtime() {
     return null
   }
   return window.atlaszDesktop?.realtime ?? null
+}
+
+function desktopIngest() {
+  if (typeof window === 'undefined') {
+    return null
+  }
+  return window.atlaszDesktop?.ingest ?? null
 }
 
 /** Topbar pulse indicator. Subscribes individually so only it ticks. */
@@ -190,6 +197,7 @@ export function RealtimePulsePanel({ enabled }: { enabled: boolean }) {
 export function DataCorePanel() {
   const snapshot = useEngineSnapshot()
   const [busy, setBusy] = useState(false)
+  const [ingestStatus, setIngestStatus] = useState<AtlaszPublicIngestStatus | null>(null)
   const hasDesktopRealtime = Boolean(desktopRealtime())
   const health =
     snapshot.status.health ??
@@ -201,6 +209,30 @@ export function DataCorePanel() {
   )
   const isReplay = snapshot.status.mode === 'replay' || replay?.active
   const signals = snapshot.frame?.signals ?? []
+
+  useEffect(() => {
+    const ingest = desktopIngest()
+    if (!ingest) {
+      return
+    }
+    let mounted = true
+    const poll = () => {
+      void ingest
+        .status()
+        .then((status) => {
+          if (mounted) {
+            setIngestStatus(status)
+          }
+        })
+        .catch(() => undefined)
+    }
+    poll()
+    const timer = setInterval(poll, 5_000)
+    return () => {
+      mounted = false
+      clearInterval(timer)
+    }
+  }, [])
 
   async function runControl(action: () => Promise<unknown>) {
     const realtime = desktopRealtime()
@@ -250,6 +282,60 @@ export function DataCorePanel() {
           </div>
         ))}
       </div>
+
+      {ingestStatus && (
+        <div className="rt-osint-grid">
+          <div>
+            <span>Public OSINT</span>
+            <strong>{ingestStatus.running ? 'running' : ingestStatus.enabled ? 'stopped' : 'disabled'}</strong>
+          </div>
+          <div>
+            <span>RSS</span>
+            <strong>{ingestStatus.rssHeadlineCount}</strong>
+          </div>
+          <div>
+            <span>Yahoo</span>
+            <strong>{ingestStatus.yahooTickCount}</strong>
+          </div>
+          <div>
+            <span>Stocktwits</span>
+            <strong>{ingestStatus.stocktwitsBatchCount}</strong>
+          </div>
+          <div>
+            <span>Polymarket</span>
+            <strong>{ingestStatus.probabilityCount}</strong>
+          </div>
+          <div>
+            <span>Edges</span>
+            <strong>{ingestStatus.exposureEdgeCount}</strong>
+          </div>
+          <div>
+            <span>Velocity</span>
+            <strong>{ingestStatus.narrativeVelocityPerMinute}/m</strong>
+          </div>
+          <div>
+            <span>Parser</span>
+            <strong>{ingestStatus.cognitiveMode}</strong>
+          </div>
+          <div>
+            <span>Timeout</span>
+            <strong>{ingestStatus.cognitiveTimeoutMs ? `${(ingestStatus.cognitiveTimeoutMs / 1000).toFixed(1)}s` : '--'}</strong>
+          </div>
+          <div>
+            <span>Queue</span>
+            <strong>{ingestStatus.cognitiveQueueLength}</strong>
+          </div>
+          <div>
+            <span>Skipped</span>
+            <strong>{ingestStatus.cognitiveSkippedCount}</strong>
+          </div>
+          <div>
+            <span>Source cuts</span>
+            <strong>{ingestStatus.cognitiveSourcePenaltyCount}</strong>
+          </div>
+          {ingestStatus.lastError && <p>{ingestStatus.lastError}</p>}
+        </div>
+      )}
 
       <div className="rt-replay-controls">
         <button

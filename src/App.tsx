@@ -1,4 +1,4 @@
-import { Component, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { Component, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import {
   Activity,
   AlertTriangle,
@@ -41,7 +41,10 @@ import { DecisionJournal } from './DecisionJournal'
 import { decisionJournal } from './intelClient'
 import { riskChainFor } from './intelGraphData'
 import { DataCorePanel, LiveMarketReadout, PulseIndicator, RealtimePulsePanel } from './RealtimeWidgets'
-import { setPulseEnabled as setEnginePulse } from './realtimeStore'
+import { addUniverseAsset, setPulseEnabled as setEnginePulse } from './realtimeStore'
+import { resolveAssetQuery, type AssetUniverseItem } from './assetUniverse'
+import { useWorldIntelSnapshot } from './worldIntelStore'
+import type { WorldIntelSnapshot } from './worldIntel'
 import {
   dailyBrief,
   graphEdges,
@@ -51,10 +54,10 @@ import {
   marketMovers,
   marketSeries,
   radarEvents,
-  rawSourceItems,
   riskMap,
   topSignals,
   watchlist,
+  type BriefItem,
   type EvidenceNote,
   type GraphNodeSeed,
   type MarketExplanation,
@@ -492,8 +495,8 @@ function getEventLayers(event: RadarEvent) {
   return eventLayerMap[event.id] ?? ['market', 'news', 'entities', 'sources']
 }
 
-function getSignalForEvent(eventId: string) {
-  return topSignals.find((signal) => signal.linkedEventIds.includes(eventId))
+function getSignalForEvent(eventId: string, signals: Signal[] = topSignals) {
+  return signals.find((signal) => signal.linkedEventIds.includes(eventId))
 }
 
 function getGraphNodeById(nodeId: string | null): GraphNodeSeed | null {
@@ -572,6 +575,36 @@ function getTierCounts(posts: SocialPulsePost[]) {
 function formatChange(value: number) {
   const sign = value > 0 ? '+' : ''
   return `${sign}${value.toFixed(2)}%`
+}
+
+function marketMoverFromUniverseItem(item: AssetUniverseItem): MarketMover {
+  return {
+    ticker: item.symbol,
+    name: item.label,
+    price: item.defaultPrice >= 10 ? item.defaultPrice.toLocaleString() : item.defaultPrice.toString(),
+    change: 0,
+    volume: 'sim',
+    catalyst: `${item.description}; routed through Atlasz local pressure map`,
+    connectedEvents: [item.kind, item.source, item.feedSymbol],
+    confidence: item.source === 'simulator' ? 45 : 55,
+  }
+}
+
+function buildSyntheticMarketSeries(market: MarketMover): Array<{ time: string; price: number; volume: number }> {
+  const basePrice = Number.parseFloat(market.price.replace(/,/g, ''))
+  const base = Number.isFinite(basePrice) && basePrice > 0 ? basePrice : 100
+  const symbolSeed = market.ticker.split('').reduce((total, char) => total + char.charCodeAt(0), 0)
+  const points = ['04:00', '06:00', '08:00', '10:00', '12:00']
+
+  return points.map((time, index) => {
+    const wave = Math.sin((symbolSeed + index * 13) / 8) * 0.006
+    const drift = (index - 2) * (market.change / 1000)
+    return {
+      time,
+      price: Number((base * (1 + wave + drift)).toFixed(base >= 10 ? 2 : 5)),
+      volume: Math.max(8, Math.round(28 + Math.abs(wave) * 2200 + index * 4)),
+    }
+  })
 }
 
 function severityClass(severity: Severity) {
@@ -767,6 +800,12 @@ function App() {
   const [selectedTimeWindow, setSelectedTimeWindow] = useState<TimeWindowId>('today')
   const [selectedSocialTopicId, setSelectedSocialTopicId] = useState('aixr-ai')
   const [selectedSocialTier, setSelectedSocialTier] = useState<SocialTier | 'all'>('all')
+  const [universeSymbols, setUniverseSymbols] = useLocalStorageState<string[]>('atlasz:intel:universe-symbols', [
+    'KAS',
+    'EUR/USD',
+    'SPX',
+    'XLK',
+  ])
   const [radarFilter, setRadarFilter] = useState('All')
   const [question, setQuestion] = useState('')
   const [activeLayerIds, setActiveLayerIds] = useLocalStorageState<LayerId[]>('atlasz:intel:layers', defaultLayerIds)
@@ -811,18 +850,40 @@ function App() {
       .catch(() => undefined)
   }, [])
 
-  const selectedMarket = useMemo(
-    () => [...marketMovers, ...watchlist].find((item) => item.ticker === selectedTicker) ?? marketMovers[0],
-    [selectedTicker],
-  )
+  const {
+    snapshot: worldSnapshot,
+    refresh: refreshWorldIntel,
+    loading: worldIntelLoading,
+  } = useWorldIntelSnapshot()
+  const worldEvents = worldSnapshot.events
+  const worldSignals = worldSnapshot.signals
+  const worldBrief = worldSnapshot.dailyBrief
+  const worldRawSourceItems = worldSnapshot.rawSourceItems
+
+  const selectedMarket = useMemo(() => {
+    const seeded = [...marketMovers, ...watchlist].find((item) => item.ticker === selectedTicker)
+    return seeded ?? marketMoverFromUniverseItem(resolveAssetQuery(selectedTicker))
+  }, [selectedTicker])
 
   const selectedMarketExplanation = marketExplanations[selectedTicker] ?? marketExplanations.CL
 
-  const chartData = marketSeries[selectedTicker] ?? marketSeries.CL
-  const selectedEvent = radarEvents.find((event) => event.id === selectedEventId) ?? radarEvents[0]
-  const selectedSignal = getSignalForEvent(selectedEvent.id) ?? topSignals[0]
+  const chartData = useMemo(
+    () => marketSeries[selectedTicker] ?? buildSyntheticMarketSeries(selectedMarket),
+    [selectedMarket, selectedTicker],
+  )
+  const tickerTapeItems = useMemo(() => {
+    const seeded = [...marketMovers, ...watchlist]
+    const universe = universeSymbols.map((symbol) => {
+      const seededMarket = seeded.find((item) => item.ticker === symbol)
+      return seededMarket ?? marketMoverFromUniverseItem(resolveAssetQuery(symbol))
+    })
+    return [...new Map([...universe, ...seeded].map((item) => [item.ticker, item])).values()].slice(0, 24)
+  }, [universeSymbols])
+  const selectedEvent = worldEvents.find((event) => event.id === selectedEventId) ?? worldEvents[0] ?? radarEvents[0]
+  const selectedSignal =
+    worldSignals.find((signal) => signal.linkedEventIds.includes(selectedEvent.id)) ?? worldSignals[0] ?? topSignals[0]
   const selectedGraphNode = getGraphNodeById(selectedGraphNodeId)
-  const pinnedSignals = topSignals.filter((signal) => pinnedSignalIds.includes(signal.id))
+  const pinnedSignals = worldSignals.filter((signal) => pinnedSignalIds.includes(signal.id))
   const selectedSocialTopic =
     socialPulseTopics.find((topic) => topic.id === selectedSocialTopicId) ?? socialPulseTopics[0]
   const selectedSocialPosts = socialPulsePosts.filter((post) => post.topicId === selectedSocialTopic.id)
@@ -831,29 +892,29 @@ function App() {
 
   const filteredEvents = useMemo(() => {
     if (radarFilter === 'All') {
-      return radarEvents
+      return worldEvents
     }
 
-    return radarEvents.filter((event) => event.region === radarFilter || event.category === radarFilter)
-  }, [radarFilter])
+    return worldEvents.filter((event) => event.region === radarFilter || event.category === radarFilter)
+  }, [radarFilter, worldEvents])
 
   const radarFilters = useMemo(
-    () => ['All', ...Array.from(new Set(radarEvents.flatMap((event) => [event.region, event.category])))],
-    [],
+    () => ['All', ...Array.from(new Set(worldEvents.flatMap((event) => [event.region, event.category])))],
+    [worldEvents],
   )
 
   const filteredPulseEvents = useMemo(() => {
     const timeWindow = timeWindows.find((window) => window.id === selectedTimeWindow)
     const activeLayerSet = new Set(activeLayerIds)
 
-    return radarEvents.filter((event) => {
+    return worldEvents.filter((event) => {
       const isInsideTime =
         !timeWindow?.minutes || selectedTimeWindow === 'custom' || (eventAgeMinutes[event.id] ?? 0) <= timeWindow.minutes
       const matchesLayer = getEventLayers(event).some((layerId) => activeLayerSet.has(layerId))
 
       return isInsideTime && matchesLayer
     })
-  }, [activeLayerIds, selectedTimeWindow])
+  }, [activeLayerIds, selectedTimeWindow, worldEvents])
 
   const graphKindOptions = useMemo(() => Array.from(new Set(graphNodes.map((node) => node.kind))), [])
 
@@ -882,6 +943,16 @@ function App() {
   const selectTicker = (ticker: string, nextView: ViewId = 'terminal') => {
     setSelectedTicker(ticker)
     setActiveView(nextView)
+  }
+
+  const addUniverseSymbol = async (query: string) => {
+    const trimmed = query.trim()
+    if (!trimmed) {
+      return
+    }
+    const item = await addUniverseAsset(trimmed)
+    setUniverseSymbols((current) => [item.symbol, ...current.filter((symbol) => symbol !== item.symbol)].slice(0, 16))
+    selectTicker(item.symbol, 'terminal')
   }
 
   const selectEvent = (eventId: string, nextView?: ViewId) => {
@@ -1089,19 +1160,19 @@ function App() {
           </div>
           <div className="status-row">
             <span>Risk events</span>
-            <strong>{radarEvents.length}</strong>
+            <strong>{worldEvents.length}</strong>
           </div>
           <div className="status-row">
             <span>Source items</span>
-            <strong>{rawSourceItems.length}</strong>
+            <strong>{worldRawSourceItems.length}</strong>
           </div>
           <div className="status-row">
             <span>Social posts</span>
             <strong>{socialPulsePosts.length}</strong>
           </div>
           <div className="status-row">
-            <span>Offline mode</span>
-            <strong>Ready</strong>
+            <span>World source</span>
+            <strong>{worldSnapshot.sourceTrust}</strong>
           </div>
         </div>
       </aside>
@@ -1127,7 +1198,7 @@ function App() {
         </header>
 
         <section className="ticker-tape" aria-label="Market tape">
-          {[...marketMovers, ...watchlist].map((item) => (
+          {tickerTapeItems.map((item) => (
             <button
               className={selectedTicker === item.ticker ? 'ticker-tile active' : 'ticker-tile'}
               key={item.ticker}
@@ -1150,10 +1221,12 @@ function App() {
             <article className="panel command-status-panel">
               <CommandStatus
                 activeLayerCount={activeLayerIds.length}
+                briefItems={worldBrief}
                 pinnedSignals={pinnedSignals}
                 selectedEvent={selectedEvent}
                 selectedMarket={selectedMarket}
                 selectedSignal={selectedSignal}
+                sourceItemCount={worldRawSourceItems.length}
                 socialPressure={socialPressure}
                 socialVelocity={socialVelocity.velocity}
               />
@@ -1167,6 +1240,7 @@ function App() {
                 onSelectEvent={(eventId) => selectEvent(eventId)}
                 onSelectTicker={(ticker) => selectTicker(ticker, 'command')}
                 selectedEventId={selectedEvent.id}
+                signals={worldSignals}
               />
               <TimelineControl
                 events={filteredPulseEvents}
@@ -1230,7 +1304,7 @@ function App() {
             <article className="panel tall-panel">
               <PanelHeader icon={Zap} label="Signals" title="Top signal map" />
               <div className="signal-stack">
-                {topSignals.map((signal) => (
+                {worldSignals.map((signal) => (
                   <SignalCard
                     isPinned={pinnedSignalIds.includes(signal.id)}
                     key={signal.id}
@@ -1243,11 +1317,17 @@ function App() {
 
             <article className="panel wide-panel">
               <PanelHeader icon={RadioTower} label="World Radar" title="Structured event feed" />
+              <WorldIntelStatusStrip
+                loading={worldIntelLoading}
+                onRefresh={refreshWorldIntel}
+                snapshot={worldSnapshot}
+              />
               <EventFeed
                 compact
-                events={radarEvents.slice(0, 3)}
+                events={worldEvents.slice(0, 3)}
                 onSelectEvent={(eventId) => selectEvent(eventId)}
                 selectedEventId={selectedEvent.id}
+                signals={worldSignals}
               />
             </article>
 
@@ -1287,6 +1367,7 @@ function App() {
               <PanelHeader icon={Layers3} label="Layers" title="Evidence layer matrix" />
               <EvidenceLayerMap
                 events={filteredPulseEvents}
+                signals={worldSignals}
                 selectedEventId={selectedEvent.id}
                 selectedTimeWindow={selectedTimeWindow}
                 activeLayerIds={activeLayerIds}
@@ -1342,6 +1423,11 @@ function App() {
 
             <article className="panel">
               <PanelHeader icon={Layers3} label="Watchlist" title="Tracked markets" />
+              <UniverseSearchPanel
+                symbols={universeSymbols}
+                onAdd={addUniverseSymbol}
+                onSelect={(ticker) => selectTicker(ticker, 'terminal')}
+              />
               <MarketMoverList
                 movers={watchlist}
                 onSelect={(ticker) => selectTicker(ticker, 'terminal')}
@@ -1376,6 +1462,7 @@ function App() {
                 onSelectEvent={(eventId) => selectEvent(eventId)}
                 onSelectTicker={(ticker) => selectTicker(ticker, 'radar')}
                 selectedEventId={selectedEvent.id}
+                signals={worldSignals}
               />
               <TimelineControl
                 events={filteredPulseEvents}
@@ -1401,6 +1488,11 @@ function App() {
 
             <article className="panel wide-panel">
               <PanelHeader icon={RadioTower} label="World Radar" title="Events are structured, not just headlines" />
+              <WorldIntelStatusStrip
+                loading={worldIntelLoading}
+                onRefresh={refreshWorldIntel}
+                snapshot={worldSnapshot}
+              />
               <div className="filter-row">
                 {radarFilters.map((filter) => (
                   <button
@@ -1417,6 +1509,7 @@ function App() {
                 events={filteredEvents}
                 onSelectEvent={(eventId) => selectEvent(eventId)}
                 selectedEventId={selectedEvent.id}
+                signals={worldSignals}
               />
             </article>
           </section>
@@ -1459,7 +1552,7 @@ function App() {
                   fitView
                   onNodeClick={(_event, node) => {
                     setSelectedGraphNodeId(node.id)
-                    if (radarEvents.some((event) => event.id === node.id)) {
+                    if (worldEvents.some((event) => event.id === node.id)) {
                       setSelectedEventId(node.id)
                     }
                   }}
@@ -1480,7 +1573,7 @@ function App() {
               />
               <GraphInspector graphNode={selectedGraphNode} />
               <div className="signal-stack">
-                {topSignals.slice(0, 3).map((signal) => (
+                {worldSignals.slice(0, 3).map((signal) => (
                   <SignalCard key={signal.id} signal={signal} compact />
                 ))}
               </div>
@@ -1539,8 +1632,13 @@ function App() {
           <section className="dashboard-grid brief-grid">
             <article className="panel wide-panel">
               <PanelHeader icon={FileText} label="Daily Brief" title="Private morning intelligence report" />
+              <WorldIntelStatusStrip
+                loading={worldIntelLoading}
+                onRefresh={refreshWorldIntel}
+                snapshot={worldSnapshot}
+              />
               <div className="daily-brief">
-                {dailyBrief.map((item) => (
+                {worldBrief.map((item) => (
                   <div className="brief-row" key={item.id}>
                     <span className={severityClass(item.severity)}>{severityLabels[item.severity]}</span>
                     <div>
@@ -1568,7 +1666,7 @@ function App() {
             <article className="panel wide-panel">
               <PanelHeader icon={Zap} label="Watch Next" title="Open signal checklist" />
               <div className="watch-next-grid">
-                {topSignals.map((signal) => (
+                {worldSignals.map((signal) => (
                   <label key={signal.id}>
                     <input type="checkbox" />
                     <span>{signal.title}</span>
@@ -1615,22 +1713,26 @@ function PanelHeader({
 
 function CommandStatus({
   activeLayerCount,
+  briefItems,
   pinnedSignals,
   selectedEvent,
   selectedMarket,
   selectedSignal,
+  sourceItemCount,
   socialPressure,
   socialVelocity,
 }: {
   activeLayerCount: number
+  briefItems: BriefItem[]
   pinnedSignals: Signal[]
   selectedEvent: RadarEvent
   selectedMarket: MarketMover
   selectedSignal: Signal
+  sourceItemCount: number
   socialPressure: number
   socialVelocity: number
 }) {
-  const dominantTheme = dailyBrief[0]
+  const dominantTheme = briefItems[0] ?? dailyBrief[0]
 
   return (
     <div className="command-status-grid">
@@ -1661,8 +1763,59 @@ function CommandStatus({
       <div className="status-tile">
         <span>System status</span>
         <strong>{activeLayerCount} layers</strong>
-        <em>{pinnedSignals.length} pinned signals, {rawSourceItems.length} source items, {socialPulsePosts.length} social posts</em>
+        <em>{pinnedSignals.length} pinned signals, {sourceItemCount} source items, {socialPulsePosts.length} social posts</em>
       </div>
+    </div>
+  )
+}
+
+function WorldIntelStatusStrip({
+  loading,
+  onRefresh,
+  snapshot,
+}: {
+  loading: boolean
+  onRefresh: () => Promise<void>
+  snapshot: WorldIntelSnapshot
+}) {
+  const updatedAt = snapshot.updatedAt
+    ? new Date(snapshot.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : 'not refreshed'
+  const statusTone =
+    snapshot.status === 'ready'
+      ? 'ready'
+      : snapshot.status === 'stale'
+        ? 'stale'
+        : snapshot.status === 'failed'
+          ? 'failed'
+          : 'seeded'
+
+  return (
+    <div className={`world-intel-strip world-intel-${statusTone}`}>
+      <div>
+        <span>World source</span>
+        <strong>{snapshot.connectorLabel}</strong>
+      </div>
+      <div>
+        <span>Trust</span>
+        <strong>{snapshot.sourceTrust}</strong>
+      </div>
+      <div>
+        <span>Status</span>
+        <strong>{snapshot.status}</strong>
+      </div>
+      <div>
+        <span>Headlines</span>
+        <strong>{snapshot.headlines.length}</strong>
+      </div>
+      <div>
+        <span>Updated</span>
+        <strong>{updatedAt}</strong>
+      </div>
+      <button type="button" onClick={() => void onRefresh()} disabled={loading}>
+        {loading ? 'Refreshing' : 'Refresh'}
+      </button>
+      {snapshot.lastError && <p>{snapshot.lastError}</p>}
     </div>
   )
 }
@@ -1673,12 +1826,14 @@ function GlobalPulseScene({
   onSelectEvent,
   onSelectTicker,
   selectedEventId,
+  signals,
 }: {
   activeLayerIds: LayerId[]
   events: RadarEvent[]
   onSelectEvent: (eventId: string) => void
   onSelectTicker: (ticker: string) => void
   selectedEventId: string
+  signals: Signal[]
 }) {
   const selectedEvent = events.find((event) => event.id === selectedEventId) ?? radarEvents.find((event) => event.id === selectedEventId) ?? events[0]
   const selectedVisual = selectedEvent ? eventVisuals[selectedEvent.id] : null
@@ -1751,7 +1906,7 @@ function GlobalPulseScene({
               <span className={severityClass(selectedEvent.severity)}>{severityLabels[selectedEvent.severity]}</span>
               <h3>{selectedEvent.title}</h3>
               <p>{selectedVisual?.changed ?? selectedEvent.summary}</p>
-              <code>{selectedVisual?.chain ?? getSignalForEvent(selectedEvent.id)?.chain}</code>
+              <code>{selectedVisual?.chain ?? getSignalForEvent(selectedEvent.id, signals)?.chain}</code>
               <div className="sidecar-metrics">
                 <div>
                   <span>Confidence</span>
@@ -2307,21 +2462,79 @@ function MarketMoverList({
   )
 }
 
+function UniverseSearchPanel({
+  symbols,
+  onAdd,
+  onSelect,
+}: {
+  symbols: string[]
+  onAdd: (query: string) => Promise<void>
+  onSelect: (symbol: string) => void
+}) {
+  const [query, setQuery] = useState('')
+  const preview = query.trim() ? resolveAssetQuery(query) : null
+  const resolvedItems = symbols.map((symbol) => resolveAssetQuery(symbol))
+
+  async function submit(event: FormEvent) {
+    event.preventDefault()
+    await onAdd(query)
+    setQuery('')
+  }
+
+  return (
+    <div className="universe-panel">
+      <form className="universe-search" onSubmit={submit}>
+        <Search size={15} />
+        <input
+          aria-label="Add asset to Atlasz universe"
+          placeholder="Type KAS, EUR/USD, SPX, XLK, NVDA..."
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+        <button type="submit">Add</button>
+      </form>
+      {preview && (
+        <div className="universe-preview">
+          <span>{preview.kind}</span>
+          <strong>{preview.symbol}</strong>
+          <em>
+            {preview.source !== 'simulator'
+              ? 'public unauthenticated capable'
+              : preview.kind === 'crypto'
+                ? 'simulated default; public WS eligible'
+                : 'simulated/local derived'}
+          </em>
+        </div>
+      )}
+      <div className="universe-chip-row">
+        {resolvedItems.map((item) => (
+          <button key={item.symbol} type="button" onClick={() => onSelect(item.symbol)}>
+            <strong>{item.symbol}</strong>
+            <span>{item.kind}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function EventFeed({
   events,
   compact = false,
   onSelectEvent,
   selectedEventId,
+  signals = topSignals,
 }: {
   events: RadarEvent[]
   compact?: boolean
   onSelectEvent?: (eventId: string) => void
   selectedEventId?: string
+  signals?: Signal[]
 }) {
   return (
     <div className={compact ? 'event-feed compact-feed' : 'event-feed'}>
       {events.map((event) => {
-        const signal = getSignalForEvent(event.id)
+        const signal = getSignalForEvent(event.id, signals)
 
         return (
           <article className={selectedEventId === event.id ? 'event-card active' : 'event-card'} key={event.id}>
@@ -2594,6 +2807,7 @@ function IngestionPipeline() {
 
 function EvidenceLayerMap({
   events,
+  signals,
   selectedEventId,
   selectedTimeWindow,
   activeLayerIds,
@@ -2607,6 +2821,7 @@ function EvidenceLayerMap({
   onTogglePinnedSignal,
 }: {
   events: RadarEvent[]
+  signals: Signal[]
   selectedEventId: string
   selectedTimeWindow: TimeWindowId
   activeLayerIds: LayerId[]
@@ -2667,7 +2882,7 @@ function EvidenceLayerMap({
       </div>
       <div className="pinned-signal-row">
         <span>Pinned signals</span>
-        {topSignals.map((signal) => (
+        {signals.map((signal) => (
           <button
             className={pinnedSignals.some((pinnedSignal) => pinnedSignal.id === signal.id) ? 'mini-toggle active' : 'mini-toggle'}
             key={signal.id}
@@ -2680,7 +2895,7 @@ function EvidenceLayerMap({
       </div>
       <div className="event-layer-stack">
         {events.slice(0, 4).map((event) => {
-          const signal = getSignalForEvent(event.id)
+          const signal = getSignalForEvent(event.id, signals)
           const visual = eventVisuals[event.id]
           const layers = getEventLayers(event).filter((layerId) => activeLayerIds.includes(layerId))
 

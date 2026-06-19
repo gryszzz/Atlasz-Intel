@@ -3,6 +3,8 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createPersistence } from './persistence'
 import { RealtimeService } from './realtimeService'
+import { WorldIntelService } from './worldIntelService'
+import { DataIngestOrchestrator } from './ingest/dataIngestOrchestrator'
 import type {
   DailyBriefRecord,
   DecisionRecord,
@@ -16,6 +18,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 let persistence: IntelPersistence | null = null
 let realtime: RealtimeService | null = null
+let worldIntel: WorldIntelService | null = null
+let dataIngest: DataIngestOrchestrator | null = null
 
 function requirePersistence(): IntelPersistence {
   if (!persistence) {
@@ -30,6 +34,23 @@ function requireRealtime(): RealtimeService {
     realtime = new RealtimeService({ persistence: store })
   }
   return realtime
+}
+
+function requireWorldIntel(): WorldIntelService {
+  if (!worldIntel) {
+    worldIntel = new WorldIntelService(requirePersistence())
+  }
+  return worldIntel
+}
+
+function requireDataIngest(): DataIngestOrchestrator {
+  if (!dataIngest) {
+    dataIngest = new DataIngestOrchestrator({
+      persistence: requirePersistence(),
+      realtime: requireRealtime(),
+    })
+  }
+  return dataIngest
 }
 
 function createWindow() {
@@ -112,6 +133,7 @@ ipcMain.handle('atlasz:realtime:stop', () => requireRealtime().stop())
 ipcMain.handle('atlasz:realtime:restart', (_event, connectorId?: string) =>
   requireRealtime().restart(connectorId as ConnectorId | undefined),
 )
+ipcMain.handle('atlasz:realtime:add-asset', (_event, query: string) => requireRealtime().addAsset(query))
 ipcMain.handle('atlasz:realtime:snapshot', () => requireRealtime().snapshot())
 ipcMain.handle('atlasz:realtime:status', () => requireRealtime().status())
 ipcMain.handle('atlasz:realtime:health', () => requireRealtime().health())
@@ -131,9 +153,17 @@ ipcMain.handle('atlasz:realtime:replay:seek', (_event, cursor: number) =>
   requireRealtime().replaySeek(cursor),
 )
 
+// --- Public world/event intelligence --------------------------------------
+
+ipcMain.handle('atlasz:world:snapshot', () => requireWorldIntel().snapshot())
+ipcMain.handle('atlasz:world:refresh', () => requireWorldIntel().refresh())
+ipcMain.handle('atlasz:ingest:status', () => requireDataIngest().status())
+
 app.whenReady().then(() => {
   requirePersistence()
   requireRealtime()
+  void requireWorldIntel().refresh()
+  requireDataIngest().start()
   createWindow()
 
   app.on('activate', () => {
@@ -150,8 +180,11 @@ app.on('window-all-closed', () => {
 })
 
 app.on('before-quit', () => {
+  dataIngest?.stop()
+  dataIngest = null
   realtime?.close()
   realtime = null
+  worldIntel = null
   persistence?.close()
   persistence = null
 })

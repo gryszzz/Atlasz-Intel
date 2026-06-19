@@ -1,6 +1,7 @@
 import electron from 'electron'
 import type { DailyBriefRecord, DecisionRecord, WorldHeadlineRecord } from './persistence'
 import type { ConnectorId, LiveEngineSnapshot, ReplayState } from '../src/realtime'
+import type { WorldIntelSnapshot } from '../src/worldIntel'
 
 const { contextBridge, ipcRenderer } = electron
 
@@ -23,6 +24,7 @@ contextBridge.exposeInMainWorld('atlaszDesktop', {
     start: () => ipcRenderer.invoke('atlasz:realtime:start'),
     stop: () => ipcRenderer.invoke('atlasz:realtime:stop'),
     restart: (connectorId?: ConnectorId) => ipcRenderer.invoke('atlasz:realtime:restart', connectorId),
+    addAsset: (query: string) => ipcRenderer.invoke('atlasz:realtime:add-asset', query),
     snapshot: () => ipcRenderer.invoke('atlasz:realtime:snapshot'),
     status: () => ipcRenderer.invoke('atlasz:realtime:status'),
     health: () => ipcRenderer.invoke('atlasz:realtime:health'),
@@ -39,5 +41,12 @@ contextBridge.exposeInMainWorld('atlaszDesktop', {
       ipcRenderer.on('atlasz:realtime:frame', wrapped)
       return () => ipcRenderer.off('atlasz:realtime:frame', wrapped)
     },
+  },
+  world: {
+    snapshot: (): Promise<WorldIntelSnapshot> => ipcRenderer.invoke('atlasz:world:snapshot'),
+    refresh: (): Promise<WorldIntelSnapshot> => ipcRenderer.invoke('atlasz:world:refresh'),
+  },
+  ingest: {
+    status: () => ipcRenderer.invoke('atlasz:ingest:status'),
   },
 })
