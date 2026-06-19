@@ -22,7 +22,7 @@ export type EvidenceNote = {
 
 export type RawSourceItem = {
   id: string
-  connector: 'mock-gdelt' | 'mock-market-tape' | 'mock-policy-calendar' | 'mock-shipping-wire'
+  connector: 'gdelt-doc-public' | 'mock-gdelt' | 'mock-market-tape' | 'mock-policy-calendar' | 'mock-shipping-wire'
   sourceName: string
   sourceUrl: string
   rawTitle: string

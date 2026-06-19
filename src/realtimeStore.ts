@@ -10,10 +10,10 @@
  * feed. The UI must label source trust honestly (see PULSE_MODE_LABEL).
  */
 import { useEffect, useState } from 'react'
+import { buildDefaultAssetUniverse, buildSeedPrices, resolveAssetQuery, type AssetUniverseItem } from './assetUniverse'
 import { RealTimeDataEngine } from './engine/realtimeEngine'
-import type { LiveAssetConfig, LiveEngineSnapshot, LiveEngineStatus } from './realtime'
+import type { LiveEngineSnapshot, LiveEngineStatus } from './realtime'
 import { defaultLiveEngineStatus } from './realtime'
-import { marketMovers, watchlist } from './data/intel'
 
 export const PULSE_MODE_LABEL: Record<LiveEngineStatus['mode'], string> = {
   live: 'External feed',
@@ -23,31 +23,8 @@ export const PULSE_MODE_LABEL: Record<LiveEngineStatus['mode'], string> = {
   stopped: 'Pulse paused',
 }
 
-function inferKind(ticker: string): LiveAssetConfig['kind'] {
-  if (ticker === 'BTC') return 'crypto'
-  if (ticker === 'CL') return 'commodity'
-  if (['QQQ', 'SOXX', 'GLD', 'XLE'].includes(ticker)) return 'etf'
-  return 'equity'
-}
-
-function parsePrice(price: string): number {
-  const value = Number.parseFloat(price.replace(/,/g, ''))
-  return Number.isFinite(value) && value > 0 ? value : 100
-}
-
-const sourceMarkets = [...marketMovers, ...watchlist]
-
-const assetConfigs: LiveAssetConfig[] = sourceMarkets.map((market) => ({
-  symbol: market.ticker,
-  label: market.name,
-  kind: inferKind(market.ticker),
-  source: 'simulator',
-  feedSymbol: market.ticker.toLowerCase(),
-}))
-
-const seedPrices: Record<string, number> = Object.fromEntries(
-  sourceMarkets.map((market) => [market.ticker, parsePrice(market.price)]),
-)
+const assetConfigs = buildDefaultAssetUniverse(false)
+const seedPrices = buildSeedPrices(assetConfigs)
 
 let engine: RealTimeDataEngine | null = null
 
@@ -69,6 +46,19 @@ export function getEngine(): RealTimeDataEngine {
     })
   }
   return engine
+}
+
+export async function addUniverseAsset(query: string): Promise<AssetUniverseItem> {
+  const realtime = desktopRealtime()
+  const item = resolveAssetQuery(query)
+  if (realtime) {
+    await realtime.addAsset(query)
+    return item
+  }
+
+  const instance = getEngine()
+  instance.addAsset(item, item.defaultPrice)
+  return item
 }
 
 /** Start or stop the offline simulator pulse. */

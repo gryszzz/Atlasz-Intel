@@ -142,19 +142,7 @@ export class RealTimeDataEngine {
 
     const attentionTargets = options.attentionTargets ?? options.assets.map((asset) => asset.symbol)
     for (const target of attentionTargets) {
-      if (this.attention.has(target)) {
-        continue
-      }
-      this.attention.set(target, {
-        target,
-        samples: new RingBuffer<LiveAttentionTick>(this.bufferSize),
-        latestPressure: 0,
-        latestMentionVelocity: 0,
-        latestSentimentDivergenceIndex: 0,
-        lastTimestamp: 0,
-        sampleCount: 0,
-      })
-      this.attentionOrder.push(target)
+      this.ensureAttentionTarget(target)
     }
   }
 
@@ -182,6 +170,25 @@ export class RealTimeDataEngine {
       return
     }
     this.pending.push(tick)
+  }
+
+  addAsset(config: LiveAssetConfig, seedPrice = 100): void {
+    if (!config.symbol || this.assets.has(config.symbol)) {
+      return
+    }
+    this.assets.set(config.symbol, {
+      config,
+      ticks: new RingBuffer<LiveTick>(this.bufferSize),
+      sessionOpen: seedPrice,
+      lastPrice: seedPrice,
+      lastTimestamp: 0,
+      tickCount: 0,
+      previousMinuteVolume: 0,
+      previousMinuteStamp: 0,
+    })
+    this.order.push(config.symbol)
+    this.ensureAttentionTarget(config.symbol)
+    this.emit()
   }
 
   /** Accept a social/attention tick into its own hot back-buffer. */
@@ -476,6 +483,22 @@ export class RealTimeDataEngine {
     for (const listener of this.listeners) {
       listener(snapshot)
     }
+  }
+
+  private ensureAttentionTarget(target: string): void {
+    if (this.attention.has(target)) {
+      return
+    }
+    this.attention.set(target, {
+      target,
+      samples: new RingBuffer<LiveAttentionTick>(this.bufferSize),
+      latestPressure: 0,
+      latestMentionVelocity: 0,
+      latestSentimentDivergenceIndex: 0,
+      lastTimestamp: 0,
+      sampleCount: 0,
+    })
+    this.attentionOrder.push(target)
   }
 
   // ---- built-in offline simulator ----------------------------------------

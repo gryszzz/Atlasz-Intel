@@ -1,4 +1,4 @@
-export type LiveAssetKind = 'crypto' | 'equity' | 'etf' | 'commodity' | 'index'
+export type LiveAssetKind = 'crypto' | 'equity' | 'etf' | 'commodity' | 'index' | 'forex' | 'sector'
 export type ConfidenceBand = 'LOW' | 'WATCH' | 'ELEVATED' | 'HIGH'
 export type ConnectorId =
   | 'simulated'

@@ -25,6 +25,7 @@ type WorkerCommand =
   | { type: 'start'; connectorId?: ConnectorId }
   | { type: 'stop' }
   | { type: 'restart'; connectorId?: ConnectorId }
+  | { type: 'addAsset'; asset: LiveAssetConfig; seedPrice: number }
   | { type: 'status' }
   | { type: 'health' }
 
@@ -87,6 +88,7 @@ type ConnectorEmit = (payload: NormalizedPayload) => void
 type WorkerConnector = ConnectorDescriptor & {
   start: (emit: ConnectorEmit) => void
   stop: () => void
+  addAsset?: (asset: LiveAssetConfig, seedPrice: number) => void
   normalizeMessage: (message: unknown) => NormalizedPayload
 }
 
@@ -123,6 +125,8 @@ parentPort.on('message', (message: WorkerCommand) => {
     stop()
   } else if (message.type === 'restart') {
     restart(message.connectorId)
+  } else if (message.type === 'addAsset') {
+    addAssetToWorker(message.asset, message.seedPrice)
   } else if (message.type === 'status') {
     postStatus()
   } else if (message.type === 'health') {
@@ -182,6 +186,25 @@ function stop(): void {
 function restart(connectorId?: ConnectorId): void {
   stop()
   start(connectorId)
+}
+
+function addAssetToWorker(asset: LiveAssetConfig, seedPrice: number): void {
+  if (!asset.symbol || config.assets.some((item) => item.symbol === asset.symbol)) {
+    return
+  }
+  config.assets.push(asset)
+  config.seedPrices[asset.symbol] = seedPrice
+  if (!config.attentionTargets.includes(asset.symbol)) {
+    config.attentionTargets.push(asset.symbol)
+  }
+  for (const connector of connectors.values()) {
+    connector.addAsset?.(asset, seedPrice)
+  }
+  enqueueAudit('connector_started', activeConnectorId, 'info', `Watchlist asset ${asset.symbol} added to ingestion universe`, {
+    symbol: asset.symbol,
+    kind: asset.kind,
+    source: asset.source,
+  })
 }
 
 function stopActiveConnector(): void {
@@ -320,7 +343,7 @@ function enqueueAudit(
 function createConnectorRegistry(workerConfig: WorkerConfig): Map<ConnectorId, WorkerConnector> {
   const registry = new Map<ConnectorId, WorkerConnector>()
   const simulated = createSimulatedConnector(workerConfig)
-  const coincap = createCoinCapConnector()
+  const coincap = createCoinCapConnector(workerConfig)
   const binance = createBinanceConnector()
   const coinbase = createCoinbaseConnector()
   const alpaca = createAlpacaPlaceholderConnector()
@@ -346,7 +369,7 @@ function createSimulatedConnector(workerConfig: WorkerConfig): WorkerConnector {
   const connector: WorkerConnector = {
     id: 'simulated',
     label: 'Local simulator',
-    assetClasses: ['crypto', 'equity', 'etf', 'commodity', 'index'],
+    assetClasses: ['crypto', 'equity', 'etf', 'commodity', 'index', 'forex', 'sector'],
     requiresAuth: false,
     get status() {
       return status
@@ -417,6 +440,13 @@ function createSimulatedConnector(workerConfig: WorkerConfig): WorkerConnector {
       }
       status = 'stopped'
     },
+    addAsset(asset, seedPrice) {
+      if (!prices.has(asset.symbol)) {
+        prices.set(asset.symbol, seedPrice)
+        drift.set(asset.symbol, 0)
+      }
+      attentionTargets.add(asset.symbol)
+    },
     normalizeMessage() {
       return { ticks: [], attention: [] }
     },
@@ -424,12 +454,21 @@ function createSimulatedConnector(workerConfig: WorkerConfig): WorkerConnector {
   return connector
 }
 
-function createCoinCapConnector(): WorkerConnector {
-  const assetByCoinCapId: Record<string, string> = { bitcoin: 'BTC', ethereum: 'ETH' }
+function createCoinCapConnector(workerConfig: WorkerConfig): WorkerConnector {
+  const assetByCoinCapId: Record<string, string> = Object.fromEntries(
+    workerConfig.assets
+      .filter((asset) => asset.kind === 'crypto' && asset.source === 'coincap')
+      .map((asset) => [asset.feedSymbol, asset.symbol]),
+  )
+  if (Object.keys(assetByCoinCapId).length === 0) {
+    assetByCoinCapId.bitcoin = 'BTC'
+    assetByCoinCapId.ethereum = 'ETH'
+  }
+  const assetQuery = Object.keys(assetByCoinCapId).join(',')
   return createJsonWebSocketConnector({
     id: 'coincap_public_ws',
     label: 'CoinCap public WebSocket',
-    url: 'wss://ws.coincap.io/prices?assets=bitcoin,ethereum',
+    url: `wss://ws.coincap.io/prices?assets=${assetQuery}`,
     assetClasses: ['crypto'],
     sourceTrust: 'public unauthenticated',
     normalizeMessage(message) {
@@ -485,13 +524,14 @@ function createBinanceConnector(): WorkerConnector {
 }
 
 function createCoinbaseConnector(): WorkerConnector {
+  const productMap = buildCoinbaseProductMap()
   return createJsonWebSocketConnector({
     id: 'coinbase_public_ws',
     label: 'Coinbase public ticker',
     url: 'wss://ws-feed.exchange.coinbase.com',
     subscribeMessage: {
       type: 'subscribe',
-      product_ids: ['BTC-USD', 'ETH-USD'],
+      product_ids: Object.keys(productMap),
       channels: ['ticker'],
     },
     assetClasses: ['crypto'],
@@ -505,9 +545,10 @@ function createCoinbaseConnector(): WorkerConnector {
         return { ticks: [], attention: [] }
       }
       const product = String(payload.product_id ?? '')
-      const symbol = product.startsWith('BTC') ? 'BTC' : product.startsWith('ETH') ? 'ETH' : ''
+      const symbol = productMap[product] ?? ''
       const price = Number(payload.price)
       const volume = Number(payload.last_size)
+      const timestamp = typeof payload.time === 'string' ? Date.parse(payload.time) : NaN
       if (!symbol || !Number.isFinite(price) || price <= 0) {
         return { ticks: [], attention: [] }
       }
@@ -516,13 +557,26 @@ function createCoinbaseConnector(): WorkerConnector {
           symbol,
           price,
           volume: Number.isFinite(volume) && volume > 0 ? volume : 1,
-          timestamp: Date.now(),
+          timestamp: Number.isFinite(timestamp) ? timestamp : Date.now(),
           source: 'coinbase_public_ws',
         },
       ]
       return { ticks, attention: attentionFromTicks(ticks, 'coinbase_public_ws') }
     },
   })
+}
+
+function buildCoinbaseProductMap(): Record<string, string> {
+  const productIds = (process.env.ATLASZ_COINBASE_PRODUCTS ?? 'BTC-USD,ETH-USD,SOL-USD,LINK-USD,KAS-USD,KAS-USDT')
+    .split(',')
+    .map((item) => item.trim().toUpperCase())
+    .filter((item) => item.length > 0)
+  return Object.fromEntries(
+    productIds.map((productId) => {
+      const base = productId.split('-')[0]
+      return [productId, base]
+    }),
+  )
 }
 
 function createAlpacaPlaceholderConnector(): WorkerConnector {

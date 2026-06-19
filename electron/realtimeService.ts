@@ -2,14 +2,14 @@ import electron from 'electron'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Worker } from 'node:worker_threads'
+import { buildDefaultAssetUniverse, buildSeedPrices, resolveAssetQuery } from '../src/assetUniverse'
 import { RealTimeDataEngine } from '../src/engine/realtimeEngine'
 import { detectRealtimeSignals } from '../src/engine/signalEngine'
-import { graphEdges, marketMovers, watchlist } from '../src/data/intel'
+import { graphEdges } from '../src/data/intel'
 import { riskChainFor } from '../src/intelGraphData'
 import type { ExposedAsset } from '../src/engine/intelGraph'
 import type {
   ConnectorId,
-  LiveAssetConfig,
   LiveAttentionTick,
   LiveDataFrame,
   LiveEngineSnapshot,
@@ -65,34 +65,7 @@ type ReplayOptions = {
   speed?: ReplayState['speed']
 }
 
-const sourceMarkets = [...marketMovers, ...watchlist]
 const replayWindowMs = 5 * 60_000
-
-function inferKind(ticker: string): LiveAssetConfig['kind'] {
-  if (ticker === 'BTC') return 'crypto'
-  if (ticker === 'CL') return 'commodity'
-  if (['QQQ', 'SOXX', 'GLD', 'XLE'].includes(ticker)) return 'etf'
-  return 'equity'
-}
-
-function parsePrice(price: string): number {
-  const value = Number.parseFloat(price.replace(/,/g, ''))
-  return Number.isFinite(value) && value > 0 ? value : 100
-}
-
-function buildAssetConfigs(enablePublicCrypto: boolean): LiveAssetConfig[] {
-  return sourceMarkets.map((market) => ({
-    symbol: market.ticker,
-    label: market.name,
-    kind: inferKind(market.ticker),
-    source: enablePublicCrypto && market.ticker === 'BTC' ? 'coincap' : 'simulator',
-    feedSymbol: market.ticker === 'BTC' ? 'bitcoin' : market.ticker.toLowerCase(),
-  }))
-}
-
-const seedPrices: Record<string, number> = Object.fromEntries(
-  sourceMarkets.map((market) => [market.ticker, parsePrice(market.price)]),
-)
 
 const entityEdges: LiveEntityEdge[] = graphEdges.map((edge) => ({
   id: edge.id,
@@ -112,6 +85,9 @@ export class RealtimeService {
     (process.env.ATLASZ_CONNECTOR as ConnectorId | undefined) ??
     (process.env.ATLASZ_ENABLE_PUBLIC_WS === '1' ? 'coincap_public_ws' : 'simulated')
   private readonly seenSignalIds = new Set<string>()
+  private readonly universe = buildDefaultAssetUniverse(this.enablePublicWs)
+  private readonly seedPrices = buildSeedPrices(this.universe)
+  private readonly knownSymbols = new Set(this.universe.map((asset) => asset.symbol))
   private worker: Worker | null = null
   private unsubscribe: (() => void) | null = null
   private healthState: RealtimeHealth
@@ -144,12 +120,12 @@ export class RealtimeService {
     this.persistence = options.persistence
     this.healthState = defaultHealth(this.defaultConnectorId, this.persistence.mode)
     this.engine = new RealTimeDataEngine({
-      assets: buildAssetConfigs(this.enablePublicWs),
-      seedPrices,
+      assets: this.universe,
+      seedPrices: this.seedPrices,
       syncIntervalMs: 100,
       bufferSize: 1000,
       entityEdges,
-      attentionTargets: [...new Set([...sourceMarkets.map((market) => market.ticker), 'AIXR', 'LIT'])],
+      attentionTargets: [...new Set([...this.universe.map((market) => market.symbol), 'AIXR', 'LIT'])],
       sqliteMode: this.persistence.mode,
       now: () => Date.now(),
     })
@@ -216,6 +192,34 @@ export class RealtimeService {
       sqliteMode: this.persistence.mode,
       replay: this.replayState,
     }
+  }
+
+  addAsset(query: string): LiveEngineSnapshot {
+    const item = resolveAssetQuery(query, { enablePublicCrypto: this.enablePublicWs })
+    this.engine.addAsset(item, item.defaultPrice)
+    this.seedPrices[item.symbol] = item.defaultPrice
+    this.knownSymbols.add(item.symbol)
+    this.worker?.postMessage({ type: 'addAsset', asset: item, seedPrice: item.defaultPrice })
+    this.audit('connector_started', 'info', `Watchlist asset ${item.symbol} added`, {
+      symbol: item.symbol,
+      kind: item.kind,
+      source: item.source,
+      query,
+    })
+    return this.snapshot()
+  }
+
+  ingestExternalBatch(ticks: LiveTick[], attention: LiveAttentionTick[]): void {
+    this.ensureEngine()
+    for (const tick of ticks) {
+      this.ensureAsset(tick.symbol)
+      this.engine.ingest(tick)
+    }
+    for (const item of attention) {
+      this.ensureAsset(item.target)
+      this.engine.ingestAttention(item)
+    }
+    this.persistSampledBatch(ticks, attention)
   }
 
   setSqliteMode(mode: LiveEngineStatus['sqliteMode']): void {
@@ -319,6 +323,17 @@ export class RealtimeService {
     }
   }
 
+  private ensureAsset(symbol: string): void {
+    if (!symbol || this.knownSymbols.has(symbol)) {
+      return
+    }
+    const item = resolveAssetQuery(symbol, { enablePublicCrypto: this.enablePublicWs })
+    this.engine.addAsset(item, item.defaultPrice)
+    this.seedPrices[item.symbol] = item.defaultPrice
+    this.knownSymbols.add(item.symbol)
+    this.worker?.postMessage({ type: 'addAsset', asset: item, seedPrice: item.defaultPrice })
+  }
+
   private startWorker(connectorId: ConnectorId): void {
     if (this.worker) {
       this.worker.postMessage({ type: 'start', connectorId })
@@ -335,9 +350,9 @@ export class RealtimeService {
 
     const worker = new Worker(join(__dirname, 'marketIngestionWorker.js'), {
       workerData: {
-        assets: buildAssetConfigs(this.enablePublicWs),
-        seedPrices,
-        attentionTargets: [...new Set([...sourceMarkets.map((market) => market.ticker), 'AIXR', 'LIT'])],
+        assets: this.universe,
+        seedPrices: this.seedPrices,
+        attentionTargets: [...new Set([...this.universe.map((market) => market.symbol), 'AIXR', 'LIT'])],
         enablePublicWs: this.enablePublicWs,
         connectorId,
         sqliteMode: this.persistence.mode,
@@ -660,7 +675,7 @@ function defaultHealth(activeConnectorId: ConnectorId, sqliteMode: RealtimeHealt
       {
         id: 'simulated',
         label: 'Local simulator',
-        assetClasses: ['crypto', 'equity', 'etf', 'commodity', 'index'],
+        assetClasses: ['crypto', 'equity', 'etf', 'commodity', 'index', 'forex', 'sector'],
         requiresAuth: false,
         status: activeConnectorId === 'simulated' ? 'stopped' : 'idle',
         reconnectCount: 0,
