@@ -5,21 +5,55 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 14vh;
+  padding-top: 13vh;
   background: rgba(4, 5, 6, 0.62);
   backdrop-filter: blur(3px);
 }
 
 .cmdk-panel {
-  width: min(640px, calc(100vw - 32px));
-  max-height: 60vh;
+  width: min(660px, calc(100vw - 32px));
+  max-height: 64vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--line, #26322f);
-  border-radius: 12px;
+  border-radius: 14px;
   background: var(--panel, #0d1110);
   box-shadow: 0 28px 90px rgba(0, 0, 0, 0.6);
+}
+
+.cmdk-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px 0;
+}
+
+.cmdk-brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(94, 234, 212, 0.12);
+  color: var(--green, #5eead4);
+}
+
+.cmdk-brand-name {
+  color: var(--white, #f7fffb);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.cmdk-brand-sub {
+  margin-left: auto;
+  color: var(--faint, #61736e);
+  font-family: var(--mono, monospace);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
 }
 
 .cmdk-search {
@@ -27,11 +61,11 @@
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 10px;
-  padding: 14px 16px;
+  padding: 12px 16px 14px;
   border-bottom: 1px solid var(--line-soft, #18211f);
 }
 
-.cmdk-search svg {
+.cmdk-search > svg {
   color: var(--green, #5eead4);
 }
 
@@ -49,6 +83,8 @@
 }
 
 .cmdk-kbd {
+  display: inline-flex;
+  align-items: center;
   font-family: var(--mono, monospace);
   font-size: 11px;
   color: var(--muted, #8ca19a);
@@ -62,7 +98,14 @@
   padding: 6px;
 }
 
+.cmdk-group + .cmdk-group {
+  margin-top: 2px;
+}
+
 .cmdk-group-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   font-family: var(--mono, monospace);
   font-size: 10px;
   font-weight: 800;
@@ -72,9 +115,14 @@
   padding: 10px 10px 4px;
 }
 
+.cmdk-group-label em {
+  font-style: normal;
+  opacity: 0.6;
+}
+
 .cmdk-item {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr auto auto;
   align-items: center;
   gap: 11px;
   width: 100%;
@@ -86,7 +134,9 @@
   padding: 9px 10px;
 }
 
-.cmdk-item svg {
+.cmdk-item-icon {
+  display: inline-flex;
+  align-items: center;
   color: var(--muted, #8ca19a);
 }
 
@@ -100,25 +150,53 @@
   color: var(--muted, #8ca19a);
 }
 
+.cmdk-item-enter {
+  display: inline-flex;
+  align-items: center;
+  color: var(--green, #5eead4);
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
 .cmdk-item.active {
   border-color: rgba(94, 234, 212, 0.45);
   background: #10201c;
 }
 
-.cmdk-item.active svg {
+.cmdk-item.active .cmdk-item-icon {
   color: var(--green, #5eead4);
 }
 
+.cmdk-item.active .cmdk-item-enter {
+  opacity: 1;
+}
+
 .cmdk-empty {
-  padding: 26px 16px;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 30px 16px;
   text-align: center;
+}
+
+.cmdk-empty svg {
+  color: var(--faint, #61736e);
+}
+
+.cmdk-empty p {
+  color: var(--text, #dce8e3);
+  font-size: 14px;
+}
+
+.cmdk-empty span {
   color: var(--muted, #8ca19a);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .cmdk-footer {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
   gap: 14px;
   border-top: 1px solid var(--line-soft, #18211f);
   padding: 9px 14px;
@@ -126,8 +204,52 @@
   font-size: 11px;
 }
 
-.cmdk-footer span {
+.cmdk-footer-hints {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.cmdk-footer-hints > span,
+.cmdk-footer-count {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+.cmdk-footer-count {
+  color: var(--muted, #8ca19a);
+  font-family: var(--mono, monospace);
+}
+
+/* Discoverable trigger (topbar) — opens the command menu. */
+.cmdk-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line, #26322f);
+  border-radius: 8px;
+  background: var(--panel-2, #121715);
+  color: var(--text, #dce8e3);
+  font-size: 12px;
+  padding: 6px 9px;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.cmdk-trigger:hover {
+  border-color: rgba(94, 234, 212, 0.45);
+  background: #10201c;
+}
+
+.cmdk-trigger svg {
+  color: var(--green, #5eead4);
+}
+
+.cmdk-trigger kbd {
+  font-family: var(--mono, monospace);
+  font-size: 10px;
+  color: var(--muted, #8ca19a);
+  border: 1px solid var(--line-soft, #18211f);
+  border-radius: 4px;
+  padding: 1px 5px;
 }

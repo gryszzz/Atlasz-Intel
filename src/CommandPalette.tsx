@@ -6,9 +6,11 @@
  * shell is a single line — pass it a list of CommandActions.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CornerDownLeft, Search } from 'lucide-react'
+import { Command, Compass, CornerDownLeft, Search } from 'lucide-react'
 import type { CommandAction } from './commandActions'
 import './CommandPalette.css'
+
+const COMMAND_MENU_EVENT = 'atlasz:command-menu'
 
 /** Case-insensitive subsequence match; returns a score (higher = better) or -1. */
 function fuzzyScore(haystack: string, needle: string): number {
@@ -38,7 +40,7 @@ function fuzzyScore(haystack: string, needle: string): number {
 
 export function CommandPalette({
   actions,
-  placeholder = 'Search modules and actions…',
+  placeholder = 'Search Atlasz — modules, markets, decisions…',
 }: {
   actions: CommandAction[]
   placeholder?: string
@@ -62,8 +64,10 @@ export function CommandPalette({
       .map((entry) => entry.action)
   }, [actions, query])
 
-  // Global hotkey: Ctrl/Cmd+K toggles the palette. Transient state is reset on
-  // open inside the updater (not an effect) to avoid cascading renders.
+  // Global hotkey: Ctrl/Cmd+K toggles the palette; a window event opens it so
+  // any visible affordance (e.g. the topbar button) can trigger it without
+  // prop drilling. Transient state is reset inside the updater (not an effect)
+  // to avoid cascading renders.
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
@@ -78,8 +82,17 @@ export function CommandPalette({
         })
       }
     }
+    function onOpenRequest() {
+      setQuery('')
+      setActiveIndex(0)
+      setOpen(true)
+    }
     window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+    window.addEventListener(COMMAND_MENU_EVENT, onOpenRequest)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener(COMMAND_MENU_EVENT, onOpenRequest)
+    }
   }, [])
 
   // Focus the input when the palette opens (external-system sync, no setState).
@@ -147,7 +160,14 @@ export function CommandPalette({
         }
       }}
     >
-      <div className="cmdk-panel" role="dialog" aria-modal="true" aria-label="Command palette" onKeyDown={onListKeyDown}>
+      <div className="cmdk-panel" role="dialog" aria-modal="true" aria-label="Atlasz command menu" onKeyDown={onListKeyDown}>
+        <div className="cmdk-brand">
+          <span className="cmdk-brand-mark" aria-hidden>
+            <Command size={13} />
+          </span>
+          <span className="cmdk-brand-name">Atlasz Intel</span>
+          <span className="cmdk-brand-sub">Command menu</span>
+        </div>
         <div className="cmdk-search">
           <Search size={17} />
           <input
@@ -162,11 +182,18 @@ export function CommandPalette({
 
         <div className="cmdk-list" role="listbox" aria-label="Commands">
           {filtered.length === 0 ? (
-            <div className="cmdk-empty">No matching commands.</div>
+            <div className="cmdk-empty">
+              <Compass size={22} aria-hidden />
+              <p>No commands match{query.trim() ? ` “${query.trim()}”` : ''}.</p>
+              <span>Try a module name, or “decision”, “pulse”, “market”.</span>
+            </div>
           ) : (
             groups.map((group) => (
-              <div key={group.label}>
-                <div className="cmdk-group-label">{group.label}</div>
+              <div className="cmdk-group" key={group.label}>
+                <div className="cmdk-group-label">
+                  {group.label}
+                  <em>{group.items.length}</em>
+                </div>
                 {group.items.map(({ action, flatIndex }) => {
                   const Icon = action.icon
                   const isActive = flatIndex === activeRow
@@ -176,13 +203,23 @@ export function CommandPalette({
                       type="button"
                       role="option"
                       aria-selected={isActive}
+                      ref={(element) => {
+                        if (isActive && element) {
+                          element.scrollIntoView({ block: 'nearest' })
+                        }
+                      }}
                       className={isActive ? 'cmdk-item active' : 'cmdk-item'}
                       onMouseMove={() => setActiveIndex(flatIndex)}
                       onClick={() => runAt(flatIndex)}
                     >
-                      <span aria-hidden>{Icon ? <Icon size={15} /> : <Search size={15} />}</span>
+                      <span className="cmdk-item-icon" aria-hidden>
+                        {Icon ? <Icon size={15} /> : <Search size={15} />}
+                      </span>
                       <span className="cmdk-item-label">{action.label}</span>
                       {action.hint ? <span className="cmdk-item-hint">{action.hint}</span> : <span />}
+                      <span className="cmdk-item-enter" aria-hidden>
+                        <CornerDownLeft size={12} />
+                      </span>
                     </button>
                   )
                 })}
@@ -192,23 +229,44 @@ export function CommandPalette({
         </div>
 
         <div className="cmdk-footer">
-          <span>
-            <span className="cmdk-kbd">↑</span>
-            <span className="cmdk-kbd">↓</span>
-            navigate
-          </span>
-          <span>
-            <span className="cmdk-kbd">
-              <CornerDownLeft size={11} />
+          <span className="cmdk-footer-hints">
+            <span>
+              <span className="cmdk-kbd">↑</span>
+              <span className="cmdk-kbd">↓</span>
+              navigate
             </span>
-            select
+            <span>
+              <span className="cmdk-kbd">
+                <CornerDownLeft size={11} />
+              </span>
+              open
+            </span>
+            <span>
+              <span className="cmdk-kbd">esc</span>
+              close
+            </span>
           </span>
-          <span>
-            <span className="cmdk-kbd">⌘K</span>
-            toggle
+          <span className="cmdk-footer-count">
+            {filtered.length} command{filtered.length === 1 ? '' : 's'}
           </span>
         </div>
       </div>
     </div>
+  )
+}
+
+/** Visible affordance that opens the command menu — keeps Ctrl+K discoverable. */
+export function CommandMenuButton() {
+  return (
+    <button
+      type="button"
+      className="cmdk-trigger"
+      title="Open command menu (Ctrl/Cmd + K)"
+      onClick={() => window.dispatchEvent(new Event(COMMAND_MENU_EVENT))}
+    >
+      <Command size={14} />
+      <span>Command</span>
+      <kbd>⌘K</kbd>
+    </button>
   )
 }

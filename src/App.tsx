@@ -35,7 +35,7 @@ import {
 import { Background, Controls, MiniMap, ReactFlow, type Edge, type Node } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import './App.css'
-import { CommandPalette } from './CommandPalette'
+import { CommandMenuButton, CommandPalette } from './CommandPalette'
 import { buildNavActions, type CommandAction } from './commandActions'
 import { DecisionJournal } from './DecisionJournal'
 import { decisionJournal } from './intelClient'
@@ -1113,6 +1113,7 @@ function App() {
             <h2>A local-first quant intelligence terminal where events become one signal map.</h2>
           </div>
           <div className="topbar-actions">
+            <CommandMenuButton />
             <span className="source-badge">
               <CircleDotDashed size={14} />
               Evidence layer v0.2
