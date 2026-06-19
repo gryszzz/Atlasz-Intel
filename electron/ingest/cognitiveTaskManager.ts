@@ -1,17 +1,8 @@
 import { EventEmitter } from 'node:events'
-import {
-  COGNITIVE_JSON_SCHEMA,
-  validateCognitiveExtraction,
-  type CognitiveExtraction,
-} from '../../src/engine/cognitiveSchema'
+import type { CognitiveExtraction } from '../../src/engine/cognitiveSchema'
+import { CognitiveParser } from '../../src/engine/cognitiveParser'
 import type { NormalizedNewsEvent } from './types'
 import { clamp, stableHash } from './types'
-
-type OllamaChatResponse = {
-  message?: {
-    content?: unknown
-  }
-}
 
 export type CognitiveTaskManagerOptions = {
   enabled?: boolean
@@ -74,6 +65,7 @@ export class CognitiveTaskManager extends EventEmitter {
   private readonly latencyWindowSize: number
   private readonly timeoutScale: number
   private readonly maxQueueSize: number
+  private readonly parser: CognitiveParser
   private readonly queue: CognitiveQueueItem[] = []
   private readonly successfulDurationsMs: number[] = []
   private readonly sourceReliability = new Map<string, SourceReliabilityState>()
@@ -94,6 +86,13 @@ export class CognitiveTaskManager extends EventEmitter {
     this.latencyWindowSize = options.latencyWindowSize ?? 8
     this.timeoutScale = options.timeoutScale ?? 1.5
     this.maxQueueSize = options.maxQueueSize ?? 250
+    // Single source of truth for the Ollama request shape, JSON parsing,
+    // fail-closed behavior, schema validation, and the provenance envelope.
+    this.parser = new CognitiveParser({
+      endpoint: this.endpoint,
+      model: this.model,
+      timeoutMs: this.maxTimeoutMs,
+    })
   }
 
   override on<K extends keyof CognitiveTaskEvents>(
@@ -208,6 +207,14 @@ export class CognitiveTaskManager extends EventEmitter {
     }
   }
 
+  /**
+   * Orchestration only: chooses the adaptive timeout and narrative-velocity
+   * directive, then delegates the actual call to the single CognitiveParser.
+   * The parser owns the Ollama request shape, JSON parsing, schema validation,
+   * fail-closed behavior, and the provenance envelope — no duplication here.
+   * A null envelope is a fail-closed miss: nothing is emitted, so no graph
+   * mutation occurs.
+   */
   private async extract(item: CognitiveQueueItem): Promise<{
     extraction: CognitiveExtraction
     meta: CognitiveExtractionMeta
@@ -215,69 +222,38 @@ export class CognitiveTaskManager extends EventEmitter {
     const { event, mode } = item
     const timeoutMs = this.currentTimeoutMs()
     const startedAt = Date.now()
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), timeoutMs)
     this.markAttempt(event.sourceName)
-    try {
-      const response = await fetch(this.endpoint, {
-        method: 'POST',
-        signal: controller.signal,
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          model: this.model,
-          stream: false,
-          format: COGNITIVE_JSON_SCHEMA,
-          options: { temperature: 0 },
-          messages: [
-            {
-              role: 'system',
-              content: systemPromptFor(mode),
-            },
-            {
-              role: 'user',
-              content: `Headline: ${event.title}\nSource summary: ${event.summary}\nRaw text: ${event.rawText.slice(0, 1800)}`,
-            },
-          ],
-        }),
-      })
-      if (!response.ok) {
-        throw new Error(`Ollama HTTP ${response.status}`)
-      }
-      const payload = (await response.json()) as OllamaChatResponse
-      const content = typeof payload.message?.content === 'string' ? payload.message.content : ''
-      const parsed = JSON.parse(content) as unknown
-      const validationIssueCount = countValidationIssues(parsed)
-      const extraction = validateCognitiveExtraction(parsed)
-      if (!extraction) {
-        this.markFailure(event.sourceName, 1)
-        return null
-      }
-      if (validationIssueCount > 0) {
-        this.markFailure(event.sourceName, validationIssueCount)
-      } else {
-        this.markSuccess(event.sourceName)
-      }
-      const durationMs = Date.now() - startedAt
-      this.recordSuccessfulDuration(durationMs)
-      const sourcePenalty = this.sourcePenalty(event.sourceName)
-      this.successfulExtractions += 1
-      return {
-        extraction: applySourcePenalty(extraction, sourcePenalty),
-        meta: {
-          durationMs,
-          timeoutMs,
-          sourcePenalty,
-          validationIssueCount,
-          routeMode: mode,
-        },
-      }
-    } catch (error) {
+
+    const envelope = await this.parser.extract(
+      {
+        headline: event.title,
+        source: event.sourceName,
+        timestamp: event.observedAt,
+        context: `${event.summary}\n${event.rawText.slice(0, 1800)}`.trim(),
+      },
+      { timeoutMs, instruction: modeInstruction(mode) },
+    )
+
+    if (!envelope) {
       this.failedExtractions += 1
-      this.markFailure(event.sourceName, 1)
-      this.emit('error', error instanceof Error ? error : new Error(String(error)))
+      this.markFailure(event.sourceName)
       return null
-    } finally {
-      clearTimeout(timer)
+    }
+
+    const durationMs = Date.now() - startedAt
+    this.recordSuccessfulDuration(durationMs)
+    this.markSuccess(event.sourceName)
+    const sourcePenalty = this.sourcePenalty(event.sourceName)
+    this.successfulExtractions += 1
+    return {
+      extraction: applySourcePenalty(envelope.extraction, sourcePenalty),
+      meta: {
+        durationMs,
+        timeoutMs,
+        sourcePenalty,
+        validationIssueCount: 0,
+        routeMode: mode,
+      },
     }
   }
 

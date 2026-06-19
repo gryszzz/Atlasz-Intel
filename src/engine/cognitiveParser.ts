@@ -32,6 +32,16 @@ export type IngestionPayload = {
   headline: string
   source: string
   timestamp?: number
+  /** Optional extra text (summary / raw body) appended to the user message. */
+  context?: string
+}
+
+/** Per-call overrides supplied by an orchestrator (e.g. the task manager). */
+export type ExtractionOptions = {
+  /** Per-call timeout override (e.g. an adaptive timeout). Falls back to the instance default. */
+  timeoutMs?: number
+  /** Mode-specific directive appended to the system prompt (e.g. narrative-velocity routing). */
+  instruction?: string
 }
 
 /** A successful, validated extraction with honest provenance attached. */
@@ -88,7 +98,7 @@ export class CognitiveParser {
    * ANY failure (unavailable, timeout, non-200, empty, non-JSON, schema-invalid).
    * Never throws.
    */
-  async extract(payload: IngestionPayload): Promise<ExtractionEnvelope | null> {
+  async extract(payload: IngestionPayload, options: ExtractionOptions = {}): Promise<ExtractionEnvelope | null> {
     const text = typeof payload?.headline === 'string' ? payload.headline.trim() : ''
     if (text === '') {
       return null
@@ -98,8 +108,14 @@ export class CognitiveParser {
       return null
     }
 
+    const timeoutMs = options.timeoutMs && options.timeoutMs > 0 ? options.timeoutMs : this.timeoutMs
+    const systemPrompt = options.instruction
+      ? `${COGNITIVE_SYSTEM_PROMPT}\n\n${options.instruction}`
+      : COGNITIVE_SYSTEM_PROMPT
+    const context = typeof payload.context === 'string' && payload.context.trim() !== '' ? payload.context.trim() : ''
+
     const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), this.timeoutMs)
+    const timer = setTimeout(() => controller.abort(), timeoutMs)
     try {
       const response = await this.fetchImpl(this.endpoint, {
         method: 'POST',
@@ -111,10 +127,10 @@ export class CognitiveParser {
           format: COGNITIVE_JSON_SCHEMA,
           options: { temperature: 0, top_p: 0.1 },
           messages: [
-            { role: 'system', content: COGNITIVE_SYSTEM_PROMPT },
+            { role: 'system', content: systemPrompt },
             {
               role: 'user',
-              content: `Analyze the following market intelligence payload.\n\nTEXT: "${text}"\nSOURCE_TRAIL: ${payload.source ?? 'unknown'}`,
+              content: `Analyze the following market intelligence payload.\n\nTEXT: "${text}"\nSOURCE_TRAIL: ${payload.source ?? 'unknown'}${context ? `\nCONTEXT: ${context}` : ''}`,
             },
           ],
         }),
