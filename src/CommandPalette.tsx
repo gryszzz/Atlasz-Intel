@@ -5,42 +5,10 @@
  * listener, fuzzy filtering, and keyboard navigation. Integrating it into the
  * shell is a single line — pass it a list of CommandActions.
  */
-import { useEffect, useMemo, useRef, useState, type ComponentType } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { CornerDownLeft, Search } from 'lucide-react'
+import type { CommandAction } from './commandActions'
 import './CommandPalette.css'
-
-export type CommandAction = {
-  id: string
-  label: string
-  group?: string
-  hint?: string
-  /** Extra text matched by the fuzzy filter but not displayed. */
-  keywords?: string
-  icon?: ComponentType<{ size?: number | string }>
-  perform: () => void
-}
-
-type NavLike = {
-  id: string
-  label: string
-  icon?: ComponentType<{ size?: number | string }>
-}
-
-/** Map a list of view definitions to navigation CommandActions. */
-export function buildNavActions<T extends NavLike>(
-  views: T[],
-  onNavigate: (id: T['id']) => void,
-): CommandAction[] {
-  return views.map((view) => ({
-    id: `nav:${view.id}`,
-    label: view.label,
-    group: 'Navigate',
-    hint: 'Jump to module',
-    keywords: String(view.id),
-    icon: view.icon,
-    perform: () => onNavigate(view.id),
-  }))
-}
 
 /** Case-insensitive subsequence match; returns a score (higher = better) or -1. */
 function fuzzyScore(haystack: string, needle: string): number {
@@ -94,37 +62,43 @@ export function CommandPalette({
       .map((entry) => entry.action)
   }, [actions, query])
 
-  // Global hotkey: Ctrl/Cmd+K toggles the palette.
+  // Global hotkey: Ctrl/Cmd+K toggles the palette. Transient state is reset on
+  // open inside the updater (not an effect) to avoid cascading renders.
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
-        setOpen((current) => !current)
+        setOpen((current) => {
+          const next = !current
+          if (next) {
+            setQuery('')
+            setActiveIndex(0)
+          }
+          return next
+        })
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
-  // Reset transient state whenever the palette opens.
+  // Focus the input when the palette opens (external-system sync, no setState).
   useEffect(() => {
-    if (open) {
-      setQuery('')
-      setActiveIndex(0)
-      const id = requestAnimationFrame(() => inputRef.current?.focus())
-      return () => cancelAnimationFrame(id)
+    if (!open) {
+      return undefined
     }
-    return undefined
+    const id = requestAnimationFrame(() => inputRef.current?.focus())
+    return () => cancelAnimationFrame(id)
   }, [open])
-
-  // Keep the highlighted row within bounds as the list shrinks.
-  useEffect(() => {
-    setActiveIndex((current) => Math.min(current, Math.max(0, filtered.length - 1)))
-  }, [filtered.length])
 
   if (!open) {
     return null
   }
+
+  // Derive the in-bounds highlighted row instead of storing/clamping it, so a
+  // shrinking result list never leaves the selection out of range.
+  const maxIndex = Math.max(0, filtered.length - 1)
+  const activeRow = Math.min(activeIndex, maxIndex)
 
   function runAt(index: number) {
     const action = filtered[index]
@@ -141,13 +115,13 @@ export function CommandPalette({
       setOpen(false)
     } else if (event.key === 'ArrowDown') {
       event.preventDefault()
-      setActiveIndex((current) => (filtered.length === 0 ? 0 : (current + 1) % filtered.length))
+      setActiveIndex(filtered.length === 0 ? 0 : (activeRow + 1) % filtered.length)
     } else if (event.key === 'ArrowUp') {
       event.preventDefault()
-      setActiveIndex((current) => (filtered.length === 0 ? 0 : (current - 1 + filtered.length) % filtered.length))
+      setActiveIndex(filtered.length === 0 ? 0 : (activeRow - 1 + filtered.length) % filtered.length)
     } else if (event.key === 'Enter') {
       event.preventDefault()
-      runAt(activeIndex)
+      runAt(activeRow)
     }
   }
 
@@ -195,7 +169,7 @@ export function CommandPalette({
                 <div className="cmdk-group-label">{group.label}</div>
                 {group.items.map(({ action, flatIndex }) => {
                   const Icon = action.icon
-                  const isActive = flatIndex === activeIndex
+                  const isActive = flatIndex === activeRow
                   return (
                     <button
                       key={action.id}
