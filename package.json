@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@xyflow/react": "^12.11.0",
+    "better-sqlite3": "^11.8.0",
     "clsx": "^2.1.1",
     "lucide-react": "^1.21.0",
     "react": "^19.2.6",
