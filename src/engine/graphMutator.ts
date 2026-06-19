@@ -7,13 +7,15 @@
  * live picture of where systemic attention is concentrating.
  *
  * This is a SEPARATE overlay from the seeded reference graph (engine/intelGraph
- * + data/intel). Every node and edge here is provenance 'model-inferred' — i.e.
- * UNVERIFIED — and must be rendered distinctly from verified/seed relationships.
- * Atlasz never presents inferred links as verified live intelligence.
+ * + data/intel). Model-generated links are provenance 'model-inferred' and
+ * decay over time; sticky static links can be inserted with explicit provenance
+ * such as 'verified' or 'local-derived'. Atlasz never presents inferred links
+ * as verified live intelligence.
  *
  * Complexity: upsert is O(chain), decay is O(E), impact-path BFS is O(V + E).
  */
 import type { CognitiveExtraction, ExposureDirection } from './cognitiveSchema'
+import type { ProvenanceId } from '../provenance'
 
 export type CognitiveNodeKind = 'event' | 'sovereign' | 'location' | 'commodity' | 'corporation' | 'infrastructure' | 'asset'
 
@@ -34,11 +36,11 @@ export type CognitiveEdge = {
   /** Operational weight in [0,1]; reinforced on repeat, decayed over time. */
   weight: number
   direction: ExposureDirection
-  /** Always 'model-inferred' — unverified. */
-  provenance: 'model-inferred'
+  provenance: ProvenanceId
   confidence: number
   createdAt: number
   lastReinforcedAt: number
+  lastDecayedAt: number
   reinforcements: number
 }
 
@@ -57,6 +59,16 @@ export type MutationResult = {
   addedNodes: string[]
   newEdges: number
   reinforcedEdges: number
+}
+
+export type StaticEdgeInput = {
+  source: { id: string; label: string; kind: CognitiveNodeKind }
+  target: { id: string; label: string; kind: CognitiveNodeKind }
+  relation: string
+  weight: number
+  direction?: ExposureDirection
+  provenance: Exclude<ProvenanceId, 'model-inferred'>
+  confidence?: number
 }
 
 export type GraphMutatorSnapshot = {
@@ -82,11 +94,19 @@ function slug(value: string): string {
     .slice(0, 64)
 }
 
+function clamp01(value: number): number {
+  return Math.min(1, Math.max(0, value))
+}
+
 export type GraphMutatorOptions = {
-  /** Multiplier applied to every edge per decay pass. Default 0.95. */
+  /** Legacy multiplier applied only when exponential decay is disabled. Default 0.95. */
   decayFactor?: number
   /** Edges below this weight after decay are purged. Default 0.05. */
   purgeFloor?: number
+  /** Exponential half-life for model-inferred edges. Default 6h. */
+  halfLifeMs?: number
+  /** Inferred edges that receive no reinforcement by this age are purged. Default 24h. */
+  maxSilenceMs?: number
   /** Injected clock for deterministic tests. */
   now?: () => number
 }
@@ -96,11 +116,15 @@ export class GraphMutator {
   private readonly adjacency = new Map<string, CognitiveEdge[]>()
   private readonly decayFactor: number
   private readonly purgeFloor: number
+  private readonly halfLifeMs: number
+  private readonly maxSilenceMs: number
   private readonly now: () => number
 
   constructor(options: GraphMutatorOptions = {}) {
     this.decayFactor = options.decayFactor ?? 0.95
     this.purgeFloor = options.purgeFloor ?? 0.05
+    this.halfLifeMs = options.halfLifeMs ?? 6 * 60 * 60_000
+    this.maxSilenceMs = options.maxSilenceMs ?? 24 * 60 * 60_000
     this.now = options.now ?? Date.now
   }
 
@@ -167,20 +191,70 @@ export class GraphMutator {
     }
   }
 
+  upsertStaticEdge(input: StaticEdgeInput): void {
+    const now = this.now()
+    this.ensureNode(input.source.id, input.source.label, input.source.kind, now)
+    this.ensureNode(input.target.id, input.target.label, input.target.kind, now)
+    const list = this.adjacency.get(input.source.id) ?? []
+    const existing = list.find((edge) => edge.target === input.target.id)
+    if (existing) {
+      existing.weight = clamp01(input.weight)
+      existing.relation = input.relation
+      existing.direction = input.direction ?? existing.direction
+      existing.provenance = input.provenance
+      existing.confidence = clamp01(input.confidence ?? input.weight)
+      existing.lastReinforcedAt = now
+      existing.lastDecayedAt = now
+      existing.reinforcements += 1
+      return
+    }
+    list.push({
+      source: input.source.id,
+      target: input.target.id,
+      relation: input.relation,
+      weight: clamp01(input.weight),
+      direction: input.direction ?? 'Volatility_Expansion',
+      provenance: input.provenance,
+      confidence: clamp01(input.confidence ?? input.weight),
+      createdAt: now,
+      lastReinforcedAt: now,
+      lastDecayedAt: now,
+      reinforcements: 0,
+    })
+    this.adjacency.set(input.source.id, list)
+  }
+
   /**
-   * Decay pass: multiply every edge weight by the decay factor and purge edges
-   * that fall below the floor, eliminating graph fragmentation. Orphaned nodes
-   * (no remaining in/out edges) are removed too. Returns counts.
+   * Legacy callsite wrapper. Uses temporal exponential decay for inferred
+   * narrative edges, keeping the name for existing service integration.
    */
   applyGlobalEdgeDecay(): { decayed: number; purged: number } {
+    return this.applyTemporalEdgeDecay()
+  }
+
+  /**
+   * Temporal decay pass for ephemeral model-inferred narratives:
+   *   W_new = W_old * e^(-lambda * delta_t)
+   * where lambda is derived from the configured half-life. Edges below the
+   * floor or silent past maxSilenceMs are purged. O(E), then orphan cleanup.
+   */
+  applyTemporalEdgeDecay(now = this.now()): { decayed: number; purged: number } {
     let decayed = 0
     let purged = 0
+    const lambda = Math.log(2) / this.halfLifeMs
     for (const [source, edges] of this.adjacency) {
       const surviving: CognitiveEdge[] = []
       for (const edge of edges) {
-        edge.weight *= this.decayFactor
+        if (edge.provenance !== 'model-inferred') {
+          surviving.push(edge)
+          continue
+        }
+        const elapsed = Math.max(0, now - edge.lastDecayedAt)
+        const silence = Math.max(0, now - edge.lastReinforcedAt)
+        edge.weight *= Number.isFinite(lambda) && lambda > 0 ? Math.exp(-lambda * elapsed) : this.decayFactor
+        edge.lastDecayedAt = now
         decayed += 1
-        if (edge.weight >= this.purgeFloor) {
+        if (edge.weight >= this.purgeFloor && silence <= this.maxSilenceMs) {
           surviving.push(edge)
         } else {
           purged += 1
@@ -295,6 +369,7 @@ export class GraphMutator {
       existing.direction = direction
       existing.confidence = confidence
       existing.lastReinforcedAt = now
+      existing.lastDecayedAt = now
       existing.reinforcements += 1
       return
     }
@@ -308,6 +383,7 @@ export class GraphMutator {
       confidence,
       createdAt: now,
       lastReinforcedAt: now,
+      lastDecayedAt: now,
       reinforcements: 0,
     })
     this.adjacency.set(source, list)
