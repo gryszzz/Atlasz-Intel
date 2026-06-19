@@ -5,17 +5,18 @@
  * live updates via the hooks below, so only those leaf components re-render on
  * the ~100ms frame cadence — the rest of the app stays still.
  *
- * There is no live market feed in the demo build, so this runs the engine's
- * offline simulator. The UI must label it honestly (see PULSE_MODE_LABEL).
+ * In the browser preview this runs the offline simulator. In Electron, the
+ * worker-backed data core may use the simulator or an explicitly enabled public
+ * feed. The UI must label source trust honestly (see PULSE_MODE_LABEL).
  */
 import { useEffect, useState } from 'react'
 import { RealTimeDataEngine } from './engine/realtimeEngine'
-import type { LiveAssetConfig, LiveAssetSnapshot, LiveEngineSnapshot, LiveEngineStatus } from './realtime'
+import type { LiveAssetConfig, LiveEngineSnapshot, LiveEngineStatus } from './realtime'
 import { defaultLiveEngineStatus } from './realtime'
 import { marketMovers, watchlist } from './data/intel'
 
 export const PULSE_MODE_LABEL: Record<LiveEngineStatus['mode'], string> = {
-  live: 'Live feed',
+  live: 'External feed',
   hybrid: 'Hybrid feed',
   simulated: 'Offline simulator',
   replay: 'Replay mode',
@@ -118,10 +119,4 @@ export function useEngineSnapshot(): LiveEngineSnapshot {
 export function useEngineStatus(): LiveEngineStatus {
   const snapshot = useEngineSnapshot()
   return snapshot.status ?? defaultLiveEngineStatus
-}
-
-/** Live snapshot for a single symbol, or null if the symbol is not tracked. */
-export function useLiveAsset(symbol: string): LiveAssetSnapshot | null {
-  const snapshot = useEngineSnapshot()
-  return snapshot.frame?.assets.find((asset) => asset.symbol === symbol) ?? null
 }

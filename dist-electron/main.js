@@ -2262,7 +2262,7 @@ var H = Object.fromEntries(z.map((e) => [e.ticker, we(e.price)])), U = P.map((e)
 	handleWorkerMessage(e) {
 		if (e.type === "batch") {
 			this.healthState = this.mergeHealth(e.health);
-			for (let t of e.audits) this.persistence.audit(t);
+			for (let t of e.audits) this.safePersist(() => this.persistence.audit(t));
 			for (let t of e.ticks) this.engine.ingest(t);
 			for (let t of e.attention) this.engine.ingestAttention(t);
 			this.persistSampledBatch(e.ticks, e.attention), this.engine.setHealth(this.health());

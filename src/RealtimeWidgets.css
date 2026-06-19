@@ -373,6 +373,14 @@
   accent-color: var(--yellow, #facc15);
 }
 
+.rt-replay-note {
+  margin: 0;
+  color: var(--faint, #61736e);
+  font-family: var(--mono, monospace);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
 .rt-signal-strip {
   display: grid;
   grid-template-columns: auto auto 1fr;

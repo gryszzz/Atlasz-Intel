@@ -374,7 +374,7 @@ export class RealtimeService {
     if (message.type === 'batch') {
       this.healthState = this.mergeHealth(message.health)
       for (const audit of message.audits) {
-        this.persistence.audit(audit)
+        this.safePersist(() => this.persistence.audit(audit))
       }
       for (const tick of message.ticks) {
         this.engine.ingest(tick)
