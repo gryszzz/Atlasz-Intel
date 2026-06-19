@@ -1,0 +1,237 @@
+.rt-pulse,
+.rt-readout {
+  display: grid;
+  gap: 12px;
+}
+
+.rt-pos {
+  color: var(--green, #5eead4);
+}
+
+.rt-neg {
+  color: var(--red, #ef4444);
+}
+
+.rt-pulse-head,
+.rt-readout-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rt-pulse-head > div {
+  display: grid;
+  gap: 2px;
+  margin-right: auto;
+}
+
+.rt-pulse-head strong {
+  color: var(--white, #f7fffb);
+  font-size: 14px;
+}
+
+.rt-pulse-head em {
+  color: var(--muted, #8ca19a);
+  font-style: normal;
+  font-size: 11px;
+  font-family: var(--mono, monospace);
+}
+
+.rt-pulse-led {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--faint, #61736e);
+  flex-shrink: 0;
+}
+
+.rt-pulse-led.live {
+  background: var(--green, #5eead4);
+  box-shadow: 0 0 0 0 rgba(94, 234, 212, 0.6);
+  animation: rt-ping 1.6s ease-out infinite;
+}
+
+@keyframes rt-ping {
+  0% {
+    box-shadow: 0 0 0 0 rgba(94, 234, 212, 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 9px rgba(94, 234, 212, 0);
+  }
+}
+
+.rt-sim-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono, monospace);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--yellow, #facc15);
+  border: 1px solid rgba(250, 204, 21, 0.3);
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+
+.rt-sim-badge .rt-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--yellow, #facc15);
+}
+
+.rt-readout-head {
+  color: var(--muted, #8ca19a);
+  font-size: 12px;
+}
+
+.rt-readout-head svg {
+  color: var(--green, #5eead4);
+}
+
+.rt-readout-head span {
+  margin-right: auto;
+  color: var(--white, #f7fffb);
+}
+
+.rt-mover-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.rt-mover-list li {
+  display: grid;
+  grid-template-columns: 56px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line-soft, #18211f);
+  border-radius: 7px;
+  background: #090d0c;
+  padding: 8px 10px;
+}
+
+.rt-mover-symbol {
+  font-weight: 700;
+  color: var(--white, #f7fffb);
+  font-size: 13px;
+}
+
+.rt-mover-price {
+  color: var(--text, #dce8e3);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+
+.rt-mover-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+}
+
+.rt-mover-vel {
+  font-family: var(--mono, monospace);
+  font-size: 11px;
+  color: var(--faint, #61736e);
+}
+
+.rt-readout-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.rt-readout-grid > div {
+  display: grid;
+  gap: 3px;
+  border: 1px solid var(--line-soft, #18211f);
+  border-radius: 7px;
+  background: #090d0c;
+  padding: 8px 10px;
+}
+
+.rt-readout-grid span {
+  color: var(--muted, #8ca19a);
+  font-size: 11px;
+}
+
+.rt-readout-grid strong {
+  color: var(--white, #f7fffb);
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+}
+
+.rt-empty {
+  color: var(--muted, #8ca19a);
+  font-size: 12px;
+  line-height: 1.5;
+  border: 1px dashed var(--line-soft, #18211f);
+  border-radius: 7px;
+  padding: 12px;
+}
+
+/* Graph risk-chain traversal list (rendered in the Entity Graph inspector). */
+.risk-chain {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  counter-reset: chain;
+}
+
+.risk-chain li {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line-soft, #18211f);
+  border-radius: 7px;
+  background: #090d0c;
+  padding: 7px 9px;
+}
+
+.risk-chain li strong {
+  color: var(--white, #f7fffb);
+  font-size: 13px;
+}
+
+.risk-chain li em {
+  color: var(--green, #5eead4);
+  font-style: normal;
+  font-family: var(--mono, monospace);
+  font-size: 11px;
+}
+
+.risk-chain li span {
+  color: var(--muted, #8ca19a);
+  font-size: 11px;
+  text-align: right;
+}
+
+.rt-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted, #8ca19a);
+  font-family: var(--mono, monospace);
+  font-size: 11px;
+  border: 1px solid var(--line-soft, #18211f);
+  border-radius: 999px;
+  padding: 5px 10px;
+}
+
+.rt-kbd {
+  font-family: var(--mono, monospace);
+  font-size: 11px;
+  color: var(--text, #dce8e3);
+  border: 1px solid var(--line-soft, #18211f);
+  border-radius: 5px;
+  padding: 1px 5px;
+}

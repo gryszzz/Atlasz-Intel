@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   ArrowDownRight,
   ArrowUpRight,
+  BookOpen,
   BrainCircuit,
   CircleDotDashed,
   Crosshair,
@@ -35,7 +36,12 @@ import { Background, Controls, MiniMap, ReactFlow, type Edge, type Node } from '
 import '@xyflow/react/dist/style.css'
 import './App.css'
 import { CommandPalette } from './CommandPalette'
-import { buildNavActions } from './commandActions'
+import { buildNavActions, type CommandAction } from './commandActions'
+import { DecisionJournal } from './DecisionJournal'
+import { decisionJournal } from './intelClient'
+import { riskChainFor } from './intelGraphData'
+import { LiveMarketReadout, PulseIndicator, RealtimePulsePanel } from './RealtimeWidgets'
+import { setPulseEnabled as setEnginePulse } from './realtimeStore'
 import {
   dailyBrief,
   graphEdges,
@@ -59,7 +65,7 @@ import {
   type SourceTrailItem,
 } from './data/intel'
 
-type ViewId = 'command' | 'terminal' | 'radar' | 'social' | 'graph' | 'analyst' | 'brief'
+type ViewId = 'command' | 'terminal' | 'radar' | 'social' | 'graph' | 'analyst' | 'brief' | 'decision'
 type LayerId =
   | 'market'
   | 'news'
@@ -136,6 +142,7 @@ const views: Array<{ id: ViewId; label: string; icon: typeof MonitorDot }> = [
   { id: 'graph', label: 'Entity Graph', icon: Network },
   { id: 'analyst', label: 'AI Analyst', icon: BrainCircuit },
   { id: 'brief', label: 'Daily Brief', icon: FileText },
+  { id: 'decision', label: 'Decision Journal', icon: BookOpen },
 ]
 
 const promptChips = [
@@ -784,8 +791,22 @@ function App() {
     },
   ])
 
+  const [pulseEnabled, setPulseEnabled] = useLocalStorageState('atlasz:intel:pulse', true)
+  const [persistenceMode, setPersistenceMode] = useState<'wal' | 'jsonl-fallback' | 'localstorage'>('localstorage')
+
   useEffect(() => {
     window.atlaszDesktop?.getAppMeta().then(setDesktopMeta).catch(() => setDesktopMeta(null))
+  }, [])
+
+  useEffect(() => {
+    setEnginePulse(pulseEnabled)
+  }, [pulseEnabled])
+
+  useEffect(() => {
+    decisionJournal
+      .status()
+      .then((info) => setPersistenceMode(info.mode))
+      .catch(() => undefined)
   }, [])
 
   const selectedMarket = useMemo(
@@ -956,9 +977,62 @@ function App() {
     setActiveView('analyst')
   }
 
+  const resetWorkspace = () => {
+    if (typeof window === 'undefined') {
+      return
+    }
+    Object.keys(window.localStorage)
+      .filter((key) => key.startsWith('atlasz:'))
+      .forEach((key) => window.localStorage.removeItem(key))
+    window.location.reload()
+  }
+
+  const paletteActions: CommandAction[] = [
+    ...buildNavActions(views, setActiveView),
+    {
+      id: 'act:create-decision',
+      label: 'Create Decision',
+      group: 'Intelligence',
+      hint: 'New thesis',
+      icon: BookOpen,
+      perform: () => setActiveView('decision'),
+    },
+    {
+      id: 'act:search-entity',
+      label: 'Search Entity',
+      group: 'Intelligence',
+      hint: 'Entity graph',
+      icon: Network,
+      perform: () => setActiveView('graph'),
+    },
+    {
+      id: 'act:search-market',
+      label: 'Search Market',
+      group: 'Intelligence',
+      hint: 'Market terminal',
+      icon: LineChart,
+      perform: () => setActiveView('terminal'),
+    },
+    {
+      id: 'act:toggle-pulse',
+      label: pulseEnabled ? 'Toggle Global Pulse · turn off' : 'Toggle Global Pulse · turn on',
+      group: 'Workspace',
+      icon: Activity,
+      perform: () => setPulseEnabled((value) => !value),
+    },
+    {
+      id: 'act:reset-workspace',
+      label: 'Reset Demo Workspace',
+      group: 'Workspace',
+      hint: 'Clear local data',
+      icon: Database,
+      perform: resetWorkspace,
+    },
+  ]
+
   return (
     <main className="app-shell">
-      <CommandPalette actions={buildNavActions(views, setActiveView)} />
+      <CommandPalette actions={paletteActions} />
       <aside className="sidebar" aria-label="Atlasz Intel sections">
         <div className="brand-lockup">
           <div className="brand-mark">
@@ -992,7 +1066,14 @@ function App() {
           <p>Private seed intelligence, watchlists, notes, and analyst thread are stored locally in this app.</p>
           <div className="storage-pill">
             <Database size={14} />
-            <span>{desktopMeta ? desktopMeta.platform : 'Browser preview'} workspace</span>
+            <span>
+              {desktopMeta ? desktopMeta.platform : 'Browser preview'} ·{' '}
+              {persistenceMode === 'wal'
+                ? 'SQLite WAL'
+                : persistenceMode === 'jsonl-fallback'
+                  ? 'Local file store'
+                  : 'localStorage'}
+            </span>
           </div>
         </div>
 
@@ -1000,7 +1081,7 @@ function App() {
           <span className="module-label">Signal Health</span>
           <div className="status-row">
             <span>Entity map</span>
-            <strong>15 nodes</strong>
+            <strong>{graphNodes.length} nodes</strong>
           </div>
           <div className="status-row">
             <span>Risk events</span>
@@ -1032,6 +1113,7 @@ function App() {
               <CircleDotDashed size={14} />
               Evidence layer v0.2
             </span>
+            <PulseIndicator />
             <button className="ghost-button" type="button" onClick={() => setActiveView('brief')}>
               <NotebookPen size={16} />
               Morning brief
@@ -1110,6 +1192,11 @@ function App() {
                 onSelect={(ticker) => selectTicker(ticker, 'command')}
                 selectedTicker={selectedTicker}
               />
+            </article>
+
+            <article className="panel">
+              <PanelHeader icon={Activity} label="Realtime" title="Live pulse" />
+              <RealtimePulsePanel enabled={pulseEnabled} />
             </article>
 
             <article className="panel">
@@ -1218,6 +1305,7 @@ function App() {
                 <em className={changeClass(selectedMarket.change)}>{formatChange(selectedMarket.change)}</em>
                 <p>{selectedMarket.catalyst}</p>
               </div>
+              <LiveMarketReadout symbol={selectedTicker} enabled={pulseEnabled} />
               <div className="chart-frame">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData} margin={{ top: 18, right: 18, left: 0, bottom: 8 }}>
@@ -1477,6 +1565,15 @@ function App() {
                   </label>
                 ))}
               </div>
+            </article>
+          </section>
+        )}
+
+        {activeView === 'decision' && (
+          <section className="dashboard-grid brief-grid">
+            <article className="panel wide-panel">
+              <PanelHeader icon={BookOpen} label="Decision Journal" title="Thesis, evidence, review, and post-mortem" />
+              <DecisionJournal />
             </article>
           </section>
         )}
@@ -2105,6 +2202,7 @@ function GraphInspector({ graphNode }: { graphNode: GraphNodeSeed | null }) {
   const relatedEvents = radarEvents.filter((event) =>
     event.detectedEntities.some((entity) => entity.toLowerCase().includes(graphNode.label.toLowerCase())),
   )
+  const chain = riskChainFor(graphNode.id)
 
   return (
     <div className="graph-inspector">
@@ -2114,6 +2212,22 @@ function GraphInspector({ graphNode }: { graphNode: GraphNodeSeed | null }) {
       <div className="relationship-block">
         <span>Direct connections</span>
         <p>{directEdges.map((edge) => `${edge.label} (${edge.strength}%)`).join(' / ') || 'No direct edge in filtered view'}</p>
+      </div>
+      <div className="relationship-block">
+        <span>Risk chain · traversal</span>
+        {chain.length === 0 ? (
+          <p>No downstream exposure path from this node.</p>
+        ) : (
+          <ol className="risk-chain">
+            {chain.slice(0, 6).map((exposed) => (
+              <li key={exposed.node.id}>
+                <strong>{exposed.node.symbol ?? exposed.node.label}</strong>
+                <em>{Math.round(exposed.strength * 100)}%</em>
+                <span>{exposed.path.map((hop) => hop.relation).join(' → ') || 'direct'}</span>
+              </li>
+            ))}
+          </ol>
+        )}
       </div>
       <LinkedTags title="Adjacent nodes" values={adjacentNodes.map((node) => node.label)} />
       <LinkedTags title="Related events" values={relatedEvents.map((event) => event.title)} />
