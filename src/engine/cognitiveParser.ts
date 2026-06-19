@@ -47,6 +47,8 @@ export type ExtractionOptions = {
 /** A successful, validated extraction with honest provenance attached. */
 export type ExtractionEnvelope = {
   extraction: CognitiveExtraction
+  /** Non-fatal structural defects observed before defensive normalization. */
+  validationIssueCount: number
   /** Always 'local-model' — produced by a local LLM, not a verified feed. */
   source: 'local-model'
   /** Always 'model-inferred' — UNVERIFIED. */
@@ -156,6 +158,7 @@ export class CognitiveParser {
         return null
       }
 
+      const validationIssueCount = countValidationIssues(parsed)
       const extraction = validateCognitiveExtraction(parsed)
       if (!extraction) {
         this.warn('extraction failed schema validation; failing closed')
@@ -164,6 +167,7 @@ export class CognitiveParser {
 
       return {
         extraction,
+        validationIssueCount,
         source: 'local-model',
         provenance: 'model-inferred',
         model: this.model,
@@ -217,4 +221,37 @@ export class CognitiveParser {
     }
     return mutator.upsertConnection(envelope.extraction)
   }
+}
+
+function countValidationIssues(input: unknown): number {
+  if (!input || typeof input !== 'object') {
+    return 1
+  }
+  const record = input as Record<string, unknown>
+  let issues = 0
+  if (typeof record.event_summary !== 'string' || record.event_summary.trim() === '') {
+    issues += 1
+  }
+  if (!Array.isArray(record.extracted_entities)) {
+    issues += 1
+  }
+  if (!Array.isArray(record.downstream_exposure_chain)) {
+    issues += 1
+  } else {
+    for (const item of record.downstream_exposure_chain) {
+      if (!item || typeof item !== 'object') {
+        issues += 1
+        continue
+      }
+      const chain = item as Record<string, unknown>
+      const weight = typeof chain.exposure_weight === 'number' ? chain.exposure_weight : Number(chain.exposure_weight)
+      if (!Number.isFinite(weight) || weight < 0 || weight > 1) {
+        issues += 1
+      }
+    }
+  }
+  if (!record.confidence_metrics || typeof record.confidence_metrics !== 'object') {
+    issues += 1
+  }
+  return issues
 }

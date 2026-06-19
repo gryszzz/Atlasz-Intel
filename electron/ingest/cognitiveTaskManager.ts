@@ -92,6 +92,7 @@ export class CognitiveTaskManager extends EventEmitter {
       endpoint: this.endpoint,
       model: this.model,
       timeoutMs: this.maxTimeoutMs,
+      fetchImpl: (input, init) => fetch(input, init),
     })
   }
 
@@ -231,7 +232,7 @@ export class CognitiveTaskManager extends EventEmitter {
         timestamp: event.observedAt,
         context: `${event.summary}\n${event.rawText.slice(0, 1800)}`.trim(),
       },
-      { timeoutMs, instruction: modeInstruction(mode) },
+      { timeoutMs, instruction: systemPromptFor(mode) },
     )
 
     if (!envelope) {
@@ -242,7 +243,11 @@ export class CognitiveTaskManager extends EventEmitter {
 
     const durationMs = Date.now() - startedAt
     this.recordSuccessfulDuration(durationMs)
-    this.markSuccess(event.sourceName)
+    if (envelope.validationIssueCount > 0) {
+      this.markFailure(event.sourceName, envelope.validationIssueCount)
+    } else {
+      this.markSuccess(event.sourceName)
+    }
     const sourcePenalty = this.sourcePenalty(event.sourceName)
     this.successfulExtractions += 1
     return {
@@ -251,7 +256,7 @@ export class CognitiveTaskManager extends EventEmitter {
         durationMs,
         timeoutMs,
         sourcePenalty,
-        validationIssueCount: 0,
+        validationIssueCount: envelope.validationIssueCount,
         routeMode: mode,
       },
     }
@@ -276,7 +281,7 @@ export class CognitiveTaskManager extends EventEmitter {
     this.recomputePenalty(state)
   }
 
-  private markFailure(sourceName: string, issueCount: number): void {
+  private markFailure(sourceName: string, issueCount = 1): void {
     const state = this.getSourceReliability(sourceName)
     state.validationFailures += 1
     state.structuralIssues += Math.max(1, issueCount)
@@ -330,37 +335,4 @@ function applySourcePenalty(extraction: CognitiveExtraction, penalty: number): C
       exposure_weight: clamp(item.exposure_weight * penalty, 0, 1),
     })),
   }
-}
-
-function countValidationIssues(input: unknown): number {
-  if (!input || typeof input !== 'object') {
-    return 1
-  }
-  const record = input as Record<string, unknown>
-  let issues = 0
-  if (typeof record.event_summary !== 'string' || record.event_summary.trim() === '') {
-    issues += 1
-  }
-  if (!Array.isArray(record.extracted_entities)) {
-    issues += 1
-  }
-  if (!Array.isArray(record.downstream_exposure_chain)) {
-    issues += 1
-  } else {
-    for (const item of record.downstream_exposure_chain) {
-      if (!item || typeof item !== 'object') {
-        issues += 1
-        continue
-      }
-      const chain = item as Record<string, unknown>
-      const weight = typeof chain.exposure_weight === 'number' ? chain.exposure_weight : Number(chain.exposure_weight)
-      if (!Number.isFinite(weight) || weight < 0 || weight > 1) {
-        issues += 1
-      }
-    }
-  }
-  if (!record.confidence_metrics || typeof record.confidence_metrics !== 'object') {
-    issues += 1
-  }
-  return issues
 }
