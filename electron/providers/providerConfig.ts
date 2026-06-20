@@ -125,6 +125,10 @@ export const BUILTIN_PROVIDERS: ProviderDefinition[] = [
   managedProvider('polymarket_gamma_public', 'Polymarket Gamma public markets', 'market-data', 'public-unauthenticated'),
   managedProvider('coinbase_public_ws', 'Coinbase public crypto websocket', 'crypto-realtime', 'public-unauthenticated'),
   managedProvider('binance_public_ws', 'Binance public crypto websocket', 'crypto-realtime', 'public-unauthenticated'),
+  rssProvider('fed_press_rss', 'Federal Reserve press releases', 'macro', 'https://www.federalreserve.gov/feeds/press_all.xml', 'Official Federal Reserve public press RSS (policy/FOMC). Public headlines only; no scraping.'),
+  rssProvider('sec_press_rss', 'SEC press releases', 'filings', 'https://www.sec.gov/news/pressreleases.rss', 'Official SEC public press RSS. Public headlines only; no scraping.'),
+  rssProvider('ecb_press_rss', 'ECB press releases', 'macro', 'https://www.ecb.europa.eu/rss/press.xml', 'Official ECB public press RSS (global rates). Public headlines only; no scraping.'),
+  rssProvider('wsj_markets_rss', 'WSJ Markets headlines', 'world-news', 'https://feeds.a.dj.com/rss/RSSMarketsMain.xml', 'Public market-news RSS headlines only; full articles may be paywalled and are not fetched.'),
   {
     providerId: 'x_explore_placeholder',
     providerName: 'X/Twitter Explore placeholder',
@@ -155,6 +159,30 @@ function managedProvider(
     authType: 'none',
     provenance,
     legalSafetyNote: 'Registered source boundary only; ingestion is handled by the existing fail-closed connector.',
+  }
+}
+
+/** Built-in public RSS provider (verified-live official/market feeds). */
+function rssProvider(
+  providerId: string,
+  providerName: string,
+  category: ProviderCategory,
+  endpoint: string,
+  legalSafetyNote: string,
+): ProviderDefinition {
+  return {
+    providerId,
+    providerName,
+    category,
+    adapter: 'rss',
+    enabled: true,
+    endpoint,
+    authType: 'none',
+    pollIntervalMs: 10 * 60_000,
+    rateLimitGuardMs: 60_000,
+    timeoutMs: 15_000,
+    provenance: 'rss-public',
+    legalSafetyNote,
   }
 }
 

@@ -412,7 +412,14 @@ function abortSignal(timeoutMs: number): AbortSignal {
 }
 
 async function defaultFetch(url: string, init?: { signal?: AbortSignal; headers?: Record<string, string> }) {
-  return fetch(url, init)
+  return fetch(url, {
+    ...init,
+    // Descriptive UA so official feeds (e.g. SEC) don't 403 the health check.
+    headers: {
+      'user-agent': 'AtlaszIntel/0.4 (local-first world-intel; +https://github.com/gryszzz/Atlasz-Intel)',
+      ...(init?.headers ?? {}),
+    },
+  })
 }
 
 function unavailableSnapshot(): ProviderDiscoverySnapshot {

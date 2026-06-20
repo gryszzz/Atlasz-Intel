@@ -65,6 +65,17 @@ describe('adapter registry', () => {
     expect(resolveAdapter(find(providers, 'rss_public_radar'), {}).managed).toBe(true)
     expect(resolveAdapter(find(providers, 'x_explore_placeholder'), {}).configured).toBe(false)
   })
+
+  it('wires verified built-in public RSS feeds to live fetchers (no auth)', () => {
+    const providers = loadProviderConfig().providers
+    for (const id of ['fed_press_rss', 'sec_press_rss', 'ecb_press_rss', 'wsj_markets_rss']) {
+      const provider = find(providers, id)
+      expect(provider.adapter).toBe('rss')
+      expect(provider.authType).toBe('none')
+      expect(/^https:\/\//.test(provider.endpoint ?? '')).toBe(true)
+      expect(resolveAdapter(provider, {}).fetcher).toBeTypeOf('function')
+    }
+  })
 })
 
 describe('market symbol + KAS discovery', () => {

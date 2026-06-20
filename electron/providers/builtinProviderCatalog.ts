@@ -33,6 +33,10 @@ export const PROVIDER_CAPABILITY_META: Record<string, ProviderCapabilityMeta> = 
   coinbase_public_ws: { feedTypes: ['WebSocket', 'REST'], envKeysRequired: [], symbolDiscovery: 'coinbase', realtimeFeedType: 'WebSocket' },
   binance_public_ws: { feedTypes: ['WebSocket', 'REST'], envKeysRequired: [], symbolDiscovery: 'binance', realtimeFeedType: 'WebSocket' },
   x_explore_placeholder: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_X_AUTH_TOKEN'] },
+  fed_press_rss: { feedTypes: ['RSS'], envKeysRequired: [], supportedEventTypes: ['macro-event', 'news'], supportedRegions: ['US'] },
+  sec_press_rss: { feedTypes: ['RSS'], envKeysRequired: [], supportedEventTypes: ['filing', 'news'], supportedRegions: ['US'] },
+  ecb_press_rss: { feedTypes: ['RSS'], envKeysRequired: [], supportedEventTypes: ['macro-event', 'news'], supportedRegions: ['EU'] },
+  wsj_markets_rss: { feedTypes: ['RSS'], envKeysRequired: [], supportedEventTypes: ['news'], supportedRegions: ['global'] },
 }
 
 export type LocalServiceKind = 'sqlite' | 'ollama' | 'vector-memory'

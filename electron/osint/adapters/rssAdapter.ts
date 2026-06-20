@@ -21,7 +21,12 @@ export async function fetchRssFeed(signal: AbortSignal, options: RssAdapterOptio
   }
   const response = await fetch(options.url, {
     signal,
-    headers: { accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml', ...(options.headers ?? {}) },
+    headers: {
+      // Descriptive UA: some official feeds (e.g. SEC) reject requests without one.
+      'user-agent': 'AtlaszIntel/0.4 (local-first world-intel; +https://github.com/gryszzz/Atlasz-Intel)',
+      accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml',
+      ...(options.headers ?? {}),
+    },
   })
   if (!response.ok) {
     throw new Error(`RSS ${options.sourceName} HTTP ${response.status}`)
