@@ -117,6 +117,8 @@ export type SourceAuditEventType =
   | 'persistence_failed'
   | 'graph_traversal_triggered'
   | 'signal_generated'
+  | 'provider_discovered'
+  | 'provider_discovery_failed'
 
 export type SourceAuditRecord = {
   id: string
