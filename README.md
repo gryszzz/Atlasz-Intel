@@ -78,7 +78,7 @@ the same trust model. Verified is never used as a fallback.
 ## Architecture
 
 ```text
-public/no-auth sources + simulator
+public/no-auth market + world sources
   -> worker_threads ingestion worker
   -> normalized batches
   -> realtime engine ring buffers
@@ -91,8 +91,9 @@ Core local systems:
 
 - **Worker-thread ingestion** keeps raw high-frequency packets off Electron main
   and React.
-- **Connector registry** supports simulated, public crypto websockets, and
-  auth-gated placeholders.
+- **Connector registry** supports a broad public REST quote path, public crypto
+  websockets, auth-gated placeholders, and dev/test simulation only when
+  explicitly enabled.
 - **Double-buffered UI delivery** publishes aggregated frames at a controlled
   cadence instead of pushing raw packets to React.
 - **SQLite WAL persistence** stores local briefs, headlines, research notes,
@@ -105,9 +106,12 @@ Core local systems:
 
 ## Data Sources
 
-Default mode is offline simulation.
+Default desktop mode is real-source-capable and fail-closed:
 
-Optional public/no-auth connectors can be enabled with environment variables:
+- Broad market lookup: Yahoo public chart endpoint for stocks, ETFs, indices,
+  FX pairs, sectors, and commodity futures proxies.
+- Crypto lookup: CoinGecko public REST for mapped assets such as BTC, ETH, SOL,
+  LINK, AVAX, and KAS.
 
 - Public crypto websockets: CoinCap, Binance, Coinbase style feeds where wired.
 - Public world/event layer: GDELT/RSS/official-source normalization where enabled.
@@ -116,7 +120,8 @@ Optional public/no-auth connectors can be enabled with environment variables:
   and connector support are added later.
 
 Public data is useful, but it is not presented as verified. The UI marks it as
-`public-unauthenticated` and keeps source trails visible.
+`public-unauthenticated`, `delayed`, `stale-cache`, or `unavailable` and keeps
+source trails visible.
 
 ## Microstructure Boundary
 
@@ -125,7 +130,7 @@ Atlasz can compute local microstructure-style context, but the labels matter:
 - `TRUE_L2_ORDER_BOOK`: only valid when a real depth/book connector provides
   book-depth updates.
 - `PROXY_TRADE_FLOW_PRESSURE`: local-computed proxy pressure from public trade
-  flow or simulated updates.
+  flow / public quote updates.
 - `MICROSTRUCTURE_UNAVAILABLE`: shown when there is not enough data.
 
 The current public path does **not** claim verified Level 2 order-book truth.
