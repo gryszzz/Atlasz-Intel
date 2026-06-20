@@ -36,8 +36,11 @@ export async function fetchCustomJson(signal: AbortSignal, options: CustomJsonOp
 export function normalizeCustomJson(payload: unknown, options: CustomJsonOptions): WorldIntelEvent[] {
   const records = extractRecords(payload)
   const events: WorldIntelEvent[] = []
-  for (const record of records) {
-    const title = firstString(record, ['title', 'headline', 'name', 'full_name', 'summary'])
+  for (const raw of records) {
+    // GeoJSON features carry their fields under `properties`; flatten them so
+    // the generic key lookups below work for USGS/weather/gov GeoJSON feeds.
+    const record = isRecord(raw.properties) ? { ...raw, ...(raw.properties as Record<string, unknown>) } : raw
+    const title = firstString(record, ['title', 'headline', 'name', 'full_name', 'summary', 'event'])
     const link = firstString(record, ['url', 'link', 'html_url', 'source_url', 'sourceUrl', 'permalink', 'webcast_live'])
     if (!title || !link) {
       continue
@@ -70,7 +73,7 @@ function extractRecords(payload: unknown): Array<Record<string, unknown>> {
     return payload.filter(isRecord)
   }
   if (isRecord(payload)) {
-    for (const key of ['items', 'data', 'results', 'articles', 'events']) {
+    for (const key of ['items', 'data', 'results', 'articles', 'events', 'features']) {
       const value = payload[key]
       if (Array.isArray(value)) {
         return value.filter(isRecord)

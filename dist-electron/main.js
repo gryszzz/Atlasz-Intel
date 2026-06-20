@@ -4197,6 +4197,20 @@ var Xt = class {
 		legalSafetyNote: "Official GitHub public Search API (unauthenticated, rate-limited). Public repo metadata."
 	},
 	{
+		providerId: "usgs_significant_quakes",
+		providerName: "USGS significant earthquakes",
+		category: "world-news",
+		adapter: "custom-json",
+		enabled: !0,
+		endpoint: "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_month.geojson",
+		authType: "none",
+		pollIntervalMs: 30 * 6e4,
+		rateLimitGuardMs: 12e4,
+		timeoutMs: 15e3,
+		provenance: "official-api",
+		legalSafetyNote: "Official USGS public earthquake GeoJSON feed. Public natural-event data."
+	},
+	{
 		providerId: "x_explore_placeholder",
 		providerName: "X/Twitter Explore placeholder",
 		category: "osint",
@@ -4427,6 +4441,12 @@ var cn = {
 		feedTypes: ["REST"],
 		envKeysRequired: [],
 		supportedEventTypes: ["tech", "ai"],
+		supportedRegions: ["global"]
+	},
+	usgs_significant_quakes: {
+		feedTypes: ["REST"],
+		envKeysRequired: [],
+		supportedEventTypes: ["natural-disaster", "seismic"],
 		supportedRegions: ["global"]
 	}
 }, ln = [
@@ -5057,13 +5077,17 @@ async function lr(e, t) {
 function ur(e, t) {
 	let n = dr(e), r = [];
 	for (let e of n) {
-		let n = mr(e, [
+		let n = fr(e.properties) ? {
+			...e,
+			...e.properties
+		} : e, i = mr(n, [
 			"title",
 			"headline",
 			"name",
 			"full_name",
-			"summary"
-		]), i = mr(e, [
+			"summary",
+			"event"
+		]), a = mr(n, [
 			"url",
 			"link",
 			"html_url",
@@ -5072,15 +5096,15 @@ function ur(e, t) {
 			"permalink",
 			"webcast_live"
 		]);
-		if (!n || !i) continue;
-		let a = mr(e, [
+		if (!i || !a) continue;
+		let o = mr(n, [
 			"summary",
 			"description",
 			"body",
 			"content",
 			"abstract",
 			"mission"
-		]), o = yn(pr(e, [
+		]), s = yn(pr(n, [
 			"timestamp",
 			"date",
 			"published",
@@ -5090,15 +5114,15 @@ function ur(e, t) {
 			"created_at",
 			"updated_at",
 			"pushed_at"
-		])) ?? Date.now(), s = _t(`${n} ${a}`);
+		])) ?? Date.now(), c = _t(`${i} ${o}`);
 		r.push(vt({
-			id: Cn(t.sourceId, i),
-			title: n,
+			id: Cn(t.sourceId, a),
+			title: i,
 			source: t.sourceName,
-			url: i,
-			sector: s.sector,
-			impact: a || s.impact,
-			observedAt: o
+			url: a,
+			sector: c.sector,
+			impact: o || c.impact,
+			observedAt: s
 		}, {
 			sourceId: t.sourceId,
 			provenance: t.provenance
@@ -5113,7 +5137,8 @@ function dr(e) {
 		"data",
 		"results",
 		"articles",
-		"events"
+		"events",
+		"features"
 	]) {
 		let n = e[t];
 		if (Array.isArray(n)) return n.filter(fr);

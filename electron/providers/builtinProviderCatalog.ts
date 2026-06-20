@@ -41,6 +41,7 @@ export const PROVIDER_CAPABILITY_META: Record<string, ProviderCapabilityMeta> = 
   nasa_news: { feedTypes: ['RSS'], envKeysRequired: [], supportedEventTypes: ['space', 'science'], supportedRegions: ['global'] },
   space_launch_library: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['space', 'launch'], supportedRegions: ['global'] },
   github_trending_repos: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['tech', 'ai'], supportedRegions: ['global'] },
+  usgs_significant_quakes: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['natural-disaster', 'seismic'], supportedRegions: ['global'] },
 }
 
 export type LocalServiceKind = 'sqlite' | 'ollama' | 'vector-memory'
