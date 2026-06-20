@@ -1,6 +1,25 @@
 import type { LiveAttentionTick, LiveTick } from '../../src/realtime'
 
-export type IngestSourceTrust = 'public unauthenticated' | 'local derived' | 'simulated' | 'verified' | 'failed'
+export type IngestSourceTrust =
+  | 'live'
+  | 'delayed'
+  | 'stale-cache'
+  | 'offline-cache'
+  | 'unavailable'
+  | 'auth-gated'
+  | 'public unauthenticated'
+  | 'public-unauthenticated'
+  | 'official-api'
+  | 'public-disclosure'
+  | 'local derived'
+  | 'local-derived'
+  | 'local-computed'
+  | 'math-derived'
+  | 'local-model'
+  | 'model-inferred'
+  | 'simulated'
+  | 'verified'
+  | 'failed'
 
 export type NormalizedNewsEvent = {
   id: string

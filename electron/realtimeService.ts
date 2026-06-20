@@ -1,12 +1,11 @@
-import electron from 'electron'
+import { createRequire } from 'node:module'
+import type * as Electron from 'electron'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Worker } from 'node:worker_threads'
 import { buildDefaultAssetUniverse, buildSeedPrices, resolveAssetQuery } from '../src/assetUniverse'
 import { RealTimeDataEngine } from '../src/engine/realtimeEngine'
 import { detectRealtimeSignals } from '../src/engine/signalEngine'
-import { graphEdges } from '../src/data/intel'
-import { riskChainFor } from '../src/intelGraphData'
 import type { ExposedAsset } from '../src/engine/intelGraph'
 import { LiquidityTickSampler } from './liquiditySampler'
 import type {
@@ -28,7 +27,8 @@ import type {
   SourceAuditRecord,
 } from './persistence'
 
-const { BrowserWindow } = electron
+const electronRequire = createRequire(import.meta.url)
+const { BrowserWindow } = electronRequire('electron') as typeof Electron
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 type RealtimeServiceOptions = {
@@ -67,16 +67,9 @@ type ReplayOptions = {
 }
 
 const replayWindowMs = 5 * 60_000
+const allowSimulatedData = process.env.ATLASZ_ALLOW_SIMULATED_DATA === '1' || process.env.NODE_ENV === 'test'
 
-const entityEdges: LiveEntityEdge[] = graphEdges.map((edge) => ({
-  id: edge.id,
-  headlineId: `seed:${edge.source}`,
-  source: edge.source,
-  target: edge.target,
-  relation: edge.label,
-  confidence: edge.strength,
-  createdAt: Date.now(),
-}))
+const entityEdges: LiveEntityEdge[] = []
 
 export class RealtimeService {
   private readonly engine: RealTimeDataEngine
@@ -84,7 +77,7 @@ export class RealtimeService {
   private readonly enablePublicWs = process.env.ATLASZ_ENABLE_PUBLIC_WS === '1'
   private readonly defaultConnectorId: ConnectorId =
     (process.env.ATLASZ_CONNECTOR as ConnectorId | undefined) ??
-    (process.env.ATLASZ_ENABLE_PUBLIC_WS === '1' ? 'coincap_public_ws' : 'simulated')
+    (process.env.ATLASZ_ENABLE_PUBLIC_WS === '1' ? 'coincap_public_ws' : 'public_market_rest')
   private readonly seenSignalIds = new Set<string>()
   private readonly universe = buildDefaultAssetUniverse(this.enablePublicWs)
   private readonly seedPrices = buildSeedPrices(this.universe)
@@ -238,7 +231,7 @@ export class RealtimeService {
   }
 
   traverseRisk(nodeId: string): ExposedAsset[] {
-    const result = riskChainFor(nodeId)
+    const result: ExposedAsset[] = []
     this.audit('graph_traversal_triggered', 'info', `Graph traversal triggered from ${nodeId}`, {
       nodeId,
       exposedAssets: result.map((asset) => asset.node.symbol ?? asset.node.label),
@@ -692,6 +685,88 @@ export class RealtimeService {
 }
 
 function defaultHealth(activeConnectorId: ConnectorId, sqliteMode: RealtimeHealth['sqliteMode']): RealtimeHealth {
+  const connectors: RealtimeHealth['connectors'] = [
+    {
+      id: 'public_market_rest',
+      label: 'Public market REST (Yahoo + CoinGecko)',
+      assetClasses: ['crypto', 'equity', 'etf', 'commodity', 'index', 'forex', 'sector'],
+      requiresAuth: false,
+      status: activeConnectorId === 'public_market_rest' ? 'stopped' : 'idle',
+      reconnectCount: 0,
+      sourceTrust: 'public unauthenticated',
+      packetsPerSecond: 0,
+      droppedPackets: 0,
+    },
+    {
+      id: 'coingecko_public_rest',
+      label: 'CoinGecko public REST',
+      assetClasses: ['crypto'],
+      requiresAuth: false,
+      status: activeConnectorId === 'coingecko_public_rest' ? 'stopped' : 'idle',
+      reconnectCount: 0,
+      sourceTrust: 'public unauthenticated',
+      packetsPerSecond: 0,
+      droppedPackets: 0,
+    },
+    {
+      id: 'coincap_public_ws',
+      label: 'CoinCap public WebSocket',
+      assetClasses: ['crypto'],
+      requiresAuth: false,
+      status: activeConnectorId === 'coincap_public_ws' ? 'stopped' : 'idle',
+      reconnectCount: 0,
+      sourceTrust: 'public unauthenticated',
+      packetsPerSecond: 0,
+      droppedPackets: 0,
+    },
+    {
+      id: 'binance_public_ws',
+      label: 'Binance public trades',
+      assetClasses: ['crypto'],
+      requiresAuth: false,
+      status: 'idle',
+      reconnectCount: 0,
+      sourceTrust: 'public unauthenticated',
+      packetsPerSecond: 0,
+      droppedPackets: 0,
+    },
+    {
+      id: 'coinbase_public_ws',
+      label: 'Coinbase public ticker',
+      assetClasses: ['crypto'],
+      requiresAuth: false,
+      status: 'idle',
+      reconnectCount: 0,
+      sourceTrust: 'public unauthenticated',
+      packetsPerSecond: 0,
+      droppedPackets: 0,
+    },
+    {
+      id: 'alpaca_iex_placeholder',
+      label: 'Alpaca IEX placeholder',
+      assetClasses: ['equity', 'etf'],
+      requiresAuth: true,
+      status: 'idle',
+      reconnectCount: 0,
+      sourceTrust: 'auth-gated',
+      packetsPerSecond: 0,
+      droppedPackets: 0,
+    },
+  ]
+  if (allowSimulatedData) {
+    connectors.push({
+      id: 'simulated',
+      label: 'Local simulator (dev/test only)',
+      assetClasses: ['crypto', 'equity', 'etf', 'commodity', 'index', 'forex', 'sector'],
+      requiresAuth: false,
+      status: activeConnectorId === 'simulated' ? 'stopped' : 'idle',
+      reconnectCount: 0,
+      sourceTrust: 'simulated',
+      packetsPerSecond: 0,
+      droppedPackets: 0,
+    })
+  }
+
   return {
     activeConnectorId,
     ingestionStatus: 'stopped',
@@ -702,63 +777,7 @@ function defaultHealth(activeConnectorId: ConnectorId, sqliteMode: RealtimeHealt
     sqliteMode,
     sourceTrust: activeConnectorId === 'simulated' ? 'simulated' : 'public unauthenticated',
     workerStatus: 'stopped',
-    connectors: [
-      {
-        id: 'simulated',
-        label: 'Local simulator',
-        assetClasses: ['crypto', 'equity', 'etf', 'commodity', 'index', 'forex', 'sector'],
-        requiresAuth: false,
-        status: activeConnectorId === 'simulated' ? 'stopped' : 'idle',
-        reconnectCount: 0,
-        sourceTrust: 'simulated',
-        packetsPerSecond: 0,
-        droppedPackets: 0,
-      },
-      {
-        id: 'coincap_public_ws',
-        label: 'CoinCap public WebSocket',
-        assetClasses: ['crypto'],
-        requiresAuth: false,
-        status: activeConnectorId === 'coincap_public_ws' ? 'stopped' : 'idle',
-        reconnectCount: 0,
-        sourceTrust: 'public unauthenticated',
-        packetsPerSecond: 0,
-        droppedPackets: 0,
-      },
-      {
-        id: 'binance_public_ws',
-        label: 'Binance public trades',
-        assetClasses: ['crypto'],
-        requiresAuth: false,
-        status: 'idle',
-        reconnectCount: 0,
-        sourceTrust: 'public unauthenticated',
-        packetsPerSecond: 0,
-        droppedPackets: 0,
-      },
-      {
-        id: 'coinbase_public_ws',
-        label: 'Coinbase public ticker',
-        assetClasses: ['crypto'],
-        requiresAuth: false,
-        status: 'idle',
-        reconnectCount: 0,
-        sourceTrust: 'public unauthenticated',
-        packetsPerSecond: 0,
-        droppedPackets: 0,
-      },
-      {
-        id: 'alpaca_iex_placeholder',
-        label: 'Alpaca IEX placeholder',
-        assetClasses: ['equity', 'etf'],
-        requiresAuth: true,
-        status: 'idle',
-        reconnectCount: 0,
-        sourceTrust: 'authenticated',
-        packetsPerSecond: 0,
-        droppedPackets: 0,
-      },
-    ],
+    connectors,
     replay: {
       active: false,
       playing: false,

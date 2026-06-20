@@ -96,6 +96,7 @@ type WorkerConnector = ConnectorDescriptor & {
 }
 
 const config = normalizeConfig(workerData as Partial<WorkerConfig>)
+const allowSimulated = process.env.ATLASZ_ALLOW_SIMULATED_DATA === '1' || process.env.NODE_ENV === 'test'
 const packetBacklogLimit = 20_000
 const syncIntervalMs = config.syncIntervalMs ?? 100
 const pendingTicks: LiveTick[] = []
@@ -108,7 +109,7 @@ const microstructure = new StreamingScreener({
 })
 const proxyLastPrices = new Map<string, number>()
 
-let activeConnectorId: ConnectorId = config.connectorId ?? (config.enablePublicWs ? 'coincap_public_ws' : 'simulated')
+let activeConnectorId: ConnectorId = config.connectorId ?? (config.enablePublicWs ? 'coincap_public_ws' : 'public_market_rest')
 let workerStatus: RealtimeHealth['workerStatus'] = 'stopped'
 let batchTimer: ReturnType<typeof setInterval> | null = null
 let droppedPackets = 0
@@ -158,7 +159,7 @@ function normalizeConfig(input: Partial<WorkerConfig>): WorkerConfig {
 
 function start(connectorId?: ConnectorId): void {
   const requested = connectorId ?? activeConnectorId
-  const connector = connectors.get(requested) ?? connectors.get('simulated')
+  const connector = connectors.get(requested)
   if (!connector) {
     workerStatus = 'failed'
     enqueueAudit('connector_failed', requested, 'error', `Connector ${requested} is not registered`)
@@ -174,10 +175,6 @@ function start(connectorId?: ConnectorId): void {
   workerStatus = connector.status === 'failed' ? 'failed' : 'running'
   ensureBatchTimer()
   postHealth()
-
-  if (connector.status === 'failed' && connector.id !== 'simulated') {
-    start('simulated')
-  }
 }
 
 function stop(): void {
@@ -333,7 +330,7 @@ function buildHealth(): RealtimeHealth {
     reconnectCount: active?.reconnectCount ?? 0,
     lastFrameTimestamp,
     sqliteMode: config.sqliteMode ?? 'unknown',
-    sourceTrust: active?.sourceTrust ?? 'simulated',
+    sourceTrust: active?.sourceTrust ?? 'unavailable',
     workerStatus,
     connectors: connectorHealth,
     replay: {
@@ -366,15 +363,423 @@ function enqueueAudit(
 
 function createConnectorRegistry(workerConfig: WorkerConfig): Map<ConnectorId, WorkerConnector> {
   const registry = new Map<ConnectorId, WorkerConnector>()
-  const simulated = createSimulatedConnector(workerConfig)
+  const publicRest = createPublicMarketRestConnector(workerConfig)
+  const coingecko = createCoinGeckoConnector(workerConfig)
   const coincap = createCoinCapConnector(workerConfig)
   const binance = createBinanceConnector()
   const coinbase = createCoinbaseConnector()
   const alpaca = createAlpacaPlaceholderConnector()
-  for (const connector of [simulated, coincap, binance, coinbase, alpaca]) {
+  for (const connector of [publicRest, coingecko, coincap, binance, coinbase, alpaca]) {
     registry.set(connector.id, connector)
   }
+  if (allowSimulated) {
+    const simulated = createSimulatedConnector(workerConfig)
+    registry.set(simulated.id, simulated)
+  }
   return registry
+}
+
+type CoinGeckoSimplePrice = Record<string, {
+  usd?: number
+  usd_24h_vol?: number
+  last_updated_at?: number
+}>
+
+type YahooChartResponse = {
+  chart?: {
+    result?: Array<{
+      meta?: {
+        symbol?: string
+        regularMarketPrice?: number
+        regularMarketTime?: number
+        regularMarketVolume?: number
+      }
+      timestamp?: number[]
+      indicators?: {
+        quote?: Array<{
+          close?: Array<number | null>
+          volume?: Array<number | null>
+        }>
+      }
+    }>
+    error?: { description?: string }
+  }
+}
+
+function createPublicMarketRestConnector(workerConfig: WorkerConfig): WorkerConnector {
+  let status: ConnectorStatus = 'idle'
+  let timer: ReturnType<typeof setInterval> | null = null
+  let emitRef: ConnectorEmit | null = null
+  let stopped = true
+  let pollInFlight = false
+  const cryptoAssets = new Map(
+    workerConfig.assets
+      .filter((asset) => asset.kind === 'crypto' && asset.source === 'coingecko')
+      .map((asset) => [asset.symbol, asset]),
+  )
+  const yahooAssets = new Map(
+    workerConfig.assets
+      .filter((asset) => asset.source === 'yahoo')
+      .map((asset) => [asset.symbol, asset]),
+  )
+
+  const connector: WorkerConnector = {
+    id: 'public_market_rest',
+    label: 'Public market REST (Yahoo + CoinGecko)',
+    assetClasses: ['crypto', 'equity', 'etf', 'commodity', 'index', 'forex', 'sector'],
+    requiresAuth: false,
+    get status() {
+      return status
+    },
+    lastError: undefined,
+    reconnectCount: 0,
+    sourceTrust: 'public unauthenticated',
+    start(emit) {
+      emitRef = emit
+      stopped = false
+      status = 'connecting'
+      enqueueAudit('connector_started', connector.id, 'info', 'Public market REST connector started', {
+        cryptoSymbols: [...cryptoAssets.keys()],
+        yahooSymbols: [...yahooAssets.keys()],
+      })
+      void poll()
+      timer = setInterval(() => void poll(), integerEnv('ATLASZ_PUBLIC_MARKET_POLL_MS', 30_000))
+    },
+    stop() {
+      stopped = true
+      if (timer) {
+        clearInterval(timer)
+        timer = null
+      }
+      status = 'stopped'
+    },
+    addAsset(asset) {
+      if (asset.kind === 'crypto' && asset.source === 'coingecko') {
+        cryptoAssets.set(asset.symbol, asset)
+      } else if (asset.source === 'yahoo') {
+        yahooAssets.set(asset.symbol, asset)
+      }
+      void poll()
+    },
+    normalizeMessage(message) {
+      if (!message || typeof message !== 'object') {
+        return { ticks: [], attention: [] }
+      }
+      const payload = message as { coingecko?: CoinGeckoSimplePrice; yahoo?: YahooChartResponse[] }
+      const ticks = [
+        ...normalizeCoinGeckoPayload(payload.coingecko ?? {}, cryptoAssets, connector.id),
+        ...normalizeYahooPayloads(payload.yahoo ?? [], [...yahooAssets.values()], connector.id),
+      ]
+      return { ticks, attention: attentionFromTicks(ticks, connector.id) }
+    },
+  }
+
+  async function poll(): Promise<void> {
+    if (stopped || pollInFlight) {
+      return
+    }
+    pollInFlight = true
+    status = connector.reconnectCount > 0 ? 'reconnecting' : 'connecting'
+    try {
+      const [cryptoResult, yahooResult] = await Promise.allSettled([
+        fetchCoinGeckoPayload([...cryptoAssets.values()]),
+        fetchYahooPayloads([...yahooAssets.values()]),
+      ])
+      const coingecko = cryptoResult.status === 'fulfilled' ? cryptoResult.value : {}
+      const yahoo = yahooResult.status === 'fulfilled' ? yahooResult.value : []
+      const normalized = connector.normalizeMessage({ coingecko, yahoo })
+      const failures = [
+        cryptoResult.status === 'rejected' ? errorMessage(cryptoResult.reason) : '',
+        yahooResult.status === 'rejected' ? errorMessage(yahooResult.reason) : '',
+      ].filter(Boolean)
+
+      if (normalized.ticks.length === 0) {
+        throw new Error(failures.join(' / ') || 'Public market REST returned no usable prices')
+      }
+
+      status = 'connected'
+      connector.lastError = failures.length > 0 ? failures.join(' / ') : undefined
+      if (failures.length > 0) {
+        enqueueAudit('connector_failed', connector.id, 'watch', connector.lastError ?? 'Partial public market REST failure')
+      } else if (connector.reconnectCount > 0) {
+        enqueueAudit('reconnect_succeeded', connector.id, 'info', 'Public market REST recovered')
+      }
+      emitRef?.(normalized)
+    } catch (error) {
+      status = 'failed'
+      connector.reconnectCount += 1
+      connector.lastError = errorMessage(error)
+      enqueueAudit('connector_failed', connector.id, 'watch', connector.lastError, {
+        reconnectCount: connector.reconnectCount,
+      })
+    } finally {
+      pollInFlight = false
+    }
+  }
+
+  return connector
+}
+
+function createCoinGeckoConnector(workerConfig: WorkerConfig): WorkerConnector {
+  let status: ConnectorStatus = 'idle'
+  let timer: ReturnType<typeof setInterval> | null = null
+  let emitRef: ConnectorEmit | null = null
+  let stopped = true
+  const assets = new Map(
+    workerConfig.assets
+      .filter((asset) => asset.kind === 'crypto' && asset.source === 'coingecko')
+      .map((asset) => [asset.symbol, asset]),
+  )
+  let pollInFlight = false
+
+  const connector: WorkerConnector = {
+    id: 'coingecko_public_rest',
+    label: 'CoinGecko public REST',
+    assetClasses: ['crypto'],
+    requiresAuth: false,
+    get status() {
+      return status
+    },
+    lastError: undefined,
+    reconnectCount: 0,
+    sourceTrust: 'public unauthenticated',
+    start(emit) {
+      emitRef = emit
+      stopped = false
+      status = 'connecting'
+      enqueueAudit('connector_started', connector.id, 'info', 'CoinGecko public REST connector started', {
+        symbols: [...assets.keys()],
+      })
+      void poll()
+      timer = setInterval(() => void poll(), integerEnv('ATLASZ_COINGECKO_POLL_MS', 15_000))
+    },
+    stop() {
+      stopped = true
+      if (timer) {
+        clearInterval(timer)
+        timer = null
+      }
+      status = 'stopped'
+    },
+    addAsset(asset) {
+      if (asset.kind === 'crypto' && asset.source === 'coingecko') {
+        assets.set(asset.symbol, asset)
+        void poll()
+      }
+    },
+    normalizeMessage(message) {
+      if (!message || typeof message !== 'object') {
+        return { ticks: [], attention: [] }
+      }
+      const payload = message as CoinGeckoSimplePrice
+      const ticks = normalizeCoinGeckoPayload(payload, assets, connector.id)
+      return { ticks, attention: attentionFromTicks(ticks, connector.id) }
+    },
+  }
+
+  async function poll(): Promise<void> {
+    if (stopped || pollInFlight) {
+      return
+    }
+    if (assets.size === 0) {
+      status = 'failed'
+      connector.lastError = 'No CoinGecko-supported crypto assets are configured.'
+      enqueueAudit('connector_failed', connector.id, 'watch', connector.lastError)
+      return
+    }
+
+    pollInFlight = true
+    try {
+      status = connector.reconnectCount > 0 ? 'reconnecting' : 'connecting'
+      const payload = await fetchCoinGeckoPayload([...assets.values()])
+      const normalized = connector.normalizeMessage(payload)
+      if (normalized.ticks.length === 0) {
+        throw new Error('CoinGecko returned no usable crypto prices for the active universe')
+      }
+      status = 'connected'
+      if (connector.reconnectCount > 0) {
+        enqueueAudit('reconnect_succeeded', connector.id, 'info', 'CoinGecko public REST recovered')
+      }
+      connector.lastError = undefined
+      emitRef?.(normalized)
+    } catch (error) {
+      status = 'failed'
+      connector.reconnectCount += 1
+      connector.lastError = errorMessage(error)
+      enqueueAudit('connector_failed', connector.id, 'watch', connector.lastError, {
+        reconnectCount: connector.reconnectCount,
+      })
+    } finally {
+      pollInFlight = false
+    }
+  }
+
+  return connector
+}
+
+function normalizeCoinGeckoPayload(
+  payload: CoinGeckoSimplePrice,
+  assets: Map<string, LiveAssetConfig>,
+  source: string,
+): LiveTick[] {
+  const now = Date.now()
+  const ticks: LiveTick[] = []
+  for (const asset of assets.values()) {
+    const quote = payload[asset.feedSymbol]
+    const price = Number(quote?.usd)
+    if (!Number.isFinite(price) || price <= 0) {
+      continue
+    }
+    const volume = Number(quote?.usd_24h_vol)
+    const timestampSeconds = Number(quote?.last_updated_at)
+    ticks.push({
+      symbol: asset.symbol,
+      price,
+      volume: Number.isFinite(volume) && volume > 0 ? volume / 1440 : 1,
+      timestamp: Number.isFinite(timestampSeconds) && timestampSeconds > 0 ? timestampSeconds * 1000 : now,
+      source,
+    })
+  }
+  return ticks
+}
+
+async function fetchCoinGeckoPayload(assets: LiveAssetConfig[]): Promise<CoinGeckoSimplePrice> {
+  const ids = [...new Set(assets.map((asset) => asset.feedSymbol).filter(Boolean))]
+  if (ids.length === 0) {
+    return {}
+  }
+  const url = new URL('https://api.coingecko.com/api/v3/simple/price')
+  url.searchParams.set('ids', ids.join(','))
+  url.searchParams.set('vs_currencies', 'usd')
+  url.searchParams.set('include_24hr_vol', 'true')
+  url.searchParams.set('include_last_updated_at', 'true')
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), integerEnv('ATLASZ_COINGECKO_TIMEOUT_MS', 8_000))
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        accept: 'application/json',
+        'user-agent': 'AtlaszIntel/0.4 local-first market connector',
+      },
+    })
+    if (!response.ok) {
+      throw new Error(`CoinGecko HTTP ${response.status}`)
+    }
+    return (await response.json()) as CoinGeckoSimplePrice
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+function normalizeYahooPayloads(payloads: YahooChartResponse[], assets: LiveAssetConfig[], source: string): LiveTick[] {
+  const ticks: LiveTick[] = []
+  for (let index = 0; index < payloads.length; index += 1) {
+    const tick = normalizeYahooPayload(payloads[index], assets[index], source)
+    if (tick) {
+      ticks.push(tick)
+    }
+  }
+  return ticks
+}
+
+function normalizeYahooPayload(payload: YahooChartResponse, asset: LiveAssetConfig | undefined, source: string): LiveTick | null {
+  if (!asset) {
+    return null
+  }
+  const result = payload.chart?.result?.[0]
+  if (!result) {
+    return null
+  }
+  const quote = result.indicators?.quote?.[0]
+  const closes = quote?.close ?? []
+  const volumes = quote?.volume ?? []
+  const timestamps = result.timestamp ?? []
+  const lastClose = lastFiniteWithIndex(closes)
+  const metaPrice = Number(result.meta?.regularMarketPrice)
+  const price = lastClose ? lastClose.value : metaPrice
+  if (!Number.isFinite(price) || price <= 0) {
+    return null
+  }
+  const timestampSeconds =
+    lastClose && Number.isFinite(timestamps[lastClose.index])
+      ? timestamps[lastClose.index]
+      : Number(result.meta?.regularMarketTime)
+  const volumeAtClose = lastClose ? Number(volumes[lastClose.index]) : Number(result.meta?.regularMarketVolume)
+  return {
+    symbol: asset.symbol,
+    price,
+    volume: Number.isFinite(volumeAtClose) && volumeAtClose > 0 ? volumeAtClose : 1,
+    timestamp: Number.isFinite(timestampSeconds) && timestampSeconds > 0 ? timestampSeconds * 1000 : Date.now(),
+    source,
+  }
+}
+
+async function fetchYahooPayloads(assets: LiveAssetConfig[]): Promise<YahooChartResponse[]> {
+  const maxSymbols = integerEnv('ATLASZ_YAHOO_MAX_SYMBOLS', 64)
+  const selectedAssets = assets.slice(0, maxSymbols)
+  if (selectedAssets.length === 0) {
+    return []
+  }
+  const requests = selectedAssets.map((asset) => fetchYahooPayload(asset))
+  const settled = await Promise.allSettled(requests)
+  const payloads: YahooChartResponse[] = []
+  const failures: string[] = []
+  for (const result of settled) {
+    if (result.status === 'fulfilled') {
+      payloads.push(result.value)
+    } else {
+      payloads.push({})
+      failures.push(errorMessage(result.reason))
+    }
+  }
+  if (payloads.every((payload) => !payload.chart?.result?.[0]) && failures.length > 0) {
+    throw new Error(failures.slice(0, 4).join(' / '))
+  }
+  return payloads
+}
+
+async function fetchYahooPayload(asset: LiveAssetConfig): Promise<YahooChartResponse> {
+  const url = new URL(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(asset.feedSymbol)}`)
+  url.searchParams.set('range', '1d')
+  url.searchParams.set('interval', '1m')
+  url.searchParams.set('includePrePost', 'true')
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), integerEnv('ATLASZ_YAHOO_TIMEOUT_MS', 8_000))
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        accept: 'application/json',
+        'user-agent': 'AtlaszIntel/0.4 local-first market connector',
+      },
+    })
+    if (!response.ok) {
+      throw new Error(`Yahoo ${asset.feedSymbol} HTTP ${response.status}`)
+    }
+    const payload = (await response.json()) as YahooChartResponse
+    const errorDescription = payload.chart?.error?.description
+    if (errorDescription) {
+      throw new Error(`Yahoo ${asset.feedSymbol}: ${errorDescription}`)
+    }
+    return payload
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+function lastFiniteWithIndex(values: Array<number | null>): { value: number; index: number } | null {
+  for (let index = values.length - 1; index >= 0; index -= 1) {
+    const value = Number(values[index])
+    if (Number.isFinite(value) && value > 0) {
+      return { value, index }
+    }
+  }
+  return null
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
 }
 
 function createSimulatedConnector(workerConfig: WorkerConfig): WorkerConnector {
@@ -617,7 +1022,7 @@ function createAlpacaPlaceholderConnector(): WorkerConnector {
     },
     lastError: undefined,
     reconnectCount: 0,
-    sourceTrust: 'authenticated',
+    sourceTrust: 'auth-gated',
     start() {
       status = 'failed'
       connector.lastError = 'Alpaca IEX requires an API key and is intentionally disabled in the default local path.'

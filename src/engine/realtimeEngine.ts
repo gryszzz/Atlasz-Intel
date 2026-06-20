@@ -2,7 +2,7 @@
  * RealTimeDataEngine — local-first ingestion core for Atlasz Intel.
  *
  * Pipeline:
- *   feed (simulator | public WebSocket) --ingest--> back-buffer (pending ticks)
+ *   feed (public connector | explicit dev simulator) --ingest--> back-buffer (pending ticks)
  *     --100ms RAF flush--> per-asset ring buffers + metrics
  *       --immutable LiveDataFrame--> front buffer --> subscribers (UI)
  *
@@ -48,7 +48,7 @@ export type RealTimeDataEngineOptions = {
   entityEdges?: LiveEntityEdge[]
   /** Targets tracked by the attention-pressure stream. Defaults to asset symbols. */
   attentionTargets?: string[]
-  /** Starting prices per symbol for the simulator. Default 100. */
+  /** Optional starting prices for explicit dev/test simulator runs. Default 0/unavailable. */
   seedPrices?: Record<string, number>
   /** Reported persistence mode (set by the SQLite layer). */
   sqliteMode?: LiveEngineStatus['sqliteMode']
@@ -126,7 +126,7 @@ export class RealTimeDataEngine {
 
     const seedPrices = options.seedPrices ?? {}
     for (const config of options.assets) {
-      const open = seedPrices[config.symbol] ?? 100
+      const open = seedPrices[config.symbol] ?? 0
       this.assets.set(config.symbol, {
         config,
         ticks: new RingBuffer<LiveTick>(this.bufferSize),
@@ -172,7 +172,7 @@ export class RealTimeDataEngine {
     this.pending.push(tick)
   }
 
-  addAsset(config: LiveAssetConfig, seedPrice = 100): void {
+  addAsset(config: LiveAssetConfig, seedPrice = 0): void {
     if (!config.symbol || this.assets.has(config.symbol)) {
       return
     }
@@ -210,7 +210,7 @@ export class RealTimeDataEngine {
     this.feeds.push(feed)
   }
 
-  /** Start the flush loop and any registered feeds + the built-in simulator. */
+  /** Start the flush loop and any registered feeds. The simulator is explicit dev/test only. */
   start(options: { simulate?: boolean; external?: boolean } = {}): void {
     if (this.running) {
       return
@@ -224,7 +224,7 @@ export class RealTimeDataEngine {
       connectedFeeds.push(feed.name)
     }
 
-    const simulate = options.simulate ?? (!options.external && this.feeds.length === 0)
+    const simulate = options.simulate === true
     if (simulate) {
       this.startSimulator()
       connectedFeeds.push('simulator')
@@ -233,7 +233,7 @@ export class RealTimeDataEngine {
     this.status = {
       ...this.status,
       running: true,
-      mode: options.external ? 'live' : this.feeds.length > 0 ? (simulate ? 'hybrid' : 'live') : 'simulated',
+      mode: simulate ? (this.feeds.length > 0 ? 'hybrid' : 'simulated') : 'live',
       connectedFeeds,
       error: undefined,
     }

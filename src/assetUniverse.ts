@@ -8,66 +8,66 @@ export type AssetUniverseItem = LiveAssetConfig & {
 }
 
 const knownCrypto: Record<string, { label: string; feedSymbol: string; defaultPrice: number }> = {
-  BTC: { label: 'Bitcoin', feedSymbol: 'bitcoin', defaultPrice: 66820 },
-  ETH: { label: 'Ethereum', feedSymbol: 'ethereum', defaultPrice: 3550 },
-  SOL: { label: 'Solana', feedSymbol: 'solana', defaultPrice: 142 },
-  KAS: { label: 'Kaspa', feedSymbol: 'kaspa', defaultPrice: 0.16 },
-  LINK: { label: 'Chainlink', feedSymbol: 'chainlink', defaultPrice: 14.2 },
-  AVAX: { label: 'Avalanche', feedSymbol: 'avalanche-2', defaultPrice: 28.5 },
+  BTC: { label: 'Bitcoin', feedSymbol: 'bitcoin', defaultPrice: 0 },
+  ETH: { label: 'Ethereum', feedSymbol: 'ethereum', defaultPrice: 0 },
+  SOL: { label: 'Solana', feedSymbol: 'solana', defaultPrice: 0 },
+  KAS: { label: 'Kaspa', feedSymbol: 'kaspa', defaultPrice: 0 },
+  LINK: { label: 'Chainlink', feedSymbol: 'chainlink', defaultPrice: 0 },
+  AVAX: { label: 'Avalanche', feedSymbol: 'avalanche-2', defaultPrice: 0 },
 }
 
-const knownForex: Record<string, { label: string; defaultPrice: number }> = {
-  EURUSD: { label: 'Euro / US Dollar', defaultPrice: 1.08 },
-  GBPUSD: { label: 'British Pound / US Dollar', defaultPrice: 1.27 },
-  USDJPY: { label: 'US Dollar / Japanese Yen', defaultPrice: 157.4 },
-  USDCAD: { label: 'US Dollar / Canadian Dollar', defaultPrice: 1.37 },
-  AUDUSD: { label: 'Australian Dollar / US Dollar', defaultPrice: 0.66 },
-  USDCHF: { label: 'US Dollar / Swiss Franc', defaultPrice: 0.9 },
+const knownForex: Record<string, { label: string; feedSymbol: string; defaultPrice: number }> = {
+  EURUSD: { label: 'Euro / US Dollar', feedSymbol: 'EURUSD=X', defaultPrice: 0 },
+  GBPUSD: { label: 'British Pound / US Dollar', feedSymbol: 'GBPUSD=X', defaultPrice: 0 },
+  USDJPY: { label: 'US Dollar / Japanese Yen', feedSymbol: 'JPY=X', defaultPrice: 0 },
+  USDCAD: { label: 'US Dollar / Canadian Dollar', feedSymbol: 'CAD=X', defaultPrice: 0 },
+  AUDUSD: { label: 'Australian Dollar / US Dollar', feedSymbol: 'AUDUSD=X', defaultPrice: 0 },
+  USDCHF: { label: 'US Dollar / Swiss Franc', feedSymbol: 'CHF=X', defaultPrice: 0 },
 }
 
-const knownIndices: Record<string, { label: string; defaultPrice: number }> = {
-  SPX: { label: 'S&P 500 Index', defaultPrice: 5450 },
-  NDX: { label: 'Nasdaq 100 Index', defaultPrice: 19650 },
-  DJI: { label: 'Dow Jones Industrial Average', defaultPrice: 39150 },
-  RUT: { label: 'Russell 2000 Index', defaultPrice: 2030 },
-  VIX: { label: 'CBOE Volatility Index', defaultPrice: 14.8 },
-  DXY: { label: 'US Dollar Index', defaultPrice: 105.2 },
+const knownIndices: Record<string, { label: string; feedSymbol: string; defaultPrice: number }> = {
+  SPX: { label: 'S&P 500 Index', feedSymbol: '^GSPC', defaultPrice: 0 },
+  NDX: { label: 'Nasdaq 100 Index', feedSymbol: '^NDX', defaultPrice: 0 },
+  DJI: { label: 'Dow Jones Industrial Average', feedSymbol: '^DJI', defaultPrice: 0 },
+  RUT: { label: 'Russell 2000 Index', feedSymbol: '^RUT', defaultPrice: 0 },
+  VIX: { label: 'CBOE Volatility Index', feedSymbol: '^VIX', defaultPrice: 0 },
+  DXY: { label: 'US Dollar Index', feedSymbol: 'DX-Y.NYB', defaultPrice: 0 },
 }
 
 const sectorAliases: Record<string, { symbol: string; label: string; defaultPrice: number }> = {
-  TECH: { symbol: 'XLK', label: 'Technology Select Sector', defaultPrice: 226 },
-  TECHNOLOGY: { symbol: 'XLK', label: 'Technology Select Sector', defaultPrice: 226 },
-  FINANCIALS: { symbol: 'XLF', label: 'Financial Select Sector', defaultPrice: 42 },
-  ENERGY: { symbol: 'XLE', label: 'Energy Select Sector', defaultPrice: 94 },
-  HEALTHCARE: { symbol: 'XLV', label: 'Health Care Select Sector', defaultPrice: 146 },
-  INDUSTRIALS: { symbol: 'XLI', label: 'Industrial Select Sector', defaultPrice: 122 },
-  UTILITIES: { symbol: 'XLU', label: 'Utilities Select Sector', defaultPrice: 70 },
+  TECH: { symbol: 'XLK', label: 'Technology Select Sector', defaultPrice: 0 },
+  TECHNOLOGY: { symbol: 'XLK', label: 'Technology Select Sector', defaultPrice: 0 },
+  FINANCIALS: { symbol: 'XLF', label: 'Financial Select Sector', defaultPrice: 0 },
+  ENERGY: { symbol: 'XLE', label: 'Energy Select Sector', defaultPrice: 0 },
+  HEALTHCARE: { symbol: 'XLV', label: 'Health Care Select Sector', defaultPrice: 0 },
+  INDUSTRIALS: { symbol: 'XLI', label: 'Industrial Select Sector', defaultPrice: 0 },
+  UTILITIES: { symbol: 'XLU', label: 'Utilities Select Sector', defaultPrice: 0 },
 }
 
-const knownCommodities: Record<string, { label: string; defaultPrice: number }> = {
-  CL: { label: 'WTI Crude', defaultPrice: 81.42 },
-  WTI: { label: 'WTI Crude', defaultPrice: 81.42 },
-  XAUUSD: { label: 'Gold Spot / US Dollar', defaultPrice: 2360 },
-  GOLD: { label: 'Gold', defaultPrice: 2360 },
-  XAGUSD: { label: 'Silver Spot / US Dollar', defaultPrice: 30 },
-  SILVER: { label: 'Silver', defaultPrice: 30 },
+const knownCommodities: Record<string, { label: string; feedSymbol: string; defaultPrice: number }> = {
+  CL: { label: 'WTI Crude futures', feedSymbol: 'CL=F', defaultPrice: 0 },
+  WTI: { label: 'WTI Crude futures', feedSymbol: 'CL=F', defaultPrice: 0 },
+  XAUUSD: { label: 'Gold futures proxy', feedSymbol: 'GC=F', defaultPrice: 0 },
+  GOLD: { label: 'Gold futures proxy', feedSymbol: 'GC=F', defaultPrice: 0 },
+  XAGUSD: { label: 'Silver futures proxy', feedSymbol: 'SI=F', defaultPrice: 0 },
+  SILVER: { label: 'Silver futures proxy', feedSymbol: 'SI=F', defaultPrice: 0 },
 }
 
 const knownEquities: Record<string, { label: string; defaultPrice: number }> = {
-  NVDA: { label: 'Nvidia', defaultPrice: 128.44 },
-  AAPL: { label: 'Apple', defaultPrice: 196.71 },
-  TSLA: { label: 'Tesla', defaultPrice: 182 },
-  TSM: { label: 'Taiwan Semiconductor', defaultPrice: 171 },
-  COIN: { label: 'Coinbase Global', defaultPrice: 225 },
-  MSFT: { label: 'Microsoft', defaultPrice: 442 },
-  AMZN: { label: 'Amazon', defaultPrice: 184 },
-  XOM: { label: 'Exxon Mobil', defaultPrice: 115 },
-  CVX: { label: 'Chevron', defaultPrice: 156 },
-  VLO: { label: 'Valero Energy', defaultPrice: 151 },
-  ZIM: { label: 'ZIM Integrated Shipping', defaultPrice: 22 },
-  DAL: { label: 'Delta Air Lines', defaultPrice: 48.76 },
-  UAL: { label: 'United Airlines', defaultPrice: 52 },
-  GM: { label: 'General Motors', defaultPrice: 46 },
+  NVDA: { label: 'Nvidia', defaultPrice: 0 },
+  AAPL: { label: 'Apple', defaultPrice: 0 },
+  TSLA: { label: 'Tesla', defaultPrice: 0 },
+  TSM: { label: 'Taiwan Semiconductor', defaultPrice: 0 },
+  COIN: { label: 'Coinbase Global', defaultPrice: 0 },
+  MSFT: { label: 'Microsoft', defaultPrice: 0 },
+  AMZN: { label: 'Amazon', defaultPrice: 0 },
+  XOM: { label: 'Exxon Mobil', defaultPrice: 0 },
+  CVX: { label: 'Chevron', defaultPrice: 0 },
+  VLO: { label: 'Valero Energy', defaultPrice: 0 },
+  ZIM: { label: 'ZIM Integrated Shipping', defaultPrice: 0 },
+  DAL: { label: 'Delta Air Lines', defaultPrice: 0 },
+  UAL: { label: 'United Airlines', defaultPrice: 0 },
+  GM: { label: 'General Motors', defaultPrice: 0 },
 }
 
 const knownEtfs = new Set([
@@ -114,8 +114,6 @@ export const starterUniverseSymbols = [
   'VLO',
   'CL',
   'GOLD',
-  ...marketMovers.map((item) => item.ticker),
-  ...watchlist.map((item) => item.ticker),
 ]
 
 export function buildDefaultAssetUniverse(enablePublicCrypto = false): AssetUniverseItem[] {
@@ -132,58 +130,76 @@ export function resolveAssetQuery(
 ): AssetUniverseItem {
   const raw = query.trim()
   const normalized = normalizeSymbol(raw)
-  const seeded = findSeedMarket(normalized)
+  const canonicalCrypto = canonicalCryptoSymbol(normalized)
+  const seeded = findSeedMarket(canonicalCrypto ?? normalized)
   if (seeded) {
     return fromSeedMarket(seeded, options.enablePublicCrypto)
   }
 
-  const forexKey = normalized.replace('/', '')
+  const forexKey = normalized.replace(/[/-]/g, '')
   if (knownForex[forexKey]) {
     const item = knownForex[forexKey]
     const symbol = `${forexKey.slice(0, 3)}/${forexKey.slice(3)}`
-    return asset(symbol, item.label, 'forex', 'simulator', forexKey.toLowerCase(), item.defaultPrice, 'FX pair simulator')
+    return asset(symbol, item.label, 'forex', 'yahoo', item.feedSymbol, item.defaultPrice, 'Yahoo public chart FX lookup; delayed/public unauthenticated')
   }
 
   const sector = sectorAliases[normalized]
   if (sector) {
-    return asset(sector.symbol, sector.label, 'sector', 'simulator', sector.symbol.toLowerCase(), sector.defaultPrice, 'Sector pressure proxy')
+    return asset(sector.symbol, sector.label, 'sector', 'yahoo', sector.symbol, sector.defaultPrice, 'Yahoo public chart sector ETF proxy; delayed/public unauthenticated')
   }
 
-  const crypto = knownCrypto[normalized]
+  const cryptoSymbol = canonicalCrypto ?? normalized
+  const crypto = knownCrypto[cryptoSymbol]
   if (crypto) {
     return asset(
-      normalized,
+      cryptoSymbol,
       crypto.label,
       'crypto',
-      options.enablePublicCrypto ? 'coincap' : 'simulator',
+      options.enablePublicCrypto ? 'coincap' : 'coingecko',
       crypto.feedSymbol,
       crypto.defaultPrice,
-      options.enablePublicCrypto ? 'Public CoinCap-capable crypto mapping' : 'Crypto simulator mapping',
+      options.enablePublicCrypto ? 'Public CoinCap-capable crypto mapping' : 'Public CoinGecko REST mapping',
     )
   }
 
   const index = knownIndices[normalized]
   if (index) {
-    return asset(normalized, index.label, 'index', 'simulator', normalized.toLowerCase(), index.defaultPrice, 'Index simulator proxy')
+    return asset(normalized, index.label, 'index', 'yahoo', index.feedSymbol, index.defaultPrice, 'Yahoo public chart index lookup; delayed/public unauthenticated')
   }
 
   const commodity = knownCommodities[normalized]
   if (commodity) {
     const symbol = normalized === 'WTI' ? 'CL' : normalized === 'GOLD' ? 'XAUUSD' : normalized === 'SILVER' ? 'XAGUSD' : normalized
-    return asset(symbol, commodity.label, 'commodity', 'simulator', symbol.toLowerCase(), commodity.defaultPrice, 'Commodity simulator proxy')
+    return asset(symbol, commodity.label, 'commodity', 'yahoo', commodity.feedSymbol, commodity.defaultPrice, 'Yahoo public chart commodity futures proxy; delayed/public unauthenticated')
   }
 
   const equity = knownEquities[normalized]
   if (equity) {
-    return asset(normalized, equity.label, 'equity', 'simulator', normalized.toLowerCase(), equity.defaultPrice, 'Equity public-poll/local pressure proxy')
+    return asset(normalized, equity.label, 'equity', 'yahoo', normalized, equity.defaultPrice, 'Yahoo public chart equity lookup; delayed/public unauthenticated')
   }
 
   const kind: LiveAssetKind = knownEtfs.has(normalized) ? 'etf' : 'equity'
-  return asset(normalized, `${normalized} watchlist asset`, kind, 'simulator', normalized.toLowerCase(), 100, 'User-added simulator watchlist asset')
+  return asset(normalized, `${normalized} watchlist asset`, kind, 'yahoo', normalized, 0, 'Yahoo public chart lookup; PRICE_UNAVAILABLE if the symbol is not found')
 }
 
 function normalizeSymbol(query: string): string {
-  return query.toUpperCase().replace(/\s+/g, '').replace('-', '/')
+  return query.toUpperCase().replace(/\s+/g, '')
+}
+
+function canonicalCryptoSymbol(normalized: string): string | null {
+  if (knownCrypto[normalized]) {
+    return normalized
+  }
+  const compact = normalized.replace(/[/-]/g, '')
+  for (const quote of ['USDT', 'USD']) {
+    if (compact.endsWith(quote)) {
+      const base = compact.slice(0, -quote.length)
+      if (knownCrypto[base]) {
+        return base
+      }
+    }
+  }
+  return null
 }
 
 function findSeedMarket(symbol: string): MarketMover | undefined {
@@ -192,15 +208,19 @@ function findSeedMarket(symbol: string): MarketMover | undefined {
 
 function fromSeedMarket(market: MarketMover, enablePublicCrypto = false): AssetUniverseItem {
   const crypto = knownCrypto[market.ticker]
+  const commodity = knownCommodities[market.ticker]
+  const index = knownIndices[market.ticker]
   const kind = inferKind(market.ticker)
+  const source: LiveAssetConfig['source'] = enablePublicCrypto && crypto ? 'coincap' : crypto ? 'coingecko' : 'yahoo'
+  const feedSymbol = crypto?.feedSymbol ?? commodity?.feedSymbol ?? index?.feedSymbol ?? market.ticker
   return asset(
     market.ticker,
     market.name,
     kind,
-    enablePublicCrypto && crypto ? 'coincap' : 'simulator',
-    crypto?.feedSymbol ?? market.ticker.toLowerCase(),
-    parsePrice(market.price),
-    'Seed watchlist asset',
+    source,
+    feedSymbol,
+    0,
+    crypto ? 'Public crypto mapping' : 'Yahoo public chart watchlist lookup; delayed/public unauthenticated',
   )
 }
 
@@ -232,11 +252,6 @@ function asset(
     defaultPrice,
     description,
   }
-}
-
-function parsePrice(price: string): number {
-  const value = Number.parseFloat(price.replace(/,/g, ''))
-  return Number.isFinite(value) && value > 0 ? value : 100
 }
 
 function uniqueBySymbol(items: AssetUniverseItem[]): AssetUniverseItem[] {

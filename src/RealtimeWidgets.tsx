@@ -1,12 +1,13 @@
 /**
  * Live HUD widgets backed by the realtime engine. Each subscribes individually
  * so only it re-renders per frame, and source trust is always labeled
- * explicitly — simulated/public/authenticated, never implied as verified truth.
+ * explicitly — public/auth-gated/unavailable, never implied as verified truth.
  */
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowDownRight, ArrowUpRight, Pause, Play, Radio, RotateCcw, StepBack } from 'lucide-react'
 import { PULSE_MODE_LABEL, useEngineSnapshot } from './realtimeStore'
 import type { RealtimeHealth, ReplayState } from './realtime'
+import { PRICE_UNAVAILABLE, formatMarketPrice, priceTruthFromAsset } from './marketDataTruth'
 import './RealtimeWidgets.css'
 
 function signClass(value: number): string {
@@ -42,6 +43,12 @@ function formatMicrostructureMode(value: string | undefined): string {
   return 'MICROSTRUCTURE UNAVAILABLE'
 }
 
+function formatSourceTrust(value: RealtimeHealth['sourceTrust'] | undefined): string {
+  if (!value) return 'unavailable'
+  if (value === 'public unauthenticated' || value === 'public-unauthenticated') return 'public-unauthenticated'
+  return value
+}
+
 function formatSqliteMode(value: RealtimeHealth['sqliteMode'] | undefined): string {
   if (value === 'node:sqlite') return 'node:sqlite'
   if (value === 'better-sqlite3') return 'better-sqlite3'
@@ -51,42 +58,46 @@ function formatSqliteMode(value: RealtimeHealth['sqliteMode'] | undefined): stri
 }
 
 function sourceTrustLabel(source?: string, trust?: RealtimeHealth['sourceTrust']): string {
-  if (source === 'simulator' || trust === 'simulated' || !source) {
-    return 'Simulated source'
+  if (trust === 'unavailable' || !source || source === 'unavailable') {
+    return 'Data unavailable'
   }
-  if (trust === 'public unauthenticated') {
-    return 'Public unauthenticated'
+  if (source === 'simulator' || trust === 'simulated') {
+    return 'Simulated source (dev/test)'
   }
-  if (trust === 'authenticated') {
-    return 'Authenticated source'
+  if (trust === 'public unauthenticated' || trust === 'public-unauthenticated') {
+    return 'public-unauthenticated'
+  }
+  if (trust === 'auth-gated') {
+    return 'auth-gated'
   }
   if (trust === 'verified') {
-    return 'Verified source'
+    return 'verified'
   }
   return source
 }
 
 function browserFallbackHealth(running: boolean, lastFrameTimestamp?: number): RealtimeHealth {
   return {
-    activeConnectorId: 'simulated',
-    ingestionStatus: running ? 'connected' : 'stopped',
+    activeConnectorId: 'public_market_rest',
+    ingestionStatus: running ? 'failed' : 'stopped',
     packetsPerSecond: 0,
     framesPerSecond: 0,
     droppedPackets: 0,
     reconnectCount: 0,
     lastFrameTimestamp,
     sqliteMode: 'localstorage',
-    sourceTrust: 'simulated',
-    workerStatus: running ? 'running' : 'stopped',
+    sourceTrust: 'unavailable',
+    workerStatus: running ? 'failed' : 'stopped',
     connectors: [
       {
-        id: 'simulated',
-        label: 'Browser simulator',
-        assetClasses: ['crypto', 'equity', 'etf', 'commodity', 'index'],
+        id: 'public_market_rest',
+        label: 'Desktop public market connector unavailable in browser preview',
+        assetClasses: ['crypto', 'equity', 'etf', 'commodity', 'index', 'forex', 'sector'],
         requiresAuth: false,
-        status: running ? 'connected' : 'stopped',
+        status: running ? 'failed' : 'stopped',
+        lastError: 'Launch the Electron desktop shell for local realtime ingestion.',
         reconnectCount: 0,
-        sourceTrust: 'simulated',
+        sourceTrust: 'unavailable',
         packetsPerSecond: 0,
         droppedPackets: 0,
         lastPacketAt: lastFrameTimestamp,
@@ -120,7 +131,7 @@ export function PulseIndicator() {
   const snapshot = useEngineSnapshot()
   const running = snapshot.status?.running ?? false
   const label = PULSE_MODE_LABEL[snapshot.status?.mode ?? 'stopped']
-  const trust = snapshot.status.health?.sourceTrust ?? 'simulated'
+  const trust = formatSourceTrust(snapshot.status.health?.sourceTrust)
   return (
     <span className="rt-indicator" title={`Realtime source trust: ${trust}. Atlasz does not verify or advise on market truth.`}>
       <span className={running ? 'rt-pulse-led live' : 'rt-pulse-led'} aria-hidden />
@@ -129,7 +140,7 @@ export function PulseIndicator() {
   )
 }
 
-/** A small honest banner stating the feed is simulated. */
+/** A small honest banner stating the feed/source boundary. */
 function SimulatedBadge({ label }: { label: string }) {
   return (
     <span className="rt-sim-badge" title="Realtime source trust for this local data core.">
@@ -139,7 +150,7 @@ function SimulatedBadge({ label }: { label: string }) {
   )
 }
 
-/** Command Center: realtime pulse state + top simulated movers. */
+/** Command Center: realtime pulse state + top sourced movers. */
 export function RealtimePulsePanel({ enabled }: { enabled: boolean }) {
   const snapshot = useEngineSnapshot()
   const status = snapshot.status
@@ -162,11 +173,11 @@ export function RealtimePulsePanel({ enabled }: { enabled: boolean }) {
           <strong>{modeLabel}</strong>
           <em>
             {running
-              ? `frame ${frame?.sequence ?? 0} · ${frame?.assets.length ?? 0} assets · ${status?.connectedFeeds.join(', ') || 'simulator'}`
+              ? `frame ${frame?.sequence ?? 0} · ${frame?.assets.length ?? 0} assets · ${status?.connectedFeeds.join(', ') || 'unavailable'}`
               : 'Pulse paused'}
           </em>
         </div>
-        <SimulatedBadge label={status?.health?.sourceTrust ?? 'Simulated feed'} />
+        <SimulatedBadge label={formatSourceTrust(status?.health?.sourceTrust)} />
       </div>
 
       {!enabled || !running ? (
@@ -174,13 +185,13 @@ export function RealtimePulsePanel({ enabled }: { enabled: boolean }) {
           Pulse is paused. Resume it from the command palette (<span className="rt-kbd">⌘K</span> → Toggle Global Pulse).
         </div>
       ) : movers.length === 0 ? (
-        <div className="rt-empty">Warming up the simulated feed…</div>
+        <div className="rt-empty">Waiting for real sourced ticks. No demo market data is generated.</div>
       ) : (
         <ul className="rt-mover-list">
           {movers.map((asset) => (
             <li key={asset.symbol}>
               <span className="rt-mover-symbol">{asset.symbol}</span>
-              <span className="rt-mover-price">{asset.price.toLocaleString()}</span>
+              <span className="rt-mover-price">{asset.tickCount > 0 ? formatMarketPrice(asset.price) : PRICE_UNAVAILABLE}</span>
               <span className={`rt-mover-change ${signClass(asset.changePct)}`}>
                 {asset.changePct >= 0 ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
                 {formatPct(asset.changePct)}
@@ -226,6 +237,11 @@ export function DataCorePanel() {
   const microstructure = health?.microstructure
   const microSignals = microstructure?.topSignals ?? []
   const liquidity = health?.liquidityHistory
+  const coreModeLabel = isReplay
+    ? 'REPLAY'
+    : health?.sourceTrust === 'unavailable' || health?.ingestionStatus === 'failed'
+      ? 'UNAVAILABLE'
+      : 'LIVE'
 
   useEffect(() => {
     const ingest = desktopIngest()
@@ -274,10 +290,10 @@ export function DataCorePanel() {
   return (
     <div className="rt-core">
       <div className="rt-core-head">
-        <span className={isReplay ? 'rt-mode replay' : 'rt-mode live'}>{isReplay ? 'REPLAY' : 'LIVE'}</span>
+        <span className={isReplay ? 'rt-mode replay' : coreModeLabel === 'LIVE' ? 'rt-mode live' : 'rt-mode'}>{coreModeLabel}</span>
         <div>
-          <strong>{activeConnector?.label ?? health?.activeConnectorId ?? 'Browser simulator'}</strong>
-          <em>{health?.ingestionStatus ?? snapshot.status.mode} · {health?.sourceTrust ?? 'simulated'}</em>
+          <strong>{activeConnector?.label ?? health?.activeConnectorId ?? 'Market connector unavailable'}</strong>
+          <em>{health?.ingestionStatus ?? snapshot.status.mode} · {formatSourceTrust(health?.sourceTrust)}</em>
         </div>
       </div>
 
@@ -305,7 +321,7 @@ export function DataCorePanel() {
           <div className={connector.id === health?.activeConnectorId ? 'active' : ''} key={connector.id}>
             <span>{connector.id}</span>
             <strong>{connector.status}</strong>
-            <em>{connector.requiresAuth ? 'auth' : connector.sourceTrust}</em>
+            <em>{connector.requiresAuth ? 'auth-gated' : formatSourceTrust(connector.sourceTrust)}</em>
           </div>
         ))}
       </div>
@@ -480,11 +496,12 @@ function Metric({ label, value, tone }: { label: string; value: string; tone?: '
   )
 }
 
-/** Market Terminal: live (simulated) readout for the selected symbol. */
+/** Market Terminal: sourced readout for the selected symbol. */
 export function LiveMarketReadout({ symbol, enabled }: { symbol: string; enabled: boolean }) {
   const snapshot = useEngineSnapshot()
   const asset = snapshot.frame?.assets.find((item) => item.symbol === symbol) ?? null
   const badge = sourceTrustLabel(asset?.source, snapshot.status.health?.sourceTrust)
+  const truth = priceTruthFromAsset(asset, symbol)
 
   if (!enabled) {
     return (
@@ -492,14 +509,14 @@ export function LiveMarketReadout({ symbol, enabled }: { symbol: string; enabled
         <div className="rt-readout-head">
           <Radio size={14} />
           <span>Live readout</span>
-          <SimulatedBadge label="Paused" />
+          <SimulatedBadge label="paused" />
         </div>
-        <p className="rt-empty">Pulse paused — showing seeded values only. Toggle Global Pulse to animate.</p>
+        <p className="rt-empty">Pulse paused. Atlasz is not showing fallback market prices.</p>
       </div>
     )
   }
 
-  if (!asset) {
+  if (!asset || truth.value === null) {
     return (
       <div className="rt-readout">
         <div className="rt-readout-head">
@@ -507,7 +524,7 @@ export function LiveMarketReadout({ symbol, enabled }: { symbol: string; enabled
           <span>Live readout</span>
           <SimulatedBadge label={badge} />
         </div>
-        <p className="rt-empty">No simulated frame yet for {symbol}.</p>
+        <p className="rt-empty">{symbol}: {PRICE_UNAVAILABLE}. No real provider tick is currently available.</p>
       </div>
     )
   }
@@ -522,7 +539,7 @@ export function LiveMarketReadout({ symbol, enabled }: { symbol: string; enabled
       <div className="rt-readout-grid">
         <div>
           <span>Price</span>
-          <strong>{asset.price.toLocaleString()}</strong>
+          <strong>{truth.label}</strong>
         </div>
         <div>
           <span>Session</span>

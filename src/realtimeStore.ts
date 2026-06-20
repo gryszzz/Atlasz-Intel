@@ -5,20 +5,20 @@
  * live updates via the hooks below, so only those leaf components re-render on
  * the ~100ms frame cadence — the rest of the app stays still.
  *
- * In the browser preview this runs the offline simulator. In Electron, the
- * worker-backed data core may use the simulator or an explicitly enabled public
- * feed. The UI must label source trust honestly (see PULSE_MODE_LABEL).
+ * In Electron, the worker-backed data core owns real public/auth-gated
+ * connectors. In a plain browser preview there is no market connector, so the
+ * store reports unavailable instead of inventing prices.
  */
 import { useEffect, useState } from 'react'
 import { buildDefaultAssetUniverse, buildSeedPrices, resolveAssetQuery, type AssetUniverseItem } from './assetUniverse'
 import { RealTimeDataEngine } from './engine/realtimeEngine'
-import type { LiveEngineSnapshot, LiveEngineStatus } from './realtime'
+import type { LiveEngineSnapshot, LiveEngineStatus, RealtimeHealth } from './realtime'
 import { defaultLiveEngineStatus } from './realtime'
 
 export const PULSE_MODE_LABEL: Record<LiveEngineStatus['mode'], string> = {
   live: 'External feed',
   hybrid: 'Hybrid feed',
-  simulated: 'Offline simulator',
+  simulated: 'Dev simulator',
   replay: 'Replay mode',
   stopped: 'Pulse paused',
 }
@@ -61,7 +61,7 @@ export async function addUniverseAsset(query: string): Promise<AssetUniverseItem
   return item
 }
 
-/** Start or stop the offline simulator pulse. */
+/** Start or stop the realtime pulse. Browser preview fails closed as unavailable. */
 export function setPulseEnabled(enabled: boolean): void {
   const realtime = desktopRealtime()
   if (realtime) {
@@ -71,9 +71,11 @@ export function setPulseEnabled(enabled: boolean): void {
 
   const instance = getEngine()
   if (enabled) {
-    instance.start({ simulate: true })
+    instance.start({ simulate: false, external: true })
+    instance.setHealth(browserUnavailableHealth(true))
   } else {
     instance.stop()
+    instance.setHealth(browserUnavailableHealth(false))
   }
 }
 
@@ -109,4 +111,38 @@ export function useEngineSnapshot(): LiveEngineSnapshot {
 export function useEngineStatus(): LiveEngineStatus {
   const snapshot = useEngineSnapshot()
   return snapshot.status ?? defaultLiveEngineStatus
+}
+
+function browserUnavailableHealth(running: boolean): RealtimeHealth {
+  return {
+    activeConnectorId: 'public_market_rest',
+    ingestionStatus: running ? 'failed' : 'stopped',
+    packetsPerSecond: 0,
+    framesPerSecond: 0,
+    droppedPackets: 0,
+    reconnectCount: 0,
+    sqliteMode: 'localstorage',
+    sourceTrust: 'unavailable',
+    workerStatus: running ? 'failed' : 'stopped',
+    connectors: [
+      {
+        id: 'public_market_rest',
+        label: 'Desktop public market connector unavailable in browser preview',
+        assetClasses: ['crypto', 'equity', 'etf', 'commodity', 'index', 'forex', 'sector'],
+        requiresAuth: false,
+        status: running ? 'failed' : 'stopped',
+        lastError: 'Launch the Electron desktop shell for local realtime ingestion.',
+        reconnectCount: 0,
+        sourceTrust: 'unavailable',
+        packetsPerSecond: 0,
+        droppedPackets: 0,
+      },
+    ],
+    replay: {
+      active: false,
+      playing: false,
+      speed: 1,
+      frameCount: 0,
+    },
+  }
 }

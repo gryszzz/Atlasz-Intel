@@ -214,7 +214,11 @@ describe('temporal graph decay and provenance', () => {
 
   it('exposes a canonical provenance contract and normalizes legacy labels', () => {
     expect(PROVENANCE_VALUES).toEqual([
-      'simulated',
+      'live',
+      'delayed',
+      'stale-cache',
+      'offline-cache',
+      'unavailable',
       'public-unauthenticated',
       'public-disclosure',
       'official-api',
@@ -226,9 +230,13 @@ describe('temporal graph decay and provenance', () => {
       'model-inferred',
       'auth-gated',
       'verified',
+      'simulated',
     ])
     expect(normalizeProvenance('public unauthenticated')).toBe('public-unauthenticated')
     expect(normalizeProvenance('authenticated')).toBe('auth-gated')
+    expect(normalizeProvenance('stale_cache')).toBe('stale-cache')
+    expect(normalizeProvenance('offline cache')).toBe('offline-cache')
+    expect(normalizeProvenance('unavailable')).toBe('unavailable')
     expect(normalizeProvenance('model_inferred')).toBe('model-inferred')
     expect(normalizeProvenance('public disclosure')).toBe('public-disclosure')
     expect(normalizeProvenance('math_derived')).toBe('math-derived')

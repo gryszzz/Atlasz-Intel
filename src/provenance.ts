@@ -1,5 +1,9 @@
 export const PROVENANCE_VALUES = [
-  'simulated',
+  'live',
+  'delayed',
+  'stale-cache',
+  'offline-cache',
+  'unavailable',
   'public-unauthenticated',
   'public-disclosure',
   'official-api',
@@ -11,12 +15,17 @@ export const PROVENANCE_VALUES = [
   'model-inferred',
   'auth-gated',
   'verified',
+  'simulated',
 ] as const
 
 export type ProvenanceId = (typeof PROVENANCE_VALUES)[number]
 
 export const PROVENANCE_LABEL: Record<ProvenanceId, string> = {
-  simulated: 'simulated',
+  live: 'live',
+  delayed: 'delayed',
+  'stale-cache': 'stale-cache',
+  'offline-cache': 'offline-cache',
+  unavailable: 'unavailable',
   'public-unauthenticated': 'public unauthenticated',
   'public-disclosure': 'public disclosure',
   'official-api': 'official API',
@@ -28,11 +37,21 @@ export const PROVENANCE_LABEL: Record<ProvenanceId, string> = {
   'model-inferred': 'model inferred',
   'auth-gated': 'auth gated',
   verified: 'verified',
+  simulated: 'simulated',
 }
 
 const legacyProvenanceMap: Record<string, ProvenanceId> = {
   simulated: 'simulated',
   simulator: 'simulated',
+  live: 'live',
+  delayed: 'delayed',
+  'stale cache': 'stale-cache',
+  stale_cache: 'stale-cache',
+  'stale-cache': 'stale-cache',
+  'offline cache': 'offline-cache',
+  offline_cache: 'offline-cache',
+  'offline-cache': 'offline-cache',
+  unavailable: 'unavailable',
   'public unauthenticated': 'public-unauthenticated',
   public_unauthenticated: 'public-unauthenticated',
   'public-unauthenticated': 'public-unauthenticated',

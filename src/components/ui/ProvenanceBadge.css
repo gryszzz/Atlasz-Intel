@@ -45,6 +45,11 @@
 
 /* ===== Per-class accent ===== */
 .prov-verified { --prov: var(--prov-verified); }
+.prov-live { --prov: var(--prov-public-unauthenticated); }
+.prov-delayed { --prov: var(--prov-public-unauthenticated); }
+.prov-stale-cache { --prov: var(--prov-local-derived); }
+.prov-offline-cache { --prov: var(--muted); }
+.prov-unavailable { --prov: var(--muted); }
 .prov-official-api { --prov: var(--prov-official-api); }
 .prov-auth-gated { --prov: var(--prov-auth-gated); }
 .prov-public-disclosure { --prov: var(--prov-public-disclosure); }
@@ -81,12 +86,14 @@
  * confirmed. A hollow ring dot visually separates these from trusted (filled). */
 .prov-tier-derived,
 .prov-tier-inferred,
+.prov-tier-unavailable,
 .prov-tier-simulated {
   border-style: dashed;
 }
 
 .prov-tier-derived .prov-badge-dot,
 .prov-tier-inferred .prov-badge-dot,
+.prov-tier-unavailable .prov-badge-dot,
 .prov-tier-simulated .prov-badge-dot {
   background: transparent;
   box-shadow: inset 0 0 0 1.5px var(--prov);

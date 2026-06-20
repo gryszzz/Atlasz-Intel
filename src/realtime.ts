@@ -4,12 +4,31 @@ export type LiveAssetKind = 'crypto' | 'equity' | 'etf' | 'commodity' | 'index' 
 export type ConfidenceBand = 'LOW' | 'WATCH' | 'ELEVATED' | 'HIGH'
 export type ConnectorId =
   | 'simulated'
+  | 'public_market_rest'
+  | 'coingecko_public_rest'
   | 'coincap_public_ws'
   | 'binance_public_ws'
   | 'coinbase_public_ws'
   | 'alpaca_iex_placeholder'
 export type ConnectorStatus = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'stopped' | 'failed'
-export type SourceTrust = 'simulated' | 'public unauthenticated' | 'authenticated' | 'verified'
+export type SourceTrust =
+  | 'live'
+  | 'delayed'
+  | 'stale-cache'
+  | 'offline-cache'
+  | 'unavailable'
+  | 'auth-gated'
+  | 'public unauthenticated'
+  | 'public-unauthenticated'
+  | 'official-api'
+  | 'public-disclosure'
+  | 'local-derived'
+  | 'local-computed'
+  | 'math-derived'
+  | 'model-inferred'
+  | 'verified'
+  /** Test/dev only. Production startup must not select this. */
+  | 'simulated'
 export type PersistenceMode = 'node:sqlite' | 'better-sqlite3' | 'json-fallback' | 'localstorage' | 'unknown'
 export type WorkerRuntimeStatus = 'stopped' | 'starting' | 'running' | 'failed'
 export type SignalSeverity = 'watch' | 'elevated' | 'high' | 'critical'
@@ -169,7 +188,7 @@ export type LiveAssetConfig = {
   symbol: string
   label: string
   kind: LiveAssetKind
-  source: 'coincap' | 'binance' | 'coinbase' | 'alpaca' | 'simulator'
+  source: 'coingecko' | 'coincap' | 'binance' | 'coinbase' | 'yahoo' | 'alpaca' | 'unavailable' | 'simulator'
   feedSymbol: string
 }
 
