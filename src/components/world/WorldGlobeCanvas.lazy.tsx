@@ -59,7 +59,7 @@ export function WorldGlobeCanvas({
         {events.length === 0 && (
           <div className="world-empty">
             <WifiOff size={20} />
-            <p>No world events in this window from current public/local sources.</p>
+            <p>No world events in this window from current public sources.</p>
           </div>
         )}
       </div>

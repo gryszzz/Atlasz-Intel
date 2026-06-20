@@ -29,7 +29,7 @@ import { DecisionJournal } from './DecisionJournal'
 import { decisionJournal } from './intelClient'
 import { riskChainFor } from './intelGraphData'
 import { DataCorePanel, LiveMarketReadout, PulseIndicator, RealtimePulsePanel } from './RealtimeWidgets'
-import { ChartSkeleton, GraphSkeleton, GlobeSkeleton } from './components/ui/Skeletons'
+import { ChartSkeleton, GraphSkeleton, GlobeSkeleton, PanelSkeleton } from './components/ui/Skeletons'
 
 // Heavy visual libraries (recharts, @xyflow/react) and the World Intelligence
 // view are loaded lazily so they stay out of the app startup chunk.
@@ -51,22 +51,23 @@ const RelationshipGraph = lazy(() =>
 const QuantTerminalView = lazy(() =>
   import('./components/quant/QuantTerminalView').then((m) => ({ default: m.QuantTerminalView })),
 )
-import { addUniverseAsset, setPulseEnabled as setEnginePulse } from './realtimeStore'
+const SourceHealthView = lazy(() =>
+  import('./components/status/SourceHealthView').then((m) => ({ default: m.SourceHealthView })),
+)
+const ResearchNotePanel = lazy(() =>
+  import('./components/journal/ResearchNotePanel').then((m) => ({ default: m.ResearchNotePanel })),
+)
+import { addUniverseAsset, setPulseEnabled as setEnginePulse, useEngineSnapshot } from './realtimeStore'
 import { resolveAssetQuery, type AssetUniverseItem } from './assetUniverse'
+import { CANDLE_HISTORY_UNAVAILABLE, PRICE_UNAVAILABLE, priceTruthFromAsset } from './marketDataTruth'
+import type { LiveAssetSnapshot } from './realtime'
 import { useWorldIntelSnapshot } from './worldIntelStore'
 import type { WorldIntelSnapshot } from './worldIntel'
 import {
-  dailyBrief,
   graphEdges,
   graphNodes,
   ingestionPipeline,
-  marketExplanations,
-  marketMovers,
-  marketSeries,
-  radarEvents,
   riskMap,
-  topSignals,
-  watchlist,
   type BriefItem,
   type EvidenceNote,
   type GraphNodeSeed,
@@ -78,7 +79,7 @@ import {
   type SourceTrailItem,
 } from './data/intel'
 
-type ViewId = 'command' | 'world' | 'terminal' | 'quant' | 'radar' | 'social' | 'graph' | 'analyst' | 'brief' | 'decision'
+type ViewId = 'command' | 'world' | 'terminal' | 'quant' | 'radar' | 'social' | 'graph' | 'analyst' | 'brief' | 'decision' | 'sources'
 type LayerId =
   | 'market'
   | 'news'
@@ -155,6 +156,7 @@ const views: Array<{ id: ViewId; label: string; icon: typeof MonitorDot }> = [
   { id: 'radar', label: 'World Radar', icon: RadioTower },
   { id: 'social', label: 'Social Pulse', icon: Activity },
   { id: 'graph', label: 'Entity Graph', icon: Network },
+  { id: 'sources', label: 'Source Health', icon: Database },
   { id: 'analyst', label: 'AI Analyst', icon: BrainCircuit },
   { id: 'brief', label: 'Daily Brief', icon: FileText },
   { id: 'decision', label: 'Research Notes', icon: BookOpen },
@@ -172,6 +174,60 @@ const severityLabels: Record<Severity, string> = {
   elevated: 'Elevated',
   watch: 'Watch',
   stable: 'Stable',
+}
+
+const unavailableEvent: RadarEvent = {
+  id: 'world-data-unavailable',
+  time: '—',
+  category: 'World data',
+  region: 'Unavailable',
+  severity: 'stable',
+  confidence: 0,
+  sourceCount: 0,
+  title: 'World radar unavailable',
+  summary: 'No real public world events are available in the current local snapshot.',
+  relationshipReason: 'Atlasz is not using seeded world events as a runtime fallback.',
+  uncertainty: 'Refresh public sources or inspect Data Core for connector status.',
+  detectedEntities: [],
+  linkedMarkets: [],
+  riskChannels: [],
+  evidenceNotes: [],
+  sourceTrail: [],
+}
+
+const unavailableSignal: Signal = {
+  id: 'signal-data-unavailable',
+  title: 'No source-backed signal available',
+  explanation: 'Signal Engine has no real sourced evidence in the current local snapshot.',
+  status: 'stable',
+  confidence: 0,
+  timeframe: 'Unavailable',
+  chain: 'DATA_UNAVAILABLE',
+  linkedEventIds: [unavailableEvent.id],
+  linkedEntities: [],
+  linkedMarkets: [],
+  repeatedThemes: [],
+  relationshipStrength: 0,
+  sourceCount: 0,
+  recencyScore: 0,
+  uncertainty: 'No simulated or seeded signal is substituted.',
+  evidenceTrail: [],
+  sourceTrail: [],
+}
+
+const unavailableBriefItem: BriefItem = {
+  id: 'brief-data-unavailable',
+  headline: 'Daily brief unavailable',
+  whyItMatters: 'No real public world event batch has been ingested for this local snapshot.',
+  severity: 'stable',
+  relatedEntities: [],
+  relatedMarkets: [],
+  confidence: 0,
+  sourceCount: 0,
+  uncertainty: 'Atlasz does not generate a fake daily brief when sources are empty or unavailable.',
+  watchNext: ['Refresh public world sources', 'Check Data Core source health'],
+  evidenceTrail: [],
+  sourceTrail: [],
 }
 
 const layerDefinitions: Array<{
@@ -507,7 +563,7 @@ function getEventLayers(event: RadarEvent) {
   return eventLayerMap[event.id] ?? ['market', 'news', 'entities', 'sources']
 }
 
-function getSignalForEvent(eventId: string, signals: Signal[] = topSignals) {
+function getSignalForEvent(eventId: string, signals: Signal[] = []) {
   return signals.find((signal) => signal.linkedEventIds.includes(eventId))
 }
 
@@ -589,34 +645,48 @@ function formatChange(value: number) {
   return `${sign}${value.toFixed(2)}%`
 }
 
-function marketMoverFromUniverseItem(item: AssetUniverseItem): MarketMover {
+function marketMoverFromLiveAsset(item: AssetUniverseItem, asset: LiveAssetSnapshot | null | undefined): MarketMover {
+  const truth = priceTruthFromAsset(asset, item.symbol)
   return {
     ticker: item.symbol,
     name: item.label,
-    price: item.defaultPrice >= 10 ? item.defaultPrice.toLocaleString() : item.defaultPrice.toString(),
-    change: 0,
-    volume: 'sim',
-    catalyst: `${item.description}; routed through Atlasz local pressure map`,
-    connectedEvents: [item.kind, item.source, item.feedSymbol],
-    confidence: item.source === 'simulator' ? 45 : 55,
+    price: truth.label,
+    change: asset?.tickCount ? asset.changePct : 0,
+    volume: asset?.tickCount ? asset.metrics.oneMinuteVolume.toFixed(0) : 'unavailable',
+    catalyst:
+      truth.value === null
+        ? `${item.description}; ${PRICE_UNAVAILABLE}`
+        : `${truth.status}; ${truth.provider}; ${item.description}`,
+    connectedEvents: [item.kind, item.source, item.feedSymbol, truth.status],
+    confidence: truth.value === null ? 0 : 55,
   }
 }
 
-function buildSyntheticMarketSeries(market: MarketMover): Array<{ time: string; price: number; volume: number }> {
-  const basePrice = Number.parseFloat(market.price.replace(/,/g, ''))
-  const base = Number.isFinite(basePrice) && basePrice > 0 ? basePrice : 100
-  const symbolSeed = market.ticker.split('').reduce((total, char) => total + char.charCodeAt(0), 0)
-  const points = ['04:00', '06:00', '08:00', '10:00', '12:00']
+function marketSeriesFromAsset(asset: LiveAssetSnapshot | null | undefined): Array<{ time: string; price: number; volume: number }> {
+  if (!asset || asset.tickCount <= 0) {
+    return []
+  }
+  return asset.ticks.map((tick) => ({
+    time: new Date(tick.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    price: tick.price,
+    volume: tick.volume,
+  }))
+}
 
-  return points.map((time, index) => {
-    const wave = Math.sin((symbolSeed + index * 13) / 8) * 0.006
-    const drift = (index - 2) * (market.change / 1000)
-    return {
-      time,
-      price: Number((base * (1 + wave + drift)).toFixed(base >= 10 ? 2 : 5)),
-      volume: Math.max(8, Math.round(28 + Math.abs(wave) * 2200 + index * 4)),
-    }
-  })
+function unavailableMarketExplanation(market: MarketMover): MarketExplanation {
+  return {
+    symbol: market.ticker,
+    priceMove: `${market.ticker}: ${market.price}`,
+    relatedEventIds: [],
+    relatedEntities: [],
+    linkedMarkets: [market.ticker],
+    possibleCause: market.catalyst,
+    relationshipReason: 'No real source-backed event or market explanation is currently attached to this asset.',
+    confidence: market.confidence,
+    uncertainty: 'Atlasz does not use seeded explanations as a runtime fallback in real-only mode.',
+    sourceTrail: [],
+    evidenceTrail: [],
+  }
 }
 
 function severityClass(severity: Severity) {
@@ -665,8 +735,8 @@ function collectEvidence(events: RadarEvent[]) {
 }
 
 function collectSignals(events: RadarEvent[]) {
-  const eventIds = new Set(events.map((event) => event.id))
-  return topSignals.filter((signal) => signal.linkedEventIds.some((eventId) => eventIds.has(eventId)))
+  void events
+  return [] as Signal[]
 }
 
 function buildAnalystAnswer({
@@ -703,112 +773,23 @@ function buildAnalystAnswer({
 }
 
 function pickAnalystContext(question: string): AnalystAnswer {
-  const normalized = question.toLowerCase()
-  const eventMatches = radarEvents.filter((event) => {
-    const haystack = [
-      event.title,
-      event.summary,
-      event.region,
-      event.category,
-      event.detectedEntities.join(' '),
-      event.linkedMarkets.join(' '),
-      event.riskChannels.join(' '),
-      event.relationshipReason,
-      event.sourceTrail.map((source) => source.title).join(' '),
-    ]
-      .join(' ')
-      .toLowerCase()
-
-    return normalized
-      .split(/\W+/)
-      .filter((token) => token.length > 3)
-      .some((token) => haystack.includes(token))
-  })
-
-  if (normalized.includes('oil') || normalized.includes('crude') || normalized.includes('red sea')) {
-    const relatedEvents = radarEvents.filter((event) => event.id === 'red-sea' || event.id === 'central-bank')
-    return buildAnalystAnswer({
-      summary:
-        'Oil is moving because the Atlasz local evidence layer links Red Sea route-risk sources to freight costs, insurance, crude premium, XLE strength, gold confirmation, and airline margin pressure. The strongest source trail is the shipping wire plus market tape snapshot; confidence is limited by the lack of direct supply-disruption data.',
-      relatedEvents,
-      entities: ['Red Sea', 'Shipping Risk', 'WTI Crude', 'XLE', 'Inflation Risk', 'Gold', 'Airlines'],
-      tickers: ['CL', 'XLE', 'GLD', 'DAL', 'UAL'],
-      confidence: 78,
-      uncertainty:
-        'The model cannot prove causality from price alone. Watch whether the move fades when shipping headlines calm or broadens into rates and consumer-margin names.',
-      watchNext: ['Freight-rate headlines', 'Energy breadth', 'Airline relative weakness', 'Gold confirmation'],
-    })
-  }
-
-  if (
-    normalized.includes('taiwan') ||
-    normalized.includes('tsmc') ||
-    normalized.includes('semiconductor') ||
-    normalized.includes('nvidia')
-  ) {
-    const relatedEvents = radarEvents.filter((event) => event.id === 'taiwan' || event.id === 'rare-earths')
-    return buildAnalystAnswer({
-      summary:
-        'Taiwan risk is grounded in two local evidence paths: the regional security wire names advanced-chip concentration, and the policy-calendar item keeps export controls in view. The exposed chain is Taiwan, TSMC, semiconductors, Nvidia, Apple suppliers, SOXX, and QQQ.',
-      relatedEvents,
-      entities: ['Taiwan', 'TSMC', 'Semiconductors', 'Nvidia', 'Apple', 'Nasdaq 100'],
-      tickers: ['TSM', 'SOXX', 'NVDA', 'AAPL', 'QQQ'],
-      confidence: 73,
-      uncertainty:
-        'The exposure is structurally high, but the immediate market impact depends on headline severity, export-control details, and whether investors treat the event as transient.',
-      watchNext: ['SOXX relative strength', 'TSM gap risk', 'Export-control language', 'Mega-cap breadth'],
-    })
-  }
-
-  if (normalized.includes('bitcoin') || normalized.includes('btc') || normalized.includes('crypto')) {
-    const relatedEvents = radarEvents.filter((event) => event.id === 'central-bank')
-    return buildAnalystAnswer({
-      summary:
-        'Bitcoin is mapped less as an isolated crypto story and more as a liquidity-sensitive asset. The local source trail references central bank language, real yields, dollar pressure, ETF-flow context, and risk appetite, but the confidence is deliberately lower because flow data is mocked.',
-      relatedEvents,
-      entities: ['Federal Reserve', 'Real Yields', 'Dollar', 'ETF Flows', 'Bitcoin'],
-      tickers: ['BTC', 'QQQ', 'TLT', 'GLD'],
-      confidence: 61,
-      uncertainty:
-        'The signal is lower confidence because crypto can move on positioning, flow, and market-structure factors that are not represented in this local seed set.',
-      watchNext: ['Dollar direction', 'Real-yield move', 'ETF flow tone', 'Nasdaq correlation'],
-    })
-  }
-
-  if (normalized.includes('rare earth') || normalized.includes('china') || normalized.includes('restriction')) {
-    const relatedEvents = radarEvents.filter((event) => event.id === 'rare-earths')
-    return buildAnalystAnswer({
-      summary:
-        'Rare earth risk is grounded in the industrial-policy monitor and the local supply-chain map. The key path is China, rare earth processing, EV magnets, defense electronics, Tesla, autos, and strategic inventory behavior.',
-      relatedEvents,
-      entities: ['China', 'Rare Earths', 'EV Supply Chain', 'Defense Electronics', 'Tesla'],
-      tickers: ['TSLA', 'LIT', 'XAR', 'GM'],
-      confidence: 68,
-      uncertainty:
-        'The market impact depends on whether restrictions become formal policy, whether exemptions appear, and how quickly buyers can diversify supply.',
-      watchNext: ['Policy language', 'Magnet supply pricing', 'EV margin pressure', 'Defense supply-chain commentary'],
-    })
-  }
-
-  const relatedEvents = eventMatches.length > 0 ? eventMatches.slice(0, 2) : radarEvents.slice(0, 2)
   return buildAnalystAnswer({
     summary:
-      'The closest local evidence points to a cross-asset risk map rather than a single cause. Start with the linked events, then test whether price, volume, and related entities confirm the same story.',
-    relatedEvents,
-    entities: Array.from(new Set(relatedEvents.flatMap((event) => event.detectedEntities))).slice(0, 8),
-    tickers: Array.from(new Set(relatedEvents.flatMap((event) => event.linkedMarkets))).slice(0, 8),
-    confidence: eventMatches.length > 0 ? 58 : 42,
-    uncertainty:
-      'This answer is generated from local seed intelligence only. Add live feeds and source ingestion before treating it as a production research result.',
-    watchNext: ['Confirm with volume', 'Check related tickers', 'Review source trail', 'Update the entity graph'],
+      `Atlasz cannot answer "${question}" from real source-backed evidence yet because the current world snapshot is empty or unavailable.`,
+    relatedEvents: [],
+    entities: [],
+    tickers: [],
+    confidence: 0,
+    uncertainty: 'No seeded analyst context is substituted in real-only mode.',
+    watchNext: ['Refresh public world sources', 'Check Data Core source health', 'Add a real connector for the asset or topic'],
   })
 }
 
 function App() {
   const [activeView, setActiveView] = useState<ViewId>('command')
-  const [selectedTicker, setSelectedTicker] = useState('CL')
-  const [selectedEventId, setSelectedEventId] = useState('red-sea')
-  const [selectedGraphNodeId, setSelectedGraphNodeId] = useState<string | null>('red-sea')
+  const [selectedTicker, setSelectedTicker] = useState('KAS')
+  const [selectedEventId, setSelectedEventId] = useState(unavailableEvent.id)
+  const [selectedGraphNodeId, setSelectedGraphNodeId] = useState<string | null>(null)
   const [selectedTimeWindow, setSelectedTimeWindow] = useState<TimeWindowId>('today')
   const [selectedSocialTopicId, setSelectedSocialTopicId] = useState('aixr-ai')
   const [selectedSocialTier, setSelectedSocialTier] = useState<SocialTier | 'all'>('all')
@@ -837,7 +818,7 @@ function App() {
     {
       id: 'welcome',
       role: 'analyst',
-      text: 'Ask about a market move, event, ticker, country, commodity, or exposure chain. This first build answers from local seed intelligence.',
+      text: 'Ask about a market move, event, ticker, country, commodity, or exposure chain. Atlasz answers only when real local evidence is available.',
       answer: pickAnalystContext('oil'),
     },
   ])
@@ -868,33 +849,35 @@ function App() {
     toggleFavorite: toggleWorldFavorite,
     loading: worldIntelLoading,
   } = useWorldIntelSnapshot()
+  const engineSnapshot = useEngineSnapshot()
+  const liveAssetBySymbol = useMemo(
+    () => new Map((engineSnapshot.frame?.assets ?? []).map((asset) => [asset.symbol, asset])),
+    [engineSnapshot.frame?.assets],
+  )
   const worldEvents = worldSnapshot.events
   const worldSignals = worldSnapshot.signals
   const worldBrief = worldSnapshot.dailyBrief
   const worldRawSourceItems = worldSnapshot.rawSourceItems
 
   const selectedMarket = useMemo(() => {
-    const seeded = [...marketMovers, ...watchlist].find((item) => item.ticker === selectedTicker)
-    return seeded ?? marketMoverFromUniverseItem(resolveAssetQuery(selectedTicker))
-  }, [selectedTicker])
+    const item = resolveAssetQuery(selectedTicker)
+    return marketMoverFromLiveAsset(item, liveAssetBySymbol.get(item.symbol))
+  }, [liveAssetBySymbol, selectedTicker])
 
-  const selectedMarketExplanation = marketExplanations[selectedTicker] ?? marketExplanations.CL
+  const selectedMarketExplanation = useMemo(() => unavailableMarketExplanation(selectedMarket), [selectedMarket])
 
-  const chartData = useMemo(
-    () => marketSeries[selectedTicker] ?? buildSyntheticMarketSeries(selectedMarket),
-    [selectedMarket, selectedTicker],
-  )
+  const chartData = useMemo(() => marketSeriesFromAsset(liveAssetBySymbol.get(selectedMarket.ticker)), [liveAssetBySymbol, selectedMarket.ticker])
   const tickerTapeItems = useMemo(() => {
-    const seeded = [...marketMovers, ...watchlist]
-    const universe = universeSymbols.map((symbol) => {
-      const seededMarket = seeded.find((item) => item.ticker === symbol)
-      return seededMarket ?? marketMoverFromUniverseItem(resolveAssetQuery(symbol))
-    })
-    return [...new Map([...universe, ...seeded].map((item) => [item.ticker, item])).values()].slice(0, 24)
-  }, [universeSymbols])
-  const selectedEvent = worldEvents.find((event) => event.id === selectedEventId) ?? worldEvents[0] ?? radarEvents[0]
+    return universeSymbols
+      .map((symbol) => {
+        const item = resolveAssetQuery(symbol)
+        return marketMoverFromLiveAsset(item, liveAssetBySymbol.get(item.symbol))
+      })
+      .slice(0, 24)
+  }, [liveAssetBySymbol, universeSymbols])
+  const selectedEvent = worldEvents.find((event) => event.id === selectedEventId) ?? worldEvents[0] ?? unavailableEvent
   const selectedSignal =
-    worldSignals.find((signal) => signal.linkedEventIds.includes(selectedEvent.id)) ?? worldSignals[0] ?? topSignals[0]
+    worldSignals.find((signal) => signal.linkedEventIds.includes(selectedEvent.id)) ?? worldSignals[0] ?? unavailableSignal
   const selectedGraphNode = getGraphNodeById(selectedGraphNodeId)
   const pinnedSignals = worldSignals.filter((signal) => pinnedSignalIds.includes(signal.id))
   const selectedSocialTopic =
@@ -1013,6 +996,9 @@ function App() {
 
   const flowEdges = useMemo<Edge[]>(
     () => {
+      if (worldSnapshot.worldEvents.length === 0) {
+        return []
+      }
       const visibleNodeIds = new Set(graphNodes.filter((node) => activeGraphKinds.includes(node.kind)).map((node) => node.id))
 
       return graphEdges
@@ -1031,7 +1017,7 @@ function App() {
           labelBgStyle: { fill: '#0d1110', fillOpacity: 0.88 },
         }))
     },
-    [activeGraphKinds],
+    [activeGraphKinds, worldSnapshot.worldEvents.length],
   )
 
   function submitQuestion(nextQuestion = question) {
@@ -1300,9 +1286,9 @@ function App() {
             </article>
 
             <article className="panel">
-              <PanelHeader icon={LineChart} label="Markets" title="Top movers" />
+              <PanelHeader icon={LineChart} label="Markets" title="Watchlist coverage" />
               <MarketMoverList
-                movers={marketMovers}
+                movers={tickerTapeItems}
                 onSelect={(ticker) => selectTicker(ticker, 'command')}
                 selectedTicker={selectedTicker}
               />
@@ -1316,6 +1302,13 @@ function App() {
             <article className="panel">
               <PanelHeader icon={Database} label="Data Core" title="Ingestion health + replay" />
               <DataCorePanel />
+            </article>
+
+            <article className="panel wide-panel">
+              <PanelHeader icon={NotebookPen} label="Research Journal" title="Research notes + follow-through" />
+              <Suspense fallback={<PanelSkeleton rows={2} label="Loading research journal" />}>
+                <ResearchNotePanel defaultSymbol={selectedTicker} />
+              </Suspense>
             </article>
 
             <article className="panel">
@@ -1339,6 +1332,7 @@ function App() {
             <article className="panel tall-panel">
               <PanelHeader icon={Zap} label="Signals" title="Top signal map" />
               <div className="signal-stack">
+                {worldSignals.length === 0 && <div className="empty-state">No source-backed signals are active.</div>}
                 {worldSignals.map((signal) => (
                   <SignalCard
                     isPinned={pinnedSignalIds.includes(signal.id)}
@@ -1446,9 +1440,13 @@ function App() {
               </div>
               <LiveMarketReadout symbol={selectedTicker} enabled={pulseEnabled} />
               <div className="chart-frame">
-                <Suspense fallback={<ChartSkeleton />}>
-                  <MarketPriceChart data={chartData} />
-                </Suspense>
+                {chartData.length > 0 ? (
+                  <Suspense fallback={<ChartSkeleton />}>
+                    <MarketPriceChart data={chartData} />
+                  </Suspense>
+                ) : (
+                  <div className="empty-state">{CANDLE_HISTORY_UNAVAILABLE}</div>
+                )}
               </div>
             </article>
 
@@ -1465,7 +1463,7 @@ function App() {
                 onSelect={(ticker) => selectTicker(ticker, 'terminal')}
               />
               <MarketMoverList
-                movers={watchlist}
+                movers={tickerTapeItems}
                 onSelect={(ticker) => selectTicker(ticker, 'terminal')}
                 selectedTicker={selectedTicker}
               />
@@ -1474,9 +1472,13 @@ function App() {
             <article className="panel wide-panel">
               <PanelHeader icon={Activity} label="Volume" title="Intraday participation" />
               <div className="bar-frame">
-                <Suspense fallback={<ChartSkeleton />}>
-                  <MarketVolumeChart data={chartData} />
-                </Suspense>
+                {chartData.length > 0 ? (
+                  <Suspense fallback={<ChartSkeleton />}>
+                    <MarketVolumeChart data={chartData} />
+                  </Suspense>
+                ) : (
+                  <div className="empty-state">{CANDLE_HISTORY_UNAVAILABLE}</div>
+                )}
               </div>
             </article>
           </section>
@@ -1485,6 +1487,16 @@ function App() {
         {activeView === 'quant' && (
           <Suspense fallback={<div className="panel"><ChartSkeleton /></div>}>
             <QuantTerminalView />
+          </Suspense>
+        )}
+
+        {activeView === 'sources' && (
+          <Suspense fallback={<div className="panel"><PanelSkeleton rows={4} label="Loading source health" /></div>}>
+            <SourceHealthView
+              sources={worldSnapshot.sources}
+              worldStatus={worldSnapshot.status}
+              onRefresh={refreshWorldIntel}
+            />
           </Suspense>
         )}
 
@@ -1670,6 +1682,9 @@ function App() {
                 snapshot={worldSnapshot}
               />
               <div className="daily-brief">
+                {worldBrief.length === 0 && (
+                  <div className="empty-state">Daily brief unavailable until a real public world-event batch is ingested.</div>
+                )}
                 {worldBrief.map((item) => (
                   <div className="brief-row" key={item.id}>
                     <span className={severityClass(item.severity)}>{severityLabels[item.severity]}</span>
@@ -1764,7 +1779,7 @@ function CommandStatus({
   socialPressure: number
   socialVelocity: number
 }) {
-  const dominantTheme = briefItems[0] ?? dailyBrief[0]
+  const dominantTheme = briefItems[0] ?? unavailableBriefItem
 
   return (
     <div className="command-status-grid">
@@ -1820,7 +1835,7 @@ function WorldIntelStatusStrip({
         ? 'stale'
         : snapshot.status === 'failed'
           ? 'failed'
-          : 'seeded'
+          : 'disabled'
 
   return (
     <div className={`world-intel-strip world-intel-${statusTone}`}>
@@ -1867,7 +1882,7 @@ function GlobalPulseScene({
   selectedEventId: string
   signals: Signal[]
 }) {
-  const selectedEvent = events.find((event) => event.id === selectedEventId) ?? radarEvents.find((event) => event.id === selectedEventId) ?? events[0]
+  const selectedEvent = events.find((event) => event.id === selectedEventId) ?? events[0] ?? unavailableEvent
   const selectedVisual = selectedEvent ? eventVisuals[selectedEvent.id] : null
   const activeLayerSet = new Set(activeLayerIds)
   const showSources = activeLayerSet.has('sources')
@@ -1888,6 +1903,9 @@ function GlobalPulseScene({
       </div>
 
       <div className="pulse-stage">
+        {events.length === 0 && (
+          <div className="empty-state">World radar unavailable. Refresh public sources to populate the globe.</div>
+        )}
         <div className="globe-viewport" aria-label="3D-style global intelligence pulse view">
           <div className="globe-sphere">
             <span className="globe-horizon" />
@@ -2380,13 +2398,11 @@ function GraphInspector({ graphNode }: { graphNode: GraphNodeSeed | null }) {
     )
   }
 
-  const directEdges = graphEdges.filter((edge) => edge.source === graphNode.id || edge.target === graphNode.id)
+  const directEdges: typeof graphEdges = []
   const adjacentNodeIds = directEdges.map((edge) => (edge.source === graphNode.id ? edge.target : edge.source))
   const adjacentNodes = graphNodes.filter((node) => adjacentNodeIds.includes(node.id))
-  const relatedEvents = radarEvents.filter((event) =>
-    event.detectedEntities.some((entity) => entity.toLowerCase().includes(graphNode.label.toLowerCase())),
-  )
-  const chain = riskChainFor(graphNode.id)
+  const relatedEvents: RadarEvent[] = []
+  const chain: ReturnType<typeof riskChainFor> = []
 
   return (
     <div className="graph-inspector">
@@ -2517,11 +2533,11 @@ function UniverseSearchPanel({
           <span>{preview.kind}</span>
           <strong>{preview.symbol}</strong>
           <em>
-            {preview.source !== 'simulator'
+            {preview.source === 'coingecko' || preview.source === 'coincap' || preview.source === 'coinbase' || preview.source === 'binance' || preview.source === 'yahoo'
               ? 'public unauthenticated capable'
-              : preview.kind === 'crypto'
-                ? 'simulated default; public WS eligible'
-                : 'simulated/local derived'}
+              : preview.source === 'alpaca'
+                ? 'auth-gated'
+                : 'DATA_UNAVAILABLE until a real provider is configured'}
           </em>
         </div>
       )}
@@ -2542,7 +2558,7 @@ function EventFeed({
   compact = false,
   onSelectEvent,
   selectedEventId,
-  signals = topSignals,
+  signals = [],
 }: {
   events: RadarEvent[]
   compact?: boolean
@@ -2552,6 +2568,7 @@ function EventFeed({
 }) {
   return (
     <div className={compact ? 'event-feed compact-feed' : 'event-feed'}>
+      {events.length === 0 && <div className="empty-state">No real source-backed events in this view.</div>}
       {events.map((event) => {
         const signal = getSignalForEvent(event.id, signals)
 
@@ -2759,9 +2776,7 @@ function SignalCard({
 }
 
 function MarketExplanationPanel({ explanation }: { explanation: MarketExplanation }) {
-  const relatedEvents = explanation.relatedEventIds
-    .map((eventId) => radarEvents.find((event) => event.id === eventId))
-    .filter((event): event is RadarEvent => Boolean(event))
+  const relatedEvents: RadarEvent[] = []
   const chains = Array.from(
     new Set(
       relatedEvents

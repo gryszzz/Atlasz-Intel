@@ -5,6 +5,7 @@ import type { WorldIntelSnapshot } from './worldIntel'
 import type { QuantTerminalSnapshot } from './quant'
 import type { HistoricalPlaybook } from './intel'
 import type { ThesisDashboard, ThesisDraft } from './engine/decisionJournal'
+import type { ProviderDiscoverySnapshot } from './providerDiscovery'
 
 declare global {
   type AtlaszDesktopMeta = {
@@ -80,6 +81,11 @@ declare global {
     }
     ingest?: {
       status: () => Promise<AtlaszPublicIngestStatus>
+    }
+    providers?: {
+      snapshot: () => Promise<ProviderDiscoverySnapshot>
+      discover: () => Promise<ProviderDiscoverySnapshot>
+      openConfig: () => Promise<{ path: string; created: boolean }>
     }
   }
 

@@ -1,11 +1,15 @@
-import electron from 'electron'
+import { createRequire } from 'node:module'
+import type * as Electron from 'electron'
 import type { DailyBriefRecord, DecisionRecord, WorldHeadlineRecord } from './persistence'
 import type { ConnectorId, LiveEngineSnapshot, ReplayState } from '../src/realtime'
 import type { WorldIntelSnapshot } from '../src/worldIntel'
 import type { QuantTerminalSnapshot } from '../src/quant'
 import type { HistoricalPlaybook } from '../src/intel'
+import type { ThesisDashboard, ThesisDraft } from '../src/engine/decisionJournal'
+import type { ProviderDiscoverySnapshot } from '../src/providerDiscovery'
 
-const { contextBridge, ipcRenderer } = electron
+const electronRequire = createRequire(import.meta.url)
+const { contextBridge, ipcRenderer } = electronRequire('electron') as typeof Electron
 
 contextBridge.exposeInMainWorld('atlaszDesktop', {
   getAppMeta: () => ipcRenderer.invoke('atlasz:app-meta'),
@@ -56,7 +60,16 @@ contextBridge.exposeInMainWorld('atlaszDesktop', {
   intel: {
     playbook: (eventId: string): Promise<HistoricalPlaybook> => ipcRenderer.invoke('atlasz:intel:playbook', eventId),
   },
+  thesis: {
+    save: (draft: ThesisDraft): Promise<ThesisDashboard> => ipcRenderer.invoke('atlasz:thesis:save', draft),
+    dashboard: (): Promise<ThesisDashboard> => ipcRenderer.invoke('atlasz:thesis:dashboard'),
+  },
   ingest: {
     status: () => ipcRenderer.invoke('atlasz:ingest:status'),
+  },
+  providers: {
+    snapshot: (): Promise<ProviderDiscoverySnapshot> => ipcRenderer.invoke('atlasz:providers:snapshot'),
+    discover: (): Promise<ProviderDiscoverySnapshot> => ipcRenderer.invoke('atlasz:providers:discover'),
+    openConfig: (): Promise<{ path: string; created: boolean }> => ipcRenderer.invoke('atlasz:providers:open-config'),
   },
 })

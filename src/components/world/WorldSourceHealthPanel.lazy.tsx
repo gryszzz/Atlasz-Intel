@@ -21,6 +21,11 @@ export function WorldSourceHealthPanel({
         {sources.map((source) => (
           <SourceRegistryRow key={source.sourceId} source={source} />
         ))}
+        {sources.length === 0 && (
+          <div className="world-empty inline-empty">
+            <p>Source registry unavailable. No fake source-health rows are generated.</p>
+          </div>
+        )}
       </div>
     </article>
   )

@@ -1,4 +1,5 @@
-import electron from 'electron'
+import { createRequire } from 'node:module'
+import type * as Electron from 'electron'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createPersistence } from './persistence'
@@ -6,7 +7,9 @@ import { RealtimeService } from './realtimeService'
 import { WorldIntelService } from './worldIntelService'
 import { QuantService } from './quant/quantService'
 import { HistoricalPlaybookService } from './intel/historicalPlaybookService'
+import { ThesisService } from './journal/thesisService'
 import { DataIngestOrchestrator } from './ingest/dataIngestOrchestrator'
+import { ProviderDiscoveryService } from './providers/providerDiscoveryService'
 import type {
   DailyBriefRecord,
   DecisionRecord,
@@ -14,8 +17,10 @@ import type {
   WorldHeadlineRecord,
 } from './persistence'
 import type { ConnectorId } from '../src/realtime'
+import type { ThesisDraft } from '../src/engine/decisionJournal'
 
-const { app, BrowserWindow, ipcMain, shell } = electron
+const electronRequire = createRequire(import.meta.url)
+const { app, BrowserWindow, ipcMain, shell } = electronRequire('electron') as typeof Electron
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 let persistence: IntelPersistence | null = null
@@ -23,7 +28,9 @@ let realtime: RealtimeService | null = null
 let worldIntel: WorldIntelService | null = null
 let quant: QuantService | null = null
 let playbook: HistoricalPlaybookService | null = null
+let thesisJournal: ThesisService | null = null
 let dataIngest: DataIngestOrchestrator | null = null
+let providerDiscovery: ProviderDiscoveryService | null = null
 
 function requirePersistence(): IntelPersistence {
   if (!persistence) {
@@ -61,6 +68,13 @@ function requirePlaybook(): HistoricalPlaybookService {
   return playbook
 }
 
+function requireThesisJournal(): ThesisService {
+  if (!thesisJournal) {
+    thesisJournal = new ThesisService(requirePersistence())
+  }
+  return thesisJournal
+}
+
 function requireDataIngest(): DataIngestOrchestrator {
   if (!dataIngest) {
     dataIngest = new DataIngestOrchestrator({
@@ -69,6 +83,16 @@ function requireDataIngest(): DataIngestOrchestrator {
     })
   }
   return dataIngest
+}
+
+function requireProviderDiscovery(): ProviderDiscoveryService {
+  if (!providerDiscovery) {
+    providerDiscovery = new ProviderDiscoveryService({
+      userDataPath: app.getPath('userData'),
+      persistence: requirePersistence(),
+    })
+  }
+  return providerDiscovery
 }
 
 function createWindow() {
@@ -182,12 +206,24 @@ ipcMain.handle('atlasz:quant:snapshot', () => requireQuant().snapshot())
 
 ipcMain.handle('atlasz:intel:playbook', (_event, eventId: string) => requirePlaybook().playbookFor(eventId))
 
+ipcMain.handle('atlasz:thesis:save', (_event, draft: ThesisDraft) => requireThesisJournal().save(draft))
+ipcMain.handle('atlasz:thesis:dashboard', () => requireThesisJournal().dashboard())
+
 ipcMain.handle('atlasz:ingest:status', () => requireDataIngest().status())
+
+ipcMain.handle('atlasz:providers:snapshot', () => requireProviderDiscovery().snapshot())
+ipcMain.handle('atlasz:providers:discover', () => requireProviderDiscovery().discover())
+ipcMain.handle('atlasz:providers:open-config', () => {
+  const result = requireProviderDiscovery().ensureConfigTemplate()
+  shell.showItemInFolder(result.path)
+  return result
+})
 
 app.whenReady().then(() => {
   requirePersistence()
   requireRealtime()
   void requireWorldIntel().refresh()
+  void requireProviderDiscovery().discover()
   requireDataIngest().start()
   createWindow()
 
@@ -210,6 +246,7 @@ app.on('before-quit', () => {
   realtime?.close()
   realtime = null
   worldIntel = null
+  providerDiscovery = null
   persistence?.close()
   persistence = null
 })

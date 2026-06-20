@@ -40,7 +40,7 @@ export function WorldEventTimeline({
         ))}
         {events.length === 0 && (
           <div className="world-empty inline-empty">
-            <p>Not available from current public sources. The local seed layer remains visible elsewhere.</p>
+            <p>Not available from current public sources. Atlasz is not substituting seeded world events.</p>
           </div>
         )}
       </div>
