@@ -12,8 +12,7 @@
 
 <p align="center">
   <a href="https://github.com/gryszzz/Atlasz-Intel/releases/latest">Latest release</a>
-  ·
-  <a href="docs/atlasz-intel-banner-transparent.png">Download transparent banner PNG</a>
+  
 </p>
 
 Atlasz Intel is a desktop intelligence terminal for researching the conditions
