@@ -287,6 +287,19 @@
   color: var(--yellow, #facc15);
 }
 
+.rt-liquidity-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.rt-liquidity-note {
+  margin: -2px 0 0;
+  color: var(--faint, #61736e);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
 .rt-connector-list {
   display: grid;
   gap: 5px;
@@ -365,6 +378,126 @@
   color: var(--yellow, #facc15);
   font-family: var(--mono, monospace);
   font-size: 10px;
+}
+
+.rt-microstructure {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(250, 204, 21, 0.18);
+  border-radius: 7px;
+  background: linear-gradient(180deg, rgba(250, 204, 21, 0.055), rgba(7, 12, 11, 0.72));
+  padding: 8px;
+}
+
+.rt-micro-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rt-micro-head > div {
+  display: grid;
+  gap: 2px;
+}
+
+.rt-micro-head span {
+  color: var(--yellow, #facc15);
+  font-family: var(--mono, monospace);
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.rt-micro-head strong {
+  color: var(--white, #f7fffb);
+  font-size: 12px;
+}
+
+.rt-micro-head em {
+  border: 1px solid rgba(250, 204, 21, 0.28);
+  border-radius: 999px;
+  color: var(--yellow, #facc15);
+  font-family: var(--mono, monospace);
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 900;
+  padding: 3px 7px;
+  text-transform: uppercase;
+}
+
+.rt-micro-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.rt-micro-note {
+  margin: 0;
+  color: var(--faint, #61736e);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.rt-micro-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.rt-micro-list li {
+  display: grid;
+  grid-template-columns: 44px 58px 1fr 1fr auto;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--line-soft, #18211f);
+  border-radius: 7px;
+  background: #080b0a;
+  padding: 6px 8px;
+}
+
+.rt-micro-list span,
+.rt-micro-list em,
+.rt-micro-list small {
+  font-family: var(--mono, monospace);
+  font-size: 10px;
+}
+
+.rt-micro-list span {
+  color: var(--white, #f7fffb);
+  font-weight: 900;
+}
+
+.rt-micro-list em {
+  color: var(--muted, #8ca19a);
+  font-style: normal;
+}
+
+.rt-micro-list small {
+  color: var(--faint, #61736e);
+}
+
+.rt-micro-severity {
+  border-radius: 999px;
+  color: var(--green, #5eead4);
+  font-family: var(--mono, monospace);
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.rt-micro-severity.elevated {
+  color: var(--yellow, #facc15);
+}
+
+.rt-micro-severity.high {
+  color: var(--red, #ef4444);
+}
+
+.rt-micro-empty {
+  padding: 8px;
 }
 
 .rt-replay-controls,

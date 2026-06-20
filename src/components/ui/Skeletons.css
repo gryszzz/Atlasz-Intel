@@ -1,0 +1,159 @@
+/*
+ * Premium loading skeletons — command-center feel while lazy chunks load.
+ * Built on the .fx-skeleton / fx-pulse primitives from styles/effects.css and
+ * the design tokens. No blank screens, no generic spinners.
+ */
+
+.skeleton-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  height: 100%;
+  min-height: 120px;
+}
+
+.skeleton-bar {
+  height: 12px;
+  border-radius: 6px;
+}
+
+.skeleton-bar.sm { width: 40%; }
+.skeleton-bar.md { width: 65%; }
+.skeleton-bar.lg { width: 88%; }
+
+/* Globe loading shell — radar sweep + pulsing core. */
+.skeleton-globe {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 240px;
+  flex: 1;
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(94, 234, 212, 0.06), transparent 60%),
+    var(--panel-2);
+  overflow: hidden;
+}
+
+.skeleton-globe-ring {
+  --fx-accent: var(--green);
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  border: 1px solid rgba(94, 234, 212, 0.28);
+  box-shadow: inset 0 0 40px rgba(94, 234, 212, 0.08);
+  animation: fx-pulse 2.6s var(--ease-out) infinite;
+}
+
+.skeleton-globe-ring::before,
+.skeleton-globe-ring::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(94, 234, 212, 0.14);
+}
+.skeleton-globe-ring::before { inset: 22px; }
+.skeleton-globe-ring::after { inset: 44px; }
+
+.skeleton-globe-sweep {
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(94, 234, 212, 0.14) 40deg, transparent 80deg);
+  animation: skeleton-sweep 2.8s linear infinite;
+}
+
+.skeleton-caption {
+  position: absolute;
+  bottom: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.skeleton-caption .dot {
+  --fx-accent: var(--green);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: fx-pulse 1.6s var(--ease-out) infinite;
+}
+
+/* Source heartbeat placeholder — pulsing status rows. */
+.skeleton-heartbeat {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.skeleton-heartbeat-row {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) 48px;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 9px;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: var(--panel);
+}
+
+.skeleton-heartbeat-row .pulse {
+  --fx-accent: var(--green);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: fx-pulse 1.8s var(--ease-out) infinite;
+}
+
+/* Quant stat-tile strip placeholder. */
+.skeleton-quant {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-2);
+}
+
+.skeleton-quant-tile {
+  height: 64px;
+  border-radius: 8px;
+}
+
+/* Chart placeholder — gridline frame + shimmer area. */
+.skeleton-chart {
+  position: relative;
+  height: 100%;
+  min-height: 160px;
+  border-radius: 8px;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 31px, rgba(148, 163, 184, 0.06) 32px),
+    var(--panel-2);
+  overflow: hidden;
+}
+
+.skeleton-chart::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 52%;
+  background: linear-gradient(180deg, rgba(94, 234, 212, 0.1), transparent);
+  -webkit-mask-image: linear-gradient(90deg, #000, #000);
+}
+
+@keyframes skeleton-sweep {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-globe-sweep,
+  .skeleton-globe-ring,
+  .skeleton-caption .dot,
+  .skeleton-heartbeat-row .pulse {
+    animation: none !important;
+  }
+}

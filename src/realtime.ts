@@ -1,3 +1,5 @@
+import type { MicrostructureHealth } from './microstructure'
+
 export type LiveAssetKind = 'crypto' | 'equity' | 'etf' | 'commodity' | 'index' | 'forex' | 'sector'
 export type ConfidenceBand = 'LOW' | 'WATCH' | 'ELEVATED' | 'HIGH'
 export type ConnectorId =
@@ -46,6 +48,15 @@ export type ReplayState = {
   frameCount: number
 }
 
+export type LiquidityHistoryHealth = {
+  persistedTicks: number
+  persistedSymbols: number
+  lastPersistedAt?: number
+  sampleMs: number
+  maxPerBatch: number
+  note: string
+}
+
 export type RealtimeHealth = {
   activeConnectorId: ConnectorId
   ingestionStatus: ConnectorStatus
@@ -59,6 +70,8 @@ export type RealtimeHealth = {
   workerStatus: WorkerRuntimeStatus
   connectors: ConnectorHealth[]
   replay: ReplayState
+  microstructure?: MicrostructureHealth
+  liquidityHistory?: LiquidityHistoryHealth
 }
 
 export type MarketLayerTicker = {

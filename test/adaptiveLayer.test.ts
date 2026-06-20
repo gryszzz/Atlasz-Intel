@@ -216,7 +216,12 @@ describe('temporal graph decay and provenance', () => {
     expect(PROVENANCE_VALUES).toEqual([
       'simulated',
       'public-unauthenticated',
+      'public-disclosure',
+      'official-api',
+      'rss-public',
       'local-derived',
+      'local-computed',
+      'math-derived',
       'local-model',
       'model-inferred',
       'auth-gated',
@@ -225,6 +230,9 @@ describe('temporal graph decay and provenance', () => {
     expect(normalizeProvenance('public unauthenticated')).toBe('public-unauthenticated')
     expect(normalizeProvenance('authenticated')).toBe('auth-gated')
     expect(normalizeProvenance('model_inferred')).toBe('model-inferred')
+    expect(normalizeProvenance('public disclosure')).toBe('public-disclosure')
+    expect(normalizeProvenance('math_derived')).toBe('math-derived')
+    expect(normalizeProvenance('local computed')).toBe('local-computed')
   })
 })
 
@@ -283,6 +291,18 @@ function fakePersistence(): IntelPersistence {
     saveAttentionBatch: () => undefined,
     saveEntityEdge: () => undefined,
     saveSignalEvent: () => undefined,
+    listOsintSources: () => [],
+    saveOsintSource: () => undefined,
+    listWorldIntelEvents: () => [],
+    saveWorldIntelEvent: () => undefined,
+    listCountryIntelState: () => [],
+    saveCountryIntelState: () => undefined,
+    listAssetIdentities: () => [],
+    saveAssetIdentity: () => undefined,
+    listFavorites: () => [],
+    saveFavorite: () => undefined,
+    deleteFavorite: () => undefined,
+    saveEventAssetLink: () => undefined,
     saveRealtimeFrame: () => undefined,
     listRealtimeFrames: () => [],
     audit: () => undefined,

@@ -11,8 +11,10 @@ import {
   type Signal,
   type SourceTrailItem,
 } from './data/intel'
+import type { ProvenanceId } from './provenance'
 
 export type WorldSourceTrust =
+  | ProvenanceId
   | 'public unauthenticated'
   | 'local derived'
   | 'simulated'
@@ -32,6 +34,114 @@ export type PublicWorldHeadline = {
   observedAt: number
 }
 
+export type WorldIntelCategory =
+  | 'geopolitics'
+  | 'macro'
+  | 'markets'
+  | 'commodities'
+  | 'infrastructure'
+  | 'social-attention'
+  | 'country'
+  | 'other'
+
+export type WorldIntelEvent = {
+  id: string
+  timestamp: number
+  title: string
+  summary: string
+  countryCodes: string[]
+  region: string
+  lat?: number
+  lon?: number
+  category: WorldIntelCategory | string
+  severity: Severity
+  confidence: number
+  sourceId: string
+  sourceUrl?: string
+  provenance: ProvenanceId
+  affectedAssets: string[]
+  affectedSectors: string[]
+  affectedCommodities: string[]
+  affectedCurrencies: string[]
+  extractedEntities: string[]
+  narrativeTags: string[]
+  rawPayloadHash: string
+  dedupeHash: string
+}
+
+export type MacroSnapshot = {
+  inflation?: number
+  policyRate?: number
+  gdpGrowth?: number
+  unemployment?: number
+  note: string
+  provenance: ProvenanceId
+}
+
+export type CountryIntelState = {
+  countryCode: string
+  countryName: string
+  flag: string
+  currentEventCount: number
+  macroSnapshot: MacroSnapshot
+  currency: string
+  equityProxies: string[]
+  majorCommodities: string[]
+  riskScore: number
+  narrativeAcceleration: number
+  topCurrentHeadlines: string[]
+  affectedTickers: string[]
+  lastUpdated: number
+  provenanceBreakdown: Record<ProvenanceId, number>
+}
+
+export type AssetIdentityType = 'equity' | 'ETF' | 'crypto' | 'FX' | 'commodity' | 'index' | 'country' | 'sector'
+
+export type AssetIdentity = {
+  symbol: string
+  name: string
+  type: AssetIdentityType
+  exchangeOrSource: string
+  iconUrl?: string
+  fallbackIcon: string
+  favorite: boolean
+  watchlistTags: string[]
+  aliases: string[]
+  relatedCountries: string[]
+  relatedSectors: string[]
+  dataAvailabilityStatus: string
+  provenanceCoverage: ProvenanceId[]
+}
+
+export type UserFavorite = {
+  id: string
+  kind: 'asset' | 'country' | 'event' | 'narrative'
+  targetId: string
+  label: string
+  createdAt: number
+}
+
+export type OsintSourceSnapshot = {
+  sourceId: string
+  sourceName: string
+  sourceType: string
+  endpointType: 'rest' | 'rss' | 'websocket' | 'local' | 'placeholder'
+  endpoint: string
+  pollIntervalMs: number
+  rateLimitMs: number
+  timeoutMs: number
+  enabled: boolean
+  status: 'idle' | 'online' | 'offline' | 'rate-limited' | 'failed' | 'disabled'
+  provenance: ProvenanceId
+  lastSuccessAt?: number
+  lastErrorAt?: number
+  lastError?: string
+  itemCount: number
+  sourceReliabilityScore: number
+  legalSafetyNote: string
+  parserAdapter: string
+}
+
 export type WorldIntelConnectorSnapshot = {
   enabled: boolean
   status: WorldIntelStatus
@@ -41,6 +151,11 @@ export type WorldIntelConnectorSnapshot = {
   updatedAt?: number
   lastError?: string
   headlines: PublicWorldHeadline[]
+  worldEvents: WorldIntelEvent[]
+  countries: CountryIntelState[]
+  assetIdentities: AssetIdentity[]
+  favorites: UserFavorite[]
+  sources: OsintSourceSnapshot[]
 }
 
 export type DerivedWorldIntel = {
@@ -160,6 +275,7 @@ const topicRules: TopicRule[] = [
 ]
 
 export function buildSeedWorldIntelSnapshot(): WorldIntelSnapshot {
+  const worldEvents = radarEvents.map((event) => radarEventToWorldIntelEvent(event))
   return {
     enabled: false,
     status: 'disabled',
@@ -169,6 +285,29 @@ export function buildSeedWorldIntelSnapshot(): WorldIntelSnapshot {
     updatedAt: undefined,
     lastError: undefined,
     headlines: [],
+    worldEvents,
+    countries: deriveCountryIntelState(worldEvents),
+    assetIdentities: deriveAssetIdentitiesFromEvents(worldEvents),
+    favorites: [],
+    sources: [
+      {
+        sourceId: 'seeded_local_world_layer',
+        sourceName: 'Seeded local world layer',
+        sourceType: 'local-seed',
+        endpointType: 'local',
+        endpoint: 'src/data/intel.ts',
+        pollIntervalMs: 0,
+        rateLimitMs: 0,
+        timeoutMs: 0,
+        enabled: true,
+        status: 'online',
+        provenance: 'simulated',
+        itemCount: worldEvents.length,
+        sourceReliabilityScore: 1,
+        legalSafetyNote: 'Local seeded context only; not live or verified.',
+        parserAdapter: 'seeded-radar-event-adapter',
+      },
+    ],
     events: radarEvents,
     signals: topSignals,
     dailyBrief,
@@ -177,9 +316,22 @@ export function buildSeedWorldIntelSnapshot(): WorldIntelSnapshot {
 }
 
 export function deriveWorldIntelSnapshot(connector: WorldIntelConnectorSnapshot): WorldIntelSnapshot {
-  const derived = deriveWorldIntel(connector.headlines, connector.sourceTrust)
+  const worldEvents =
+    connector.worldEvents.length > 0
+      ? connector.worldEvents
+      : connector.headlines.map((headline) =>
+          buildWorldIntelEventFromHeadline(headline, {
+            sourceId: connector.connectorId,
+            provenance: sourceTrustToProvenance(connector.sourceTrust),
+          }),
+        )
+  const derived = deriveWorldIntelFromEvents(worldEvents, connector.sourceTrust)
   return {
     ...connector,
+    worldEvents,
+    countries: connector.countries.length > 0 ? connector.countries : deriveCountryIntelState(worldEvents),
+    assetIdentities:
+      connector.assetIdentities.length > 0 ? connector.assetIdentities : deriveAssetIdentitiesFromEvents(worldEvents),
     ...derived,
   }
 }
@@ -213,6 +365,22 @@ export function deriveWorldIntel(
     dailyBrief: [...dynamicBrief, ...dailyBrief].slice(0, 7),
     rawSourceItems: [...dynamicRaw, ...rawSourceItems],
   }
+}
+
+export function deriveWorldIntelFromEvents(
+  worldEvents: WorldIntelEvent[],
+  sourceTrust: WorldSourceTrust,
+): DerivedWorldIntel {
+  const headlines = worldEvents.map((event): PublicWorldHeadline => ({
+    id: event.id,
+    title: event.title,
+    source: event.sourceId,
+    url: event.sourceUrl ?? '',
+    sector: String(event.category),
+    impact: `${event.summary} ${event.extractedEntities.join(' ')} ${event.narrativeTags.join(' ')}`,
+    observedAt: event.timestamp,
+  }))
+  return deriveWorldIntel(headlines, sourceTrust)
 }
 
 export function classifyWorldHeadline(headline: PublicWorldHeadline): ClassifiedHeadline | null {
@@ -253,6 +421,156 @@ export function classifyHeadlineText(title: string): { sector: string; impact: s
     sector: classified.topic.category,
     impact: `${classified.topic.label}; matched ${classified.matchedKeywords.join(', ')}`,
   }
+}
+
+export function buildWorldIntelEventFromHeadline(
+  headline: PublicWorldHeadline,
+  options: { sourceId?: string; provenance?: ProvenanceId } = {},
+): WorldIntelEvent {
+  const classified = classifyWorldHeadline(headline)
+  const topic = classified?.topic
+  const matchedKeywords = classified?.matchedKeywords ?? []
+  const text = `${headline.title} ${headline.sector} ${headline.impact}`
+  const countryCodes = inferCountryCodes(text, topic?.region)
+  const region = topic?.region ?? regionFromCountryCodes(countryCodes)
+  const coordinates = coordinatesForCountryCodes(countryCodes, region)
+  const category = categoryFor(topic?.category ?? headline.sector)
+  const affectedAssets = unique([...(topic?.markets ?? []), ...extractTickerLikeSymbols(text)]).slice(0, 16)
+  const affectedCommodities = inferCommodities(text, topic?.entities ?? [])
+  const affectedCurrencies = inferCurrencies(countryCodes, text)
+  const extractedEntities = unique([...(topic?.entities ?? []), ...matchedKeywords.map(titleCase)]).slice(0, 18)
+  const narrativeTags = unique([
+    topic?.label ?? (headline.sector || 'World news'),
+    ...(topic?.riskChannels ?? []),
+    ...matchedKeywords.map(titleCase),
+  ]).slice(0, 12)
+  const rawPayloadHash = stableId(`${headline.title}|${headline.source}|${headline.url}|${headline.observedAt}`)
+
+  return {
+    id: headline.id,
+    timestamp: headline.observedAt,
+    title: headline.title,
+    summary: headline.impact || topic?.narrative || 'Public world event retained without a stronger local mapping.',
+    countryCodes,
+    region,
+    lat: coordinates?.lat,
+    lon: coordinates?.lon,
+    category,
+    severity: topic?.severity ?? severityFromText(text),
+    confidence: confidenceFor(Math.max(1, matchedKeywords.length), options.provenance ?? 'public-unauthenticated'),
+    sourceId: options.sourceId ?? normalizeSourceId(headline.source),
+    sourceUrl: headline.url,
+    provenance: options.provenance ?? 'public-unauthenticated',
+    affectedAssets,
+    affectedSectors: inferSectors(text, topic?.category),
+    affectedCommodities,
+    affectedCurrencies,
+    extractedEntities,
+    narrativeTags,
+    rawPayloadHash,
+    dedupeHash: stableId(`${headline.title.toLowerCase()}|${countryCodes.join(',')}|${category}`),
+  }
+}
+
+export function deriveCountryIntelState(events: WorldIntelEvent[]): CountryIntelState[] {
+  const byCountry = new Map<string, WorldIntelEvent[]>()
+  for (const event of events) {
+    for (const code of event.countryCodes.length > 0 ? event.countryCodes : ['GLOBAL']) {
+      byCountry.set(code, [...(byCountry.get(code) ?? []), event])
+    }
+  }
+
+  return [...byCountry.entries()]
+    .map(([code, countryEvents]) => {
+      const meta = countryCatalog[code] ?? countryCatalog.GLOBAL
+      const latest = Math.max(...countryEvents.map((event) => event.timestamp))
+      const severityPressure = countryEvents.reduce((total, event) => total + severityWeight(event.severity), 0)
+      const affectedTickers = unique(countryEvents.flatMap((event) => event.affectedAssets)).slice(0, 12)
+      const provenanceBreakdown = emptyProvenanceBreakdown()
+      for (const event of countryEvents) {
+        provenanceBreakdown[event.provenance] = (provenanceBreakdown[event.provenance] ?? 0) + 1
+      }
+
+      return {
+        countryCode: code,
+        countryName: meta.name,
+        flag: meta.flag,
+        currentEventCount: countryEvents.length,
+        macroSnapshot: {
+          note: 'Macro series not available from current public sources in Phase 1.',
+          provenance: 'local-derived' as const,
+        },
+        currency: meta.currency,
+        equityProxies: meta.equityProxies,
+        majorCommodities: unique([...meta.commodities, ...countryEvents.flatMap((event) => event.affectedCommodities)]).slice(0, 8),
+        riskScore: Math.min(100, Math.round(18 + severityPressure * 10 + countryEvents.length * 4)),
+        narrativeAcceleration: Math.min(100, Math.round(countryEvents.length * 12 + severityPressure * 4)),
+        topCurrentHeadlines: countryEvents
+          .sort((left, right) => right.timestamp - left.timestamp)
+          .slice(0, 4)
+          .map((event) => event.title),
+        affectedTickers,
+        lastUpdated: latest,
+        provenanceBreakdown,
+      }
+    })
+    .sort((left, right) => right.riskScore - left.riskScore)
+}
+
+export function deriveAssetIdentitiesFromEvents(events: WorldIntelEvent[]): AssetIdentity[] {
+  return unique(events.flatMap((event) => event.affectedAssets))
+    .slice(0, 80)
+    .map((symbol) => buildAssetIdentity(symbol, {
+      relatedCountries: unique(events.filter((event) => event.affectedAssets.includes(symbol)).flatMap((event) => event.countryCodes)),
+      relatedSectors: unique(events.filter((event) => event.affectedAssets.includes(symbol)).flatMap((event) => event.affectedSectors)),
+      provenanceCoverage: unique(events.filter((event) => event.affectedAssets.includes(symbol)).map((event) => event.provenance)),
+    }))
+}
+
+export function buildAssetIdentity(
+  symbol: string,
+  options: Partial<Pick<AssetIdentity, 'relatedCountries' | 'relatedSectors' | 'provenanceCoverage' | 'favorite'>> = {},
+): AssetIdentity {
+  const normalized = symbol.toUpperCase()
+  const catalog = assetCatalog[normalized]
+  const type = catalog?.type ?? inferAssetIdentityType(normalized)
+  return {
+    symbol: normalized,
+    name: catalog?.name ?? `${normalized} watchlist asset`,
+    type,
+    exchangeOrSource: catalog?.exchangeOrSource ?? (type === 'crypto' ? 'public crypto mapping' : 'local universe'),
+    iconUrl: catalog?.iconUrl,
+    fallbackIcon: catalog?.fallbackIcon ?? fallbackIconFor(normalized, type),
+    favorite: options.favorite ?? false,
+    watchlistTags: catalog?.watchlistTags ?? [type.toLowerCase()],
+    aliases: unique([normalized, ...(catalog?.aliases ?? [])]),
+    relatedCountries: options.relatedCountries ?? catalog?.relatedCountries ?? [],
+    relatedSectors: options.relatedSectors ?? catalog?.relatedSectors ?? [],
+    dataAvailabilityStatus: catalog?.dataAvailabilityStatus ?? 'not available from current public sources; simulator/local derived only',
+    provenanceCoverage: options.provenanceCoverage ?? catalog?.provenanceCoverage ?? ['local-derived'],
+  }
+}
+
+function radarEventToWorldIntelEvent(event: RadarEvent): WorldIntelEvent {
+  return buildWorldIntelEventFromHeadline(
+    {
+      id: event.id,
+      title: event.title,
+      source: 'Seeded local world layer',
+      url: '',
+      sector: event.category,
+      impact: `${event.summary} ${event.relationshipReason}`,
+      observedAt: Date.now(),
+    },
+    { sourceId: 'seeded_local_world_layer', provenance: 'simulated' },
+  )
+}
+
+function sourceTrustToProvenance(sourceTrust: WorldSourceTrust): ProvenanceId {
+  if (sourceTrust === 'public unauthenticated') return 'public-unauthenticated'
+  if (sourceTrust === 'local derived') return 'local-derived'
+  if (sourceTrust === 'stale' || sourceTrust === 'failed') return 'local-derived'
+  return sourceTrust
 }
 
 function buildRadarEvent(items: ClassifiedHeadline[], sourceTrust: WorldSourceTrust): RadarEvent {
@@ -382,7 +700,16 @@ function buildRawSourceItem(item: ClassifiedHeadline): RawSourceItem {
 }
 
 function confidenceFor(sourceCount: number, sourceTrust: WorldSourceTrust): number {
-  const trustPenalty = sourceTrust === 'public unauthenticated' ? 8 : sourceTrust === 'stale' ? 18 : 12
+  const trustPenalty =
+    sourceTrust === 'verified'
+      ? 0
+      : sourceTrust === 'official-api'
+        ? 4
+        : sourceTrust === 'public unauthenticated' || sourceTrust === 'public-unauthenticated' || sourceTrust === 'rss-public'
+          ? 8
+          : sourceTrust === 'stale'
+            ? 18
+            : 12
   return Math.min(72, Math.max(48, 45 + sourceCount * 7 - trustPenalty))
 }
 
@@ -403,6 +730,401 @@ function groupBy<T>(items: T[], keyFor: (item: T) => string): Map<string, T[]> {
   return groups
 }
 
-function unique(items: string[]): string[] {
+function unique<T extends string>(items: T[]): T[] {
   return [...new Set(items)]
+}
+
+function stableId(input: string): string {
+  let hash = 0
+  for (let index = 0; index < input.length; index += 1) {
+    hash = (hash * 31 + input.charCodeAt(index)) >>> 0
+  }
+  return `world-${hash.toString(36)}`
+}
+
+type CountryMeta = {
+  name: string
+  flag: string
+  region: string
+  currency: string
+  lat: number
+  lon: number
+  equityProxies: string[]
+  commodities: string[]
+  keywords: string[]
+}
+
+const countryCatalog: Record<string, CountryMeta> = {
+  GLOBAL: {
+    name: 'Global',
+    flag: 'GL',
+    region: 'Global',
+    currency: 'DXY',
+    lat: 10,
+    lon: 0,
+    equityProxies: ['SPY', 'QQQ', 'ACWI'],
+    commodities: ['Oil', 'Gold'],
+    keywords: ['global', 'world', 'central bank', 'inflation'],
+  },
+  US: {
+    name: 'United States',
+    flag: 'US',
+    region: 'North America',
+    currency: 'USD',
+    lat: 38,
+    lon: -97,
+    equityProxies: ['SPY', 'QQQ', 'IWM'],
+    commodities: ['Oil', 'Natural Gas'],
+    keywords: ['united states', 'u.s.', 'us ', 'america', 'federal reserve', 'fed'],
+  },
+  CN: {
+    name: 'China',
+    flag: 'CN',
+    region: 'Asia Pacific',
+    currency: 'CNY',
+    lat: 35,
+    lon: 103,
+    equityProxies: ['FXI', 'MCHI'],
+    commodities: ['Copper', 'Rare Earths', 'Oil'],
+    keywords: ['china', 'beijing', 'chinese', 'tariff', 'rare earth'],
+  },
+  TW: {
+    name: 'Taiwan',
+    flag: 'TW',
+    region: 'Asia Pacific',
+    currency: 'TWD',
+    lat: 23.7,
+    lon: 121,
+    equityProxies: ['EWT', 'TSM', 'SOXX'],
+    commodities: ['Semiconductors'],
+    keywords: ['taiwan', 'taipei', 'tsmc'],
+  },
+  JP: {
+    name: 'Japan',
+    flag: 'JP',
+    region: 'Asia Pacific',
+    currency: 'JPY',
+    lat: 36,
+    lon: 138,
+    equityProxies: ['EWJ', 'DXJ'],
+    commodities: ['LNG'],
+    keywords: ['japan', 'tokyo', 'yen', 'boj', 'bank of japan'],
+  },
+  EU: {
+    name: 'European Union',
+    flag: 'EU',
+    region: 'Europe',
+    currency: 'EUR',
+    lat: 50,
+    lon: 10,
+    equityProxies: ['VGK', 'FEZ'],
+    commodities: ['Natural Gas', 'Power'],
+    keywords: ['europe', 'european union', 'ecb', 'eurozone', 'brussels'],
+  },
+  DE: {
+    name: 'Germany',
+    flag: 'DE',
+    region: 'Europe',
+    currency: 'EUR',
+    lat: 51,
+    lon: 10,
+    equityProxies: ['EWG'],
+    commodities: ['Natural Gas', 'Industrial Power'],
+    keywords: ['germany', 'berlin', 'german'],
+  },
+  GB: {
+    name: 'United Kingdom',
+    flag: 'GB',
+    region: 'Europe',
+    currency: 'GBP',
+    lat: 54,
+    lon: -2,
+    equityProxies: ['EWU'],
+    commodities: ['Natural Gas'],
+    keywords: ['united kingdom', 'uk ', 'britain', 'london', 'boe'],
+  },
+  RU: {
+    name: 'Russia',
+    flag: 'RU',
+    region: 'Europe',
+    currency: 'RUB',
+    lat: 60,
+    lon: 90,
+    equityProxies: ['Energy proxies'],
+    commodities: ['Oil', 'Natural Gas', 'Uranium'],
+    keywords: ['russia', 'moscow', 'russian', 'ukraine'],
+  },
+  UA: {
+    name: 'Ukraine',
+    flag: 'UA',
+    region: 'Europe',
+    currency: 'UAH',
+    lat: 49,
+    lon: 32,
+    equityProxies: ['Wheat', 'Europe risk'],
+    commodities: ['Wheat', 'Natural Gas'],
+    keywords: ['ukraine', 'kyiv', 'black sea'],
+  },
+  SA: {
+    name: 'Saudi Arabia',
+    flag: 'SA',
+    region: 'Middle East',
+    currency: 'SAR',
+    lat: 24,
+    lon: 45,
+    equityProxies: ['Oil proxies'],
+    commodities: ['Oil'],
+    keywords: ['saudi', 'riyadh', 'opec'],
+  },
+  IR: {
+    name: 'Iran',
+    flag: 'IR',
+    region: 'Middle East',
+    currency: 'IRR',
+    lat: 32,
+    lon: 53,
+    equityProxies: ['Oil risk'],
+    commodities: ['Oil'],
+    keywords: ['iran', 'tehran', 'hormuz'],
+  },
+  YE: {
+    name: 'Yemen / Red Sea corridor',
+    flag: 'YE',
+    region: 'Middle East',
+    currency: 'Route risk',
+    lat: 15,
+    lon: 43,
+    equityProxies: ['XLE', 'ZIM', 'DAL'],
+    commodities: ['Oil', 'Freight'],
+    keywords: ['red sea', 'suez', 'houthi', 'yemen'],
+  },
+  BR: {
+    name: 'Brazil',
+    flag: 'BR',
+    region: 'Latin America',
+    currency: 'BRL',
+    lat: -10,
+    lon: -55,
+    equityProxies: ['EWZ'],
+    commodities: ['Iron Ore', 'Soybeans', 'Oil'],
+    keywords: ['brazil', 'brasilia', 'real '],
+  },
+  CA: {
+    name: 'Canada',
+    flag: 'CA',
+    region: 'North America',
+    currency: 'CAD',
+    lat: 56,
+    lon: -106,
+    equityProxies: ['EWC'],
+    commodities: ['Oil', 'Uranium', 'Gold'],
+    keywords: ['canada', 'ottawa', 'canadian', 'bank of canada'],
+  },
+  NO: {
+    name: 'Norway',
+    flag: 'NO',
+    region: 'Europe',
+    currency: 'NOK',
+    lat: 61,
+    lon: 8,
+    equityProxies: ['Energy proxies'],
+    commodities: ['Oil', 'Natural Gas'],
+    keywords: ['norway', 'norwegian', 'norges bank'],
+  },
+}
+
+const assetCatalog: Record<string, Partial<AssetIdentity> & Pick<AssetIdentity, 'name' | 'type'>> = {
+  BTC: {
+    name: 'Bitcoin',
+    type: 'crypto',
+    exchangeOrSource: 'Coinbase/CoinCap public capable',
+    fallbackIcon: 'BTC',
+    watchlistTags: ['crypto', 'liquidity'],
+    aliases: ['Bitcoin', 'XBT'],
+    dataAvailabilityStatus: 'public unauthenticated crypto feeds when enabled; simulator default',
+    provenanceCoverage: ['public-unauthenticated', 'simulated'],
+  },
+  ETH: {
+    name: 'Ethereum',
+    type: 'crypto',
+    exchangeOrSource: 'Coinbase/CoinCap public capable',
+    fallbackIcon: 'ETH',
+    watchlistTags: ['crypto'],
+    aliases: ['Ethereum'],
+    dataAvailabilityStatus: 'public unauthenticated crypto feeds when enabled; simulator default',
+    provenanceCoverage: ['public-unauthenticated', 'simulated'],
+  },
+  KAS: {
+    name: 'Kaspa',
+    type: 'crypto',
+    exchangeOrSource: 'public crypto mapping / simulator fallback',
+    fallbackIcon: 'KAS',
+    watchlistTags: ['crypto', 'watchlist'],
+    aliases: ['Kaspa'],
+    dataAvailabilityStatus: 'simulator default; public availability depends on connector product support',
+    provenanceCoverage: ['simulated'],
+  },
+  SPY: { name: 'SPDR S&P 500 ETF', type: 'ETF', exchangeOrSource: 'NYSE Arca', fallbackIcon: 'SPY' },
+  QQQ: { name: 'Invesco QQQ Trust', type: 'ETF', exchangeOrSource: 'Nasdaq', fallbackIcon: 'QQQ' },
+  SOXX: { name: 'iShares Semiconductor ETF', type: 'ETF', exchangeOrSource: 'Nasdaq', fallbackIcon: 'SOX' },
+  SMH: { name: 'VanEck Semiconductor ETF', type: 'ETF', exchangeOrSource: 'Nasdaq', fallbackIcon: 'SMH' },
+  XLE: { name: 'Energy Select Sector SPDR', type: 'ETF', exchangeOrSource: 'NYSE Arca', fallbackIcon: 'XLE' },
+  XLK: { name: 'Technology Select Sector SPDR', type: 'sector', exchangeOrSource: 'NYSE Arca', fallbackIcon: 'XLK' },
+  GLD: { name: 'SPDR Gold Shares', type: 'commodity', exchangeOrSource: 'NYSE Arca', fallbackIcon: 'Au' },
+  CL: { name: 'WTI Crude proxy', type: 'commodity', exchangeOrSource: 'local commodity proxy', fallbackIcon: 'WTI' },
+  USO: { name: 'United States Oil Fund', type: 'commodity', exchangeOrSource: 'NYSE Arca', fallbackIcon: 'USO' },
+  DXY: { name: 'US Dollar Index', type: 'index', exchangeOrSource: 'local macro proxy', fallbackIcon: 'DXY' },
+  NVDA: { name: 'Nvidia', type: 'equity', exchangeOrSource: 'Nasdaq', fallbackIcon: 'NV' },
+  AMD: { name: 'Advanced Micro Devices', type: 'equity', exchangeOrSource: 'Nasdaq', fallbackIcon: 'AMD' },
+  TSM: { name: 'Taiwan Semiconductor Manufacturing', type: 'equity', exchangeOrSource: 'NYSE ADR', fallbackIcon: 'TSM' },
+  AAPL: { name: 'Apple', type: 'equity', exchangeOrSource: 'Nasdaq', fallbackIcon: 'APL' },
+  TSLA: { name: 'Tesla', type: 'equity', exchangeOrSource: 'Nasdaq', fallbackIcon: 'TSL' },
+  ZIM: { name: 'ZIM Integrated Shipping', type: 'equity', exchangeOrSource: 'NYSE', fallbackIcon: 'ZIM' },
+  VLO: { name: 'Valero Energy', type: 'equity', exchangeOrSource: 'NYSE', fallbackIcon: 'VLO' },
+  MP: { name: 'MP Materials', type: 'equity', exchangeOrSource: 'NYSE', fallbackIcon: 'MP' },
+  REMX: { name: 'VanEck Rare Earth/Strategic Metals ETF', type: 'ETF', exchangeOrSource: 'NYSE Arca', fallbackIcon: 'RE' },
+}
+
+function inferCountryCodes(text: string, region?: string): string[] {
+  const haystack = ` ${text.toLowerCase()} `
+  const matches = Object.entries(countryCatalog)
+    .filter(([code]) => code !== 'GLOBAL')
+    .filter(([, meta]) => meta.keywords.some((keyword) => haystack.includes(` ${keyword.toLowerCase()} `) || haystack.includes(keyword.toLowerCase())))
+    .map(([code]) => code)
+  if (matches.length > 0) {
+    return unique(matches).slice(0, 4)
+  }
+  if (region === 'Global' || region === 'Global Macro') {
+    return ['GLOBAL']
+  }
+  return ['GLOBAL']
+}
+
+function regionFromCountryCodes(countryCodes: string[]): string {
+  const first = countryCatalog[countryCodes[0] ?? 'GLOBAL']
+  return first?.region ?? 'Global'
+}
+
+function coordinatesForCountryCodes(countryCodes: string[], region: string): { lat: number; lon: number } | null {
+  const meta = countryCatalog[countryCodes[0] ?? 'GLOBAL']
+  if (meta) {
+    return { lat: meta.lat, lon: meta.lon }
+  }
+  const fallback: Record<string, { lat: number; lon: number }> = {
+    'Asia Pacific': { lat: 25, lon: 120 },
+    Europe: { lat: 50, lon: 10 },
+    'Middle East': { lat: 25, lon: 45 },
+    'North America': { lat: 39, lon: -98 },
+    Global: { lat: 10, lon: 0 },
+  }
+  return fallback[region] ?? null
+}
+
+function categoryFor(value: string): WorldIntelCategory {
+  const normalized = value.toLowerCase()
+  if (normalized.includes('trade') || normalized.includes('geopolitic') || normalized.includes('policy')) return 'geopolitics'
+  if (normalized.includes('macro') || normalized.includes('rate') || normalized.includes('inflation')) return 'macro'
+  if (normalized.includes('energy') || normalized.includes('commodity')) return 'commodities'
+  if (normalized.includes('shipping') || normalized.includes('route') || normalized.includes('infrastructure')) return 'infrastructure'
+  if (normalized.includes('market')) return 'markets'
+  return 'other'
+}
+
+function severityFromText(text: string): Severity {
+  const normalized = text.toLowerCase()
+  if (/(war|attack|missile|invasion|emergency|shutdown|crisis)/.test(normalized)) return 'critical'
+  if (/(sanction|tariff|shortage|delay|strike|ban|restriction|disruption)/.test(normalized)) return 'elevated'
+  if (/(watch|monitor|could|may|risk|concern)/.test(normalized)) return 'watch'
+  return 'watch'
+}
+
+function inferSectors(text: string, fallback?: string): string[] {
+  const normalized = text.toLowerCase()
+  const sectors: string[] = []
+  if (/(semiconductor|chip|gpu|ai|data center)/.test(normalized)) sectors.push('Semiconductors', 'Technology')
+  if (/(oil|gas|lng|pipeline|energy|opec)/.test(normalized)) sectors.push('Energy')
+  if (/(shipping|freight|port|suez|red sea)/.test(normalized)) sectors.push('Shipping', 'Transportation')
+  if (/(tariff|trade|export|import)/.test(normalized)) sectors.push('Industrials', 'Consumer goods')
+  if (/(rare earth|lithium|battery|copper|uranium)/.test(normalized)) sectors.push('Materials', 'Defense')
+  if (fallback) sectors.push(fallback)
+  return unique(sectors).slice(0, 8)
+}
+
+function inferCommodities(text: string, entities: string[]): string[] {
+  const normalized = `${text} ${entities.join(' ')}`.toLowerCase()
+  const commodities: string[] = []
+  if (/(oil|crude|wti|brent|opec)/.test(normalized)) commodities.push('Oil')
+  if (/(natural gas|lng|pipeline|gas storage)/.test(normalized)) commodities.push('Natural Gas')
+  if (/(gold|real yield)/.test(normalized)) commodities.push('Gold')
+  if (/(copper|power grid|data center)/.test(normalized)) commodities.push('Copper')
+  if (/(rare earth|magnet|critical mineral)/.test(normalized)) commodities.push('Rare Earths')
+  if (/(lithium|battery)/.test(normalized)) commodities.push('Lithium')
+  if (/(uranium|nuclear)/.test(normalized)) commodities.push('Uranium')
+  return unique(commodities)
+}
+
+function inferCurrencies(countryCodes: string[], text: string): string[] {
+  const currencies = countryCodes.map((code) => countryCatalog[code]?.currency).filter((currency): currency is string => Boolean(currency))
+  const normalized = text.toLowerCase()
+  if (/(dollar|fed|federal reserve|dxy)/.test(normalized)) currencies.push('USD', 'DXY')
+  if (/(euro|ecb|eurozone)/.test(normalized)) currencies.push('EUR')
+  if (/(yen|boj|japan)/.test(normalized)) currencies.push('JPY')
+  return unique(currencies).slice(0, 6)
+}
+
+function extractTickerLikeSymbols(text: string): string[] {
+  const matches = text.match(/\b[A-Z]{2,5}\b/g) ?? []
+  return matches.filter((value) => !['THE', 'AND', 'FOR', 'WITH', 'FROM', 'THIS'].includes(value)).slice(0, 10)
+}
+
+function inferAssetIdentityType(symbol: string): AssetIdentityType {
+  if (['BTC', 'ETH', 'SOL', 'KAS', 'AVAX', 'LINK'].includes(symbol)) return 'crypto'
+  if (['EUR/USD', 'USD/JPY', 'GBP/USD', 'DXY'].includes(symbol)) return 'FX'
+  if (['CL', 'WTI', 'USO', 'GLD', 'XAUUSD', 'COPPER', 'UNG'].includes(symbol)) return 'commodity'
+  if (['SPX', 'NDX', 'DJI', 'RUT', 'VIX', 'DXY'].includes(symbol)) return 'index'
+  if (symbol.startsWith('XL')) return 'sector'
+  if (['SPY', 'QQQ', 'SOXX', 'SMH', 'FXI', 'REMX', 'LIT', 'XAR', 'TLT', 'VGK'].includes(symbol)) return 'ETF'
+  return 'equity'
+}
+
+function fallbackIconFor(symbol: string, type: AssetIdentityType): string {
+  if (type === 'country') return symbol.slice(0, 2)
+  if (type === 'crypto') return symbol.slice(0, 4)
+  return symbol.replace(/[^A-Z]/g, '').slice(0, 3) || type.slice(0, 2).toUpperCase()
+}
+
+function titleCase(value: string): string {
+  return value
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(' ')
+}
+
+function normalizeSourceId(source: string): string {
+  return source.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'public_world_source'
+}
+
+function severityWeight(severity: Severity): number {
+  if (severity === 'critical') return 4
+  if (severity === 'elevated') return 2.4
+  if (severity === 'watch') return 1.2
+  return 0.4
+}
+
+function emptyProvenanceBreakdown(): Record<ProvenanceId, number> {
+  return {
+    simulated: 0,
+    'public-unauthenticated': 0,
+    'public-disclosure': 0,
+    'official-api': 0,
+    'rss-public': 0,
+    'local-derived': 0,
+    'local-computed': 0,
+    'math-derived': 0,
+    'local-model': 0,
+    'model-inferred': 0,
+    'auth-gated': 0,
+    verified: 0,
+  }
 }

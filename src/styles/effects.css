@@ -1,0 +1,60 @@
+/*
+ * Atlasz effects layer
+ * Reusable, restrained high-tech motion + surface utilities. Keep additive and
+ * performance-friendly. Effects respect prefers-reduced-motion.
+ */
+
+/* Live pulse ring — consumed by status dots / verified provenance badges.
+ * Reads --prov (or any accent) from the element so the ring matches its hue. */
+@keyframes fx-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--fx-accent, var(--prov, #2dd4bf)) 55%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--fx-accent, var(--prov, #2dd4bf)) 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--fx-accent, var(--prov, #2dd4bf)) 0%, transparent);
+  }
+}
+
+/* Skeleton shimmer for loading states. */
+@keyframes fx-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.fx-glass {
+  background: rgba(13, 17, 16, 0.72);
+  backdrop-filter: blur(14px) saturate(120%);
+  border: 1px solid var(--line);
+}
+
+.fx-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--panel-2);
+  border-radius: 6px;
+}
+
+.fx-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(148, 163, 184, 0.08),
+    transparent
+  );
+  animation: fx-shimmer 1.4s var(--ease-out, ease) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-skeleton::after,
+  [class*="fx-pulse"] {
+    animation: none !important;
+  }
+}

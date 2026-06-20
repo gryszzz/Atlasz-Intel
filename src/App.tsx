@@ -1,4 +1,4 @@
-import { Component, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { Component, Suspense, lazy, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import {
   Activity,
   AlertTriangle,
@@ -21,19 +21,7 @@ import {
   ShieldAlert,
   Zap,
 } from 'lucide-react'
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
-import { Background, Controls, MiniMap, ReactFlow, type Edge, type Node } from '@xyflow/react'
-import '@xyflow/react/dist/style.css'
+import type { Edge, Node } from '@xyflow/react'
 import './App.css'
 import { CommandMenuButton, CommandPalette } from './CommandPalette'
 import { buildNavActions, type CommandAction } from './commandActions'
@@ -41,6 +29,28 @@ import { DecisionJournal } from './DecisionJournal'
 import { decisionJournal } from './intelClient'
 import { riskChainFor } from './intelGraphData'
 import { DataCorePanel, LiveMarketReadout, PulseIndicator, RealtimePulsePanel } from './RealtimeWidgets'
+import { ChartSkeleton, GraphSkeleton, GlobeSkeleton } from './components/ui/Skeletons'
+
+// Heavy visual libraries (recharts, @xyflow/react) and the World Intelligence
+// view are loaded lazily so they stay out of the app startup chunk.
+const WorldIntelligenceView = lazy(() =>
+  import('./WorldIntelligenceView').then((m) => ({ default: m.WorldIntelligenceView })),
+)
+const MarketPriceChart = lazy(() =>
+  import('./components/quant/MarketCharts').then((m) => ({ default: m.MarketPriceChart })),
+)
+const MarketVolumeChart = lazy(() =>
+  import('./components/quant/MarketCharts').then((m) => ({ default: m.MarketVolumeChart })),
+)
+const SocialVelocityChart = lazy(() =>
+  import('./components/quant/MarketCharts').then((m) => ({ default: m.SocialVelocityChart })),
+)
+const RelationshipGraph = lazy(() =>
+  import('./components/graph/RelationshipGraph').then((m) => ({ default: m.RelationshipGraph })),
+)
+const QuantTerminalView = lazy(() =>
+  import('./components/quant/QuantTerminalView').then((m) => ({ default: m.QuantTerminalView })),
+)
 import { addUniverseAsset, setPulseEnabled as setEnginePulse } from './realtimeStore'
 import { resolveAssetQuery, type AssetUniverseItem } from './assetUniverse'
 import { useWorldIntelSnapshot } from './worldIntelStore'
@@ -68,7 +78,7 @@ import {
   type SourceTrailItem,
 } from './data/intel'
 
-type ViewId = 'command' | 'terminal' | 'radar' | 'social' | 'graph' | 'analyst' | 'brief' | 'decision'
+type ViewId = 'command' | 'world' | 'terminal' | 'quant' | 'radar' | 'social' | 'graph' | 'analyst' | 'brief' | 'decision'
 type LayerId =
   | 'market'
   | 'news'
@@ -139,13 +149,15 @@ type AnalystMessage = {
 
 const views: Array<{ id: ViewId; label: string; icon: typeof MonitorDot }> = [
   { id: 'command', label: 'Command Center', icon: MonitorDot },
+  { id: 'world', label: 'World Intel', icon: Globe2 },
   { id: 'terminal', label: 'Market Terminal', icon: LineChart },
+  { id: 'quant', label: 'Quant Desk', icon: Crosshair },
   { id: 'radar', label: 'World Radar', icon: RadioTower },
   { id: 'social', label: 'Social Pulse', icon: Activity },
   { id: 'graph', label: 'Entity Graph', icon: Network },
   { id: 'analyst', label: 'AI Analyst', icon: BrainCircuit },
   { id: 'brief', label: 'Daily Brief', icon: FileText },
-  { id: 'decision', label: 'Decision Journal', icon: BookOpen },
+  { id: 'decision', label: 'Research Notes', icon: BookOpen },
 ]
 
 const promptChips = [
@@ -340,13 +352,13 @@ const socialPulsePosts: SocialPulsePost[] = [
     tier: 'uncertainty',
     handle: '@risk-notes',
     accountType: 'unknown',
-    text: 'Uncertainty: account quality is uneven, several posts recycle the same screenshot, and there is no confirmed customer-size data.',
+    text: 'Uncertainty: account quality is uneven, several posts recycle the same image, and there is no confirmed customer-size data.',
     observedAt: '09:10 ET',
     minutesAgo: 5,
     reachScore: 54,
     engagement: 67,
     credibility: 71,
-    keywords: ['duplicate screenshot', 'account quality', 'customer size'],
+    keywords: ['duplicate image', 'account quality', 'customer size'],
     linkedMarkets: ['AIXR'],
     sourceUrl: 'local://social/aixr-uncertainty',
   },
@@ -853,6 +865,7 @@ function App() {
   const {
     snapshot: worldSnapshot,
     refresh: refreshWorldIntel,
+    toggleFavorite: toggleWorldFavorite,
     loading: worldIntelLoading,
   } = useWorldIntelSnapshot()
   const worldEvents = worldSnapshot.events
@@ -1062,11 +1075,38 @@ function App() {
 
   const paletteActions: CommandAction[] = [
     ...buildNavActions(views, setActiveView),
+    ...worldSnapshot.worldEvents.slice(0, 24).map((event): CommandAction => ({
+      id: `world-event:${event.id}`,
+      label: event.title,
+      group: 'World Events',
+      hint: `${event.region} / ${event.provenance}`,
+      keywords: [event.summary, event.category, event.region, ...event.affectedAssets, ...event.narrativeTags].join(' '),
+      icon: RadioTower,
+      perform: () => selectEvent(event.id, 'world'),
+    })),
+    ...worldSnapshot.countries.slice(0, 18).map((country): CommandAction => ({
+      id: `country:${country.countryCode}`,
+      label: country.countryName,
+      group: 'Countries',
+      hint: `${country.currency} / risk ${country.riskScore}`,
+      keywords: [country.countryCode, country.currency, ...country.affectedTickers, ...country.topCurrentHeadlines].join(' '),
+      icon: Globe2,
+      perform: () => setActiveView('world'),
+    })),
+    ...worldSnapshot.assetIdentities.slice(0, 28).map((asset): CommandAction => ({
+      id: `asset:${asset.symbol}`,
+      label: asset.symbol,
+      group: 'Assets',
+      hint: `${asset.type} / ${asset.exchangeOrSource}`,
+      keywords: [asset.name, asset.type, asset.exchangeOrSource, ...asset.aliases, ...asset.watchlistTags].join(' '),
+      icon: LineChart,
+      perform: () => selectTicker(asset.symbol, 'world'),
+    })),
     {
       id: 'act:create-decision',
-      label: 'Create Decision',
+      label: 'Save Research Note',
       group: 'Intelligence',
-      hint: 'New thesis',
+      hint: 'Context note',
       icon: BookOpen,
       perform: () => setActiveView('decision'),
     },
@@ -1107,14 +1147,9 @@ function App() {
     <main className="app-shell">
       <CommandPalette actions={paletteActions} />
       <aside className="sidebar" aria-label="Atlasz Intel sections">
-        <div className="brand-lockup">
-          <div className="brand-mark">
-            <Activity size={20} />
-          </div>
-          <div>
-            <span className="eyebrow">Local-first terminal</span>
-            <h1>Atlasz Intel</h1>
-          </div>
+        <div className="brand-lockup brand-lockup-banner">
+          <img className="brand-banner" src="/atlasz-logo.png" alt="Atlasz Intel" />
+          <span className="eyebrow">Local-first terminal</span>
         </div>
 
         <nav className="nav-stack">
@@ -1384,6 +1419,19 @@ function App() {
           </section>
         )}
 
+        {activeView === 'world' && (
+          <Suspense fallback={<div className="world-panel world-map-panel"><GlobeSkeleton /></div>}>
+            <WorldIntelligenceView
+              loading={worldIntelLoading}
+              onRefresh={refreshWorldIntel}
+              onSelectEvent={(eventId) => selectEvent(eventId)}
+              onSelectTicker={(ticker) => selectTicker(ticker, 'terminal')}
+              onToggleFavorite={toggleWorldFavorite}
+              snapshot={worldSnapshot}
+            />
+          </Suspense>
+        )}
+
         {activeView === 'terminal' && (
           <section className="dashboard-grid terminal-grid">
             <article className="panel terminal-chart-panel">
@@ -1398,21 +1446,9 @@ function App() {
               </div>
               <LiveMarketReadout symbol={selectedTicker} enabled={pulseEnabled} />
               <div className="chart-frame">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData} margin={{ top: 18, right: 18, left: 0, bottom: 8 }}>
-                    <defs>
-                      <linearGradient id="marketGradient" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="5%" stopColor="#5eead4" stopOpacity={0.55} />
-                        <stop offset="95%" stopColor="#5eead4" stopOpacity={0.02} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid stroke="#1c2825" vertical={false} />
-                    <XAxis dataKey="time" stroke="#6c7d76" tickLine={false} axisLine={false} />
-                    <YAxis stroke="#6c7d76" tickLine={false} axisLine={false} width={58} domain={['dataMin', 'dataMax']} />
-                    <Tooltip contentStyle={{ background: '#0d1110', border: '1px solid #26322f', color: '#f2fff9' }} />
-                    <Area type="monotone" dataKey="price" stroke="#5eead4" strokeWidth={2.5} fill="url(#marketGradient)" />
-                  </AreaChart>
-                </ResponsiveContainer>
+                <Suspense fallback={<ChartSkeleton />}>
+                  <MarketPriceChart data={chartData} />
+                </Suspense>
               </div>
             </article>
 
@@ -1438,18 +1474,18 @@ function App() {
             <article className="panel wide-panel">
               <PanelHeader icon={Activity} label="Volume" title="Intraday participation" />
               <div className="bar-frame">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} margin={{ top: 10, right: 18, left: 0, bottom: 8 }}>
-                    <CartesianGrid stroke="#1c2825" vertical={false} />
-                    <XAxis dataKey="time" stroke="#6c7d76" tickLine={false} axisLine={false} />
-                    <YAxis stroke="#6c7d76" tickLine={false} axisLine={false} width={44} />
-                    <Tooltip contentStyle={{ background: '#0d1110', border: '1px solid #26322f', color: '#f2fff9' }} />
-                    <Bar dataKey="volume" fill="#facc15" radius={[5, 5, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                <Suspense fallback={<ChartSkeleton />}>
+                  <MarketVolumeChart data={chartData} />
+                </Suspense>
               </div>
             </article>
           </section>
+        )}
+
+        {activeView === 'quant' && (
+          <Suspense fallback={<div className="panel"><ChartSkeleton /></div>}>
+            <QuantTerminalView />
+          </Suspense>
         )}
 
         {activeView === 'radar' && (
@@ -1546,22 +1582,18 @@ function App() {
             <article className="panel graph-panel">
               <PanelHeader icon={Network} label="Entity Graph" title="Relationships between events, markets, and exposures" />
               <div className="graph-frame">
-                <ReactFlow
-                  nodes={flowNodes}
-                  edges={flowEdges}
-                  fitView
-                  onNodeClick={(_event, node) => {
-                    setSelectedGraphNodeId(node.id)
-                    if (worldEvents.some((event) => event.id === node.id)) {
-                      setSelectedEventId(node.id)
-                    }
-                  }}
-                  proOptions={{ hideAttribution: true }}
-                >
-                  <MiniMap pannable zoomable nodeColor="#5eead4" maskColor="rgba(5, 6, 7, 0.72)" />
-                  <Controls />
-                  <Background color="#20302d" gap={22} />
-                </ReactFlow>
+                <Suspense fallback={<GraphSkeleton />}>
+                  <RelationshipGraph
+                    nodes={flowNodes}
+                    edges={flowEdges}
+                    onNodeClick={(nodeId) => {
+                      setSelectedGraphNodeId(nodeId)
+                      if (worldEvents.some((event) => event.id === nodeId)) {
+                        setSelectedEventId(nodeId)
+                      }
+                    }}
+                  />
+                </Suspense>
               </div>
             </article>
             <article className="panel">
@@ -1680,7 +1712,7 @@ function App() {
         {activeView === 'decision' && (
           <section className="dashboard-grid brief-grid">
             <article className="panel wide-panel">
-              <PanelHeader icon={BookOpen} label="Decision Journal" title="Thesis, evidence, review, and post-mortem" />
+              <PanelHeader icon={BookOpen} label="Research Notes" title="Observation, evidence, follow-up, and outcome context" />
               <DecisionJournal />
             </article>
           </section>
@@ -2037,22 +2069,9 @@ function SocialPulseModule({
 
       {!compact && (
         <div className="social-velocity-chart">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={velocityChartData} margin={{ top: 12, right: 18, left: 0, bottom: 6 }}>
-              <defs>
-                <linearGradient id="socialVelocityGradient" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="5%" stopColor="#67e8f9" stopOpacity={0.5} />
-                  <stop offset="95%" stopColor="#67e8f9" stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid stroke="#1c2825" vertical={false} />
-              <XAxis dataKey="time" stroke="#6c7d76" tickLine={false} axisLine={false} />
-              <YAxis stroke="#6c7d76" tickLine={false} axisLine={false} width={44} />
-              <Tooltip contentStyle={{ background: '#0d1110', border: '1px solid #26322f', color: '#f2fff9' }} />
-              <Area type="monotone" dataKey="volume" stroke="#67e8f9" strokeWidth={2.2} fill="url(#socialVelocityGradient)" />
-              <Area type="monotone" dataKey="velocity" stroke="#facc15" strokeWidth={1.7} fill="transparent" />
-            </AreaChart>
-          </ResponsiveContainer>
+          <Suspense fallback={<ChartSkeleton />}>
+            <SocialVelocityChart data={velocityChartData} />
+          </Suspense>
         </div>
       )}
 

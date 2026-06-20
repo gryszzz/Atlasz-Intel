@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url'
 import { createPersistence } from './persistence'
 import { RealtimeService } from './realtimeService'
 import { WorldIntelService } from './worldIntelService'
+import { QuantService } from './quant/quantService'
+import { HistoricalPlaybookService } from './intel/historicalPlaybookService'
 import { DataIngestOrchestrator } from './ingest/dataIngestOrchestrator'
 import type {
   DailyBriefRecord,
@@ -19,6 +21,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 let persistence: IntelPersistence | null = null
 let realtime: RealtimeService | null = null
 let worldIntel: WorldIntelService | null = null
+let quant: QuantService | null = null
+let playbook: HistoricalPlaybookService | null = null
 let dataIngest: DataIngestOrchestrator | null = null
 
 function requirePersistence(): IntelPersistence {
@@ -41,6 +45,20 @@ function requireWorldIntel(): WorldIntelService {
     worldIntel = new WorldIntelService(requirePersistence())
   }
   return worldIntel
+}
+
+function requireQuant(): QuantService {
+  if (!quant) {
+    quant = new QuantService(requirePersistence())
+  }
+  return quant
+}
+
+function requirePlaybook(): HistoricalPlaybookService {
+  if (!playbook) {
+    playbook = new HistoricalPlaybookService(requirePersistence())
+  }
+  return playbook
 }
 
 function requireDataIngest(): DataIngestOrchestrator {
@@ -157,6 +175,13 @@ ipcMain.handle('atlasz:realtime:replay:seek', (_event, cursor: number) =>
 
 ipcMain.handle('atlasz:world:snapshot', () => requireWorldIntel().snapshot())
 ipcMain.handle('atlasz:world:refresh', () => requireWorldIntel().refresh())
+ipcMain.handle('atlasz:world:favorite', (_event, kind: 'asset' | 'country' | 'event' | 'narrative', targetId: string, label: string) =>
+  requireWorldIntel().toggleFavorite(kind, targetId, label),
+)
+ipcMain.handle('atlasz:quant:snapshot', () => requireQuant().snapshot())
+
+ipcMain.handle('atlasz:intel:playbook', (_event, eventId: string) => requirePlaybook().playbookFor(eventId))
+
 ipcMain.handle('atlasz:ingest:status', () => requireDataIngest().status())
 
 app.whenReady().then(() => {

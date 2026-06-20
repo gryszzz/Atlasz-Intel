@@ -21,11 +21,25 @@ function formatRate(value: number | undefined): string {
   return `${(value ?? 0).toFixed(1)}/s`
 }
 
+function formatMicros(value: number | null | undefined): string {
+  if (value === null || value === undefined) {
+    return '--'
+  }
+  return `${value.toFixed(0)}us`
+}
+
 function formatTimestamp(value: number | undefined): string {
   if (!value) {
     return '--'
   }
   return new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+}
+
+function formatMicrostructureMode(value: string | undefined): string {
+  if (value === 'TRUE_L2_ORDER_BOOK') return 'TRUE L2 ORDER BOOK'
+  if (value === 'TOP_OF_BOOK_ONLY') return 'TOP OF BOOK ONLY'
+  if (value === 'PROXY_TRADE_FLOW_PRESSURE') return 'PROXY TRADE-FLOW'
+  return 'MICROSTRUCTURE UNAVAILABLE'
 }
 
 function formatSqliteMode(value: RealtimeHealth['sqliteMode'] | undefined): string {
@@ -209,6 +223,9 @@ export function DataCorePanel() {
   )
   const isReplay = snapshot.status.mode === 'replay' || replay?.active
   const signals = snapshot.frame?.signals ?? []
+  const microstructure = health?.microstructure
+  const microSignals = microstructure?.topSignals ?? []
+  const liquidity = health?.liquidityHistory
 
   useEffect(() => {
     const ingest = desktopIngest()
@@ -273,6 +290,16 @@ export function DataCorePanel() {
         <Metric label="SQLite" value={formatSqliteMode(health?.sqliteMode ?? snapshot.status.sqliteMode)} />
       </div>
 
+      <div className="rt-liquidity-grid">
+        <Metric label="Market rows" value={`${liquidity?.persistedTicks ?? 0}`} />
+        <Metric label="Symbols" value={`${liquidity?.persistedSymbols ?? 0}`} />
+        <Metric label="Last write" value={formatTimestamp(liquidity?.lastPersistedAt)} />
+        <Metric label="Sample" value={`${liquidity?.sampleMs ?? 1000}ms`} />
+      </div>
+      <p className="rt-liquidity-note">
+        {liquidity?.note ?? 'Liquidity history is sampled only after the local data core starts.'}
+      </p>
+
       <div className="rt-connector-list">
         {(health?.connectors ?? []).slice(0, 5).map((connector) => (
           <div className={connector.id === health?.activeConnectorId ? 'active' : ''} key={connector.id}>
@@ -336,6 +363,43 @@ export function DataCorePanel() {
           {ingestStatus.lastError && <p>{ingestStatus.lastError}</p>}
         </div>
       )}
+
+      <div className="rt-microstructure">
+        <div className="rt-micro-head">
+          <div>
+            <span>Microstructure</span>
+            <strong>{microstructure?.enabled ? 'Stress context' : 'not available'}</strong>
+          </div>
+          <em>{formatMicrostructureMode(microstructure?.dataMode)}</em>
+        </div>
+        <div className="rt-micro-grid">
+          <Metric label="Book updates" value={`${microstructure?.updateCount ?? 0}`} />
+          <Metric label="Tracked" value={`${microstructure?.trackedSymbols ?? 0}`} />
+          <Metric label="Shocks" value={`${microstructure?.shockCount ?? 0}`} tone={(microstructure?.shockCount ?? 0) > 0 ? 'warn' : undefined} />
+          <Metric label="Threshold" value={`${microstructure?.zScoreThreshold ?? 2.5}σ`} />
+          <Metric label="Latency" value={formatMicros(microstructure?.latencyMicrosAvg)} />
+          <Metric label="Jitter" value={formatMicros(microstructure?.jitterMicros)} />
+        </div>
+        <p className="rt-micro-note">
+          {microstructure?.note ??
+            'Microstructure context is disabled in this runtime. Public trade-flow data is never labeled as verified depth.'}
+        </p>
+        {microSignals.length > 0 ? (
+          <ul className="rt-micro-list" aria-label="Top microstructure signals">
+            {microSignals.slice(0, 3).map((signal) => (
+              <li key={signal.id}>
+                <span>{signal.symbol}</span>
+                <strong className={`rt-micro-severity ${signal.severity}`}>{signal.severity}</strong>
+                <em>{signal.dataMode === 'TRUE_L2_ORDER_BOOK' ? `OBI ${signal.obi.toFixed(2)}` : `pressure ${signal.obi.toFixed(2)}`}</em>
+                <em>{signal.dataMode === 'TRUE_L2_ORDER_BOOK' ? `OFI z ${signal.ofiZScore.toFixed(2)}` : `flow z ${signal.ofiZScore.toFixed(2)}`}</em>
+                <small>{formatMicrostructureMode(signal.dataMode)}</small>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="rt-empty rt-micro-empty">No microstructure stress above threshold in the current local window.</div>
+        )}
+      </div>
 
       <div className="rt-replay-controls">
         <button

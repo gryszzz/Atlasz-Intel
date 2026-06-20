@@ -40,7 +40,7 @@ function fuzzyScore(haystack: string, needle: string): number {
 
 export function CommandPalette({
   actions,
-  placeholder = 'Search Atlasz — modules, markets, decisions…',
+  placeholder = 'Search Atlasz — modules, markets, research notes…',
 }: {
   actions: CommandAction[]
   placeholder?: string
@@ -163,7 +163,7 @@ export function CommandPalette({
       <div className="cmdk-panel" role="dialog" aria-modal="true" aria-label="Atlasz command menu" onKeyDown={onListKeyDown}>
         <div className="cmdk-brand">
           <span className="cmdk-brand-mark" aria-hidden>
-            <Command size={13} />
+            <img src="/atlasz-logo.png" alt="" />
           </span>
           <span className="cmdk-brand-name">Atlasz Intel</span>
           <span className="cmdk-brand-sub">Command menu</span>
@@ -185,7 +185,7 @@ export function CommandPalette({
             <div className="cmdk-empty">
               <Compass size={22} aria-hidden />
               <p>No commands match{query.trim() ? ` “${query.trim()}”` : ''}.</p>
-              <span>Try a module name, or “decision”, “pulse”, “market”.</span>
+              <span>Try a module name, or “research”, “pulse”, “market”.</span>
             </div>
           ) : (
             groups.map((group) => (

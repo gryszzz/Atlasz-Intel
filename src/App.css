@@ -24,16 +24,19 @@
   padding: 18px 10px 12px;
 }
 
-.brand-mark {
-  display: grid;
-  width: 42px;
-  height: 42px;
-  place-items: center;
-  border: 1px solid rgba(94, 234, 212, 0.45);
-  border-radius: 8px;
-  background: #0c1815;
-  color: var(--green);
-  box-shadow: 0 0 26px rgba(94, 234, 212, 0.12);
+.brand-lockup-banner {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 8px 10px;
+}
+
+.brand-banner {
+  display: block;
+  width: min(100%, 238px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 18px rgba(94, 234, 212, 0.14));
 }
 
 .eyebrow,
@@ -45,12 +48,6 @@
   font-weight: 700;
   letter-spacing: 0;
   text-transform: uppercase;
-}
-
-.brand-lockup h1 {
-  margin: 4px 0 0;
-  font-size: 25px;
-  line-height: 1;
 }
 
 .nav-stack {

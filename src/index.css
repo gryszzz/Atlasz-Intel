@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "./styles/tokens.css";
+@import "./styles/effects.css";
 
 :root {
   --bg: #050607;

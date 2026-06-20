@@ -10,6 +10,15 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+release
+release-artifacts
+*.AppImage
+*.blockmap
+*.dmg
+*.exe
+*.msi
+*.snap
+*.zip
 *.local
 
 # Local env / credentials (never commit real keys); .env.example is tracked

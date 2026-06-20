@@ -2,6 +2,9 @@
 
 import type { ConnectorId, LiveEngineSnapshot, LiveEngineStatus, RealtimeHealth, ReplayState } from './realtime'
 import type { WorldIntelSnapshot } from './worldIntel'
+import type { QuantTerminalSnapshot } from './quant'
+import type { HistoricalPlaybook } from './intel'
+import type { ThesisDashboard, ThesisDraft } from './engine/decisionJournal'
 
 declare global {
   type AtlaszDesktopMeta = {
@@ -59,6 +62,21 @@ declare global {
     world?: {
       snapshot: () => Promise<WorldIntelSnapshot>
       refresh: () => Promise<WorldIntelSnapshot>
+      favorite: (
+        kind: 'asset' | 'country' | 'event' | 'narrative',
+        targetId: string,
+        label: string,
+      ) => Promise<WorldIntelSnapshot>
+    }
+    quant?: {
+      snapshot: () => Promise<QuantTerminalSnapshot>
+    }
+    intel?: {
+      playbook: (eventId: string) => Promise<HistoricalPlaybook>
+    }
+    thesis?: {
+      save: (draft: ThesisDraft) => Promise<ThesisDashboard>
+      dashboard: () => Promise<ThesisDashboard>
     }
     ingest?: {
       status: () => Promise<AtlaszPublicIngestStatus>

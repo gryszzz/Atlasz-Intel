@@ -1,7 +1,9 @@
 {
   "name": "atlasz-intel",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.1.0",
+  "description": "Local-first world intelligence command center for market context, public event streams, entity graphs, and research notes.",
+  "author": "Atlasz Intel",
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -47,6 +49,8 @@
   "build": {
     "appId": "com.atlasz.intel",
     "productName": "Atlasz Intel",
+    "icon": "build/icon.png",
+    "npmRebuild": false,
     "directories": {
       "output": "release"
     },
@@ -56,13 +60,16 @@
       "package.json"
     ],
     "mac": {
+      "icon": "build/icon.icns",
       "category": "public.app-category.finance"
     },
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "build/icon.ico"
     },
     "linux": {
       "target": "AppImage",
+      "icon": "build/icon.png",
       "category": "Finance"
     }
   }

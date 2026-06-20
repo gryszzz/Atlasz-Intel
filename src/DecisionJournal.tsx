@@ -1,16 +1,15 @@
 /**
- * Decision Journal — the discipline / edge layer.
+ * Research Notes — the local context layer.
  *
- * A serious thesis + review workflow (not a diary gimmick): every entry records
- * the thesis, the evidence it rests on, conviction, the emotional state it was
- * made in, and a scheduled review for an honest post-mortem. Persists through
- * the renderer client (desktop SQLite store when present, localStorage in the
- * browser preview).
+ * A serious note + follow-up workflow: every entry records the observation,
+ * evidence, confidence, emotional state, and a scheduled follow-up. It is not
+ * an execution log, broker journal, or recommendation engine.
  */
 import { useEffect, useMemo, useState } from 'react'
 import { AlarmClock, BookOpen, Database, Plus, ShieldCheck } from 'lucide-react'
 import { decisionJournal, type PersistenceInfo } from './intelClient'
 import {
+  decisionDirectionLabels,
   decisionStatusLabels,
   emotionalStateLabels,
   isDueForReview,
@@ -22,7 +21,7 @@ import {
 import { radarEvents, topSignals } from './data/intel'
 import './DecisionJournal.css'
 
-const DIRECTIONS: DecisionDirection[] = ['long', 'short', 'neutral', 'avoid', 'watch']
+const DIRECTIONS: DecisionDirection[] = ['positive', 'negative', 'neutral', 'avoid', 'watch']
 const EMOTIONS = Object.keys(emotionalStateLabels) as EmotionalState[]
 const REVIEW_OUTCOMES: NonNullable<DecisionJournalEntry['outcome']>[] = [
   'correct',
@@ -93,12 +92,12 @@ export function DecisionJournal() {
         {dueCount > 0 && (
           <div className="dj-due-pill">
             <AlarmClock size={13} />
-            {dueCount} due for review
+            {dueCount} due for follow-up
           </div>
         )}
         <button className="dj-new" type="button" onClick={() => setShowForm((value) => !value)}>
           <Plus size={15} />
-          {showForm ? 'Close' : 'New thesis'}
+          {showForm ? 'Close' : 'New research note'}
         </button>
       </div>
 
@@ -113,11 +112,11 @@ export function DecisionJournal() {
       )}
 
       {loading ? (
-        <div className="dj-empty">Loading decision journal…</div>
+        <div className="dj-empty">Loading research notes…</div>
       ) : entries.length === 0 ? (
         <div className="dj-empty">
           <BookOpen size={18} />
-          <p>No theses yet. Record your first one to start tracking reasoning, evidence, and outcomes over time.</p>
+          <p>No research notes yet. Save one to track reasoning, evidence, and follow-up context over time.</p>
         </div>
       ) : (
         <div className="dj-list">
@@ -151,13 +150,13 @@ function DecisionCard({
   return (
     <article className={due ? 'dj-card due' : 'dj-card'}>
       <header>
-        <span className={`dj-dir dj-dir-${entry.direction}`}>{entry.direction}</span>
+        <span className={`dj-dir dj-dir-${entry.direction}`}>{decisionDirectionLabels[entry.direction]}</span>
         <strong>{entry.title}</strong>
         <span className={`dj-status dj-status-${entry.status}`}>{decisionStatusLabels[entry.status]}</span>
       </header>
       <p className="dj-thesis">{entry.thesis}</p>
       <div className="dj-meta">
-        <span>Conviction {entry.conviction}%</span>
+        <span>Confidence {entry.conviction}%</span>
         <span>{emotionalStateLabels[entry.emotionalState]}</span>
         <span>Review {toDateInput(entry.reviewDate)}</span>
         {entry.tickers.length > 0 && <span>{entry.tickers.join(', ')}</span>}
@@ -174,14 +173,14 @@ function DecisionCard({
       )}
       {entry.postMortem && (
         <div className="dj-postmortem">
-          <span>Post-mortem{entry.outcome ? ` · ${entry.outcome}` : ''}</span>
+          <span>Follow-up{entry.outcome ? ` · ${entry.outcome}` : ''}</span>
           <p>{entry.postMortem}</p>
         </div>
       )}
       <footer>
         <button type="button" onClick={onToggleReview}>
           <ShieldCheck size={13} />
-          {reviewing ? 'Cancel' : entry.status === 'open' ? 'Review thesis' : 'Update review'}
+          {reviewing ? 'Cancel' : entry.status === 'open' ? 'Follow up note' : 'Update follow-up'}
         </button>
         <button
           type="button"
@@ -239,15 +238,15 @@ function ReviewForm({ entry, onDone }: { entry: DecisionJournalEntry; onDone: ()
         </label>
       </div>
       <label>
-        <span>Post-mortem</span>
+        <span>Follow-up notes</span>
         <textarea
           value={postMortem}
-          placeholder="What actually happened, and what does it say about the thesis and the evidence?"
+          placeholder="What actually happened, and what does it say about the original observation and evidence?"
           onChange={(event) => setPostMortem(event.target.value)}
         />
       </label>
       <button type="submit" className="dj-save">
-        Save review
+        Save follow-up
       </button>
     </form>
   )
@@ -296,21 +295,21 @@ function DecisionForm({ onCancel, onCreated }: { onCancel: () => void; onCreated
       }}
     >
       <label>
-        <span>Thesis title</span>
-        <input value={title} placeholder="e.g. Energy stays bid while Red Sea risk persists" onChange={(event) => setTitle(event.target.value)} />
+        <span>Note title</span>
+        <input value={title} placeholder="e.g. Energy stress remains elevated while Red Sea risk persists" onChange={(event) => setTitle(event.target.value)} />
       </label>
       <label>
-        <span>Thesis</span>
-        <textarea value={thesis} placeholder="What you believe and why, in your own words." onChange={(event) => setThesis(event.target.value)} />
+        <span>Observation</span>
+        <textarea value={thesis} placeholder="What you observe, what evidence supports it, and what remains uncertain." onChange={(event) => setThesis(event.target.value)} />
       </label>
 
       <div className="dj-field-row">
         <label>
-          <span>Direction</span>
+          <span>Context stance</span>
           <select value={direction} onChange={(event) => setDirection(event.target.value as DecisionDirection)}>
             {DIRECTIONS.map((value) => (
               <option key={value} value={value}>
-                {value}
+                {decisionDirectionLabels[value]}
               </option>
             ))}
           </select>
@@ -332,7 +331,7 @@ function DecisionForm({ onCancel, onCreated }: { onCancel: () => void; onCreated
       </div>
 
       <label>
-        <span>Conviction · {conviction}%</span>
+        <span>Confidence · {conviction}%</span>
         <input type="range" min={0} max={100} value={conviction} onChange={(event) => setConviction(Number(event.target.value))} />
       </label>
 
@@ -363,7 +362,7 @@ function DecisionForm({ onCancel, onCreated }: { onCancel: () => void; onCreated
           Cancel
         </button>
         <button type="submit" className="dj-save" disabled={!canSave || saving}>
-          {saving ? 'Saving…' : 'Save thesis'}
+          {saving ? 'Saving…' : 'Save research note'}
         </button>
       </div>
     </form>

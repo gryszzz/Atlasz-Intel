@@ -1,20 +1,19 @@
 /**
- * Decision Layer — the 7th Atlasz Intel intelligence layer.
+ * Research Notes — the 7th Atlasz Intel intelligence layer.
  *
  * Atlasz is explicitly NOT a trading bot and does NOT give financial advice;
- * the Decision Journal is a personal, local-first reasoning record. It captures
- * the user's thesis, the evidence it rests on, the emotional state it was made
- * in, and a scheduled review so theses can be honestly graded after the fact.
+ * Research Notes are personal, local-first context records. They capture the
+ * user's observation, the evidence it rests on, the emotional state it was made
+ * in, and a scheduled follow-up so reasoning can be reviewed after the fact.
  */
 
-export type DecisionDirection = 'long' | 'short' | 'neutral' | 'avoid' | 'watch'
+export type DecisionDirection = 'positive' | 'negative' | 'neutral' | 'avoid' | 'watch' | 'long' | 'short'
 
 export type DecisionStatus = 'open' | 'reviewing' | 'validated' | 'invalidated' | 'closed'
 
 /**
- * Emotional state at the time of the decision. Tracking this is the point of a
- * decision journal — it surfaces when conviction was driven by feeling rather
- * than evidence.
+ * Emotional state at the time of the note. Tracking this surfaces when
+ * confidence was driven by feeling rather than evidence.
  */
 export type EmotionalState =
   | 'calm'
@@ -30,26 +29,26 @@ export type DecisionJournalEntry = {
   id: string
   createdAt: number
   updatedAt: number
-  /** Short title for the thesis, e.g. "Energy bid persists on Red Sea risk". */
+  /** Short title for the note, e.g. "Energy stress persists on Red Sea risk". */
   title: string
-  /** The full reasoning: what the user believes and why. */
+  /** The full observation: what the user believes is happening and why. */
   thesis: string
   direction: DecisionDirection
-  /** Symbols the thesis concerns. */
+  /** Symbols or entities the note concerns. */
   tickers: string[]
-  /** Self-rated conviction 0-100 (not a probability, a personal confidence). */
+  /** Self-rated confidence 0-100 (not a probability). */
   conviction: number
   emotionalState: EmotionalState
-  /** IDs of Evidence Layer items / signals / events backing the thesis. */
+  /** IDs of Evidence Layer items / signals / events backing the note. */
   evidenceIds: string[]
   /** Free-form notes on supporting / contradicting context. */
   context: string
-  /** Unix ms when this thesis should be reviewed. */
+  /** Unix ms when this note should be followed up. */
   reviewDate: number
   status: DecisionStatus
-  /** Post-mortem written at review time. Empty until reviewed. */
+  /** Follow-up written at review time. Empty until reviewed. */
   postMortem: string
-  /** Optional realized outcome label written at review/close. */
+  /** Optional descriptive outcome label written at follow-up/close. */
   outcome?: 'correct' | 'partly-correct' | 'incorrect' | 'inconclusive'
 }
 
@@ -80,12 +79,22 @@ export const emotionalStateLabels: Record<EmotionalState, string> = {
 export const decisionStatusLabels: Record<DecisionStatus, string> = {
   open: 'Open',
   reviewing: 'Reviewing',
-  validated: 'Validated',
-  invalidated: 'Invalidated',
+  validated: 'Followed through',
+  invalidated: 'Did not follow through',
   closed: 'Closed',
 }
 
-/** True when an open thesis has reached its scheduled review date. */
+export const decisionDirectionLabels: Record<DecisionDirection, string> = {
+  positive: 'Positive context',
+  negative: 'Negative context',
+  neutral: 'Neutral',
+  avoid: 'Avoid',
+  watch: 'Watch',
+  long: 'Positive context',
+  short: 'Negative context',
+}
+
+/** True when an open note has reached its scheduled follow-up date. */
 export function isDueForReview(entry: DecisionJournalEntry, now: number = Date.now()): boolean {
   return entry.status === 'open' && entry.reviewDate <= now
 }

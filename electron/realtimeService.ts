@@ -8,6 +8,7 @@ import { detectRealtimeSignals } from '../src/engine/signalEngine'
 import { graphEdges } from '../src/data/intel'
 import { riskChainFor } from '../src/intelGraphData'
 import type { ExposedAsset } from '../src/engine/intelGraph'
+import { LiquidityTickSampler } from './liquiditySampler'
 import type {
   ConnectorId,
   LiveAttentionTick,
@@ -102,7 +103,14 @@ export class RealtimeService {
       reconnectingFeeds: [],
     },
   }
-  private lastMarketPersistAt = 0
+  private readonly liquiditySampler = new LiquidityTickSampler({
+    sampleMs: integerEnv('ATLASZ_MARKET_TICK_SAMPLE_MS', 1_000),
+    maxPerBatch: integerEnv('ATLASZ_MARKET_TICK_MAX_PER_BATCH', 96),
+  })
+  private readonly persistedMarketSymbols = new Set<string>()
+  private persistedMarketTickCount = 0
+  private lastMarketPersistAt: number | undefined
+  private lastAttentionPersistAt = 0
   private lastFramePersistAt = 0
   private lastFrameAuditAt = 0
   private replayFrames: RealtimeFrameRecord[] = []
@@ -191,6 +199,7 @@ export class RealtimeService {
       ...this.healthState,
       sqliteMode: this.persistence.mode,
       replay: this.replayState,
+      liquidityHistory: this.liquidityHistoryHealth(),
     }
   }
 
@@ -411,6 +420,7 @@ export class RealtimeService {
       ...workerHealth,
       sqliteMode: this.persistence.mode,
       replay: this.replayState,
+      liquidityHistory: this.liquidityHistoryHealth(),
     }
   }
 
@@ -461,13 +471,9 @@ export class RealtimeService {
 
   private persistSampledBatch(ticks: LiveTick[], attention: LiveAttentionTick[]): void {
     const now = Date.now()
-    if (now - this.lastMarketPersistAt < 1_000) {
-      return
-    }
-    this.lastMarketPersistAt = now
-    const tradeDate = new Date(now).toISOString().slice(0, 10)
-    for (const tick of ticks.slice(0, 24)) {
-      this.safePersist(() =>
+    for (const tick of this.liquiditySampler.select(ticks, now)) {
+      const tradeDate = new Date(tick.timestamp).toISOString().slice(0, 10)
+      const persisted = this.safePersist(() =>
         this.persistence.saveMarketTick({
           id: `tick:${tick.symbol}:${tick.timestamp}`,
           symbol: tick.symbol,
@@ -478,7 +484,17 @@ export class RealtimeService {
           tradeDate,
         }),
       )
+      if (persisted) {
+        this.persistedMarketTickCount += 1
+        this.persistedMarketSymbols.add(tick.symbol.toUpperCase())
+        this.lastMarketPersistAt = Math.max(this.lastMarketPersistAt ?? 0, tick.timestamp)
+      }
     }
+
+    if (now - this.lastAttentionPersistAt < 1_000) {
+      return
+    }
+    this.lastAttentionPersistAt = now
     for (const item of attention.slice(0, 24)) {
       this.safePersist(() =>
         this.persistence.saveAttentionBatch({
@@ -515,6 +531,19 @@ export class RealtimeService {
         assetCount: frame.assets.length,
         attentionCount: frame.attention.length,
       })
+    }
+  }
+
+  private liquidityHistoryHealth(): RealtimeHealth['liquidityHistory'] {
+    const sampler = this.liquiditySampler.snapshot()
+    return {
+      persistedTicks: this.persistedMarketTickCount,
+      persistedSymbols: this.persistedMarketSymbols.size,
+      lastPersistedAt: this.lastMarketPersistAt,
+      sampleMs: sampler.sampleMs,
+      maxPerBatch: sampler.maxPerBatch,
+      note:
+        'Sampled liquidity history written to market_ticks_daily. One tick per symbol per interval; raw firehose remains in memory.',
     }
   }
 
@@ -638,9 +667,10 @@ export class RealtimeService {
     )
   }
 
-  private safePersist(operation: () => void): void {
+  private safePersist(operation: () => void): boolean {
     try {
       operation()
+      return true
     } catch (error) {
       console.warn('[atlasz] realtime persistence failed:', error instanceof Error ? error.message : error)
       try {
@@ -656,6 +686,7 @@ export class RealtimeService {
       } catch {
         // If persistence itself is unavailable, do not recursively fail.
       }
+      return false
     }
   }
 }
@@ -734,7 +765,19 @@ function defaultHealth(activeConnectorId: ConnectorId, sqliteMode: RealtimeHealt
       speed: 1,
       frameCount: 0,
     },
+    liquidityHistory: {
+      persistedTicks: 0,
+      persistedSymbols: 0,
+      sampleMs: 1_000,
+      maxPerBatch: 96,
+      note: 'Sampled liquidity history has not started.',
+    },
   }
+}
+
+function integerEnv(key: string, fallback: number): number {
+  const value = Number(process.env[key])
+  return Number.isInteger(value) && value > 0 ? value : fallback
 }
 
 export function assetsFromFrame(frame: LiveDataFrame | null): string[] {

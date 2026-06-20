@@ -4,73 +4,74 @@ import { dirname as n, join as r } from "node:path";
 import { fileURLToPath as i } from "node:url";
 import { existsSync as a, mkdirSync as o, readFileSync as s, writeFileSync as c } from "node:fs";
 import { Worker as l } from "node:worker_threads";
-import { EventEmitter as u } from "node:events";
+import { createHash as u } from "node:crypto";
+import { EventEmitter as d } from "node:events";
 //#region \0rolldown/runtime.js
-var d = Object.create, f = Object.defineProperty, p = Object.getOwnPropertyDescriptor, m = Object.getOwnPropertyNames, h = Object.getPrototypeOf, g = Object.prototype.hasOwnProperty, _ = (e, t) => () => (e && (t = e(e = 0)), t), v = (e, t) => () => (t || (e((t = { exports: {} }).exports, t), e = null), t.exports), y = (e, t) => {
+var f = Object.create, p = Object.defineProperty, m = Object.getOwnPropertyDescriptor, h = Object.getOwnPropertyNames, g = Object.getPrototypeOf, _ = Object.prototype.hasOwnProperty, v = (e, t) => () => (e && (t = e(e = 0)), t), y = (e, t) => () => (t || (e((t = { exports: {} }).exports, t), e = null), t.exports), b = (e, t) => {
 	let n = {};
-	for (var r in e) f(n, r, {
+	for (var r in e) p(n, r, {
 		get: e[r],
 		enumerable: !0
 	});
-	return t || f(n, Symbol.toStringTag, { value: "Module" }), n;
-}, b = (e, t, n, r) => {
-	if (t && typeof t == "object" || typeof t == "function") for (var i = m(t), a = 0, o = i.length, s; a < o; a++) s = i[a], !g.call(e, s) && s !== n && f(e, s, {
+	return t || p(n, Symbol.toStringTag, { value: "Module" }), n;
+}, x = (e, t, n, r) => {
+	if (t && typeof t == "object" || typeof t == "function") for (var i = h(t), a = 0, o = i.length, s; a < o; a++) s = i[a], !_.call(e, s) && s !== n && p(e, s, {
 		get: ((e) => t[e]).bind(null, s),
-		enumerable: !(r = p(t, s)) || r.enumerable
+		enumerable: !(r = m(t, s)) || r.enumerable
 	});
 	return e;
-}, x = (e, t, n) => (n = e == null ? {} : d(h(e)), b(t || !e || !e.__esModule ? f(n, "default", {
+}, ee = (e, t, n) => (n = e == null ? {} : f(g(e)), x(t || !e || !e.__esModule ? p(n, "default", {
 	value: e,
 	enumerable: !0
-}) : n, e)), S = (e) => g.call(e, "module.exports") ? e["module.exports"] : b(f({}, "__esModule", { value: !0 }), e), C = /* @__PURE__ */ e(import.meta.url), w = "\nCREATE TABLE IF NOT EXISTS daily_briefs (\n  id TEXT PRIMARY KEY,\n  date TEXT NOT NULL,\n  headline TEXT NOT NULL,\n  body TEXT NOT NULL,\n  severity TEXT NOT NULL,\n  confidence INTEGER NOT NULL,\n  created_at INTEGER NOT NULL\n);\nCREATE TABLE IF NOT EXISTS world_headlines (\n  id TEXT PRIMARY KEY,\n  title TEXT NOT NULL,\n  source TEXT NOT NULL,\n  url TEXT NOT NULL,\n  sector TEXT NOT NULL,\n  impact TEXT NOT NULL,\n  observed_at INTEGER NOT NULL\n);\nCREATE TABLE IF NOT EXISTS decision_journal (\n  id TEXT PRIMARY KEY,\n  created_at INTEGER NOT NULL,\n  updated_at INTEGER NOT NULL,\n  title TEXT NOT NULL,\n  thesis TEXT NOT NULL,\n  direction TEXT NOT NULL,\n  tickers TEXT NOT NULL,\n  conviction INTEGER NOT NULL,\n  emotional_state TEXT NOT NULL,\n  evidence_ids TEXT NOT NULL,\n  context TEXT NOT NULL,\n  review_date INTEGER NOT NULL,\n  status TEXT NOT NULL,\n  post_mortem TEXT NOT NULL,\n  outcome TEXT\n);\nCREATE TABLE IF NOT EXISTS market_ticks_daily (\n  id TEXT PRIMARY KEY,\n  symbol TEXT NOT NULL,\n  price REAL NOT NULL,\n  volume REAL NOT NULL,\n  source TEXT NOT NULL,\n  observed_at INTEGER NOT NULL,\n  trade_date TEXT NOT NULL\n);\nCREATE TABLE IF NOT EXISTS social_attention_batches (\n  id TEXT PRIMARY KEY,\n  target TEXT NOT NULL,\n  pressure REAL NOT NULL,\n  mention_velocity REAL NOT NULL,\n  sentiment_divergence_index REAL NOT NULL,\n  source TEXT NOT NULL,\n  observed_at INTEGER NOT NULL,\n  sample_count INTEGER NOT NULL\n);\nCREATE TABLE IF NOT EXISTS entity_edges (\n  id TEXT PRIMARY KEY,\n  source TEXT NOT NULL,\n  target TEXT NOT NULL,\n  relation TEXT NOT NULL,\n  confidence REAL NOT NULL,\n  created_at INTEGER NOT NULL\n);\nCREATE TABLE IF NOT EXISTS signal_events (\n  id TEXT PRIMARY KEY,\n  type TEXT NOT NULL,\n  asset_or_topic_id TEXT NOT NULL,\n  severity TEXT NOT NULL,\n  evidence_ids TEXT NOT NULL,\n  confidence TEXT NOT NULL,\n  created_at INTEGER NOT NULL,\n  explanation TEXT NOT NULL,\n  related_graph_nodes TEXT NOT NULL\n);\nCREATE TABLE IF NOT EXISTS source_audit_log (\n  id TEXT PRIMARY KEY,\n  event_type TEXT NOT NULL,\n  connector_id TEXT,\n  severity TEXT NOT NULL,\n  message TEXT NOT NULL,\n  created_at INTEGER NOT NULL,\n  metadata TEXT NOT NULL\n);\nCREATE TABLE IF NOT EXISTS realtime_frames (\n  id TEXT PRIMARY KEY,\n  sequence INTEGER NOT NULL,\n  emitted_at INTEGER NOT NULL,\n  frame_json TEXT NOT NULL\n);\nCREATE INDEX IF NOT EXISTS idx_decision_review ON decision_journal(status, review_date);\nCREATE INDEX IF NOT EXISTS idx_headline_observed ON world_headlines(observed_at);\nCREATE INDEX IF NOT EXISTS idx_market_ticks_symbol_time ON market_ticks_daily(symbol, observed_at);\nCREATE INDEX IF NOT EXISTS idx_attention_target_time ON social_attention_batches(target, observed_at);\nCREATE INDEX IF NOT EXISTS idx_signal_created ON signal_events(created_at);\nCREATE INDEX IF NOT EXISTS idx_audit_created ON source_audit_log(created_at);\nCREATE INDEX IF NOT EXISTS idx_realtime_frames_window ON realtime_frames(emitted_at);\n";
-function ee(t) {
+}) : n, e)), S = (e) => _.call(e, "module.exports") ? e["module.exports"] : x(p({}, "__esModule", { value: !0 }), e), C = /* @__PURE__ */ e(import.meta.url), te = "\nCREATE TABLE IF NOT EXISTS daily_briefs (\n  id TEXT PRIMARY KEY,\n  date TEXT NOT NULL,\n  headline TEXT NOT NULL,\n  body TEXT NOT NULL,\n  severity TEXT NOT NULL,\n  confidence INTEGER NOT NULL,\n  created_at INTEGER NOT NULL\n);\nCREATE TABLE IF NOT EXISTS world_headlines (\n  id TEXT PRIMARY KEY,\n  title TEXT NOT NULL,\n  source TEXT NOT NULL,\n  url TEXT NOT NULL,\n  sector TEXT NOT NULL,\n  impact TEXT NOT NULL,\n  observed_at INTEGER NOT NULL\n);\nCREATE TABLE IF NOT EXISTS decision_journal (\n  id TEXT PRIMARY KEY,\n  created_at INTEGER NOT NULL,\n  updated_at INTEGER NOT NULL,\n  title TEXT NOT NULL,\n  thesis TEXT NOT NULL,\n  direction TEXT NOT NULL,\n  tickers TEXT NOT NULL,\n  conviction INTEGER NOT NULL,\n  emotional_state TEXT NOT NULL,\n  evidence_ids TEXT NOT NULL,\n  context TEXT NOT NULL,\n  review_date INTEGER NOT NULL,\n  status TEXT NOT NULL,\n  post_mortem TEXT NOT NULL,\n  outcome TEXT\n);\nCREATE TABLE IF NOT EXISTS market_ticks_daily (\n  id TEXT PRIMARY KEY,\n  symbol TEXT NOT NULL,\n  price REAL NOT NULL,\n  volume REAL NOT NULL,\n  source TEXT NOT NULL,\n  observed_at INTEGER NOT NULL,\n  trade_date TEXT NOT NULL\n);\nCREATE TABLE IF NOT EXISTS social_attention_batches (\n  id TEXT PRIMARY KEY,\n  target TEXT NOT NULL,\n  pressure REAL NOT NULL,\n  mention_velocity REAL NOT NULL,\n  sentiment_divergence_index REAL NOT NULL,\n  source TEXT NOT NULL,\n  observed_at INTEGER NOT NULL,\n  sample_count INTEGER NOT NULL\n);\nCREATE TABLE IF NOT EXISTS entity_edges (\n  id TEXT PRIMARY KEY,\n  source TEXT NOT NULL,\n  target TEXT NOT NULL,\n  relation TEXT NOT NULL,\n  confidence REAL NOT NULL,\n  created_at INTEGER NOT NULL\n);\nCREATE TABLE IF NOT EXISTS signal_events (\n  id TEXT PRIMARY KEY,\n  type TEXT NOT NULL,\n  asset_or_topic_id TEXT NOT NULL,\n  severity TEXT NOT NULL,\n  evidence_ids TEXT NOT NULL,\n  confidence TEXT NOT NULL,\n  created_at INTEGER NOT NULL,\n  explanation TEXT NOT NULL,\n  related_graph_nodes TEXT NOT NULL\n);\nCREATE TABLE IF NOT EXISTS source_audit_log (\n  id TEXT PRIMARY KEY,\n  event_type TEXT NOT NULL,\n  connector_id TEXT,\n  severity TEXT NOT NULL,\n  message TEXT NOT NULL,\n  created_at INTEGER NOT NULL,\n  metadata TEXT NOT NULL\n);\nCREATE TABLE IF NOT EXISTS realtime_frames (\n  id TEXT PRIMARY KEY,\n  sequence INTEGER NOT NULL,\n  emitted_at INTEGER NOT NULL,\n  frame_json TEXT NOT NULL\n);\nCREATE TABLE IF NOT EXISTS osint_sources (\n  source_id TEXT PRIMARY KEY,\n  source_name TEXT NOT NULL,\n  source_type TEXT NOT NULL,\n  endpoint_type TEXT NOT NULL,\n  endpoint TEXT NOT NULL,\n  poll_interval_ms INTEGER NOT NULL,\n  rate_limit_ms INTEGER NOT NULL,\n  timeout_ms INTEGER NOT NULL,\n  enabled INTEGER NOT NULL,\n  status TEXT NOT NULL,\n  provenance TEXT NOT NULL,\n  last_success_at INTEGER,\n  last_error_at INTEGER,\n  last_error TEXT,\n  item_count INTEGER NOT NULL,\n  source_reliability_score REAL NOT NULL,\n  legal_safety_note TEXT NOT NULL,\n  parser_adapter TEXT NOT NULL\n);\nCREATE TABLE IF NOT EXISTS world_intel_events (\n  id TEXT PRIMARY KEY,\n  timestamp INTEGER NOT NULL,\n  title TEXT NOT NULL,\n  summary TEXT NOT NULL,\n  country_codes TEXT NOT NULL,\n  region TEXT NOT NULL,\n  lat REAL,\n  lon REAL,\n  category TEXT NOT NULL,\n  severity TEXT NOT NULL,\n  confidence INTEGER NOT NULL,\n  source_id TEXT NOT NULL,\n  source_url TEXT,\n  provenance TEXT NOT NULL,\n  affected_assets TEXT NOT NULL,\n  affected_sectors TEXT NOT NULL,\n  affected_commodities TEXT NOT NULL,\n  affected_currencies TEXT NOT NULL,\n  extracted_entities TEXT NOT NULL,\n  narrative_tags TEXT NOT NULL,\n  raw_payload_hash TEXT NOT NULL,\n  dedupe_hash TEXT NOT NULL\n);\nCREATE TABLE IF NOT EXISTS user_theses (\n  id TEXT PRIMARY KEY,\n  timestamp INTEGER NOT NULL,\n  asset_symbol TEXT NOT NULL,\n  thesis_type TEXT NOT NULL,\n  trigger_event_id TEXT,\n  snapshot_metrics TEXT NOT NULL,\n  user_notes TEXT NOT NULL,\n  target_horizon_days INTEGER NOT NULL,\n  is_closed INTEGER NOT NULL,\n  performance_grade TEXT,\n  entry_price REAL,\n  current_return REAL,\n  one_day_return REAL,\n  seven_day_return REAL,\n  thirty_day_return REAL,\n  created_at INTEGER NOT NULL,\n  updated_at INTEGER NOT NULL\n);\nCREATE TABLE IF NOT EXISTS world_intel_embeddings (\n  id TEXT PRIMARY KEY,\n  event_id TEXT NOT NULL,\n  timestamp INTEGER NOT NULL,\n  summary_hash TEXT NOT NULL,\n  embedding_model TEXT NOT NULL,\n  embedding_vector TEXT NOT NULL,\n  source_event_category TEXT NOT NULL,\n  provenance TEXT NOT NULL,\n  created_at INTEGER NOT NULL\n);\nCREATE TABLE IF NOT EXISTS country_intel_state (\n  country_code TEXT PRIMARY KEY,\n  state_json TEXT NOT NULL,\n  last_updated INTEGER NOT NULL\n);\nCREATE TABLE IF NOT EXISTS asset_identity (\n  symbol TEXT PRIMARY KEY,\n  identity_json TEXT NOT NULL\n);\nCREATE TABLE IF NOT EXISTS user_favorites (\n  id TEXT PRIMARY KEY,\n  kind TEXT NOT NULL,\n  target_id TEXT NOT NULL,\n  label TEXT NOT NULL,\n  created_at INTEGER NOT NULL\n);\nCREATE TABLE IF NOT EXISTS quant_snapshots (\n  id TEXT PRIMARY KEY,\n  asset_symbol TEXT NOT NULL,\n  snapshot_json TEXT NOT NULL,\n  created_at INTEGER NOT NULL\n);\nCREATE TABLE IF NOT EXISTS event_asset_links (\n  id TEXT PRIMARY KEY,\n  event_id TEXT NOT NULL,\n  asset_symbol TEXT NOT NULL,\n  relation TEXT NOT NULL,\n  confidence REAL NOT NULL,\n  created_at INTEGER NOT NULL\n);\nCREATE TABLE IF NOT EXISTS source_health (\n  source_id TEXT PRIMARY KEY,\n  health_json TEXT NOT NULL,\n  updated_at INTEGER NOT NULL\n);\nCREATE TABLE IF NOT EXISTS narrative_clusters (\n  id TEXT PRIMARY KEY,\n  cluster_json TEXT NOT NULL,\n  updated_at INTEGER NOT NULL\n);\nCREATE INDEX IF NOT EXISTS idx_decision_review ON decision_journal(status, review_date);\nCREATE INDEX IF NOT EXISTS idx_headline_observed ON world_headlines(observed_at);\nCREATE INDEX IF NOT EXISTS idx_market_ticks_symbol_time ON market_ticks_daily(symbol, observed_at);\nCREATE INDEX IF NOT EXISTS idx_attention_target_time ON social_attention_batches(target, observed_at);\nCREATE INDEX IF NOT EXISTS idx_signal_created ON signal_events(created_at);\nCREATE INDEX IF NOT EXISTS idx_audit_created ON source_audit_log(created_at);\nCREATE INDEX IF NOT EXISTS idx_realtime_frames_window ON realtime_frames(emitted_at);\nCREATE INDEX IF NOT EXISTS idx_world_events_time ON world_intel_events(timestamp);\nCREATE INDEX IF NOT EXISTS idx_world_events_source ON world_intel_events(source_id, timestamp);\nCREATE INDEX IF NOT EXISTS idx_event_asset_links_asset ON event_asset_links(asset_symbol, created_at);\nCREATE INDEX IF NOT EXISTS idx_embeddings_event ON world_intel_embeddings(event_id);\nCREATE INDEX IF NOT EXISTS idx_user_theses_symbol ON user_theses(asset_symbol, timestamp);\n";
+function w(t) {
 	a(t) || o(t, { recursive: !0 });
 	let n = r(t, "atlasz-intel.db"), i = e(import.meta.url);
 	try {
 		let { DatabaseSync: e } = i("node:sqlite"), t = new e(n);
-		return T(t), new te(t, "node:sqlite");
+		return ne(t), new T(t, "node:sqlite");
 	} catch (e) {
 		console.warn("[atlasz] node:sqlite unavailable, trying better-sqlite3. Reason:", e instanceof Error ? e.message : e);
 	}
 	try {
 		let e = new (i("better-sqlite3"))(n);
-		return T(e), new te(e, "better-sqlite3");
+		return ne(e), new T(e, "better-sqlite3");
 	} catch (e) {
-		return console.warn("[atlasz] SQLite unavailable, using JSON fallback store. Reason:", e instanceof Error ? e.message : e), new O(t);
+		return console.warn("[atlasz] SQLite unavailable, using JSON fallback store. Reason:", e instanceof Error ? e.message : e), new fe(t);
 	}
 }
-function T(e) {
+function ne(e) {
 	e.exec(`
     PRAGMA journal_mode = WAL;
     PRAGMA synchronous = NORMAL;
     PRAGMA foreign_keys = ON;
-    ${w}
+    ${te}
   `);
 }
-var te = class {
+var T = class {
 	mode;
 	db;
 	constructor(e, t) {
 		this.db = e, this.mode = t;
 	}
 	listBriefs() {
-		return this.db.prepare("SELECT * FROM daily_briefs ORDER BY created_at DESC").all().map(E);
+		return this.db.prepare("SELECT * FROM daily_briefs ORDER BY created_at DESC").all().map(re);
 	}
 	saveBrief(e) {
 		this.db.prepare("INSERT INTO daily_briefs (id, date, headline, body, severity, confidence, created_at)\n         VALUES (@id, @date, @headline, @body, @severity, @confidence, @createdAt)\n         ON CONFLICT(id) DO UPDATE SET\n           date=excluded.date, headline=excluded.headline, body=excluded.body,\n           severity=excluded.severity, confidence=excluded.confidence").run(e);
 	}
 	listHeadlines(e = 200) {
-		return this.db.prepare("SELECT * FROM world_headlines ORDER BY observed_at DESC LIMIT ?").all(e).map(ne);
+		return this.db.prepare("SELECT * FROM world_headlines ORDER BY observed_at DESC LIMIT ?").all(e).map(se);
 	}
 	saveHeadline(e) {
 		this.db.prepare("INSERT INTO world_headlines (id, title, source, url, sector, impact, observed_at)\n         VALUES (@id, @title, @source, @url, @sector, @impact, @observedAt)\n         ON CONFLICT(id) DO UPDATE SET\n           title=excluded.title, source=excluded.source, url=excluded.url,\n           sector=excluded.sector, impact=excluded.impact, observed_at=excluded.observed_at").run(e);
 	}
 	listDecisions() {
-		return this.db.prepare("SELECT * FROM decision_journal ORDER BY updated_at DESC").all().map(re);
+		return this.db.prepare("SELECT * FROM decision_journal ORDER BY updated_at DESC").all().map(O);
 	}
 	getDecision(e) {
 		let t = this.db.prepare("SELECT * FROM decision_journal WHERE id = ?").get(e);
-		return t ? re(t) : null;
+		return t ? O(t) : null;
 	}
 	saveDecision(e) {
 		this.db.prepare("INSERT INTO decision_journal\n           (id, created_at, updated_at, title, thesis, direction, tickers, conviction,\n            emotional_state, evidence_ids, context, review_date, status, post_mortem, outcome)\n         VALUES\n           (@id, @createdAt, @updatedAt, @title, @thesis, @direction, @tickers, @conviction,\n            @emotionalState, @evidenceIds, @context, @reviewDate, @status, @postMortem, @outcome)\n         ON CONFLICT(id) DO UPDATE SET\n           updated_at=excluded.updated_at, title=excluded.title, thesis=excluded.thesis,\n           direction=excluded.direction, tickers=excluded.tickers, conviction=excluded.conviction,\n           emotional_state=excluded.emotional_state, evidence_ids=excluded.evidence_ids,\n           context=excluded.context, review_date=excluded.review_date, status=excluded.status,\n           post_mortem=excluded.post_mortem, outcome=excluded.outcome").run({
@@ -83,10 +84,13 @@ var te = class {
 		this.db.prepare("DELETE FROM decision_journal WHERE id = ?").run(e);
 	}
 	decisionsDueForReview(e) {
-		return this.db.prepare("SELECT * FROM decision_journal WHERE status = 'open' AND review_date <= ? ORDER BY review_date ASC").all(e).map(re);
+		return this.db.prepare("SELECT * FROM decision_journal WHERE status = 'open' AND review_date <= ? ORDER BY review_date ASC").all(e).map(O);
 	}
 	saveMarketTick(e) {
 		this.db.prepare("INSERT INTO market_ticks_daily (id, symbol, price, volume, source, observed_at, trade_date)\n         VALUES (@id, @symbol, @price, @volume, @source, @observedAt, @tradeDate)\n         ON CONFLICT(id) DO UPDATE SET\n           price=excluded.price, volume=excluded.volume, source=excluded.source,\n           observed_at=excluded.observed_at, trade_date=excluded.trade_date").run(e);
+	}
+	listMarketTicks(e, t = 200) {
+		return this.db.prepare("SELECT * FROM market_ticks_daily WHERE symbol = ? ORDER BY observed_at DESC LIMIT ?").all(e, t).map(E);
 	}
 	saveAttentionBatch(e) {
 		this.db.prepare("INSERT INTO social_attention_batches\n           (id, target, pressure, mention_velocity, sentiment_divergence_index, source, observed_at, sample_count)\n         VALUES\n           (@id, @target, @pressure, @mentionVelocity, @sentimentDivergenceIndex, @source, @observedAt, @sampleCount)\n         ON CONFLICT(id) DO UPDATE SET\n           pressure=excluded.pressure, mention_velocity=excluded.mention_velocity,\n           sentiment_divergence_index=excluded.sentiment_divergence_index,\n           source=excluded.source, observed_at=excluded.observed_at, sample_count=excluded.sample_count").run(e);
@@ -101,6 +105,93 @@ var te = class {
 			relatedGraphNodes: JSON.stringify(e.relatedGraphNodes)
 		});
 	}
+	listOsintSources() {
+		return this.db.prepare("SELECT * FROM osint_sources ORDER BY source_name ASC").all().map(ce);
+	}
+	saveOsintSource(e) {
+		this.db.prepare("INSERT INTO osint_sources\n           (source_id, source_name, source_type, endpoint_type, endpoint, poll_interval_ms,\n            rate_limit_ms, timeout_ms, enabled, status, provenance, last_success_at,\n            last_error_at, last_error, item_count, source_reliability_score, legal_safety_note, parser_adapter)\n         VALUES\n           (@sourceId, @sourceName, @sourceType, @endpointType, @endpoint, @pollIntervalMs,\n            @rateLimitMs, @timeoutMs, @enabled, @status, @provenance, @lastSuccessAt,\n            @lastErrorAt, @lastError, @itemCount, @sourceReliabilityScore, @legalSafetyNote, @parserAdapter)\n         ON CONFLICT(source_id) DO UPDATE SET\n           source_name=excluded.source_name, source_type=excluded.source_type, endpoint_type=excluded.endpoint_type,\n           endpoint=excluded.endpoint, poll_interval_ms=excluded.poll_interval_ms, rate_limit_ms=excluded.rate_limit_ms,\n           timeout_ms=excluded.timeout_ms, enabled=excluded.enabled, status=excluded.status, provenance=excluded.provenance,\n           last_success_at=excluded.last_success_at, last_error_at=excluded.last_error_at, last_error=excluded.last_error,\n           item_count=excluded.item_count, source_reliability_score=excluded.source_reliability_score,\n           legal_safety_note=excluded.legal_safety_note, parser_adapter=excluded.parser_adapter").run({
+			...e,
+			enabled: +!!e.enabled,
+			lastSuccessAt: e.lastSuccessAt ?? null,
+			lastErrorAt: e.lastErrorAt ?? null,
+			lastError: e.lastError ?? null
+		});
+	}
+	listWorldIntelEvents(e = 300) {
+		return this.db.prepare("SELECT * FROM world_intel_events ORDER BY timestamp DESC LIMIT ?").all(e).map(D);
+	}
+	saveWorldIntelEvent(e) {
+		this.db.prepare("INSERT INTO world_intel_events\n           (id, timestamp, title, summary, country_codes, region, lat, lon, category, severity, confidence,\n            source_id, source_url, provenance, affected_assets, affected_sectors, affected_commodities,\n            affected_currencies, extracted_entities, narrative_tags, raw_payload_hash, dedupe_hash)\n         VALUES\n           (@id, @timestamp, @title, @summary, @countryCodes, @region, @lat, @lon, @category, @severity, @confidence,\n            @sourceId, @sourceUrl, @provenance, @affectedAssets, @affectedSectors, @affectedCommodities,\n            @affectedCurrencies, @extractedEntities, @narrativeTags, @rawPayloadHash, @dedupeHash)\n         ON CONFLICT(id) DO UPDATE SET\n           timestamp=excluded.timestamp, title=excluded.title, summary=excluded.summary, country_codes=excluded.country_codes,\n           region=excluded.region, lat=excluded.lat, lon=excluded.lon, category=excluded.category, severity=excluded.severity,\n           confidence=excluded.confidence, source_id=excluded.source_id, source_url=excluded.source_url,\n           provenance=excluded.provenance, affected_assets=excluded.affected_assets, affected_sectors=excluded.affected_sectors,\n           affected_commodities=excluded.affected_commodities, affected_currencies=excluded.affected_currencies,\n           extracted_entities=excluded.extracted_entities, narrative_tags=excluded.narrative_tags,\n           raw_payload_hash=excluded.raw_payload_hash, dedupe_hash=excluded.dedupe_hash").run({
+			...e,
+			countryCodes: JSON.stringify(e.countryCodes),
+			lat: e.lat ?? null,
+			lon: e.lon ?? null,
+			sourceUrl: e.sourceUrl ?? null,
+			affectedAssets: JSON.stringify(e.affectedAssets),
+			affectedSectors: JSON.stringify(e.affectedSectors),
+			affectedCommodities: JSON.stringify(e.affectedCommodities),
+			affectedCurrencies: JSON.stringify(e.affectedCurrencies),
+			extractedEntities: JSON.stringify(e.extractedEntities),
+			narrativeTags: JSON.stringify(e.narrativeTags)
+		});
+	}
+	listWorldIntelEmbeddings(e = 500) {
+		return this.db.prepare("SELECT * FROM world_intel_embeddings ORDER BY timestamp DESC LIMIT ?").all(e).map(ie);
+	}
+	saveWorldIntelEmbedding(e) {
+		this.db.prepare("INSERT INTO world_intel_embeddings\n           (id, event_id, timestamp, summary_hash, embedding_model, embedding_vector,\n            source_event_category, provenance, created_at)\n         VALUES\n           (@id, @eventId, @timestamp, @summaryHash, @embeddingModel, @embeddingVector,\n            @sourceEventCategory, @provenance, @createdAt)\n         ON CONFLICT(id) DO UPDATE SET\n           summary_hash=excluded.summary_hash, embedding_model=excluded.embedding_model,\n           embedding_vector=excluded.embedding_vector, source_event_category=excluded.source_event_category,\n           provenance=excluded.provenance, created_at=excluded.created_at").run({
+			...e,
+			embeddingVector: JSON.stringify(e.embeddingVector)
+		});
+	}
+	listUserTheses(e = 500) {
+		return this.db.prepare("SELECT * FROM user_theses ORDER BY timestamp DESC LIMIT ?").all(e).map(ae);
+	}
+	saveUserThesis(e) {
+		this.db.prepare("INSERT INTO user_theses\n           (id, timestamp, asset_symbol, thesis_type, trigger_event_id, snapshot_metrics, user_notes,\n            target_horizon_days, is_closed, performance_grade, entry_price, current_return,\n            one_day_return, seven_day_return, thirty_day_return, created_at, updated_at)\n         VALUES\n           (@id, @timestamp, @assetSymbol, @thesisType, @triggerEventId, @snapshotMetrics, @userNotes,\n            @targetHorizonDays, @isClosed, @performanceGrade, @entryPrice, @currentReturn,\n            @oneDayReturn, @sevenDayReturn, @thirtyDayReturn, @createdAt, @updatedAt)\n         ON CONFLICT(id) DO UPDATE SET\n           thesis_type=excluded.thesis_type, snapshot_metrics=excluded.snapshot_metrics,\n           user_notes=excluded.user_notes, target_horizon_days=excluded.target_horizon_days,\n           is_closed=excluded.is_closed, performance_grade=excluded.performance_grade,\n           entry_price=excluded.entry_price, current_return=excluded.current_return,\n           one_day_return=excluded.one_day_return, seven_day_return=excluded.seven_day_return,\n           thirty_day_return=excluded.thirty_day_return, updated_at=excluded.updated_at").run({
+			...e,
+			triggerEventId: e.triggerEventId ?? null,
+			snapshotMetrics: JSON.stringify(e.snapshotMetrics),
+			isClosed: +!!e.isClosed,
+			performanceGrade: e.performanceGrade ?? null,
+			entryPrice: e.entryPrice ?? null,
+			currentReturn: e.currentReturn ?? null,
+			oneDayReturn: e.oneDayReturn ?? null,
+			sevenDayReturn: e.sevenDayReturn ?? null,
+			thirtyDayReturn: e.thirtyDayReturn ?? null
+		});
+	}
+	listCountryIntelState() {
+		return this.db.prepare("SELECT state_json FROM country_intel_state ORDER BY last_updated DESC").all().map((e) => A(e.state_json));
+	}
+	saveCountryIntelState(e) {
+		this.db.prepare("INSERT INTO country_intel_state (country_code, state_json, last_updated)\n         VALUES (@countryCode, @stateJson, @lastUpdated)\n         ON CONFLICT(country_code) DO UPDATE SET\n           state_json=excluded.state_json, last_updated=excluded.last_updated").run({
+			countryCode: e.countryCode,
+			stateJson: JSON.stringify(e),
+			lastUpdated: e.lastUpdated
+		});
+	}
+	listAssetIdentities() {
+		return this.db.prepare("SELECT identity_json FROM asset_identity ORDER BY symbol ASC").all().map((e) => A(e.identity_json));
+	}
+	saveAssetIdentity(e) {
+		this.db.prepare("INSERT INTO asset_identity (symbol, identity_json)\n         VALUES (@symbol, @identityJson)\n         ON CONFLICT(symbol) DO UPDATE SET identity_json=excluded.identity_json").run({
+			symbol: e.symbol,
+			identityJson: JSON.stringify(e)
+		});
+	}
+	listFavorites() {
+		return this.db.prepare("SELECT * FROM user_favorites ORDER BY created_at DESC").all().map(le);
+	}
+	saveFavorite(e) {
+		this.db.prepare("INSERT INTO user_favorites (id, kind, target_id, label, created_at)\n         VALUES (@id, @kind, @targetId, @label, @createdAt)\n         ON CONFLICT(id) DO UPDATE SET kind=excluded.kind, target_id=excluded.target_id, label=excluded.label").run(e);
+	}
+	deleteFavorite(e) {
+		this.db.prepare("DELETE FROM user_favorites WHERE id = ?").run(e);
+	}
+	saveEventAssetLink(e) {
+		this.db.prepare("INSERT INTO event_asset_links (id, event_id, asset_symbol, relation, confidence, created_at)\n         VALUES (@id, @eventId, @assetSymbol, @relation, @confidence, @createdAt)\n         ON CONFLICT(id) DO UPDATE SET relation=excluded.relation, confidence=excluded.confidence, created_at=excluded.created_at").run(e);
+	}
 	saveRealtimeFrame(e) {
 		this.db.prepare("INSERT INTO realtime_frames (id, sequence, emitted_at, frame_json)\n         VALUES (@id, @sequence, @emittedAt, @frameJson)\n         ON CONFLICT(id) DO UPDATE SET\n           sequence=excluded.sequence, emitted_at=excluded.emitted_at, frame_json=excluded.frame_json").run({
 			id: e.id,
@@ -110,7 +201,7 @@ var te = class {
 		});
 	}
 	listRealtimeFrames(e, t, n = 2e3) {
-		return this.db.prepare("SELECT * FROM realtime_frames WHERE emitted_at BETWEEN ? AND ? ORDER BY emitted_at ASC LIMIT ?").all(e, t, n).map(ie);
+		return this.db.prepare("SELECT * FROM realtime_frames WHERE emitted_at BETWEEN ? AND ? ORDER BY emitted_at ASC LIMIT ?").all(e, t, n).map(ue);
 	}
 	audit(e) {
 		this.db.prepare("INSERT INTO source_audit_log\n           (id, event_type, connector_id, severity, message, created_at, metadata)\n         VALUES\n           (@id, @eventType, @connectorId, @severity, @message, @createdAt, @metadata)").run({
@@ -123,7 +214,7 @@ var te = class {
 		this.db.close();
 	}
 };
-function E(e) {
+function re(e) {
 	return {
 		id: String(e.id),
 		date: String(e.date),
@@ -134,7 +225,61 @@ function E(e) {
 		createdAt: Number(e.created_at)
 	};
 }
-function ne(e) {
+function ie(e) {
+	return {
+		id: String(e.id),
+		eventId: String(e.event_id),
+		timestamp: Number(e.timestamp),
+		summaryHash: String(e.summary_hash),
+		embeddingModel: String(e.embedding_model),
+		embeddingVector: oe(e.embedding_vector),
+		sourceEventCategory: String(e.source_event_category),
+		provenance: String(e.provenance),
+		createdAt: Number(e.created_at)
+	};
+}
+function ae(e) {
+	return {
+		id: String(e.id),
+		timestamp: Number(e.timestamp),
+		assetSymbol: String(e.asset_symbol),
+		thesisType: String(e.thesis_type),
+		triggerEventId: e.trigger_event_id === null || e.trigger_event_id === void 0 ? null : String(e.trigger_event_id),
+		snapshotMetrics: A(e.snapshot_metrics),
+		userNotes: String(e.user_notes),
+		targetHorizonDays: Number(e.target_horizon_days),
+		isClosed: Number(e.is_closed) === 1,
+		performanceGrade: e.performance_grade === null || e.performance_grade === void 0 ? null : String(e.performance_grade),
+		entryPrice: e.entry_price === null || e.entry_price === void 0 ? null : Number(e.entry_price),
+		currentReturn: e.current_return === null || e.current_return === void 0 ? null : Number(e.current_return),
+		oneDayReturn: e.one_day_return === null || e.one_day_return === void 0 ? null : Number(e.one_day_return),
+		sevenDayReturn: e.seven_day_return === null || e.seven_day_return === void 0 ? null : Number(e.seven_day_return),
+		thirtyDayReturn: e.thirty_day_return === null || e.thirty_day_return === void 0 ? null : Number(e.thirty_day_return),
+		createdAt: Number(e.created_at),
+		updatedAt: Number(e.updated_at)
+	};
+}
+function oe(e) {
+	if (typeof e != "string") return [];
+	try {
+		let t = JSON.parse(e);
+		return Array.isArray(t) ? t.map((e) => Number(e)).filter((e) => Number.isFinite(e)) : [];
+	} catch {
+		return [];
+	}
+}
+function E(e) {
+	return {
+		id: String(e.id),
+		symbol: String(e.symbol),
+		price: Number(e.price),
+		volume: Number(e.volume),
+		source: String(e.source),
+		observedAt: Number(e.observed_at),
+		tradeDate: String(e.trade_date)
+	};
+}
+function se(e) {
 	return {
 		id: String(e.id),
 		title: String(e.title),
@@ -145,7 +290,64 @@ function ne(e) {
 		observedAt: Number(e.observed_at)
 	};
 }
-function re(e) {
+function ce(e) {
+	return {
+		sourceId: String(e.source_id),
+		sourceName: String(e.source_name),
+		sourceType: String(e.source_type),
+		endpointType: String(e.endpoint_type),
+		endpoint: String(e.endpoint),
+		pollIntervalMs: Number(e.poll_interval_ms),
+		rateLimitMs: Number(e.rate_limit_ms),
+		timeoutMs: Number(e.timeout_ms),
+		enabled: Number(e.enabled) === 1,
+		status: String(e.status),
+		provenance: String(e.provenance),
+		lastSuccessAt: e.last_success_at === null || e.last_success_at === void 0 ? void 0 : Number(e.last_success_at),
+		lastErrorAt: e.last_error_at === null || e.last_error_at === void 0 ? void 0 : Number(e.last_error_at),
+		lastError: e.last_error === null || e.last_error === void 0 ? void 0 : String(e.last_error),
+		itemCount: Number(e.item_count),
+		sourceReliabilityScore: Number(e.source_reliability_score),
+		legalSafetyNote: String(e.legal_safety_note),
+		parserAdapter: String(e.parser_adapter)
+	};
+}
+function D(e) {
+	return {
+		id: String(e.id),
+		timestamp: Number(e.timestamp),
+		title: String(e.title),
+		summary: String(e.summary),
+		countryCodes: k(e.country_codes),
+		region: String(e.region),
+		lat: e.lat === null || e.lat === void 0 ? void 0 : Number(e.lat),
+		lon: e.lon === null || e.lon === void 0 ? void 0 : Number(e.lon),
+		category: String(e.category),
+		severity: String(e.severity),
+		confidence: Number(e.confidence),
+		sourceId: String(e.source_id),
+		sourceUrl: e.source_url === null || e.source_url === void 0 ? void 0 : String(e.source_url),
+		provenance: String(e.provenance),
+		affectedAssets: k(e.affected_assets),
+		affectedSectors: k(e.affected_sectors),
+		affectedCommodities: k(e.affected_commodities),
+		affectedCurrencies: k(e.affected_currencies),
+		extractedEntities: k(e.extracted_entities),
+		narrativeTags: k(e.narrative_tags),
+		rawPayloadHash: String(e.raw_payload_hash),
+		dedupeHash: String(e.dedupe_hash)
+	};
+}
+function le(e) {
+	return {
+		id: String(e.id),
+		kind: String(e.kind),
+		targetId: String(e.target_id),
+		label: String(e.label),
+		createdAt: Number(e.created_at)
+	};
+}
+function O(e) {
 	return {
 		id: String(e.id),
 		createdAt: Number(e.created_at),
@@ -153,10 +355,10 @@ function re(e) {
 		title: String(e.title),
 		thesis: String(e.thesis),
 		direction: String(e.direction),
-		tickers: D(e.tickers),
+		tickers: k(e.tickers),
 		conviction: Number(e.conviction),
 		emotionalState: String(e.emotional_state),
-		evidenceIds: D(e.evidence_ids),
+		evidenceIds: k(e.evidence_ids),
 		context: String(e.context),
 		reviewDate: Number(e.review_date),
 		status: String(e.status),
@@ -164,19 +366,19 @@ function re(e) {
 		outcome: e.outcome === null || e.outcome === void 0 ? null : String(e.outcome)
 	};
 }
-function ie(e) {
+function ue(e) {
 	return {
 		id: String(e.id),
 		sequence: Number(e.sequence),
 		emittedAt: Number(e.emitted_at),
-		frame: ae(e.frame_json)
+		frame: de(e.frame_json)
 	};
 }
-function ae(e) {
+function de(e) {
 	if (typeof e != "string") throw Error("Invalid realtime frame payload");
 	return JSON.parse(e);
 }
-function D(e) {
+function k(e) {
 	if (typeof e != "string") return [];
 	try {
 		let t = JSON.parse(e);
@@ -185,7 +387,15 @@ function D(e) {
 		return [];
 	}
 }
-var O = class {
+function A(e) {
+	if (typeof e != "string") return {};
+	try {
+		return JSON.parse(e);
+	} catch {
+		return {};
+	}
+}
+var fe = class {
 	mode = "json-fallback";
 	file;
 	data;
@@ -196,13 +406,13 @@ var O = class {
 		return [...this.data.briefs].sort((e, t) => t.createdAt - e.createdAt);
 	}
 	saveBrief(e) {
-		this.data.briefs = k(this.data.briefs, e), this.flush();
+		this.data.briefs = j(this.data.briefs, e), this.flush();
 	}
 	listHeadlines(e = 200) {
 		return [...this.data.headlines].sort((e, t) => t.observedAt - e.observedAt).slice(0, e);
 	}
 	saveHeadline(e) {
-		this.data.headlines = k(this.data.headlines, e), this.flush();
+		this.data.headlines = j(this.data.headlines, e), this.flush();
 	}
 	listDecisions() {
 		return [...this.data.decisions].sort((e, t) => t.updatedAt - e.updatedAt);
@@ -211,7 +421,7 @@ var O = class {
 		return this.data.decisions.find((t) => t.id === e) ?? null;
 	}
 	saveDecision(e) {
-		this.data.decisions = k(this.data.decisions, e), this.flush();
+		this.data.decisions = j(this.data.decisions, e), this.flush();
 	}
 	deleteDecision(e) {
 		this.data.decisions = this.data.decisions.filter((t) => t.id !== e), this.flush();
@@ -220,31 +430,82 @@ var O = class {
 		return this.data.decisions.filter((t) => t.status === "open" && t.reviewDate <= e).sort((e, t) => e.reviewDate - t.reviewDate);
 	}
 	saveMarketTick(e) {
-		this.data.marketTicks = j(k(this.data.marketTicks, e), "observedAt", 25e3), this.flush();
+		this.data.marketTicks = M(j(this.data.marketTicks, e), "observedAt", 25e3), this.flush();
+	}
+	listMarketTicks(e, t = 200) {
+		return [...this.data.marketTicks].filter((t) => t.symbol === e).sort((e, t) => t.observedAt - e.observedAt).slice(0, t);
 	}
 	saveAttentionBatch(e) {
-		this.data.attentionBatches = j(k(this.data.attentionBatches, e), "observedAt", 25e3), this.flush();
+		this.data.attentionBatches = M(j(this.data.attentionBatches, e), "observedAt", 25e3), this.flush();
 	}
 	saveEntityEdge(e) {
-		this.data.entityEdges = k(this.data.entityEdges, e), this.flush();
+		this.data.entityEdges = j(this.data.entityEdges, e), this.flush();
 	}
 	saveSignalEvent(e) {
-		this.data.signalEvents = j(k(this.data.signalEvents, e), "createdAt", 1e4), this.flush();
+		this.data.signalEvents = M(j(this.data.signalEvents, e), "createdAt", 1e4), this.flush();
+	}
+	listOsintSources() {
+		return [...this.data.osintSources].sort((e, t) => e.sourceName.localeCompare(t.sourceName));
+	}
+	saveOsintSource(e) {
+		this.data.osintSources = pe(this.data.osintSources, e, "sourceId"), this.flush();
+	}
+	listWorldIntelEvents(e = 300) {
+		return [...this.data.worldIntelEvents].sort((e, t) => t.timestamp - e.timestamp).slice(0, e);
+	}
+	saveWorldIntelEvent(e) {
+		this.data.worldIntelEvents = M(j(this.data.worldIntelEvents, e), "timestamp", 1e4), this.flush();
+	}
+	listWorldIntelEmbeddings(e = 500) {
+		return [...this.data.worldIntelEmbeddings].sort((e, t) => t.timestamp - e.timestamp).slice(0, e);
+	}
+	saveWorldIntelEmbedding(e) {
+		this.data.worldIntelEmbeddings = M(j(this.data.worldIntelEmbeddings, e), "timestamp", 1e4), this.flush();
+	}
+	listUserTheses(e = 500) {
+		return [...this.data.userTheses].sort((e, t) => t.timestamp - e.timestamp).slice(0, e);
+	}
+	saveUserThesis(e) {
+		this.data.userTheses = M(j(this.data.userTheses, e), "timestamp", 1e4), this.flush();
+	}
+	listCountryIntelState() {
+		return [...this.data.countryIntelState].sort((e, t) => t.riskScore - e.riskScore);
+	}
+	saveCountryIntelState(e) {
+		this.data.countryIntelState = pe(this.data.countryIntelState, e, "countryCode"), this.flush();
+	}
+	listAssetIdentities() {
+		return [...this.data.assetIdentities].sort((e, t) => e.symbol.localeCompare(t.symbol));
+	}
+	saveAssetIdentity(e) {
+		this.data.assetIdentities = pe(this.data.assetIdentities, e, "symbol"), this.flush();
+	}
+	listFavorites() {
+		return [...this.data.favorites].sort((e, t) => t.createdAt - e.createdAt);
+	}
+	saveFavorite(e) {
+		this.data.favorites = j(this.data.favorites, e), this.flush();
+	}
+	deleteFavorite(e) {
+		this.data.favorites = this.data.favorites.filter((t) => t.id !== e), this.flush();
+	}
+	saveEventAssetLink(e) {
+		this.data.eventAssetLinks = M(j(this.data.eventAssetLinks, e), "createdAt", 25e3), this.flush();
 	}
 	saveRealtimeFrame(e) {
-		this.data.realtimeFrames = j(k(this.data.realtimeFrames, e), "emittedAt", 1e4), this.flush();
+		this.data.realtimeFrames = M(j(this.data.realtimeFrames, e), "emittedAt", 1e4), this.flush();
 	}
 	listRealtimeFrames(e, t, n = 2e3) {
 		return [...this.data.realtimeFrames].filter((n) => n.emittedAt >= e && n.emittedAt <= t).sort((e, t) => e.emittedAt - t.emittedAt).slice(0, n);
 	}
 	audit(e) {
-		this.data.auditLog = j([...this.data.auditLog, e], "createdAt", 1e4), this.flush();
+		this.data.auditLog = M([...this.data.auditLog, e], "createdAt", 1e4), this.flush();
 	}
 	close() {
 		this.flush();
 	}
 	read() {
-		if (!a(this.file)) return A();
+		if (!a(this.file)) return me();
 		try {
 			let e = JSON.parse(s(this.file, "utf8"));
 			return {
@@ -255,24 +516,38 @@ var O = class {
 				attentionBatches: e.attentionBatches ?? [],
 				entityEdges: e.entityEdges ?? [],
 				signalEvents: e.signalEvents ?? [],
+				osintSources: e.osintSources ?? [],
+				worldIntelEvents: e.worldIntelEvents ?? [],
+				worldIntelEmbeddings: e.worldIntelEmbeddings ?? [],
+				userTheses: e.userTheses ?? [],
+				countryIntelState: e.countryIntelState ?? [],
+				assetIdentities: e.assetIdentities ?? [],
+				favorites: e.favorites ?? [],
+				eventAssetLinks: e.eventAssetLinks ?? [],
 				realtimeFrames: e.realtimeFrames ?? [],
 				auditLog: e.auditLog ?? []
 			};
 		} catch {
-			return A();
+			return me();
 		}
 	}
 	flush() {
 		c(this.file, JSON.stringify(this.data), "utf8");
 	}
 };
-function k(e, t) {
+function j(e, t) {
 	let n = e.findIndex((e) => e.id === t.id);
 	if (n === -1) return [...e, t];
 	let r = [...e];
 	return r[n] = t, r;
 }
-function A() {
+function pe(e, t, n) {
+	let r = e.findIndex((e) => e[n] === t[n]);
+	if (r === -1) return [...e, t];
+	let i = [...e];
+	return i[r] = t, i;
+}
+function me() {
 	return {
 		briefs: [],
 		headlines: [],
@@ -281,16 +556,24 @@ function A() {
 		attentionBatches: [],
 		entityEdges: [],
 		signalEvents: [],
+		osintSources: [],
+		worldIntelEvents: [],
+		worldIntelEmbeddings: [],
+		userTheses: [],
+		countryIntelState: [],
+		assetIdentities: [],
+		favorites: [],
+		eventAssetLinks: [],
 		realtimeFrames: [],
 		auditLog: []
 	};
 }
-function j(e, t, n) {
+function M(e, t, n) {
 	return e.length <= n ? e : [...e].sort((e, n) => Number(n[t]) - Number(e[t])).slice(0, n).sort((e, n) => Number(e[t]) - Number(n[t]));
 }
 //#endregion
 //#region src/data/intel.ts
-var M = {
+var N = {
 	redSeaWire: {
 		id: "src-red-sea-wire",
 		sourceName: "Atlasz Shipping Wire",
@@ -391,76 +674,76 @@ var M = {
 		publishedAt: "2026-06-19T02:52:00-04:00",
 		note: "Regional energy context limits immediate stress but keeps industrial margins watchlisted."
 	}
-}, oe = [
+}, he = [
 	{
 		id: "raw-red-sea-1",
 		connector: "mock-shipping-wire",
-		sourceName: M.redSeaWire.sourceName,
-		sourceUrl: M.redSeaWire.sourceUrl,
-		rawTitle: M.redSeaWire.title,
+		sourceName: N.redSeaWire.sourceName,
+		sourceUrl: N.redSeaWire.sourceUrl,
+		rawTitle: N.redSeaWire.title,
 		rawExcerpt: "Route-risk references detected: Red Sea, insurance premium, crude, freight, airline margins.",
-		ingestedAt: M.redSeaWire.observedAt,
-		publishedAt: M.redSeaWire.publishedAt,
+		ingestedAt: N.redSeaWire.observedAt,
+		publishedAt: N.redSeaWire.publishedAt,
 		normalizedEventId: "red-sea"
 	},
 	{
 		id: "raw-red-sea-2",
 		connector: "mock-market-tape",
-		sourceName: M.oilTape.sourceName,
-		sourceUrl: M.oilTape.sourceUrl,
-		rawTitle: M.oilTape.title,
+		sourceName: N.oilTape.sourceName,
+		sourceUrl: N.oilTape.sourceUrl,
+		rawTitle: N.oilTape.title,
 		rawExcerpt: "WTI, XLE, GLD, and airline basket used as market-linking confirmation.",
-		ingestedAt: M.oilTape.observedAt,
-		publishedAt: M.oilTape.publishedAt,
+		ingestedAt: N.oilTape.observedAt,
+		publishedAt: N.oilTape.publishedAt,
 		normalizedEventId: "red-sea"
 	},
 	{
 		id: "raw-taiwan-1",
 		connector: "mock-gdelt",
-		sourceName: M.taiwanWire.sourceName,
-		sourceUrl: M.taiwanWire.sourceUrl,
-		rawTitle: M.taiwanWire.title,
+		sourceName: N.taiwanWire.sourceName,
+		sourceUrl: N.taiwanWire.sourceUrl,
+		rawTitle: N.taiwanWire.title,
 		rawExcerpt: "Entities detected: Taiwan, TSMC, advanced chips, Nvidia, Apple suppliers, Nasdaq.",
-		ingestedAt: M.taiwanWire.observedAt,
-		publishedAt: M.taiwanWire.publishedAt,
+		ingestedAt: N.taiwanWire.observedAt,
+		publishedAt: N.taiwanWire.publishedAt,
 		normalizedEventId: "taiwan"
 	},
 	{
 		id: "raw-rare-earths-1",
 		connector: "mock-policy-calendar",
-		sourceName: M.rareEarthsPolicy.sourceName,
-		sourceUrl: M.rareEarthsPolicy.sourceUrl,
-		rawTitle: M.rareEarthsPolicy.title,
+		sourceName: N.rareEarthsPolicy.sourceName,
+		sourceUrl: N.rareEarthsPolicy.sourceUrl,
+		rawTitle: N.rareEarthsPolicy.title,
 		rawExcerpt: "Policy references include China, rare earths, EV magnets, defense electronics, and strategic inputs.",
-		ingestedAt: M.rareEarthsPolicy.observedAt,
-		publishedAt: M.rareEarthsPolicy.publishedAt,
+		ingestedAt: N.rareEarthsPolicy.observedAt,
+		publishedAt: N.rareEarthsPolicy.publishedAt,
 		normalizedEventId: "rare-earths"
 	},
 	{
 		id: "raw-fed-1",
 		connector: "mock-policy-calendar",
-		sourceName: M.fedCalendar.sourceName,
-		sourceUrl: M.fedCalendar.sourceUrl,
-		rawTitle: M.fedCalendar.title,
+		sourceName: N.fedCalendar.sourceName,
+		sourceUrl: N.fedCalendar.sourceUrl,
+		rawTitle: N.fedCalendar.title,
 		rawExcerpt: "Macro sensitivity extraction links real yields, gold, Nasdaq, Bitcoin, TLT, and dollar pressure.",
-		ingestedAt: M.fedCalendar.observedAt,
-		publishedAt: M.fedCalendar.publishedAt,
+		ingestedAt: N.fedCalendar.observedAt,
+		publishedAt: N.fedCalendar.publishedAt,
 		normalizedEventId: "central-bank"
 	},
 	{
 		id: "raw-europe-gas-1",
 		connector: "mock-gdelt",
-		sourceName: M.europeGas.sourceName,
-		sourceUrl: M.europeGas.sourceUrl,
-		rawTitle: M.europeGas.title,
+		sourceName: N.europeGas.sourceName,
+		sourceUrl: N.europeGas.sourceUrl,
+		rawTitle: N.europeGas.title,
 		rawExcerpt: "European storage buffer reduces immediate risk, but industrial margin exposure remains mapped.",
-		ingestedAt: M.europeGas.observedAt,
-		publishedAt: M.europeGas.publishedAt,
+		ingestedAt: N.europeGas.observedAt,
+		publishedAt: N.europeGas.publishedAt,
 		normalizedEventId: "europe-energy"
 	}
 ];
-`${oe.length}`;
-var se = [
+`${he.length}`;
+var ge = [
 	{
 		ticker: "CL",
 		name: "WTI Crude",
@@ -531,7 +814,7 @@ var se = [
 		],
 		confidence: 61
 	}
-], ce = [
+], _e = [
 	{
 		ticker: "QQQ",
 		name: "Nasdaq 100",
@@ -588,7 +871,7 @@ var se = [
 		],
 		confidence: 59
 	}
-], N = [
+], ve = [
 	{
 		id: "red-sea",
 		time: "07:45 ET",
@@ -643,9 +926,9 @@ var se = [
 			}
 		],
 		sourceTrail: [
-			M.redSeaWire,
-			M.freightTape,
-			M.oilTape
+			N.redSeaWire,
+			N.freightTape,
+			N.oilTape
 		]
 	},
 	{
@@ -700,7 +983,7 @@ var se = [
 				confidenceImpact: "limits"
 			}
 		],
-		sourceTrail: [M.taiwanWire, M.chipPolicy]
+		sourceTrail: [N.taiwanWire, N.chipPolicy]
 	},
 	{
 		id: "rare-earths",
@@ -752,7 +1035,7 @@ var se = [
 				confidenceImpact: "limits"
 			}
 		],
-		sourceTrail: [M.rareEarthsPolicy, M.evSupplyChain]
+		sourceTrail: [N.rareEarthsPolicy, N.evSupplyChain]
 	},
 	{
 		id: "central-bank",
@@ -795,7 +1078,7 @@ var se = [
 			supports: "BTC linkage with limited confidence",
 			confidenceImpact: "limits"
 		}],
-		sourceTrail: [M.fedCalendar, M.cryptoFlows]
+		sourceTrail: [N.fedCalendar, N.cryptoFlows]
 	},
 	{
 		id: "europe-energy",
@@ -836,9 +1119,9 @@ var se = [
 			supports: "Uncertainty note",
 			confidenceImpact: "limits"
 		}],
-		sourceTrail: [M.europeGas]
+		sourceTrail: [N.europeGas]
 	}
-], le = Object.fromEntries(N.map((e) => [e.id, e])), P = (e) => Array.from(new Map(e.flatMap((e) => le[e]?.sourceTrail ?? []).map((e) => [e.id, e])).values()), F = (e) => e.flatMap((e) => le[e]?.evidenceNotes ?? []), I = [
+], ye = Object.fromEntries(ve.map((e) => [e.id, e])), P = (e) => Array.from(new Map(e.flatMap((e) => ye[e]?.sourceTrail ?? []).map((e) => [e.id, e])).values()), F = (e) => e.flatMap((e) => ye[e]?.evidenceNotes ?? []), be = [
 	{
 		id: "oil-inflation",
 		title: "Oil-linked risk is rising across shipping, energy, gold, and airline exposure",
@@ -981,7 +1264,7 @@ var se = [
 		evidenceTrail: F(["central-bank"]),
 		sourceTrail: P(["central-bank"])
 	}
-], ue = {
+], xe = {
 	CL: {
 		symbol: "CL",
 		priceMove: "+2.64%",
@@ -1193,7 +1476,7 @@ var se = [
 		sourceTrail: P(["taiwan", "rare-earths"]),
 		evidenceTrail: F(["taiwan", "rare-earths"])
 	}
-}, de = [
+}, Se = [
 	{
 		id: "red-sea",
 		label: "Red Sea",
@@ -1344,7 +1627,7 @@ var se = [
 		},
 		tone: "watch"
 	}
-], fe = [
+], Ce = [
 	{
 		id: "e1",
 		source: "red-sea",
@@ -1436,7 +1719,7 @@ var se = [
 		label: "mega-cap beta",
 		strength: 58
 	}
-], pe = [
+], we = [
 	{
 		id: "brief-changed",
 		headline: "Energy and geopolitical risk are now the dominant cross-asset cluster",
@@ -1465,8 +1748,8 @@ var se = [
 			"Airline underperformance",
 			"Gold confirmation"
 		],
-		sourceTrail: I[0].sourceTrail,
-		evidenceTrail: I[0].evidenceTrail
+		sourceTrail: be[0].sourceTrail,
+		evidenceTrail: be[0].evidenceTrail
 	},
 	{
 		id: "brief-move",
@@ -1493,8 +1776,8 @@ var se = [
 			"XLE breadth",
 			"DAL/UAL reaction"
 		],
-		sourceTrail: ue.CL.sourceTrail,
-		evidenceTrail: ue.CL.evidenceTrail
+		sourceTrail: xe.CL.sourceTrail,
+		evidenceTrail: xe.CL.evidenceTrail
 	},
 	{
 		id: "brief-taiwan",
@@ -1524,8 +1807,8 @@ var se = [
 			"Export-control language",
 			"QQQ breadth"
 		],
-		sourceTrail: I[1].sourceTrail,
-		evidenceTrail: I[1].evidenceTrail
+		sourceTrail: be[1].sourceTrail,
+		evidenceTrail: be[1].evidenceTrail
 	},
 	{
 		id: "brief-policy",
@@ -1588,7 +1871,7 @@ var se = [
 		sourceTrail: P(["red-sea", "central-bank"]),
 		evidenceTrail: F(["red-sea", "central-bank"])
 	}
-], me = {
+], Te = {
 	BTC: {
 		label: "Bitcoin",
 		feedSymbol: "bitcoin",
@@ -1619,7 +1902,7 @@ var se = [
 		feedSymbol: "avalanche-2",
 		defaultPrice: 28.5
 	}
-}, he = {
+}, Ee = {
 	EURUSD: {
 		label: "Euro / US Dollar",
 		defaultPrice: 1.08
@@ -1644,7 +1927,7 @@ var se = [
 		label: "US Dollar / Swiss Franc",
 		defaultPrice: .9
 	}
-}, ge = {
+}, De = {
 	SPX: {
 		label: "S&P 500 Index",
 		defaultPrice: 5450
@@ -1669,7 +1952,7 @@ var se = [
 		label: "US Dollar Index",
 		defaultPrice: 105.2
 	}
-}, _e = {
+}, Oe = {
 	TECH: {
 		symbol: "XLK",
 		label: "Technology Select Sector",
@@ -1705,7 +1988,7 @@ var se = [
 		label: "Utilities Select Sector",
 		defaultPrice: 70
 	}
-}, ve = {
+}, ke = {
 	CL: {
 		label: "WTI Crude",
 		defaultPrice: 81.42
@@ -1730,7 +2013,7 @@ var se = [
 		label: "Silver",
 		defaultPrice: 30
 	}
-}, ye = {
+}, Ae = {
 	NVDA: {
 		label: "Nvidia",
 		defaultPrice: 128.44
@@ -1787,7 +2070,7 @@ var se = [
 		label: "General Motors",
 		defaultPrice: 46
 	}
-}, be = new Set([
+}, je = new Set([
 	"SPY",
 	"QQQ",
 	"SOXX",
@@ -1805,7 +2088,7 @@ var se = [
 	"VGK",
 	"XLB",
 	"FXI"
-]), xe = [
+]), Me = [
 	"BTC",
 	"ETH",
 	"KAS",
@@ -1829,53 +2112,53 @@ var se = [
 	"VLO",
 	"CL",
 	"GOLD",
-	...se.map((e) => e.ticker),
-	...ce.map((e) => e.ticker)
+	...ge.map((e) => e.ticker),
+	..._e.map((e) => e.ticker)
 ];
-function Se(e = !1) {
-	return Ae(xe.map((t) => we(t, { enablePublicCrypto: e })));
+function Ne(e = !1) {
+	return Ve(Me.map((t) => Fe(t, { enablePublicCrypto: e })));
 }
-function Ce(e) {
+function Pe(e) {
 	return Object.fromEntries(e.map((e) => [e.symbol, e.defaultPrice]));
 }
-function we(e, t = {}) {
-	let n = Te(e.trim()), r = Ee(n);
-	if (r) return De(r, t.enablePublicCrypto);
+function Fe(e, t = {}) {
+	let n = Ie(e.trim()), r = Le(n);
+	if (r) return Re(r, t.enablePublicCrypto);
 	let i = n.replace("/", "");
-	if (he[i]) {
-		let e = he[i];
-		return L(`${i.slice(0, 3)}/${i.slice(3)}`, e.label, "forex", "simulator", i.toLowerCase(), e.defaultPrice, "FX pair simulator");
+	if (Ee[i]) {
+		let e = Ee[i];
+		return I(`${i.slice(0, 3)}/${i.slice(3)}`, e.label, "forex", "simulator", i.toLowerCase(), e.defaultPrice, "FX pair simulator");
 	}
-	let a = _e[n];
-	if (a) return L(a.symbol, a.label, "sector", "simulator", a.symbol.toLowerCase(), a.defaultPrice, "Sector pressure proxy");
-	let o = me[n];
-	if (o) return L(n, o.label, "crypto", t.enablePublicCrypto ? "coincap" : "simulator", o.feedSymbol, o.defaultPrice, t.enablePublicCrypto ? "Public CoinCap-capable crypto mapping" : "Crypto simulator mapping");
-	let s = ge[n];
-	if (s) return L(n, s.label, "index", "simulator", n.toLowerCase(), s.defaultPrice, "Index simulator proxy");
-	let c = ve[n];
+	let a = Oe[n];
+	if (a) return I(a.symbol, a.label, "sector", "simulator", a.symbol.toLowerCase(), a.defaultPrice, "Sector pressure proxy");
+	let o = Te[n];
+	if (o) return I(n, o.label, "crypto", t.enablePublicCrypto ? "coincap" : "simulator", o.feedSymbol, o.defaultPrice, t.enablePublicCrypto ? "Public CoinCap-capable crypto mapping" : "Crypto simulator mapping");
+	let s = De[n];
+	if (s) return I(n, s.label, "index", "simulator", n.toLowerCase(), s.defaultPrice, "Index simulator proxy");
+	let c = ke[n];
 	if (c) {
 		let e = n === "WTI" ? "CL" : n === "GOLD" ? "XAUUSD" : n === "SILVER" ? "XAGUSD" : n;
-		return L(e, c.label, "commodity", "simulator", e.toLowerCase(), c.defaultPrice, "Commodity simulator proxy");
+		return I(e, c.label, "commodity", "simulator", e.toLowerCase(), c.defaultPrice, "Commodity simulator proxy");
 	}
-	let l = ye[n];
-	if (l) return L(n, l.label, "equity", "simulator", n.toLowerCase(), l.defaultPrice, "Equity public-poll/local pressure proxy");
-	let u = be.has(n) ? "etf" : "equity";
-	return L(n, `${n} watchlist asset`, u, "simulator", n.toLowerCase(), 100, "User-added simulator watchlist asset");
+	let l = Ae[n];
+	if (l) return I(n, l.label, "equity", "simulator", n.toLowerCase(), l.defaultPrice, "Equity public-poll/local pressure proxy");
+	let u = je.has(n) ? "etf" : "equity";
+	return I(n, `${n} watchlist asset`, u, "simulator", n.toLowerCase(), 100, "User-added simulator watchlist asset");
 }
-function Te(e) {
+function Ie(e) {
 	return e.toUpperCase().replace(/\s+/g, "").replace("-", "/");
 }
-function Ee(e) {
-	return [...se, ...ce].find((t) => t.ticker === e);
+function Le(e) {
+	return [...ge, ..._e].find((t) => t.ticker === e);
 }
-function De(e, t = !1) {
-	let n = me[e.ticker], r = Oe(e.ticker);
-	return L(e.ticker, e.name, r, t && n ? "coincap" : "simulator", n?.feedSymbol ?? e.ticker.toLowerCase(), ke(e.price), "Seed watchlist asset");
+function Re(e, t = !1) {
+	let n = Te[e.ticker], r = ze(e.ticker);
+	return I(e.ticker, e.name, r, t && n ? "coincap" : "simulator", n?.feedSymbol ?? e.ticker.toLowerCase(), Be(e.price), "Seed watchlist asset");
 }
-function Oe(e) {
-	return me[e] ? "crypto" : ve[e] ? "commodity" : ge[e] ? "index" : be.has(e) ? "etf" : (ye[e], "equity");
+function ze(e) {
+	return Te[e] ? "crypto" : ke[e] ? "commodity" : De[e] ? "index" : je.has(e) ? "etf" : (Ae[e], "equity");
 }
-function L(e, t, n, r, i, a, o) {
+function I(e, t, n, r, i, a, o) {
 	return {
 		symbol: e,
 		displaySymbol: e,
@@ -1887,22 +2170,22 @@ function L(e, t, n, r, i, a, o) {
 		description: o
 	};
 }
-function ke(e) {
+function Be(e) {
 	let t = Number.parseFloat(e.replace(/,/g, ""));
 	return Number.isFinite(t) && t > 0 ? t : 100;
 }
-function Ae(e) {
+function Ve(e) {
 	return [...new Map(e.map((e) => [e.symbol, e])).values()];
 }
 //#endregion
 //#region src/realtime.ts
-var je = {
+var He = {
 	running: !1,
 	mode: "stopped",
 	sqliteMode: "unknown",
 	connectedFeeds: [],
 	reconnectingFeeds: []
-}, Me = class {
+}, Ue = class {
 	capacity;
 	buffer;
 	head = 0;
@@ -1969,7 +2252,7 @@ var je = {
 		let e = this.head - this.length;
 		return e < 0 ? e + this.capacity : e;
 	}
-}, Ne = 6e4, Pe = 30 * Ne, Fe = class {
+}, We = 6e4, Ge = 30 * We, Ke = class {
 	assets = /* @__PURE__ */ new Map();
 	order = [];
 	listeners = /* @__PURE__ */ new Set();
@@ -1995,8 +2278,8 @@ var je = {
 	feeds = [];
 	simulatorTimer = null;
 	constructor(e) {
-		this.bufferSize = e.bufferSize ?? 1e3, this.syncIntervalMs = e.syncIntervalMs ?? 100, this.entityEdges = e.entityEdges ?? [], this.now = e.now ?? Ie, this.status = {
-			...je,
+		this.bufferSize = e.bufferSize ?? 1e3, this.syncIntervalMs = e.syncIntervalMs ?? 100, this.entityEdges = e.entityEdges ?? [], this.now = e.now ?? qe, this.status = {
+			...He,
 			sqliteMode: e.sqliteMode ?? "unknown"
 		};
 		let t = e.seedPrices ?? {};
@@ -2004,7 +2287,7 @@ var je = {
 			let e = t[n.symbol] ?? 100;
 			this.assets.set(n.symbol, {
 				config: n,
-				ticks: new Me(this.bufferSize),
+				ticks: new Ue(this.bufferSize),
 				sessionOpen: e,
 				lastPrice: e,
 				lastTimestamp: 0,
@@ -2033,7 +2316,7 @@ var je = {
 	addAsset(e, t = 100) {
 		!e.symbol || this.assets.has(e.symbol) || (this.assets.set(e.symbol, {
 			config: e,
-			ticks: new Me(this.bufferSize),
+			ticks: new Ue(this.bufferSize),
 			sessionOpen: t,
 			lastPrice: t,
 			lastTimestamp: 0,
@@ -2045,8 +2328,8 @@ var je = {
 	ingestAttention(e) {
 		this.attention.has(e.target) && (!Number.isFinite(e.pressure) || !Number.isFinite(e.mentionVelocity) || this.pendingAttention.push({
 			...e,
-			pressure: Le(e.pressure, 0, 100),
-			sentimentDivergenceIndex: Le(e.sentimentDivergenceIndex, -1, 1)
+			pressure: Je(e.pressure, 0, 100),
+			sentimentDivergenceIndex: Je(e.sentimentDivergenceIndex, -1, 1)
 		}));
 	}
 	registerFeed(e) {
@@ -2069,7 +2352,7 @@ var je = {
 	stop() {
 		if (!this.running) return;
 		this.running = !1;
-		let e = ze();
+		let e = Xe();
 		this.rafHandle !== null && e && e(this.rafHandle), this.rafHandle = null, this.timerHandle !== null && (clearTimeout(this.timerHandle), this.timerHandle = null), this.simulatorTimer !== null && (clearInterval(this.simulatorTimer), this.simulatorTimer = null);
 		for (let e of this.feeds) e.stop();
 		this.status = {
@@ -2102,7 +2385,7 @@ var je = {
 	}
 	scheduleNextFlush() {
 		if (!this.running) return;
-		let e = Re();
+		let e = Ye();
 		e ? this.rafHandle = e(() => this.tick()) : this.timerHandle = setTimeout(() => this.tick(), this.syncIntervalMs);
 	}
 	tick() {
@@ -2132,9 +2415,9 @@ var je = {
 			let t = this.attention.get(e);
 			return {
 				target: t.target,
-				pressure: R(t.latestPressure, 2),
-				mentionVelocity: R(t.latestMentionVelocity, 2),
-				sentimentDivergenceIndex: R(t.latestSentimentDivergenceIndex, 3),
+				pressure: L(t.latestPressure, 2),
+				mentionVelocity: L(t.latestMentionVelocity, 2),
+				sentimentDivergenceIndex: L(t.latestSentimentDivergenceIndex, 3),
 				sampleCount: t.sampleCount,
 				lastUpdated: t.lastTimestamp,
 				samples: t.samples.slice(120)
@@ -2157,9 +2440,9 @@ var je = {
 			label: e.config.label,
 			kind: e.config.kind,
 			source: e.config.source,
-			price: R(e.lastPrice, 4),
-			changePct: R(r, 3),
-			volume: R(n.oneMinuteVolume, 2),
+			price: L(e.lastPrice, 4),
+			changePct: L(r, 3),
+			volume: L(n.oneMinuteVolume, 2),
 			tickCount: e.tickCount,
 			lastUpdated: e.lastTimestamp,
 			metrics: n,
@@ -2170,11 +2453,11 @@ var je = {
 		let n = 0, r = 0, i = NaN, a = 0, o = 0, s = 0;
 		e.ticks.forEachReverseWhile((e) => {
 			let i = t - e.timestamp;
-			return i > Pe ? !1 : (r += e.volume, i <= Ne && (n += e.volume), !0);
+			return i > Ge ? !1 : (r += e.volume, i <= We && (n += e.volume), !0);
 		});
 		let c = e.ticks.toArray();
 		for (let e of c) {
-			if (t - e.timestamp > Ne) {
+			if (t - e.timestamp > We) {
 				i = e.price;
 				continue;
 			}
@@ -2187,16 +2470,16 @@ var je = {
 		let l = 0;
 		if (s > 1) {
 			let e = a / s, t = Math.max(0, o / s - e * e);
-			l = R(Math.sqrt(t) * 1e4, 2);
+			l = L(Math.sqrt(t) * 1e4, 2);
 		}
-		let u = Math.floor(t / Ne);
+		let u = Math.floor(t / We);
 		e.previousMinuteStamp !== 0 && u !== e.previousMinuteStamp ? (e.previousMinuteVolume = n, e.previousMinuteStamp = u) : e.previousMinuteStamp === 0 && (e.previousMinuteStamp = u, e.previousMinuteVolume = n);
-		let d = e.previousMinuteVolume, f = d > 0 ? R((n - d) / d, 3) : 0;
+		let d = e.previousMinuteVolume, f = d > 0 ? L((n - d) / d, 3) : 0;
 		return {
 			volatilityVelocity: l,
 			volumeAcceleration: f,
-			oneMinuteVolume: R(n, 2),
-			thirtyMinuteAverageVolume: R(r / 30, 2)
+			oneMinuteVolume: L(n, 2),
+			thirtyMinuteAverageVolume: L(r / 30, 2)
 		};
 	}
 	emit() {
@@ -2206,7 +2489,7 @@ var je = {
 	ensureAttentionTarget(e) {
 		this.attention.has(e) || (this.attention.set(e, {
 			target: e,
-			samples: new Me(this.bufferSize),
+			samples: new Ue(this.bufferSize),
 			latestPressure: 0,
 			latestMentionVelocity: 0,
 			latestSentimentDivergenceIndex: 0,
@@ -2229,14 +2512,14 @@ var je = {
 				this.ingest({
 					symbol: r,
 					price: c,
-					volume: R(u * l, 2),
+					volume: L(u * l, 2),
 					timestamp: t,
 					source: "simulator"
 				}), this.ingestAttention({
 					target: r,
-					pressure: R(Le(38 + Math.abs(s) * 12e3 + (l - 1) * 5, 0, 100), 2),
-					mentionVelocity: R(Math.max(0, l - .8 + Math.abs(s) * 1e3), 2),
-					sentimentDivergenceIndex: R(Le(s * 280 + (Math.random() - .5) * .18, -1, 1), 3),
+					pressure: L(Je(38 + Math.abs(s) * 12e3 + (l - 1) * 5, 0, 100), 2),
+					mentionVelocity: L(Math.max(0, l - .8 + Math.abs(s) * 1e3), 2),
+					sentimentDivergenceIndex: L(Je(s * 280 + (Math.random() - .5) * .18, -1, 1), 3),
 					timestamp: t,
 					source: "simulator"
 				});
@@ -2244,72 +2527,72 @@ var je = {
 		}, Math.min(this.syncIntervalMs, 120));
 	}
 };
-function Ie() {
+function qe() {
 	return Date.now();
 }
-function R(e, t) {
+function L(e, t) {
 	let n = 10 ** t;
 	return Math.round(e * n) / n;
 }
-function Le(e, t, n) {
+function Je(e, t, n) {
 	return Math.min(n, Math.max(t, e));
 }
-function Re() {
+function Ye() {
 	let e = globalThis.requestAnimationFrame;
 	return typeof e == "function" ? e.bind(globalThis) : null;
 }
-function ze() {
+function Xe() {
 	let e = globalThis.cancelAnimationFrame;
 	return typeof e == "function" ? e.bind(globalThis) : null;
 }
 //#endregion
 //#region src/engine/signalEngine.ts
-function Be(e, t) {
+function Ze(e, t) {
 	let n = new Map(t?.attention.map((e) => [e.target, e]) ?? []), r = new Map(e.attention.map((e) => [e.target, e])), i = e.assets.length > 0 ? e.assets.reduce((e, t) => e + t.changePct, 0) / e.assets.length : 0, a = [];
 	for (let t of e.assets) {
 		let o = r.get(t.symbol), s = n.get(t.symbol);
-		a.push(...Ve(t, e, i)), o && a.push(...He(t, o, s, e));
+		a.push(...Qe(t, e, i)), o && a.push(...$e(t, o, s, e));
 	}
-	return a.sort((e, t) => t.magnitude - e.magnitude).slice(0, 12).map((t) => Ue(t, e));
+	return a.sort((e, t) => t.magnitude - e.magnitude).slice(0, 12).map((t) => et(t, e));
 }
-function Ve(e, t, n) {
+function Qe(e, t, n) {
 	let r = [], i = Math.max(e.metrics.thirtyMinuteAverageVolume, 1), a = e.metrics.oneMinuteVolume / i;
 	(e.metrics.volumeAcceleration >= 1.75 || a >= 4) && r.push({
 		type: "unusual_volume_spike",
 		assetOrTopicId: e.symbol,
-		severity: z(Math.max(e.metrics.volumeAcceleration, a / 2)),
+		severity: R(Math.max(e.metrics.volumeAcceleration, a / 2)),
 		magnitude: Math.max(e.metrics.volumeAcceleration, a / 2),
 		explanation: `${e.symbol} volume is running ${a.toFixed(1)}x its rolling baseline with acceleration ${e.metrics.volumeAcceleration.toFixed(2)}.`,
-		relatedGraphNodes: B(e.symbol, t)
+		relatedGraphNodes: nt(e.symbol, t)
 	}), e.metrics.volatilityVelocity >= 18 && r.push({
 		type: "volatility_velocity_spike",
 		assetOrTopicId: e.symbol,
-		severity: z(e.metrics.volatilityVelocity / 10),
+		severity: R(e.metrics.volatilityVelocity / 10),
 		magnitude: e.metrics.volatilityVelocity / 10,
 		explanation: `${e.symbol} volatility velocity reached ${e.metrics.volatilityVelocity.toFixed(1)} bps on the one-minute window.`,
-		relatedGraphNodes: B(e.symbol, t)
+		relatedGraphNodes: nt(e.symbol, t)
 	});
 	let o = Math.abs(e.changePct - n);
 	return o >= 2.5 && e.metrics.volatilityVelocity >= 8 && r.push({
 		type: "correlation_break",
 		assetOrTopicId: e.symbol,
-		severity: z(o / 1.5),
+		severity: R(o / 1.5),
 		magnitude: o / 1.5,
 		explanation: `${e.symbol} is deviating ${o.toFixed(2)} points from the basket while volatility remains elevated.`,
-		relatedGraphNodes: B(e.symbol, t)
+		relatedGraphNodes: nt(e.symbol, t)
 	}), r;
 }
-function He(e, t, n, r) {
+function $e(e, t, n, r) {
 	let i = [];
 	if (t.pressure >= 78 || t.mentionVelocity >= 8) {
 		let e = Math.max(t.pressure / 25, t.mentionVelocity / 3);
 		i.push({
 			type: "attention_pressure_spike",
 			assetOrTopicId: t.target,
-			severity: z(e),
+			severity: R(e),
 			magnitude: e,
 			explanation: `${t.target} attention pressure is ${t.pressure.toFixed(0)} with dV/dt ${t.mentionVelocity.toFixed(1)}.`,
-			relatedGraphNodes: B(t.target, r)
+			relatedGraphNodes: nt(t.target, r)
 		});
 	}
 	let a = Math.sign(e.changePct), o = Math.sign(t.sentimentDivergenceIndex);
@@ -2318,10 +2601,10 @@ function He(e, t, n, r) {
 		i.push({
 			type: "sentiment_price_divergence",
 			assetOrTopicId: t.target,
-			severity: z(n),
+			severity: R(n),
 			magnitude: n,
 			explanation: `${t.target} price direction and social sentiment are diverging: price ${e.changePct.toFixed(2)}%, sentiment index ${t.sentimentDivergenceIndex.toFixed(2)}.`,
-			relatedGraphNodes: B(t.target, r)
+			relatedGraphNodes: nt(t.target, r)
 		});
 	}
 	if (n) {
@@ -2331,16 +2614,16 @@ function He(e, t, n, r) {
 			i.push({
 				type: "narrative_acceleration",
 				assetOrTopicId: t.target,
-				severity: z(n),
+				severity: R(n),
 				magnitude: n,
 				explanation: `${t.target} narrative velocity accelerated by ${e.toFixed(1)} mentions/min equivalent since the prior frame.`,
-				relatedGraphNodes: B(t.target, r)
+				relatedGraphNodes: nt(t.target, r)
 			});
 		}
 	}
 	return i;
 }
-function Ue(e, t) {
+function et(e, t) {
 	return {
 		id: `${e.type}:${e.assetOrTopicId}:${Math.floor(t.emittedAt / 1e3)}`,
 		type: e.type,
@@ -2351,26 +2634,26 @@ function Ue(e, t) {
 			`asset:${e.assetOrTopicId}`,
 			`signal:${e.type}`
 		],
-		confidence: We(e.severity),
+		confidence: tt(e.severity),
 		createdAt: t.emittedAt,
 		explanation: e.explanation,
 		relatedGraphNodes: e.relatedGraphNodes
 	};
 }
-function z(e) {
+function R(e) {
 	return e >= 5 ? "critical" : e >= 3.5 ? "high" : e >= 2 ? "elevated" : "watch";
 }
-function We(e) {
+function tt(e) {
 	return e === "critical" || e === "high" ? "HIGH" : e === "elevated" ? "ELEVATED" : "WATCH";
 }
-function B(e, t) {
+function nt(e, t) {
 	let n = e.toLowerCase(), r = new Set([e]);
 	for (let e of t.entityEdges) (e.source.toLowerCase().includes(n) || e.target.toLowerCase().includes(n)) && (r.add(e.source), r.add(e.target));
 	return [...r].slice(0, 8);
 }
 //#endregion
 //#region src/engine/intelGraph.ts
-var Ge = class {
+var rt = class {
 	nodes = /* @__PURE__ */ new Map();
 	adjacency = /* @__PURE__ */ new Map();
 	edgeCount = 0;
@@ -2399,7 +2682,7 @@ var Ge = class {
 			label: e.target,
 			kind: "risk"
 		});
-		let t = Ke(e.weight), n = this.adjacency.get(e.source);
+		let t = it(e.weight), n = this.adjacency.get(e.source);
 		return n && (n.push({
 			target: e.target,
 			relation: e.relation,
@@ -2470,18 +2753,18 @@ var Ge = class {
 		return this.adjacency.get(e) ?? [];
 	}
 };
-function Ke(e) {
+function it(e) {
 	return Number.isNaN(e) || e < 0 ? 0 : e > 1 ? 1 : e;
 }
-function qe(e) {
-	let t = new Ge();
+function at(e) {
+	let t = new rt();
 	for (let n of e.nodes) t.addNode(n);
 	for (let n of e.edges) t.addEdge(n);
 	return t;
 }
 //#endregion
 //#region src/intelGraphData.ts
-var Je = {
+var ot = {
 	"Trade route": "event",
 	Risk: "risk",
 	Commodity: "commodity",
@@ -2490,7 +2773,7 @@ var Je = {
 	Country: "country",
 	Company: "company",
 	Sector: "sector"
-}, Ye = {
+}, st = {
 	xle: "XLE",
 	qqq: "QQQ",
 	nvda: "NVDA",
@@ -2498,32 +2781,63 @@ var Je = {
 	tsmc: "TSM",
 	oil: "CL",
 	gold: "GLD"
-}, Xe = null;
-function Ze() {
-	return Xe ||= qe({
-		nodes: de.map((e) => ({
+}, ct = null;
+function lt() {
+	return ct ||= at({
+		nodes: Se.map((e) => ({
 			id: e.id,
 			label: e.label,
-			kind: Je[e.kind] ?? "risk",
-			symbol: Ye[e.id]
+			kind: ot[e.kind] ?? "risk",
+			symbol: st[e.id]
 		})),
-		edges: fe.map((e) => ({
+		edges: Ce.map((e) => ({
 			source: e.source,
 			target: e.target,
 			relation: e.label,
 			weight: e.strength / 100
 		}))
-	}), Xe;
+	}), ct;
 }
-function Qe(e) {
-	return e ? Ze().traverseRisk(e, {
+function ut(e) {
+	return e ? lt().traverseRisk(e, {
 		minStrength: .05,
 		maxDepth: 8
 	}) : [];
 }
 //#endregion
+//#region electron/liquiditySampler.ts
+var dt = 1e3, ft = 96, pt = class {
+	sampleMs;
+	maxPerBatch;
+	now;
+	lastAcceptedAtBySymbol = /* @__PURE__ */ new Map();
+	constructor(e = {}) {
+		this.sampleMs = Math.max(100, Math.floor(e.sampleMs ?? dt)), this.maxPerBatch = Math.max(1, Math.floor(e.maxPerBatch ?? ft)), this.now = e.now ?? (() => Date.now());
+	}
+	select(e, t = this.now()) {
+		let n = [], r = /* @__PURE__ */ new Set();
+		for (let i of e) {
+			if (n.length >= this.maxPerBatch) break;
+			if (!mt(i)) continue;
+			let e = i.symbol.toUpperCase();
+			r.has(e) || t - (this.lastAcceptedAtBySymbol.get(e) ?? 0) < this.sampleMs || (r.add(e), n.push(i), this.lastAcceptedAtBySymbol.set(e, t));
+		}
+		return n;
+	}
+	snapshot() {
+		return {
+			sampleMs: this.sampleMs,
+			maxPerBatch: this.maxPerBatch,
+			trackedSymbols: this.lastAcceptedAtBySymbol.size
+		};
+	}
+};
+function mt(e) {
+	return typeof e.symbol == "string" && e.symbol.trim() !== "" && Number.isFinite(e.price) && e.price > 0 && Number.isFinite(e.volume) && e.volume >= 0 && Number.isFinite(e.timestamp);
+}
+//#endregion
 //#region electron/realtimeService.ts
-var { BrowserWindow: $e } = t, et = n(i(import.meta.url)), tt = 5 * 6e4, nt = fe.map((e) => ({
+var { BrowserWindow: ht } = t, gt = n(i(import.meta.url)), _t = 5 * 6e4, vt = Ce.map((e) => ({
 	id: e.id,
 	headlineId: `seed:${e.source}`,
 	source: e.source,
@@ -2531,14 +2845,14 @@ var { BrowserWindow: $e } = t, et = n(i(import.meta.url)), tt = 5 * 6e4, nt = fe
 	relation: e.label,
 	confidence: e.strength,
 	createdAt: Date.now()
-})), rt = class {
+})), yt = class {
 	engine;
 	persistence;
 	enablePublicWs = process.env.ATLASZ_ENABLE_PUBLIC_WS === "1";
 	defaultConnectorId = process.env.ATLASZ_CONNECTOR ?? (process.env.ATLASZ_ENABLE_PUBLIC_WS === "1" ? "coincap_public_ws" : "simulated");
 	seenSignalIds = /* @__PURE__ */ new Set();
-	universe = Se(this.enablePublicWs);
-	seedPrices = Ce(this.universe);
+	universe = Ne(this.enablePublicWs);
+	seedPrices = Pe(this.universe);
 	knownSymbols = new Set(this.universe.map((e) => e.symbol));
 	worker = null;
 	unsubscribe = null;
@@ -2554,7 +2868,14 @@ var { BrowserWindow: $e } = t, et = n(i(import.meta.url)), tt = 5 * 6e4, nt = fe
 			reconnectingFeeds: []
 		}
 	};
-	lastMarketPersistAt = 0;
+	liquiditySampler = new pt({
+		sampleMs: xt("ATLASZ_MARKET_TICK_SAMPLE_MS", 1e3),
+		maxPerBatch: xt("ATLASZ_MARKET_TICK_MAX_PER_BATCH", 96)
+	});
+	persistedMarketSymbols = /* @__PURE__ */ new Set();
+	persistedMarketTickCount = 0;
+	lastMarketPersistAt;
+	lastAttentionPersistAt = 0;
 	lastFramePersistAt = 0;
 	lastFrameAuditAt = 0;
 	replayFrames = [];
@@ -2568,12 +2889,12 @@ var { BrowserWindow: $e } = t, et = n(i(import.meta.url)), tt = 5 * 6e4, nt = fe
 		frameCount: 0
 	};
 	constructor(e) {
-		this.persistence = e.persistence, this.healthState = it(this.defaultConnectorId, this.persistence.mode), this.engine = new Fe({
+		this.persistence = e.persistence, this.healthState = bt(this.defaultConnectorId, this.persistence.mode), this.engine = new Ke({
 			assets: this.universe,
 			seedPrices: this.seedPrices,
 			syncIntervalMs: 100,
 			bufferSize: 1e3,
-			entityEdges: nt,
+			entityEdges: vt,
 			attentionTargets: [...new Set([
 				...this.universe.map((e) => e.symbol),
 				"AIXR",
@@ -2582,7 +2903,7 @@ var { BrowserWindow: $e } = t, et = n(i(import.meta.url)), tt = 5 * 6e4, nt = fe
 			sqliteMode: this.persistence.mode,
 			now: () => Date.now()
 		});
-		for (let e of nt) this.safePersist(() => this.persistence.saveEntityEdge({
+		for (let e of vt) this.safePersist(() => this.persistence.saveEntityEdge({
 			id: e.id,
 			source: e.source,
 			target: e.target,
@@ -2618,11 +2939,12 @@ var { BrowserWindow: $e } = t, et = n(i(import.meta.url)), tt = 5 * 6e4, nt = fe
 		return {
 			...this.healthState,
 			sqliteMode: this.persistence.mode,
-			replay: this.replayState
+			replay: this.replayState,
+			liquidityHistory: this.liquidityHistoryHealth()
 		};
 	}
 	addAsset(e) {
-		let t = we(e, { enablePublicCrypto: this.enablePublicWs });
+		let t = Fe(e, { enablePublicCrypto: this.enablePublicWs });
 		return this.engine.addAsset(t, t.defaultPrice), this.seedPrices[t.symbol] = t.defaultPrice, this.knownSymbols.add(t.symbol), this.worker?.postMessage({
 			type: "addAsset",
 			asset: t,
@@ -2647,14 +2969,14 @@ var { BrowserWindow: $e } = t, et = n(i(import.meta.url)), tt = 5 * 6e4, nt = fe
 		}, this.engine.setHealth(this.health());
 	}
 	traverseRisk(e) {
-		let t = Qe(e);
+		let t = ut(e);
 		return this.audit("graph_traversal_triggered", "info", `Graph traversal triggered from ${e}`, {
 			nodeId: e,
 			exposedAssets: t.map((e) => e.node.symbol ?? e.node.label)
 		}), t;
 	}
 	replayStart(e = {}) {
-		let t = e.to ?? Date.now(), n = e.from ?? t - tt, r = e.speed ?? this.replayState.speed;
+		let t = e.to ?? Date.now(), n = e.from ?? t - _t, r = e.speed ?? this.replayState.speed;
 		return this.replayFrames = this.persistence.listRealtimeFrames(n, t, 3e3), this.replayIndex = 0, this.replayState = {
 			active: !0,
 			playing: this.replayFrames.length > 0,
@@ -2705,7 +3027,7 @@ var { BrowserWindow: $e } = t, et = n(i(import.meta.url)), tt = 5 * 6e4, nt = fe
 	}
 	ensureAsset(e) {
 		if (!e || this.knownSymbols.has(e)) return;
-		let t = we(e, { enablePublicCrypto: this.enablePublicWs });
+		let t = Fe(e, { enablePublicCrypto: this.enablePublicWs });
 		this.engine.addAsset(t, t.defaultPrice), this.seedPrices[t.symbol] = t.defaultPrice, this.knownSymbols.add(t.symbol), this.worker?.postMessage({
 			type: "addAsset",
 			asset: t,
@@ -2726,7 +3048,7 @@ var { BrowserWindow: $e } = t, et = n(i(import.meta.url)), tt = 5 * 6e4, nt = fe
 			ingestionStatus: "connecting",
 			workerStatus: "starting"
 		}, this.engine.setHealth(this.healthState);
-		let t = new l(r(et, "marketIngestionWorker.js"), { workerData: {
+		let t = new l(r(gt, "marketIngestionWorker.js"), { workerData: {
 			assets: this.universe,
 			seedPrices: this.seedPrices,
 			attentionTargets: [...new Set([
@@ -2771,7 +3093,8 @@ var { BrowserWindow: $e } = t, et = n(i(import.meta.url)), tt = 5 * 6e4, nt = fe
 		return {
 			...e,
 			sqliteMode: this.persistence.mode,
-			replay: this.replayState
+			replay: this.replayState,
+			liquidityHistory: this.liquidityHistoryHealth()
 		};
 	}
 	ensureBroadcast() {
@@ -2788,7 +3111,7 @@ var { BrowserWindow: $e } = t, et = n(i(import.meta.url)), tt = 5 * 6e4, nt = fe
 			}, this.replayState.active || this.broadcast(this.latestLiveSnapshot);
 			return;
 		}
-		let t = Be(e.frame, this.previousLiveFrame), n = {
+		let t = Ze(e.frame, this.previousLiveFrame), n = {
 			...this.health(),
 			lastFrameTimestamp: e.frame.emittedAt
 		};
@@ -2812,28 +3135,31 @@ var { BrowserWindow: $e } = t, et = n(i(import.meta.url)), tt = 5 * 6e4, nt = fe
 	}
 	persistSampledBatch(e, t) {
 		let n = Date.now();
-		if (n - this.lastMarketPersistAt < 1e3) return;
-		this.lastMarketPersistAt = n;
-		let r = new Date(n).toISOString().slice(0, 10);
-		for (let t of e.slice(0, 24)) this.safePersist(() => this.persistence.saveMarketTick({
-			id: `tick:${t.symbol}:${t.timestamp}`,
-			symbol: t.symbol,
-			price: t.price,
-			volume: t.volume,
-			source: t.source,
-			observedAt: t.timestamp,
-			tradeDate: r
-		}));
-		for (let e of t.slice(0, 24)) this.safePersist(() => this.persistence.saveAttentionBatch({
-			id: `attention:${e.target}:${e.timestamp}`,
-			target: e.target,
-			pressure: e.pressure,
-			mentionVelocity: e.mentionVelocity,
-			sentimentDivergenceIndex: e.sentimentDivergenceIndex,
-			source: e.source,
-			observedAt: e.timestamp,
-			sampleCount: 1
-		}));
+		for (let t of this.liquiditySampler.select(e, n)) {
+			let e = new Date(t.timestamp).toISOString().slice(0, 10);
+			this.safePersist(() => this.persistence.saveMarketTick({
+				id: `tick:${t.symbol}:${t.timestamp}`,
+				symbol: t.symbol,
+				price: t.price,
+				volume: t.volume,
+				source: t.source,
+				observedAt: t.timestamp,
+				tradeDate: e
+			})) && (this.persistedMarketTickCount += 1, this.persistedMarketSymbols.add(t.symbol.toUpperCase()), this.lastMarketPersistAt = Math.max(this.lastMarketPersistAt ?? 0, t.timestamp));
+		}
+		if (!(n - this.lastAttentionPersistAt < 1e3)) {
+			this.lastAttentionPersistAt = n;
+			for (let e of t.slice(0, 24)) this.safePersist(() => this.persistence.saveAttentionBatch({
+				id: `attention:${e.target}:${e.timestamp}`,
+				target: e.target,
+				pressure: e.pressure,
+				mentionVelocity: e.mentionVelocity,
+				sentimentDivergenceIndex: e.sentimentDivergenceIndex,
+				source: e.source,
+				observedAt: e.timestamp,
+				sampleCount: 1
+			}));
+		}
 	}
 	persistSampledFrame(e) {
 		e.emittedAt - this.lastFramePersistAt < 1e3 || (this.lastFramePersistAt = e.emittedAt, this.safePersist(() => this.persistence.saveRealtimeFrame({
@@ -2846,6 +3172,17 @@ var { BrowserWindow: $e } = t, et = n(i(import.meta.url)), tt = 5 * 6e4, nt = fe
 			assetCount: e.assets.length,
 			attentionCount: e.attention.length
 		})));
+	}
+	liquidityHistoryHealth() {
+		let e = this.liquiditySampler.snapshot();
+		return {
+			persistedTicks: this.persistedMarketTickCount,
+			persistedSymbols: this.persistedMarketSymbols.size,
+			lastPersistedAt: this.lastMarketPersistAt,
+			sampleMs: e.sampleMs,
+			maxPerBatch: e.maxPerBatch,
+			note: "Sampled liquidity history written to market_ticks_daily. One tick per symbol per interval; raw firehose remains in memory."
+		};
 	}
 	persistSignals(e) {
 		for (let t of e) this.seenSignalIds.has(t.id) || (this.seenSignalIds.add(t.id), this.safePersist(() => this.persistence.saveSignalEvent(t)), this.audit("signal_generated", t.severity === "critical" ? "watch" : "info", t.explanation, {
@@ -2920,7 +3257,7 @@ var { BrowserWindow: $e } = t, et = n(i(import.meta.url)), tt = 5 * 6e4, nt = fe
 		this.replayTimer &&= (clearTimeout(this.replayTimer), null);
 	}
 	broadcast(e) {
-		for (let t of $e.getAllWindows()) t.isDestroyed() || t.webContents.send("atlasz:realtime:frame", e);
+		for (let t of ht.getAllWindows()) t.isDestroyed() || t.webContents.send("atlasz:realtime:frame", e);
 	}
 	audit(e, t, n, r) {
 		this.safePersist(() => this.persistence.audit({
@@ -2935,7 +3272,7 @@ var { BrowserWindow: $e } = t, et = n(i(import.meta.url)), tt = 5 * 6e4, nt = fe
 	}
 	safePersist(e) {
 		try {
-			e();
+			return e(), !0;
 		} catch (e) {
 			console.warn("[atlasz] realtime persistence failed:", e instanceof Error ? e.message : e);
 			try {
@@ -2949,10 +3286,11 @@ var { BrowserWindow: $e } = t, et = n(i(import.meta.url)), tt = 5 * 6e4, nt = fe
 					metadata: {}
 				});
 			} catch {}
+			return !1;
 		}
 	}
 };
-function it(e, t) {
+function bt(e, t) {
 	return {
 		activeConnectorId: e,
 		ingestionStatus: "stopped",
@@ -3033,12 +3371,23 @@ function it(e, t) {
 			playing: !1,
 			speed: 1,
 			frameCount: 0
+		},
+		liquidityHistory: {
+			persistedTicks: 0,
+			persistedSymbols: 0,
+			sampleMs: 1e3,
+			maxPerBatch: 96,
+			note: "Sampled liquidity history has not started."
 		}
 	};
 }
+function xt(e, t) {
+	let n = Number(process.env[e]);
+	return Number.isInteger(n) && n > 0 ? n : t;
+}
 //#endregion
 //#region src/worldIntel.ts
-var at = [
+var St = [
 	{
 		id: "red-sea",
 		label: "Shipping and Red Sea route risk",
@@ -3293,32 +3642,49 @@ var at = [
 		]
 	}
 ];
-function ot(e) {
-	let t = st(e.headlines, e.sourceTrust);
+function Ct(e) {
+	let t = e.worldEvents.length > 0 ? e.worldEvents : e.headlines.map((t) => Ot(t, {
+		sourceId: e.connectorId,
+		provenance: Mt(e.sourceTrust)
+	})), n = Tt(t, e.sourceTrust);
 	return {
 		...e,
-		...t
+		worldEvents: t,
+		countries: e.countries.length > 0 ? e.countries : kt(t),
+		assetIdentities: e.assetIdentities.length > 0 ? e.assetIdentities : At(t),
+		...n
 	};
 }
-function st(e, t) {
-	let n = e.map((e) => ct(e)).filter((e) => e !== null);
+function wt(e, t) {
+	let n = e.map((e) => Et(e)).filter((e) => e !== null);
 	if (n.length === 0) return {
-		events: N,
-		signals: I,
-		dailyBrief: pe,
-		rawSourceItems: oe
+		events: ve,
+		signals: be,
+		dailyBrief: we,
+		rawSourceItems: he
 	};
-	let r = [...yt(n, (e) => e.topic.id).values()].map((e) => ut(e, t)), i = r.map((e) => dt(e, t)), a = r.slice(0, 4).map((e) => ft(e, t)), o = n.slice(0, 25).map((e) => ht(e));
+	let r = [...Ht(n, (e) => e.topic.id).values()].map((e) => Nt(e, t)), i = r.map((e) => Pt(e, t)), a = r.slice(0, 4).map((e) => Ft(e, t)), o = n.slice(0, 25).map((e) => Rt(e));
 	return {
-		events: vt(r, N),
-		signals: vt(i, I),
-		dailyBrief: [...a, ...pe].slice(0, 7),
-		rawSourceItems: [...o, ...oe]
+		events: Vt(r, ve),
+		signals: Vt(i, be),
+		dailyBrief: [...a, ...we].slice(0, 7),
+		rawSourceItems: [...o, ...he]
 	};
 }
-function ct(e) {
+function Tt(e, t) {
+	return wt(e.map((e) => ({
+		id: e.id,
+		title: e.title,
+		source: e.sourceId,
+		url: e.sourceUrl ?? "",
+		sector: String(e.category),
+		impact: `${e.summary} ${e.extractedEntities.join(" ")} ${e.narrativeTags.join(" ")}`,
+		observedAt: e.timestamp
+	})), t);
+}
+function Et(e) {
 	let t = `${e.title} ${e.sector} ${e.impact}`.toLowerCase(), n = null;
-	for (let e of at) {
+	for (let e of St) {
 		let r = e.keywords.filter((e) => t.includes(e));
 		r.length !== 0 && (!n || r.length > n.matchedKeywords.length) && (n = {
 			topic: e,
@@ -3331,8 +3697,8 @@ function ct(e) {
 		matchedKeywords: n.matchedKeywords
 	} : null;
 }
-function lt(e) {
-	let t = ct({
+function Dt(e) {
+	let t = Et({
 		id: "classification-probe",
 		title: e,
 		source: "classification",
@@ -3349,19 +3715,105 @@ function lt(e) {
 		impact: "Public headline retained without a strong Atlasz keyword/entity mapping."
 	};
 }
-function ut(e, t) {
-	let n = e[0].topic, r = Math.max(...e.map((e) => e.observedAt)), i = e.slice(0, 5).map((e) => pt(e, t)), a = mt(n, e.length, t);
+function Ot(e, t = {}) {
+	let n = Et(e), r = n?.topic, i = n?.matchedKeywords ?? [], a = `${e.title} ${e.sector} ${e.impact}`, o = Kt(a, r?.region), s = r?.region ?? qt(o), c = Jt(o, s), l = Yt(r?.category ?? e.sector), u = z([...r?.markets ?? [], ...en(a)]).slice(0, 16), d = Qt(a, r?.entities ?? []), f = $t(o, a), p = z([...r?.entities ?? [], ...i.map(rn)]).slice(0, 18), m = z([
+		r?.label ?? (e.sector || "World news"),
+		...r?.riskChannels ?? [],
+		...i.map(rn)
+	]).slice(0, 12), h = Ut(`${e.title}|${e.source}|${e.url}|${e.observedAt}`);
+	return {
+		id: e.id,
+		timestamp: e.observedAt,
+		title: e.title,
+		summary: e.impact || r?.narrative || "Public world event retained without a stronger local mapping.",
+		countryCodes: o,
+		region: s,
+		lat: c?.lat,
+		lon: c?.lon,
+		category: l,
+		severity: r?.severity ?? Xt(a),
+		confidence: zt(Math.max(1, i.length), t.provenance ?? "public-unauthenticated"),
+		sourceId: t.sourceId ?? an(e.source),
+		sourceUrl: e.url,
+		provenance: t.provenance ?? "public-unauthenticated",
+		affectedAssets: u,
+		affectedSectors: Zt(a, r?.category),
+		affectedCommodities: d,
+		affectedCurrencies: f,
+		extractedEntities: p,
+		narrativeTags: m,
+		rawPayloadHash: h,
+		dedupeHash: Ut(`${e.title.toLowerCase()}|${o.join(",")}|${l}`)
+	};
+}
+function kt(e) {
+	let t = /* @__PURE__ */ new Map();
+	for (let n of e) for (let e of n.countryCodes.length > 0 ? n.countryCodes : ["GLOBAL"]) t.set(e, [...t.get(e) ?? [], n]);
+	return [...t.entries()].map(([e, t]) => {
+		let n = Wt[e] ?? Wt.GLOBAL, r = Math.max(...t.map((e) => e.timestamp)), i = t.reduce((e, t) => e + on(t.severity), 0), a = z(t.flatMap((e) => e.affectedAssets)).slice(0, 12), o = sn();
+		for (let e of t) o[e.provenance] = (o[e.provenance] ?? 0) + 1;
+		return {
+			countryCode: e,
+			countryName: n.name,
+			flag: n.flag,
+			currentEventCount: t.length,
+			macroSnapshot: {
+				note: "Macro series not available from current public sources in Phase 1.",
+				provenance: "local-derived"
+			},
+			currency: n.currency,
+			equityProxies: n.equityProxies,
+			majorCommodities: z([...n.commodities, ...t.flatMap((e) => e.affectedCommodities)]).slice(0, 8),
+			riskScore: Math.min(100, Math.round(18 + i * 10 + t.length * 4)),
+			narrativeAcceleration: Math.min(100, Math.round(t.length * 12 + i * 4)),
+			topCurrentHeadlines: t.sort((e, t) => t.timestamp - e.timestamp).slice(0, 4).map((e) => e.title),
+			affectedTickers: a,
+			lastUpdated: r,
+			provenanceBreakdown: o
+		};
+	}).sort((e, t) => t.riskScore - e.riskScore);
+}
+function At(e) {
+	return z(e.flatMap((e) => e.affectedAssets)).slice(0, 80).map((t) => jt(t, {
+		relatedCountries: z(e.filter((e) => e.affectedAssets.includes(t)).flatMap((e) => e.countryCodes)),
+		relatedSectors: z(e.filter((e) => e.affectedAssets.includes(t)).flatMap((e) => e.affectedSectors)),
+		provenanceCoverage: z(e.filter((e) => e.affectedAssets.includes(t)).map((e) => e.provenance))
+	}));
+}
+function jt(e, t = {}) {
+	let n = e.toUpperCase(), r = Gt[n], i = r?.type ?? tn(n);
+	return {
+		symbol: n,
+		name: r?.name ?? `${n} watchlist asset`,
+		type: i,
+		exchangeOrSource: r?.exchangeOrSource ?? (i === "crypto" ? "public crypto mapping" : "local universe"),
+		iconUrl: r?.iconUrl,
+		fallbackIcon: r?.fallbackIcon ?? nn(n, i),
+		favorite: t.favorite ?? !1,
+		watchlistTags: r?.watchlistTags ?? [i.toLowerCase()],
+		aliases: z([n, ...r?.aliases ?? []]),
+		relatedCountries: t.relatedCountries ?? r?.relatedCountries ?? [],
+		relatedSectors: t.relatedSectors ?? r?.relatedSectors ?? [],
+		dataAvailabilityStatus: r?.dataAvailabilityStatus ?? "not available from current public sources; simulator/local derived only",
+		provenanceCoverage: t.provenanceCoverage ?? r?.provenanceCoverage ?? ["local-derived"]
+	};
+}
+function Mt(e) {
+	return e === "public unauthenticated" ? "public-unauthenticated" : e === "local derived" || e === "stale" || e === "failed" ? "local-derived" : e;
+}
+function Nt(e, t) {
+	let n = e[0].topic, r = Math.max(...e.map((e) => e.observedAt)), i = e.slice(0, 5).map((e) => It(e, t)), a = Lt(n, e.length, t);
 	return {
 		id: n.id,
-		time: _t(r),
+		time: Bt(r),
 		category: n.category,
 		region: n.region,
 		severity: n.severity,
-		confidence: gt(e.length, t),
+		confidence: zt(e.length, t),
 		sourceCount: e.length,
 		title: `${n.label} appears in public coverage`,
 		summary: `${n.narrative} Latest matched headline: ${e[0].title}`,
-		relationshipReason: `Keyword/entity evidence matched ${bt(e.flatMap((e) => e.matchedKeywords)).join(", ")} and maps to ${n.markets.join(", ")}.`,
+		relationshipReason: `Keyword/entity evidence matched ${z(e.flatMap((e) => e.matchedKeywords)).join(", ")} and maps to ${n.markets.join(", ")}.`,
 		uncertainty: n.uncertainty,
 		detectedEntities: n.entities,
 		linkedMarkets: n.markets,
@@ -3370,7 +3822,7 @@ function ut(e, t) {
 		sourceTrail: i
 	};
 }
-function dt(e, t) {
+function Pt(e, t) {
 	return {
 		id: `world-${e.id}`,
 		title: `${e.title} · source-backed watch`,
@@ -3391,7 +3843,7 @@ function dt(e, t) {
 		sourceTrail: e.sourceTrail
 	};
 }
-function ft(e, t) {
+function Ft(e, t) {
 	return {
 		id: `brief-${e.id}`,
 		headline: e.title,
@@ -3411,7 +3863,7 @@ function ft(e, t) {
 		sourceTrail: e.sourceTrail
 	};
 }
-function pt(e, t) {
+function It(e, t) {
 	return {
 		id: `src-${e.id}`,
 		sourceName: e.source,
@@ -3423,7 +3875,7 @@ function pt(e, t) {
 		note: `${t}; matched ${e.matchedKeywords.join(", ")} for ${e.topic.label}.`
 	};
 }
-function mt(e, t, n) {
+function Lt(e, t, n) {
 	return [
 		{
 			id: `ev-${e.id}-public-source-count`,
@@ -3445,7 +3897,7 @@ function mt(e, t, n) {
 		}
 	];
 }
-function ht(e) {
+function Rt(e) {
 	return {
 		id: `raw-${e.id}`,
 		connector: "gdelt-doc-public",
@@ -3458,20 +3910,20 @@ function ht(e) {
 		normalizedEventId: e.topic.id
 	};
 }
-function gt(e, t) {
-	let n = t === "public unauthenticated" ? 8 : t === "stale" ? 18 : 12;
+function zt(e, t) {
+	let n = t === "verified" ? 0 : t === "official-api" ? 4 : t === "public unauthenticated" || t === "public-unauthenticated" || t === "rss-public" ? 8 : t === "stale" ? 18 : 12;
 	return Math.min(72, Math.max(48, 45 + e * 7 - n));
 }
-function _t(e) {
+function Bt(e) {
 	return new Date(e).toLocaleTimeString([], {
 		hour: "2-digit",
 		minute: "2-digit"
 	});
 }
-function vt(e, t) {
+function Vt(e, t) {
 	return [...new Map([...e, ...t].map((e) => [e.id, e])).values()];
 }
-function yt(e, t) {
+function Ht(e, t) {
 	let n = /* @__PURE__ */ new Map();
 	for (let r of e) {
 		let e = t(r);
@@ -3479,12 +3931,1078 @@ function yt(e, t) {
 	}
 	return n;
 }
-function bt(e) {
+function z(e) {
 	return [...new Set(e)];
 }
+function Ut(e) {
+	let t = 0;
+	for (let n = 0; n < e.length; n += 1) t = t * 31 + e.charCodeAt(n) >>> 0;
+	return `world-${t.toString(36)}`;
+}
+var Wt = {
+	GLOBAL: {
+		name: "Global",
+		flag: "GL",
+		region: "Global",
+		currency: "DXY",
+		lat: 10,
+		lon: 0,
+		equityProxies: [
+			"SPY",
+			"QQQ",
+			"ACWI"
+		],
+		commodities: ["Oil", "Gold"],
+		keywords: [
+			"global",
+			"world",
+			"central bank",
+			"inflation"
+		]
+	},
+	US: {
+		name: "United States",
+		flag: "US",
+		region: "North America",
+		currency: "USD",
+		lat: 38,
+		lon: -97,
+		equityProxies: [
+			"SPY",
+			"QQQ",
+			"IWM"
+		],
+		commodities: ["Oil", "Natural Gas"],
+		keywords: [
+			"united states",
+			"u.s.",
+			"us ",
+			"america",
+			"federal reserve",
+			"fed"
+		]
+	},
+	CN: {
+		name: "China",
+		flag: "CN",
+		region: "Asia Pacific",
+		currency: "CNY",
+		lat: 35,
+		lon: 103,
+		equityProxies: ["FXI", "MCHI"],
+		commodities: [
+			"Copper",
+			"Rare Earths",
+			"Oil"
+		],
+		keywords: [
+			"china",
+			"beijing",
+			"chinese",
+			"tariff",
+			"rare earth"
+		]
+	},
+	TW: {
+		name: "Taiwan",
+		flag: "TW",
+		region: "Asia Pacific",
+		currency: "TWD",
+		lat: 23.7,
+		lon: 121,
+		equityProxies: [
+			"EWT",
+			"TSM",
+			"SOXX"
+		],
+		commodities: ["Semiconductors"],
+		keywords: [
+			"taiwan",
+			"taipei",
+			"tsmc"
+		]
+	},
+	JP: {
+		name: "Japan",
+		flag: "JP",
+		region: "Asia Pacific",
+		currency: "JPY",
+		lat: 36,
+		lon: 138,
+		equityProxies: ["EWJ", "DXJ"],
+		commodities: ["LNG"],
+		keywords: [
+			"japan",
+			"tokyo",
+			"yen",
+			"boj",
+			"bank of japan"
+		]
+	},
+	EU: {
+		name: "European Union",
+		flag: "EU",
+		region: "Europe",
+		currency: "EUR",
+		lat: 50,
+		lon: 10,
+		equityProxies: ["VGK", "FEZ"],
+		commodities: ["Natural Gas", "Power"],
+		keywords: [
+			"europe",
+			"european union",
+			"ecb",
+			"eurozone",
+			"brussels"
+		]
+	},
+	DE: {
+		name: "Germany",
+		flag: "DE",
+		region: "Europe",
+		currency: "EUR",
+		lat: 51,
+		lon: 10,
+		equityProxies: ["EWG"],
+		commodities: ["Natural Gas", "Industrial Power"],
+		keywords: [
+			"germany",
+			"berlin",
+			"german"
+		]
+	},
+	GB: {
+		name: "United Kingdom",
+		flag: "GB",
+		region: "Europe",
+		currency: "GBP",
+		lat: 54,
+		lon: -2,
+		equityProxies: ["EWU"],
+		commodities: ["Natural Gas"],
+		keywords: [
+			"united kingdom",
+			"uk ",
+			"britain",
+			"london",
+			"boe"
+		]
+	},
+	RU: {
+		name: "Russia",
+		flag: "RU",
+		region: "Europe",
+		currency: "RUB",
+		lat: 60,
+		lon: 90,
+		equityProxies: ["Energy proxies"],
+		commodities: [
+			"Oil",
+			"Natural Gas",
+			"Uranium"
+		],
+		keywords: [
+			"russia",
+			"moscow",
+			"russian",
+			"ukraine"
+		]
+	},
+	UA: {
+		name: "Ukraine",
+		flag: "UA",
+		region: "Europe",
+		currency: "UAH",
+		lat: 49,
+		lon: 32,
+		equityProxies: ["Wheat", "Europe risk"],
+		commodities: ["Wheat", "Natural Gas"],
+		keywords: [
+			"ukraine",
+			"kyiv",
+			"black sea"
+		]
+	},
+	SA: {
+		name: "Saudi Arabia",
+		flag: "SA",
+		region: "Middle East",
+		currency: "SAR",
+		lat: 24,
+		lon: 45,
+		equityProxies: ["Oil proxies"],
+		commodities: ["Oil"],
+		keywords: [
+			"saudi",
+			"riyadh",
+			"opec"
+		]
+	},
+	IR: {
+		name: "Iran",
+		flag: "IR",
+		region: "Middle East",
+		currency: "IRR",
+		lat: 32,
+		lon: 53,
+		equityProxies: ["Oil risk"],
+		commodities: ["Oil"],
+		keywords: [
+			"iran",
+			"tehran",
+			"hormuz"
+		]
+	},
+	YE: {
+		name: "Yemen / Red Sea corridor",
+		flag: "YE",
+		region: "Middle East",
+		currency: "Route risk",
+		lat: 15,
+		lon: 43,
+		equityProxies: [
+			"XLE",
+			"ZIM",
+			"DAL"
+		],
+		commodities: ["Oil", "Freight"],
+		keywords: [
+			"red sea",
+			"suez",
+			"houthi",
+			"yemen"
+		]
+	},
+	BR: {
+		name: "Brazil",
+		flag: "BR",
+		region: "Latin America",
+		currency: "BRL",
+		lat: -10,
+		lon: -55,
+		equityProxies: ["EWZ"],
+		commodities: [
+			"Iron Ore",
+			"Soybeans",
+			"Oil"
+		],
+		keywords: [
+			"brazil",
+			"brasilia",
+			"real "
+		]
+	},
+	CA: {
+		name: "Canada",
+		flag: "CA",
+		region: "North America",
+		currency: "CAD",
+		lat: 56,
+		lon: -106,
+		equityProxies: ["EWC"],
+		commodities: [
+			"Oil",
+			"Uranium",
+			"Gold"
+		],
+		keywords: [
+			"canada",
+			"ottawa",
+			"canadian",
+			"bank of canada"
+		]
+	},
+	NO: {
+		name: "Norway",
+		flag: "NO",
+		region: "Europe",
+		currency: "NOK",
+		lat: 61,
+		lon: 8,
+		equityProxies: ["Energy proxies"],
+		commodities: ["Oil", "Natural Gas"],
+		keywords: [
+			"norway",
+			"norwegian",
+			"norges bank"
+		]
+	}
+}, Gt = {
+	BTC: {
+		name: "Bitcoin",
+		type: "crypto",
+		exchangeOrSource: "Coinbase/CoinCap public capable",
+		fallbackIcon: "BTC",
+		watchlistTags: ["crypto", "liquidity"],
+		aliases: ["Bitcoin", "XBT"],
+		dataAvailabilityStatus: "public unauthenticated crypto feeds when enabled; simulator default",
+		provenanceCoverage: ["public-unauthenticated", "simulated"]
+	},
+	ETH: {
+		name: "Ethereum",
+		type: "crypto",
+		exchangeOrSource: "Coinbase/CoinCap public capable",
+		fallbackIcon: "ETH",
+		watchlistTags: ["crypto"],
+		aliases: ["Ethereum"],
+		dataAvailabilityStatus: "public unauthenticated crypto feeds when enabled; simulator default",
+		provenanceCoverage: ["public-unauthenticated", "simulated"]
+	},
+	KAS: {
+		name: "Kaspa",
+		type: "crypto",
+		exchangeOrSource: "public crypto mapping / simulator fallback",
+		fallbackIcon: "KAS",
+		watchlistTags: ["crypto", "watchlist"],
+		aliases: ["Kaspa"],
+		dataAvailabilityStatus: "simulator default; public availability depends on connector product support",
+		provenanceCoverage: ["simulated"]
+	},
+	SPY: {
+		name: "SPDR S&P 500 ETF",
+		type: "ETF",
+		exchangeOrSource: "NYSE Arca",
+		fallbackIcon: "SPY"
+	},
+	QQQ: {
+		name: "Invesco QQQ Trust",
+		type: "ETF",
+		exchangeOrSource: "Nasdaq",
+		fallbackIcon: "QQQ"
+	},
+	SOXX: {
+		name: "iShares Semiconductor ETF",
+		type: "ETF",
+		exchangeOrSource: "Nasdaq",
+		fallbackIcon: "SOX"
+	},
+	SMH: {
+		name: "VanEck Semiconductor ETF",
+		type: "ETF",
+		exchangeOrSource: "Nasdaq",
+		fallbackIcon: "SMH"
+	},
+	XLE: {
+		name: "Energy Select Sector SPDR",
+		type: "ETF",
+		exchangeOrSource: "NYSE Arca",
+		fallbackIcon: "XLE"
+	},
+	XLK: {
+		name: "Technology Select Sector SPDR",
+		type: "sector",
+		exchangeOrSource: "NYSE Arca",
+		fallbackIcon: "XLK"
+	},
+	GLD: {
+		name: "SPDR Gold Shares",
+		type: "commodity",
+		exchangeOrSource: "NYSE Arca",
+		fallbackIcon: "Au"
+	},
+	CL: {
+		name: "WTI Crude proxy",
+		type: "commodity",
+		exchangeOrSource: "local commodity proxy",
+		fallbackIcon: "WTI"
+	},
+	USO: {
+		name: "United States Oil Fund",
+		type: "commodity",
+		exchangeOrSource: "NYSE Arca",
+		fallbackIcon: "USO"
+	},
+	DXY: {
+		name: "US Dollar Index",
+		type: "index",
+		exchangeOrSource: "local macro proxy",
+		fallbackIcon: "DXY"
+	},
+	NVDA: {
+		name: "Nvidia",
+		type: "equity",
+		exchangeOrSource: "Nasdaq",
+		fallbackIcon: "NV"
+	},
+	AMD: {
+		name: "Advanced Micro Devices",
+		type: "equity",
+		exchangeOrSource: "Nasdaq",
+		fallbackIcon: "AMD"
+	},
+	TSM: {
+		name: "Taiwan Semiconductor Manufacturing",
+		type: "equity",
+		exchangeOrSource: "NYSE ADR",
+		fallbackIcon: "TSM"
+	},
+	AAPL: {
+		name: "Apple",
+		type: "equity",
+		exchangeOrSource: "Nasdaq",
+		fallbackIcon: "APL"
+	},
+	TSLA: {
+		name: "Tesla",
+		type: "equity",
+		exchangeOrSource: "Nasdaq",
+		fallbackIcon: "TSL"
+	},
+	ZIM: {
+		name: "ZIM Integrated Shipping",
+		type: "equity",
+		exchangeOrSource: "NYSE",
+		fallbackIcon: "ZIM"
+	},
+	VLO: {
+		name: "Valero Energy",
+		type: "equity",
+		exchangeOrSource: "NYSE",
+		fallbackIcon: "VLO"
+	},
+	MP: {
+		name: "MP Materials",
+		type: "equity",
+		exchangeOrSource: "NYSE",
+		fallbackIcon: "MP"
+	},
+	REMX: {
+		name: "VanEck Rare Earth/Strategic Metals ETF",
+		type: "ETF",
+		exchangeOrSource: "NYSE Arca",
+		fallbackIcon: "RE"
+	}
+};
+function Kt(e, t) {
+	let n = ` ${e.toLowerCase()} `, r = Object.entries(Wt).filter(([e]) => e !== "GLOBAL").filter(([, e]) => e.keywords.some((e) => n.includes(` ${e.toLowerCase()} `) || n.includes(e.toLowerCase()))).map(([e]) => e);
+	return r.length > 0 ? z(r).slice(0, 4) : ["GLOBAL"];
+}
+function qt(e) {
+	return Wt[e[0] ?? "GLOBAL"]?.region ?? "Global";
+}
+function Jt(e, t) {
+	let n = Wt[e[0] ?? "GLOBAL"];
+	return n ? {
+		lat: n.lat,
+		lon: n.lon
+	} : {
+		"Asia Pacific": {
+			lat: 25,
+			lon: 120
+		},
+		Europe: {
+			lat: 50,
+			lon: 10
+		},
+		"Middle East": {
+			lat: 25,
+			lon: 45
+		},
+		"North America": {
+			lat: 39,
+			lon: -98
+		},
+		Global: {
+			lat: 10,
+			lon: 0
+		}
+	}[t] ?? null;
+}
+function Yt(e) {
+	let t = e.toLowerCase();
+	return t.includes("trade") || t.includes("geopolitic") || t.includes("policy") ? "geopolitics" : t.includes("macro") || t.includes("rate") || t.includes("inflation") ? "macro" : t.includes("energy") || t.includes("commodity") ? "commodities" : t.includes("shipping") || t.includes("route") || t.includes("infrastructure") ? "infrastructure" : t.includes("market") ? "markets" : "other";
+}
+function Xt(e) {
+	let t = e.toLowerCase();
+	return /(war|attack|missile|invasion|emergency|shutdown|crisis)/.test(t) ? "critical" : /(sanction|tariff|shortage|delay|strike|ban|restriction|disruption)/.test(t) ? "elevated" : (/(watch|monitor|could|may|risk|concern)/.test(t), "watch");
+}
+function Zt(e, t) {
+	let n = e.toLowerCase(), r = [];
+	return /(semiconductor|chip|gpu|ai|data center)/.test(n) && r.push("Semiconductors", "Technology"), /(oil|gas|lng|pipeline|energy|opec)/.test(n) && r.push("Energy"), /(shipping|freight|port|suez|red sea)/.test(n) && r.push("Shipping", "Transportation"), /(tariff|trade|export|import)/.test(n) && r.push("Industrials", "Consumer goods"), /(rare earth|lithium|battery|copper|uranium)/.test(n) && r.push("Materials", "Defense"), t && r.push(t), z(r).slice(0, 8);
+}
+function Qt(e, t) {
+	let n = `${e} ${t.join(" ")}`.toLowerCase(), r = [];
+	return /(oil|crude|wti|brent|opec)/.test(n) && r.push("Oil"), /(natural gas|lng|pipeline|gas storage)/.test(n) && r.push("Natural Gas"), /(gold|real yield)/.test(n) && r.push("Gold"), /(copper|power grid|data center)/.test(n) && r.push("Copper"), /(rare earth|magnet|critical mineral)/.test(n) && r.push("Rare Earths"), /(lithium|battery)/.test(n) && r.push("Lithium"), /(uranium|nuclear)/.test(n) && r.push("Uranium"), z(r);
+}
+function $t(e, t) {
+	let n = e.map((e) => Wt[e]?.currency).filter((e) => !!e), r = t.toLowerCase();
+	return /(dollar|fed|federal reserve|dxy)/.test(r) && n.push("USD", "DXY"), /(euro|ecb|eurozone)/.test(r) && n.push("EUR"), /(yen|boj|japan)/.test(r) && n.push("JPY"), z(n).slice(0, 6);
+}
+function en(e) {
+	return (e.match(/\b[A-Z]{2,5}\b/g) ?? []).filter((e) => ![
+		"THE",
+		"AND",
+		"FOR",
+		"WITH",
+		"FROM",
+		"THIS"
+	].includes(e)).slice(0, 10);
+}
+function tn(e) {
+	return [
+		"BTC",
+		"ETH",
+		"SOL",
+		"KAS",
+		"AVAX",
+		"LINK"
+	].includes(e) ? "crypto" : [
+		"EUR/USD",
+		"USD/JPY",
+		"GBP/USD",
+		"DXY"
+	].includes(e) ? "FX" : [
+		"CL",
+		"WTI",
+		"USO",
+		"GLD",
+		"XAUUSD",
+		"COPPER",
+		"UNG"
+	].includes(e) ? "commodity" : [
+		"SPX",
+		"NDX",
+		"DJI",
+		"RUT",
+		"VIX",
+		"DXY"
+	].includes(e) ? "index" : e.startsWith("XL") ? "sector" : [
+		"SPY",
+		"QQQ",
+		"SOXX",
+		"SMH",
+		"FXI",
+		"REMX",
+		"LIT",
+		"XAR",
+		"TLT",
+		"VGK"
+	].includes(e) ? "ETF" : "equity";
+}
+function nn(e, t) {
+	return t === "country" ? e.slice(0, 2) : t === "crypto" ? e.slice(0, 4) : e.replace(/[^A-Z]/g, "").slice(0, 3) || t.slice(0, 2).toUpperCase();
+}
+function rn(e) {
+	return e.split(/\s+/).filter(Boolean).map((e) => `${e.charAt(0).toUpperCase()}${e.slice(1)}`).join(" ");
+}
+function an(e) {
+	return e.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "public_world_source";
+}
+function on(e) {
+	return e === "critical" ? 4 : e === "elevated" ? 2.4 : e === "watch" ? 1.2 : .4;
+}
+function sn() {
+	return {
+		simulated: 0,
+		"public-unauthenticated": 0,
+		"public-disclosure": 0,
+		"official-api": 0,
+		"rss-public": 0,
+		"local-derived": 0,
+		"local-computed": 0,
+		"math-derived": 0,
+		"local-model": 0,
+		"model-inferred": 0,
+		"auth-gated": 0,
+		verified: 0
+	};
+}
 //#endregion
-//#region electron/worldIntelService.ts
-var xt = "https://api.gdeltproject.org/api/v2/doc/doc", St = [
+//#region electron/assetIdentityService.ts
+var cn = class {
+	persistence;
+	constructor(e) {
+		this.persistence = e;
+	}
+	list() {
+		let e = new Set(this.persistence.listFavorites().map((e) => e.targetId));
+		return this.persistence.listAssetIdentities().map((t) => ({
+			...t,
+			favorite: e.has(t.symbol) || t.favorite
+		}));
+	}
+	ensureForEvents(e) {
+		let t = new Map(this.list().map((e) => [e.symbol, e])), n = [...new Set(e.flatMap((e) => e.affectedAssets))], r = [];
+		for (let i of n) {
+			let n = e.filter((e) => e.affectedAssets.includes(i)), a = t.get(i) ?? jt(i, {
+				relatedCountries: [...new Set(n.flatMap((e) => e.countryCodes))],
+				relatedSectors: [...new Set(n.flatMap((e) => e.affectedSectors))],
+				provenanceCoverage: [...new Set(n.map((e) => e.provenance))]
+			});
+			this.persistence.saveAssetIdentity(a), r.push(a);
+		}
+		return this.list().length > 0 ? this.list() : r;
+	}
+	toggleFavorite(e, t, n) {
+		let r = `${e}:${t}`;
+		return this.persistence.listFavorites().find((e) => e.id === r) ? (this.persistence.deleteFavorite(r), this.persistence.listFavorites()) : (this.persistence.saveFavorite({
+			id: r,
+			kind: e,
+			targetId: t,
+			label: n,
+			createdAt: Date.now()
+		}), this.persistence.listFavorites());
+	}
+};
+//#endregion
+//#region electron/osint/adapters/adapterShared.ts
+function ln(e) {
+	return u("sha256").update(e).digest("hex");
+}
+function B(e) {
+	return [...new Set(e.map((e) => e.trim()).filter((e) => e.length > 0))];
+}
+function V(e) {
+	return typeof e == "string" ? e.trim() : "";
+}
+function un(e) {
+	if (typeof e == "number" && Number.isFinite(e)) return Math.round(e < 0xe8d4a51000 ? e * 1e3 : e);
+	if (typeof e == "string" && e.trim() !== "") {
+		let t = Date.parse(e.trim());
+		return Number.isFinite(t) ? t : void 0;
+	}
+}
+function dn(e) {
+	let t = Ot({
+		id: e.id,
+		title: e.title,
+		source: e.source,
+		url: e.url,
+		sector: e.category,
+		impact: e.summary,
+		observedAt: e.observedAt
+	}, {
+		sourceId: e.sourceId,
+		provenance: e.provenance
+	});
+	return {
+		...t,
+		category: e.category,
+		provenance: e.provenance,
+		summary: e.summary || t.summary,
+		affectedAssets: B(e.affectedAssets ?? []).slice(0, 16),
+		narrativeTags: B([...e.narrativeTags ?? [], ...t.narrativeTags]).slice(0, 12),
+		extractedEntities: B([...e.extractedEntities ?? [], ...t.extractedEntities]).slice(0, 18),
+		rawPayloadHash: ln(fn(e.rawPayload)),
+		dedupeHash: ln(e.dedupeKey)
+	};
+}
+function fn(e) {
+	return JSON.stringify(pn(e));
+}
+function pn(e) {
+	return Array.isArray(e) ? e.map(pn) : e && typeof e == "object" ? Object.keys(e).sort().reduce((t, n) => (t[n] = pn(e[n]), t), {}) : e;
+}
+function mn(e, t) {
+	return `${e}-${ln(t).slice(0, 20)}`;
+}
+//#endregion
+//#region electron/osint/adapters/politicianTradeAdapter.ts
+var hn = "politician_disclosure_public";
+function gn(e = process.env) {
+	let t = V(e.ATLASZ_POLITICIAN_DISCLOSURE_URL);
+	if (!t || !/^https?:\/\//i.test(t)) return null;
+	let n, r = V(e.ATLASZ_POLITICIAN_DISCLOSURE_HEADERS);
+	if (r) try {
+		let e = JSON.parse(r);
+		e && typeof e == "object" && (n = e);
+	} catch {}
+	return {
+		url: t,
+		headers: n
+	};
+}
+async function _n(e, t = gn()) {
+	if (!t) return [];
+	let n = await fetch(t.url, {
+		signal: e,
+		headers: {
+			accept: "application/json",
+			...t.headers ?? {}
+		}
+	});
+	if (!n.ok) throw Error(`Politician disclosure HTTP ${n.status}`);
+	let r = await n.text(), i;
+	try {
+		i = JSON.parse(r);
+	} catch {
+		throw Error("Politician disclosure provider returned non-JSON");
+	}
+	return vn(i);
+}
+function vn(e) {
+	let t = Sn(e), n = [];
+	for (let e of t) {
+		let t = yn(e);
+		t && n.push(t);
+	}
+	return n;
+}
+function yn(e) {
+	let t = H(e, [
+		"representative",
+		"senator",
+		"politician",
+		"official",
+		"name",
+		"member"
+	]);
+	if (!t) return null;
+	let n = H(e, [
+		"office",
+		"chamber",
+		"district",
+		"state",
+		"party"
+	]), r = xn(H(e, [
+		"ticker",
+		"symbol",
+		"asset_ticker",
+		"assetTicker"
+	])), i = H(e, [
+		"asset",
+		"asset_description",
+		"assetDescription",
+		"company",
+		"security",
+		"issuer"
+	]), a = bn(H(e, [
+		"type",
+		"transaction_type",
+		"transactionType",
+		"action",
+		"order_type"
+	])), o = H(e, [
+		"amount",
+		"amount_range",
+		"amountRange",
+		"range",
+		"value"
+	]), s = H(e, [
+		"link",
+		"ptr_link",
+		"ptrLink",
+		"source",
+		"url",
+		"document_url"
+	]), c = un(wn(e, [
+		"transaction_date",
+		"transactionDate",
+		"tx_date",
+		"traded",
+		"date"
+	])), l = un(wn(e, [
+		"disclosure_date",
+		"disclosureDate",
+		"filed",
+		"published",
+		"report_date"
+	])), u = l ?? c ?? Date.now(), d = `${t} — ${a} ${r || i || "undisclosed asset"}`, f = [
+		`${n ? `${n}. ` : ""}Delayed public financial disclosure (not real-time trading).`,
+		a === "unknown" ? "" : `Transaction: ${a}.`,
+		o ? `Amount range: ${o}.` : "",
+		c ? `Transaction date: ${new Date(c).toISOString().slice(0, 10)}.` : "",
+		l ? `Disclosed: ${new Date(l).toISOString().slice(0, 10)}.` : "",
+		r ? "" : "Ticker not provided by source; retained as unmapped disclosure."
+	].filter((e) => e !== ""), p = [
+		t,
+		r || i,
+		c ?? "",
+		a,
+		o
+	].join("|").toLowerCase();
+	return dn({
+		id: mn(hn, p),
+		title: d,
+		summary: f.join(" "),
+		source: "Public official financial disclosure",
+		url: s,
+		observedAt: u,
+		category: "public-disclosure",
+		provenance: "public-disclosure",
+		sourceId: hn,
+		dedupeKey: p,
+		rawPayload: e,
+		affectedAssets: r ? [r] : [],
+		narrativeTags: B([
+			"Public disclosure",
+			"Official financial disclosure",
+			a === "unknown" ? "" : `${a} disclosure`
+		]),
+		extractedEntities: B([
+			t,
+			n,
+			i
+		])
+	});
+}
+function bn(e) {
+	let t = e.toLowerCase();
+	return /(purchase|buy|acquire|bought)/.test(t) ? "purchase" : /(sale|sell|sold|dispos)/.test(t) ? "sale" : /exchange/.test(t) ? "exchange" : "unknown";
+}
+function xn(e) {
+	let t = e.toUpperCase().replace(/[^A-Z0-9.-]/g, "");
+	return /^[A-Z]{1,6}([.-][A-Z]{1,4})?$/.test(t) ? t : "";
+}
+function Sn(e) {
+	if (Array.isArray(e)) return e.filter(Cn);
+	if (Cn(e)) for (let t of [
+		"data",
+		"transactions",
+		"results",
+		"disclosures",
+		"items"
+	]) {
+		let n = e[t];
+		if (Array.isArray(n)) return n.filter(Cn);
+	}
+	return [];
+}
+function Cn(e) {
+	return !!e && typeof e == "object" && !Array.isArray(e);
+}
+function wn(e, t) {
+	for (let n of t) if (e[n] !== void 0 && e[n] !== null && e[n] !== "") return e[n];
+}
+function H(e, t) {
+	return V(wn(e, t));
+}
+var Tn = hn, En = "sec_edgar_public", Dn = [
+	"8-K",
+	"10-Q",
+	"10-K"
+], On = "https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=&company=&dateb=&owner=include&count=100&output=atom";
+function kn(e = process.env) {
+	let t = V(e.ATLASZ_SEC_USER_AGENT);
+	if (!t || !/@|https?:\/\//.test(t)) return null;
+	let n = V(e.ATLASZ_SEC_FORM_TYPES) ? V(e.ATLASZ_SEC_FORM_TYPES).split(",").map((e) => e.trim().toUpperCase()).filter(Boolean) : Dn, r = e.ATLASZ_SEC_INCLUDE_AMENDMENTS !== "0", i = {}, a = V(e.ATLASZ_SEC_CIK_TICKER_MAP);
+	if (a) try {
+		let e = JSON.parse(a);
+		e && typeof e == "object" && (i = Object.fromEntries(Object.entries(e).map(([e, t]) => [Bn(e), String(t).toUpperCase()])));
+	} catch {}
+	return {
+		userAgent: t,
+		formTypes: n,
+		includeAmendments: r,
+		cikTickerMap: i
+	};
+}
+async function An(e, t = kn()) {
+	if (!t) return [];
+	let n = await fetch(On, {
+		signal: e,
+		headers: {
+			accept: "application/atom+xml",
+			"user-agent": t.userAgent
+		}
+	});
+	if (!n.ok) throw Error(`SEC EDGAR HTTP ${n.status}`);
+	return jn(Pn(await n.text()), t);
+}
+function jn(e, t = {}) {
+	let n = (t.formTypes ?? Dn).map((e) => e.toUpperCase()), r = t.includeAmendments ?? !0, i = t.cikTickerMap ?? {}, a = [];
+	for (let t of e) Nn(t.formType, n, r) && a.push(Mn(t, i));
+	return a;
+}
+function Mn(e, t) {
+	let n = t[Bn(e.cik)] ?? "", r = e.accessionNumber || `${e.cik}-${e.filedAt}`, i = `sec|${r}`.toLowerCase(), a = [
+		`SEC ${e.formType} filing by ${e.companyName || "unknown filer"} (CIK ${e.cik || "n/a"}).`,
+		`Accession ${r}.`,
+		n ? `Mapped ticker: ${n}.` : "No ticker mapping available; persisted as unmapped filing."
+	].join(" ");
+	return dn({
+		id: mn(En, i),
+		title: `${e.formType} — ${e.companyName || "SEC filer"}`,
+		summary: a,
+		source: e.sourceDomain || "sec.gov",
+		url: e.filingUrl,
+		observedAt: e.filedAt,
+		category: "filing",
+		provenance: "official-api",
+		sourceId: En,
+		dedupeKey: i,
+		rawPayload: e,
+		affectedAssets: n ? [n] : [],
+		narrativeTags: B([
+			"SEC filing",
+			e.formType,
+			"Regulatory disclosure"
+		]),
+		extractedEntities: B([e.companyName, `CIK ${e.cik}`])
+	});
+}
+function Nn(e, t, n) {
+	let r = e.toUpperCase().trim(), i = r.replace(/\/A$/, "");
+	return r.endsWith("/A") && !n ? !1 : t.includes(i) || t.includes(r);
+}
+function Pn(e) {
+	if (typeof e != "string" || !e.includes("<entry")) return [];
+	let t = [], n = e.split(/<entry[\s>]/i).slice(1);
+	for (let e of n) {
+		let n = e.split(/<\/entry>/i)[0] ?? "", r = Vn(Fn(n, "title")), i = Fn(n, "updated"), a = Date.parse(i), o = In(n, "category", "term"), s = r.split(" - ")[0]?.trim() ?? "", c = (o || s).toUpperCase(), l = In(n, "link", "href"), u = Ln(Fn(n, "id")) || Ln(n), d = Rn(r), f = zn(r);
+		!c || !Number.isFinite(a) || t.push({
+			companyName: f,
+			cik: d,
+			formType: c,
+			filedAt: a,
+			accessionNumber: u,
+			filingUrl: l,
+			sourceDomain: "sec.gov"
+		});
+	}
+	return t;
+}
+function Fn(e, t) {
+	let n = e.match(RegExp(`<${t}[^>]*>([\\s\\S]*?)<\\/${t}>`, "i"));
+	return n ? n[1].trim() : "";
+}
+function In(e, t, n) {
+	let r = e.match(RegExp(`<${t}[^>]*\\b${n}="([^"]*)"`, "i"));
+	return r ? r[1].trim() : "";
+}
+function Ln(e) {
+	let t = e.match(/accession-number=([0-9-]+)/i) || e.match(/\b(\d{10}-\d{2}-\d{6})\b/);
+	return t ? t[1] : "";
+}
+function Rn(e) {
+	let t = e.match(/\((\d{4,10})\)/);
+	return t ? Bn(t[1]) : "";
+}
+function zn(e) {
+	return (e.includes(" - ") ? e.split(" - ").slice(1).join(" - ") : e).replace(/\(\d{4,10}\).*/, "").trim();
+}
+function Bn(e) {
+	let t = String(e).replace(/\D/g, "");
+	return t ? String(Number(t)) : "";
+}
+function Vn(e) {
+	return e.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, "\"").replace(/&#39;/g, "'");
+}
+var Hn = En, Un = "macro_calendar_fred", Wn = [
+	"DXY",
+	"TLT",
+	"SPY",
+	"QQQ",
+	"GLD",
+	"BTC"
+], Gn = [
+	"SPY",
+	"QQQ",
+	"DXY"
+], Kn = [
+	{
+		seriesId: "CPIAUCSL",
+		label: "CPI (headline inflation)",
+		unit: "index",
+		proxies: Wn
+	},
+	{
+		seriesId: "PPIACO",
+		label: "PPI (producer prices)",
+		unit: "index",
+		proxies: Wn
+	},
+	{
+		seriesId: "UNRATE",
+		label: "Unemployment rate",
+		unit: "%",
+		proxies: Gn
+	},
+	{
+		seriesId: "PAYEMS",
+		label: "Nonfarm payrolls (NFP)",
+		unit: "thousands",
+		proxies: Wn
+	},
+	{
+		seriesId: "GDPC1",
+		label: "Real GDP",
+		unit: "bn chained $",
+		proxies: Gn
+	},
+	{
+		seriesId: "FEDFUNDS",
+		label: "Federal funds rate (policy rate)",
+		unit: "%",
+		proxies: Wn
+	}
+];
+function qn(e = process.env) {
+	let t = V(e.ATLASZ_FRED_API_KEY);
+	return t ? {
+		apiKey: t,
+		baseUrl: V(e.ATLASZ_FRED_BASE_URL) || "https://api.stlouisfed.org/fred",
+		series: Kn,
+		rateLimitMs: 1200
+	} : null;
+}
+async function Jn(e, t = qn()) {
+	if (!t) return [];
+	let n = [];
+	for (let r of t.series) {
+		if (e.aborted) break;
+		let i = new URL(`${t.baseUrl}/series/observations`);
+		i.searchParams.set("series_id", r.seriesId), i.searchParams.set("api_key", t.apiKey), i.searchParams.set("file_type", "json"), i.searchParams.set("sort_order", "desc"), i.searchParams.set("limit", "1");
+		let a = await fetch(i, {
+			signal: e,
+			headers: { accept: "application/json" }
+		});
+		if (!a.ok) throw Error(`FRED ${r.seriesId} HTTP ${a.status}`);
+		let o = (await a.json()).observations?.[0], s = Yn(r, o);
+		s && n.push(s), await Xn(t.rateLimitMs, e);
+	}
+	return n;
+}
+function Yn(e, t) {
+	if (!t) return null;
+	let n = V(t.value);
+	if (!n || n === ".") return null;
+	let r = Number(n);
+	if (!Number.isFinite(r)) return null;
+	let i = Date.parse(`${t.date}T00:00:00Z`);
+	if (!Number.isFinite(i)) return null;
+	let a = `fred|${e.seriesId}|${t.date}`.toLowerCase();
+	return dn({
+		id: mn(Un, a),
+		title: `${e.label}: ${n} ${e.unit}`.trim(),
+		summary: `Official macro release (${e.seriesId}) for ${t.date}: ${n} ${e.unit}. Source: FRED official API.`,
+		source: "FRED (Federal Reserve Economic Data)",
+		url: `https://fred.stlouisfed.org/series/${e.seriesId}`,
+		observedAt: i,
+		category: "macro-event",
+		provenance: "official-api",
+		sourceId: Un,
+		dedupeKey: a,
+		rawPayload: {
+			seriesId: e.seriesId,
+			...t
+		},
+		affectedAssets: B(e.proxies),
+		narrativeTags: B([
+			"Macro release",
+			e.label,
+			"Policy-sensitive"
+		]),
+		extractedEntities: B([
+			e.label,
+			e.seriesId,
+			"United States"
+		])
+	});
+}
+function Xn(e, t) {
+	return new Promise((n, r) => {
+		if (t.aborted) {
+			n();
+			return;
+		}
+		let i = setTimeout(n, e);
+		t.addEventListener("abort", () => {
+			clearTimeout(i), r(/* @__PURE__ */ Error("Macro calendar fetch aborted"));
+		}, { once: !0 });
+	});
+}
+var Zn = Un, Qn = "https://api.gdeltproject.org/api/v2/doc/doc", $n = [
 	"\"Red Sea\"",
 	"semiconductor",
 	"Taiwan",
@@ -3494,58 +5012,345 @@ var xt = "https://api.gdeltproject.org/api/v2/doc/doc", St = [
 	"\"central bank\"",
 	"inflation",
 	"\"natural gas\"",
-	"oil"
-].join(" OR "), Ct = class {
+	"oil",
+	"\"data center\"",
+	"copper",
+	"uranium"
+].join(" OR "), er = class {
+	definitions;
+	states = /* @__PURE__ */ new Map();
+	constructor() {
+		this.definitions = tr();
+		for (let e of this.definitions) this.states.set(e.sourceId, {
+			status: e.enabled ? "idle" : "disabled",
+			itemCount: 0,
+			sourceReliabilityScore: +!!e.enabled,
+			consecutiveFailures: 0
+		});
+	}
+	snapshots() {
+		return this.definitions.map((e) => this.toSnapshot(e));
+	}
+	async pollEnabledSources(e = Date.now()) {
+		let t = [];
+		for (let n of this.definitions) {
+			if (!n.enabled || !n.fetcher) continue;
+			let r = this.requireState(n.sourceId);
+			if (r.lastAttemptAt && e - r.lastAttemptAt < n.rateLimitMs) {
+				r.status = "rate-limited";
+				continue;
+			}
+			r.lastAttemptAt = e;
+			let i = new AbortController(), a = setTimeout(() => i.abort(), n.timeoutMs);
+			try {
+				let e = await n.fetcher(i.signal);
+				r.status = "online", r.lastSuccessAt = Date.now(), r.lastError = void 0, r.itemCount += e.length, r.consecutiveFailures = 0, r.sourceReliabilityScore = Math.min(1, r.sourceReliabilityScore + .05), t.push(...e);
+			} catch (e) {
+				r.status = "failed", r.lastErrorAt = Date.now(), r.lastError = e instanceof Error ? e.message : String(e), r.consecutiveFailures += 1, r.sourceReliabilityScore = Math.max(.15, Number((r.sourceReliabilityScore * .82).toFixed(3)));
+			} finally {
+				clearTimeout(a);
+			}
+		}
+		return {
+			events: cr(t),
+			sources: this.snapshots()
+		};
+	}
+	toSnapshot(e) {
+		let t = this.requireState(e.sourceId);
+		return {
+			sourceId: e.sourceId,
+			sourceName: e.sourceName,
+			sourceType: e.sourceType,
+			endpointType: e.endpointType,
+			endpoint: e.endpoint,
+			pollIntervalMs: e.pollIntervalMs,
+			rateLimitMs: e.rateLimitMs,
+			timeoutMs: e.timeoutMs,
+			enabled: e.enabled,
+			status: e.enabled ? t.status : "disabled",
+			provenance: e.provenance,
+			lastSuccessAt: t.lastSuccessAt,
+			lastErrorAt: t.lastErrorAt,
+			lastError: t.lastError,
+			itemCount: t.itemCount,
+			sourceReliabilityScore: t.sourceReliabilityScore,
+			legalSafetyNote: e.legalSafetyNote,
+			parserAdapter: e.parserAdapter
+		};
+	}
+	requireState(e) {
+		let t = this.states.get(e);
+		if (!t) throw Error(`OSINT source state missing for ${e}`);
+		return t;
+	}
+};
+function tr() {
+	return [
+		{
+			sourceId: "gdelt_doc_public",
+			sourceName: "GDELT DOC public news/events",
+			sourceType: "global-news-events",
+			endpointType: "rest",
+			endpoint: Qn,
+			pollIntervalMs: U("ATLASZ_GDELT_POLL_MS", 5 * 6e4),
+			rateLimitMs: U("ATLASZ_GDELT_RATE_LIMIT_MS", 2e4),
+			timeoutMs: U("ATLASZ_GDELT_TIMEOUT_MS", 12e3),
+			enabled: process.env.ATLASZ_ENABLE_PUBLIC_WORLD !== "0",
+			provenance: "public-unauthenticated",
+			legalSafetyNote: "Documented public GDELT API; public unauthenticated article metadata, not verification.",
+			parserAdapter: "gdelt-doc-artlist-v2",
+			fetcher: or
+		},
+		rr(),
+		ir(),
+		ar(),
+		nr("rss_public_radar", "RSS public finance/geopolitics feeds", "global-news-events", "rss", "rss-public"),
+		nr("yahoo_finance_1m_public", "Yahoo public market bars", "markets", "rest", "public-unauthenticated"),
+		nr("stocktwits_public_stream", "Stocktwits public symbol streams", "social-attention", "rest", "public-unauthenticated"),
+		nr("polymarket_gamma_public", "Polymarket Gamma public markets", "markets-probability", "rest", "public-unauthenticated"),
+		nr("coinbase_public_ws", "Coinbase public crypto websocket", "markets-crypto", "websocket", "public-unauthenticated"),
+		{
+			sourceId: "x_explore_placeholder",
+			sourceName: "X/Twitter Explore placeholder",
+			sourceType: "social-attention",
+			endpointType: "placeholder",
+			endpoint: "disabled",
+			pollIntervalMs: 0,
+			rateLimitMs: 0,
+			timeoutMs: 0,
+			enabled: !1,
+			provenance: "auth-gated",
+			legalSafetyNote: "Disabled scaffold only. No login, CAPTCHA, paywall, or anti-bot bypass behavior is implemented.",
+			parserAdapter: "disabled-placeholder"
+		}
+	];
+}
+function nr(e, t, n, r, i) {
+	return {
+		sourceId: e,
+		sourceName: t,
+		sourceType: n,
+		endpointType: r,
+		endpoint: "managed by existing Atlasz ingestion service",
+		pollIntervalMs: 0,
+		rateLimitMs: 0,
+		timeoutMs: 0,
+		enabled: !0,
+		provenance: i,
+		legalSafetyNote: "Registered source boundary only; ingestion is handled by the existing fail-closed connector.",
+		parserAdapter: "existing-normalizer"
+	};
+}
+function rr() {
+	let e = kn();
+	return {
+		sourceId: Hn,
+		sourceName: "SEC EDGAR public filings (8-K/10-Q/10-K)",
+		sourceType: "regulatory-filings",
+		endpointType: "rss",
+		endpoint: "https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent (Atom)",
+		pollIntervalMs: U("ATLASZ_SEC_POLL_MS", 10 * 6e4),
+		rateLimitMs: U("ATLASZ_SEC_RATE_LIMIT_MS", 6e4),
+		timeoutMs: U("ATLASZ_SEC_TIMEOUT_MS", 15e3),
+		enabled: e !== null && process.env.ATLASZ_ENABLE_PUBLIC_WORLD !== "0",
+		provenance: "official-api",
+		legalSafetyNote: "Official SEC EDGAR public Atom feed. Requires contactable User-Agent (ATLASZ_SEC_USER_AGENT); fail-closed without one. No login or scraping.",
+		parserAdapter: "sec-edgar-atom-v1",
+		fetcher: e ? (t) => An(t, e) : void 0
+	};
+}
+function ir() {
+	let e = gn();
+	return {
+		sourceId: Tn,
+		sourceName: "Public official financial disclosures (delayed)",
+		sourceType: "public-disclosure",
+		endpointType: "rest",
+		endpoint: e?.url ?? "unconfigured (ATLASZ_POLITICIAN_DISCLOSURE_URL)",
+		pollIntervalMs: U("ATLASZ_POLITICIAN_POLL_MS", 30 * 6e4),
+		rateLimitMs: U("ATLASZ_POLITICIAN_RATE_LIMIT_MS", 6e4),
+		timeoutMs: U("ATLASZ_POLITICIAN_TIMEOUT_MS", 15e3),
+		enabled: e !== null && process.env.ATLASZ_ENABLE_PUBLIC_WORLD !== "0",
+		provenance: "public-disclosure",
+		legalSafetyNote: "Configured public/open-civic disclosure provider only. Delayed public financial disclosures, not real-time market data. Fail-closed without a configured provider.",
+		parserAdapter: "politician-disclosure-json-v1",
+		fetcher: e ? (t) => _n(t, e) : void 0
+	};
+}
+function ar() {
+	let e = qn();
+	return {
+		sourceId: Zn,
+		sourceName: "Macro calendar (FRED official API)",
+		sourceType: "macro-economic",
+		endpointType: "rest",
+		endpoint: "https://api.stlouisfed.org/fred/series/observations",
+		pollIntervalMs: U("ATLASZ_FRED_POLL_MS", 60 * 6e4),
+		rateLimitMs: U("ATLASZ_FRED_RATE_LIMIT_MS", 12e4),
+		timeoutMs: U("ATLASZ_FRED_TIMEOUT_MS", 2e4),
+		enabled: e !== null && process.env.ATLASZ_ENABLE_PUBLIC_WORLD !== "0",
+		provenance: "official-api",
+		legalSafetyNote: "Official FRED public API. API key from env only (ATLASZ_FRED_API_KEY); fail-closed without it. Missing observations are skipped, never fabricated.",
+		parserAdapter: "macro-fred-observations-v1",
+		fetcher: e ? (t) => Jn(t, e) : void 0
+	};
+}
+async function or(e) {
+	let t = new URL(Qn);
+	t.searchParams.set("query", $n), t.searchParams.set("mode", "ArtList"), t.searchParams.set("format", "json"), t.searchParams.set("maxrecords", "50"), t.searchParams.set("sort", "DateDesc");
+	let n = await fetch(t, {
+		signal: e,
+		headers: {
+			accept: "application/json",
+			"user-agent": "AtlaszIntel/0.4 local-first world-intel connector"
+		}
+	});
+	if (!n.ok) throw Error(`GDELT HTTP ${n.status}`);
+	let r = await n.text();
+	if (!r.trim().startsWith("{")) throw Error(r.trim().slice(0, 160) || "GDELT returned a non-JSON response");
+	let i = JSON.parse(r);
+	return (Array.isArray(i.articles) ? i.articles : []).map(sr).filter((e) => e !== null).map((e) => Ot(e, {
+		sourceId: "gdelt_doc_public",
+		provenance: "public-unauthenticated"
+	}));
+}
+function sr(e) {
+	let t = lr(e.title), n = lr(e.url);
+	if (!t || !n) return null;
+	let r = lr(e.sourceCommonName) || lr(e.domain) || "GDELT public source", i = ur(lr(e.seendate)) ?? Date.now(), a = Dt(t);
+	return {
+		id: dr(n),
+		title: t,
+		source: r,
+		url: n,
+		sector: a.sector,
+		impact: a.impact,
+		observedAt: i
+	};
+}
+function cr(e) {
+	return [...new Map(e.map((e) => [e.dedupeHash, e])).values()];
+}
+function lr(e) {
+	return typeof e == "string" ? e.trim() : "";
+}
+function ur(e) {
+	if (!/^\d{14}$/.test(e)) return null;
+	let t = `${e.slice(0, 4)}-${e.slice(4, 6)}-${e.slice(6, 8)}T${e.slice(8, 10)}:${e.slice(10, 12)}:${e.slice(12, 14)}Z`, n = Date.parse(t);
+	return Number.isFinite(n) ? n : null;
+}
+function dr(e) {
+	let t = 0;
+	for (let n = 0; n < e.length; n += 1) t = t * 31 + e.charCodeAt(n) >>> 0;
+	return `osint-${t.toString(36)}`;
+}
+function U(e, t) {
+	let n = Number(process.env[e]);
+	return Number.isInteger(n) && n >= 0 ? n : t;
+}
+//#endregion
+//#region electron/worldIntelService.ts
+var fr = class {
 	persistence;
+	registry = new er();
+	assetIdentity;
 	enabled = process.env.ATLASZ_ENABLE_PUBLIC_WORLD !== "0";
 	status = this.enabled ? "stale" : "disabled";
 	lastError;
 	updatedAt;
 	inFlight = null;
 	constructor(e) {
-		this.persistence = e;
+		this.persistence = e, this.assetIdentity = new cn(e), this.persistSources(this.registry.snapshots());
 	}
 	snapshot() {
 		return this.buildSnapshot();
 	}
 	refresh() {
-		return this.enabled ? this.inFlight ? this.inFlight : (this.status = "fetching", this.inFlight = this.fetchGdelt().then((e) => {
-			for (let t of e) this.persistence.saveHeadline(Et(t));
-			this.status = e.length > 0 ? "ready" : "stale", this.lastError = void 0, this.updatedAt = Date.now();
-			let t = this.buildSnapshot();
-			return t.rawSourceItems.some((e) => e.connector === "gdelt-doc-public") && wt(this.persistence, t), t;
-		}).catch((e) => (this.lastError = e instanceof Error ? e.message : String(e), this.status = this.persistence.listHeadlines(1).length > 0 ? "stale" : "failed", this.buildSnapshot())).finally(() => {
+		return this.enabled ? this.inFlight ? this.inFlight : (this.status = "fetching", this.inFlight = this.registry.pollEnabledSources().then(({ events: e, sources: t }) => {
+			this.persistSources(t);
+			for (let t of e) this.persistWorldEvent(t);
+			let n = this.persistence.listWorldIntelEvents(300);
+			this.persistCountryState(kt(n)), this.assetIdentity.ensureForEvents(n), this.status = e.length > 0 || n.length > 0 ? "ready" : "stale", this.lastError = t.find((e) => e.status === "failed")?.lastError, this.updatedAt = Date.now();
+			let r = this.buildSnapshot();
+			return r.worldEvents.length > 0 && pr(this.persistence, r), r;
+		}).catch((e) => (this.lastError = e instanceof Error ? e.message : String(e), this.status = this.persistence.listWorldIntelEvents(1).length > 0 || this.persistence.listHeadlines(1).length > 0 ? "stale" : "failed", this.buildSnapshot())).finally(() => {
 			this.inFlight = null;
 		}), this.inFlight) : (this.status = "disabled", Promise.resolve(this.buildSnapshot()));
 	}
-	async fetchGdelt() {
-		let e = new URL(xt);
-		e.searchParams.set("query", St), e.searchParams.set("mode", "ArtList"), e.searchParams.set("format", "json"), e.searchParams.set("maxrecords", "35"), e.searchParams.set("sort", "DateDesc");
-		let t = await fetch(e, { headers: {
-			accept: "application/json",
-			"user-agent": "AtlaszIntel/0.2 local-first world-intel connector"
-		} });
-		if (!t.ok) throw Error(`GDELT HTTP ${t.status}`);
-		let n = await t.text();
-		if (!n.trim().startsWith("{")) throw Error(n.trim().slice(0, 160) || "GDELT returned a non-JSON response");
-		let r = JSON.parse(n);
-		return (Array.isArray(r.articles) ? r.articles : []).map(Tt).filter((e) => e !== null);
+	toggleFavorite(e, t, n) {
+		return this.assetIdentity.toggleFavorite(e, t, n), this.buildSnapshot();
 	}
 	buildSnapshot() {
-		let e = this.persistence.listHeadlines(80).map(Dt);
-		return ot({
+		let e = this.persistence.listHeadlines(120).map(hr), t = this.persistence.listWorldIntelEvents(300), n = new Set(t.map((e) => e.id)), r = e.filter((e) => !n.has(e.id)).map((e) => Ot(e, {
+			sourceId: e.source || "legacy_world_headlines",
+			provenance: this.status === "stale" ? "local-derived" : "public-unauthenticated"
+		})), i = [...t, ...r].sort((e, t) => t.timestamp - e.timestamp), a = this.mergeCountries(this.persistence.listCountryIntelState(), kt(i)), o = this.mergeAssetIdentities(this.assetIdentity.list(), At(i)), s = this.mergeSources(this.registry.snapshots(), this.persistence.listOsintSources());
+		return Ct({
 			enabled: this.enabled,
 			status: this.status,
-			sourceTrust: this.status === "failed" ? "failed" : this.status === "stale" ? "stale" : "public unauthenticated",
+			sourceTrust: this.status === "failed" ? "failed" : this.status === "stale" ? "stale" : "public-unauthenticated",
 			connectorId: this.enabled ? "gdelt_doc_public" : "seeded",
-			connectorLabel: this.enabled ? "GDELT DOC public news" : "Seeded local world layer",
+			connectorLabel: this.enabled ? "Atlasz OSINT source registry" : "Seeded local world layer",
 			updatedAt: this.updatedAt,
 			lastError: this.lastError,
-			headlines: e
+			headlines: e,
+			worldEvents: i,
+			countries: a,
+			assetIdentities: o,
+			favorites: this.persistence.listFavorites(),
+			sources: s
 		});
 	}
+	persistSources(e) {
+		for (let t of e) this.safePersist(() => this.persistence.saveOsintSource(t));
+	}
+	persistWorldEvent(e) {
+		this.safePersist(() => this.persistence.saveWorldIntelEvent(e)), this.safePersist(() => this.persistence.saveHeadline(mr(e)));
+		for (let t of e.affectedAssets) this.safePersist(() => this.persistence.saveEventAssetLink({
+			id: `world-event:${e.id}:${t}`,
+			eventId: e.id,
+			assetSymbol: t,
+			relation: e.narrativeTags[0] ?? e.category,
+			confidence: e.confidence / 100,
+			createdAt: e.timestamp
+		}));
+	}
+	persistCountryState(e) {
+		for (let t of e) this.safePersist(() => this.persistence.saveCountryIntelState(t));
+	}
+	mergeSources(e, t) {
+		return [...new Map([...t, ...e].map((e) => [e.sourceId, e])).values()];
+	}
+	mergeCountries(e, t) {
+		return [...new Map([...t, ...e].map((e) => [e.countryCode, e])).values()].sort((e, t) => t.riskScore - e.riskScore);
+	}
+	mergeAssetIdentities(e, t) {
+		let n = new Set(this.persistence.listFavorites().map((e) => e.targetId));
+		return [...new Map([...t, ...e].map((e) => [e.symbol, e])).values()].map((e) => ({
+			...e,
+			favorite: n.has(e.symbol) || e.favorite
+		})).sort((e, t) => e.symbol.localeCompare(t.symbol));
+	}
+	safePersist(e) {
+		try {
+			e();
+		} catch (e) {
+			try {
+				this.persistence.audit({
+					id: `audit-world-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+					eventType: "persistence_failed",
+					connectorId: "world_intel_service",
+					severity: "error",
+					message: e instanceof Error ? e.message : String(e),
+					createdAt: Date.now(),
+					metadata: {}
+				});
+			} catch {}
+		}
+	}
 };
-function wt(e, t) {
+function pr(e, t) {
 	let n = t.updatedAt ?? Date.now(), r = new Date(n).toISOString().slice(0, 10);
 	for (let i of t.dailyBrief.slice(0, 5)) e.saveBrief({
 		id: `world-${r}-${i.id}`,
@@ -3562,21 +5367,18 @@ function wt(e, t) {
 		createdAt: n
 	});
 }
-function Tt(e) {
-	let t = V(e.title), n = V(e.url);
-	if (!t || !n) return null;
-	let r = V(e.sourceCommonName) || V(e.domain) || "GDELT public source", i = Ot(V(e.seendate)) ?? Date.now(), a = lt(t);
+function mr(e) {
 	return {
-		id: kt(n),
-		title: t,
-		source: r,
-		url: n,
-		sector: a.sector,
-		impact: a.impact,
-		observedAt: i
+		id: e.id,
+		title: e.title,
+		source: e.sourceId,
+		url: e.sourceUrl ?? "",
+		sector: String(e.category),
+		impact: `${e.summary} Provenance: ${e.provenance}.`,
+		observedAt: e.timestamp
 	};
 }
-function Et(e) {
+function hr(e) {
 	return {
 		id: e.id,
 		title: e.title,
@@ -3587,46 +5389,641 @@ function Et(e) {
 		observedAt: e.observedAt
 	};
 }
-function Dt(e) {
+//#endregion
+//#region electron/quant/quantMath.ts
+function gr(e) {
+	return e.length === 0 ? null : e.reduce((e, t) => e + t, 0) / e.length;
+}
+function _r(e) {
+	if (e.length < 2) return null;
+	let t = gr(e);
+	if (t === null) return null;
+	let n = e.reduce((e, n) => e + (n - t) ** 2, 0) / (e.length - 1);
+	return Math.sqrt(n);
+}
+function vr(e) {
+	if (e.length < 3) return null;
+	let t = e.slice(0, -1), n = e[e.length - 1], r = gr(t), i = _r(t);
+	return r === null || i === null || i === 0 ? null : (n - r) / i;
+}
+function yr(e) {
+	let t = [];
+	for (let n = 1; n < e.length; n += 1) {
+		let r = e[n - 1];
+		r !== 0 && t.push((e[n] - r) / r);
+	}
+	return t;
+}
+function br(e) {
+	return _r(yr(e));
+}
+function xr(e) {
+	if (e.length === 0) return null;
+	let t = e[0];
+	for (let n of e) n > t && (t = n);
+	let n = e[e.length - 1];
+	return t === 0 ? null : (n - t) / t * 100;
+}
+function Sr(e, t = 10) {
+	if (e.length < 2) return null;
+	let n = e[e.length - 1], r = gr(e.slice(Math.max(0, e.length - 1 - t), e.length - 1));
+	return r === null || r === 0 ? null : n / r;
+}
+function Cr(e) {
+	let t = 0, n = 0;
+	for (let r of e) t += r.price * r.volume, n += r.volume;
+	return n === 0 ? null : t / n;
+}
+function wr(e) {
+	if (e.length === 0) return null;
+	let t = Cr(e);
+	return t === null || t === 0 ? null : (e[e.length - 1].price - t) / t * 100;
+}
+function Tr(e, t) {
+	let n = Math.min(e.length, t.length);
+	if (n < 3) return null;
+	let r = e.slice(e.length - n), i = t.slice(t.length - n), a = gr(r), o = gr(i);
+	if (a === null || o === null) return null;
+	let s = 0, c = 0, l = 0;
+	for (let e = 0; e < n; e += 1) {
+		let t = r[e] - a, n = i[e] - o;
+		s += t * n, c += t * t, l += n * n;
+	}
+	return c === 0 || l === 0 ? null : s / Math.sqrt(c * l);
+}
+function Er(e, t) {
+	if (e.length < 2 || t.length < 2) return null;
+	let n = Dr(e), r = Dr(t);
+	return n === null || r === null ? null : (n - r) * 100;
+}
+function Dr(e) {
+	if (e.length < 2) return null;
+	let t = e[0], n = e[e.length - 1];
+	return t === 0 ? null : (n - t) / t;
+}
+function Or(e) {
+	if (e.length < 2) return null;
+	let t = e[0], n = e[e.length - 1];
+	return t === 0 ? null : (n - t) / t * 100;
+}
+//#endregion
+//#region electron/quant/eventOverlayService.ts
+function kr(e) {
+	let t = e.assetSymbol.toUpperCase(), n = e.allowModelInferred ?? !1, r = e.maxMarkers ?? 50, i = [];
+	for (let r of e.events) {
+		if (r.timestamp < e.from || r.timestamp > e.to) continue;
+		let a = Ar(r, t);
+		a && (a === "model-inferred" && !n || i.push({
+			eventId: r.id,
+			timestamp: r.timestamp,
+			title: r.title,
+			category: String(r.category),
+			severity: r.severity,
+			provenance: r.provenance,
+			linkType: a
+		}));
+	}
+	return i.sort((e, t) => e.timestamp - t.timestamp).slice(0, r);
+}
+function Ar(e, t) {
+	return e.affectedAssets.map((e) => e.toUpperCase()).includes(t) ? e.category === "macro-event" ? "macro-proxy" : e.provenance === "model-inferred" ? "model-inferred" : "direct-asset" : null;
+}
+//#endregion
+//#region src/quant.ts
+function jr(e, t = Date.now()) {
 	return {
-		id: e.id,
-		title: e.title,
-		source: e.source,
-		url: e.url,
-		sector: e.sector,
-		impact: e.impact,
-		observedAt: e.observedAt
+		generatedAt: t,
+		regime: "unavailable",
+		regimeProvenance: "math-derived",
+		regimeExplanation: e,
+		metrics: []
 	};
 }
-function V(e) {
-	return typeof e == "string" ? e.trim() : "";
+function Mr(e, t, n = Date.now()) {
+	return {
+		assetSymbol: e,
+		generatedAt: n,
+		bars: [],
+		metrics: [],
+		markers: [],
+		dataAvailable: !1,
+		unavailableReason: t
+	};
 }
-function Ot(e) {
-	if (!/^\d{14}$/.test(e)) return null;
-	let t = `${e.slice(0, 4)}-${e.slice(4, 6)}-${e.slice(6, 8)}T${e.slice(8, 10)}:${e.slice(10, 12)}:${e.slice(12, 14)}Z`, n = Date.parse(t);
-	return Number.isFinite(n) ? n : null;
+//#endregion
+//#region electron/quant/quantComputeService.ts
+var Nr = 12, Pr = 60, Fr = 3, Ir = /(BTC|ETH|SOL|LINK|KAS|XRP|ADA|DOGE|AVAX|USDT?$|-USD$)/i, Lr = class {
+	source;
+	constructor(e) {
+		this.source = e;
+	}
+	computeSnapshots(e, t = {}) {
+		return e.map((e) => this.computeAssetSnapshot(e, t));
+	}
+	computeAssetSnapshot(e, t = {}) {
+		let n = t.now ?? Date.now(), r = this.loadBars(e);
+		if (r.length < Nr) return Mr(e, `Insufficient price history (${r.length}/${Nr} bars) from current public sources.`, n);
+		let i = Ur(e), a = r.map((e) => e.price), o = r.map((e) => e.volume), s = Math.min(1, r.length / Pr), c = r[r.length - 1].time, l = [];
+		l.push(Rr({
+			symbol: e,
+			timestamp: c,
+			name: "Volume velocity",
+			value: Sr(o),
+			unit: "x",
+			window: "10-bar",
+			threshold: Fr,
+			coverage: s,
+			status: (e) => e >= Fr ? "anomaly" : e >= 2 ? "elevated" : "normal",
+			explain: (e) => `Latest volume is ${e.toFixed(2)}× the 10-bar average.`,
+			unavailable: "Not enough volume history to compute velocity."
+		})), l.push(Rr({
+			symbol: e,
+			timestamp: c,
+			name: "Price z-score",
+			value: vr(a),
+			unit: "σ",
+			window: `${a.length}-bar`,
+			threshold: 3,
+			coverage: s,
+			status: (e) => Math.abs(e) >= 3 ? "anomaly" : Math.abs(e) >= 2 ? "elevated" : "normal",
+			explain: (e) => `Latest price is ${e.toFixed(2)}σ from its moving average.`,
+			unavailable: "Not enough price history to compute a z-score."
+		})), l.push(Rr({
+			symbol: e,
+			timestamp: c,
+			name: "VWAP deviation",
+			value: wr(r),
+			unit: "%",
+			window: "session",
+			threshold: 5,
+			coverage: s,
+			status: (e) => Math.abs(e) >= 5 ? "anomaly" : Math.abs(e) >= 2 ? "elevated" : "normal",
+			explain: (e) => `Latest price is ${e.toFixed(2)}% from session VWAP.`,
+			unavailable: "Intraday data does not support a VWAP computation."
+		})), l.push(Rr({
+			symbol: e,
+			timestamp: c,
+			name: "Realized volatility",
+			value: Vr(br(a)),
+			unit: "%",
+			window: `${a.length}-bar`,
+			coverage: s,
+			status: () => "normal",
+			explain: (e) => `Std. dev. of per-bar returns is ${e.toFixed(2)}%.`,
+			unavailable: "Not enough returns to compute realized volatility."
+		})), l.push(Rr({
+			symbol: e,
+			timestamp: c,
+			name: "Current drawdown",
+			value: xr(a),
+			unit: "%",
+			window: "window peak",
+			threshold: -20,
+			coverage: s,
+			status: (e) => e <= -20 ? "anomaly" : e <= -10 ? "elevated" : "normal",
+			explain: (e) => `Down ${Math.abs(e).toFixed(2)}% from the window peak.`,
+			unavailable: "No price history to compute drawdown."
+		}));
+		let u = (i && i !== e ? this.loadBars(i) : []).map((e) => e.price), d = u.length >= Nr ? Er(Hr(a, u), Hr(u, a)) : null;
+		l.push(zr({
+			symbol: e,
+			timestamp: c,
+			name: "Relative strength",
+			value: d,
+			unit: "%",
+			benchmark: i,
+			coverage: s,
+			status: (e) => Math.abs(e) >= 10 ? "anomaly" : Math.abs(e) >= 5 ? "elevated" : "normal",
+			explain: (e) => `${e >= 0 ? "Outperforming" : "Underperforming"} ${i} by ${Math.abs(e).toFixed(2)}% over the window.`,
+			unavailable: i ? `Benchmark ${i} history unavailable from current public sources.` : "No benchmark configured for this asset class."
+		}));
+		let f = u.length >= Nr ? Tr(yr(Hr(a, u)), yr(Hr(u, a))) : null;
+		return l.push(zr({
+			symbol: e,
+			timestamp: c,
+			name: "Rolling correlation",
+			value: f,
+			unit: "r",
+			benchmark: i,
+			coverage: s,
+			status: (e) => Math.abs(e) >= .8 ? "elevated" : "normal",
+			explain: (e) => `Return correlation with ${i} is ${e.toFixed(2)}.`,
+			unavailable: i ? `Benchmark ${i} history unavailable from current public sources.` : "No benchmark configured for this asset class."
+		})), {
+			assetSymbol: e,
+			generatedAt: n,
+			benchmark: i,
+			bars: r,
+			metrics: l,
+			markers: kr({
+				events: t.events ?? [],
+				assetSymbol: e,
+				from: r[0].time,
+				to: c,
+				allowModelInferred: t.allowModelInferred
+			}),
+			dataAvailable: !0
+		};
+	}
+	loadBars(e) {
+		return this.source.listMarketTicks(e, 200).map((e) => ({
+			time: e.observedAt,
+			price: e.price,
+			volume: e.volume
+		})).filter((e) => Number.isFinite(e.price) && Number.isFinite(e.time)).sort((e, t) => e.time - t.time);
+	}
+};
+function Rr(e) {
+	return Br(e, void 0, ["market_ticks_daily"], "math-derived");
 }
-function kt(e) {
-	let t = 0;
-	for (let n = 0; n < e.length; n += 1) t = t * 31 + e.charCodeAt(n) >>> 0;
-	return `gdelt-${t.toString(36)}`;
+function zr(e) {
+	return Br({
+		...e,
+		window: "window"
+	}, e.benchmark, ["market_ticks_daily", e.benchmark ? `benchmark:${e.benchmark}` : "benchmark:none"], "math-derived");
+}
+function Br(e, t, n, r) {
+	let i = `${e.symbol}:${e.name}`.toLowerCase().replace(/\s+/g, "-");
+	return e.value === null || !Number.isFinite(e.value) ? {
+		id: i,
+		assetSymbol: e.symbol,
+		timestamp: e.timestamp,
+		metricName: e.name,
+		metricValue: null,
+		unit: e.unit,
+		window: e.window,
+		benchmark: t,
+		threshold: e.threshold,
+		status: "unavailable",
+		explanation: e.unavailable,
+		provenance: r,
+		inputSources: n,
+		dataCoverage: e.coverage,
+		confidence: 0,
+		unavailableReason: e.unavailable
+	} : {
+		id: i,
+		assetSymbol: e.symbol,
+		timestamp: e.timestamp,
+		metricName: e.name,
+		metricValue: e.value,
+		unit: e.unit,
+		window: e.window,
+		benchmark: t,
+		threshold: e.threshold,
+		status: e.status(e.value),
+		explanation: e.explain(e.value),
+		provenance: r,
+		inputSources: n,
+		dataCoverage: e.coverage,
+		confidence: Math.max(.1, Math.min(.95, e.coverage))
+	};
+}
+function Vr(e) {
+	return e === null ? null : e * 100;
+}
+function Hr(e, t) {
+	let n = Math.min(e.length, t.length);
+	return e.slice(e.length - n);
+}
+function Ur(e) {
+	let t = e.toUpperCase();
+	if (Ir.test(t)) return "BTC";
+	if (/^[A-Z]{1,5}$/.test(t)) return "SPY";
+}
+//#endregion
+//#region electron/quant/macroComputeService.ts
+function Wr(e, t = Date.now()) {
+	let n = [], r = Gr(e);
+	n.push(qr({
+		id: "yield-curve-10y2y",
+		metricName: "10Y-2Y yield curve",
+		metricValue: r.value,
+		unit: "pp",
+		inputSources: r.sources,
+		explanation: r.value === null ? r.reason : `${r.value.toFixed(2)}pp (${r.value < 0 ? "inverted" : "positive"}).`,
+		status: r.value === null ? "unavailable" : r.value < 0 ? "anomaly" : "normal",
+		unavailableReason: r.value === null ? r.reason : void 0
+	}));
+	let i = e.dgs10 !== void 0 && e.dgs3mo !== void 0 ? Jr(e.dgs10 - e.dgs3mo) : null;
+	n.push(qr({
+		id: "yield-curve-10y3m",
+		metricName: "10Y-3M yield curve",
+		metricValue: i,
+		unit: "pp",
+		inputSources: ["FRED:DGS10", "FRED:DGS3MO"],
+		explanation: i === null ? "10Y-3M unavailable from current sources." : `${i.toFixed(2)}pp.`,
+		status: i === null ? "unavailable" : i < 0 ? "anomaly" : "normal",
+		unavailableReason: i === null ? "10Y-3M unavailable from current sources." : void 0
+	}));
+	let a = e.dxySeries && e.dxySeries.length >= 2 ? Or(e.dxySeries) : null;
+	n.push(qr({
+		id: "dxy-momentum",
+		metricName: "DXY momentum (liquidity-proxy)",
+		metricValue: a,
+		unit: "%",
+		inputSources: ["FRED:DTWEXBGS"],
+		explanation: a === null ? "Dollar-index history unavailable from current sources." : `Broad dollar index ${a >= 0 ? "up" : "down"} ${Math.abs(a).toFixed(2)}% over the window. Proxy only.`,
+		status: a === null ? "unavailable" : Math.abs(a) >= 2 ? "elevated" : "normal",
+		unavailableReason: a === null ? "Dollar-index history unavailable from current sources." : void 0
+	}));
+	let { regime: o, explanation: s } = Kr(r.value, a);
+	return o === "unavailable" ? {
+		...jr(s, t),
+		metrics: n
+	} : {
+		generatedAt: t,
+		regime: o,
+		regimeProvenance: "math-derived",
+		regimeExplanation: s,
+		metrics: n
+	};
+}
+function Gr(e) {
+	return e.t10y2y !== void 0 && Number.isFinite(e.t10y2y) ? {
+		value: Jr(e.t10y2y),
+		sources: ["FRED:T10Y2Y"],
+		reason: ""
+	} : e.dgs10 !== void 0 && e.dgs2 !== void 0 ? {
+		value: Jr(e.dgs10 - e.dgs2),
+		sources: ["FRED:DGS10", "FRED:DGS2"],
+		reason: ""
+	} : {
+		value: null,
+		sources: [],
+		reason: "Yield-curve series unavailable from current public sources."
+	};
+}
+function Kr(e, t) {
+	if (e === null && t === null) return {
+		regime: "unavailable",
+		explanation: "Insufficient macro series to classify a regime."
+	};
+	let n = 0, r = [];
+	return e !== null && (e < 0 ? (--n, r.push("inverted curve (risk-off)")) : (n += 1, r.push("positive curve (risk-on)"))), t !== null && (t > 1 ? (--n, r.push("rising dollar (risk-off)")) : t < -1 ? (n += 1, r.push("falling dollar (risk-on)")) : r.push("flat dollar")), {
+		regime: n > 0 ? "risk-on" : n < 0 ? "risk-off" : "mixed",
+		explanation: `Signals: ${r.join(", ")}.`
+	};
+}
+function qr(e) {
+	return {
+		...e,
+		provenance: "math-derived"
+	};
+}
+function Jr(e) {
+	return Math.round(e * 100) / 100;
+}
+var Yr = "https://api.stlouisfed.org/fred";
+async function Xr(e, t = process.env) {
+	let n = V(t.ATLASZ_FRED_API_KEY);
+	if (!n) return null;
+	let r = V(t.ATLASZ_FRED_BASE_URL) || Yr, [i, a, o, s] = await Promise.all([
+		Zr(r, n, "T10Y2Y", e),
+		Zr(r, n, "DGS10", e),
+		Zr(r, n, "DGS2", e),
+		Zr(r, n, "DGS3MO", e)
+	]);
+	return {
+		t10y2y: i,
+		dgs10: a,
+		dgs2: o,
+		dgs3mo: s,
+		dxySeries: await Qr(r, n, "DTWEXBGS", 30, e)
+	};
+}
+async function Zr(e, t, n, r) {
+	let i = await Qr(e, t, n, 1, r);
+	return i[i.length - 1];
+}
+async function Qr(e, t, n, r, i) {
+	let a = new URL(`${e}/series/observations`);
+	a.searchParams.set("series_id", n), a.searchParams.set("api_key", t), a.searchParams.set("file_type", "json"), a.searchParams.set("sort_order", "desc"), a.searchParams.set("limit", String(r));
+	let o = await fetch(a, {
+		signal: i,
+		headers: { accept: "application/json" }
+	});
+	if (!o.ok) throw Error(`FRED ${n} HTTP ${o.status}`);
+	return ((await o.json()).observations ?? []).map((e) => Number(e.value)).filter((e) => Number.isFinite(e)).reverse();
+}
+//#endregion
+//#region electron/quant/quantService.ts
+var $r = 16, ei = 8e3, ti = [
+	"SPY",
+	"QQQ",
+	"BTC",
+	"AAPL",
+	"MSFT",
+	"NVDA"
+], ni = class {
+	persistence;
+	compute;
+	constructor(e) {
+		this.persistence = e, this.compute = new Lr(e);
+	}
+	async snapshot() {
+		let e = Date.now(), t = this.resolveSymbols(), n = this.persistence.listWorldIntelEvents(300);
+		return {
+			generatedAt: e,
+			assets: this.compute.computeSnapshots(t, {
+				events: n,
+				now: e
+			}),
+			macro: await this.macroSnapshot(e)
+		};
+	}
+	resolveSymbols() {
+		let e = this.persistence.listAssetIdentities().map((e) => e.symbol.toUpperCase());
+		return [...new Set([...e, ...ti])].slice(0, $r);
+	}
+	async macroSnapshot(e) {
+		let t = new AbortController(), n = setTimeout(() => t.abort(), ei);
+		try {
+			let n = await Xr(t.signal);
+			return n ? Wr(n, e) : jr("Macro series unavailable: configure ATLASZ_FRED_API_KEY (fail-closed).", e);
+		} catch (t) {
+			return jr(`Macro series fetch failed: ${t instanceof Error ? t.message : String(t)}`, e);
+		} finally {
+			clearTimeout(n);
+		}
+	}
+}, ri = "lexical-hash-v1", ii = new Set(/* @__PURE__ */ "the.a.an.and.or.of.to.in.on.for.with.as.at.by.is.are.was.were.be.from.that.this.it.its.into.over.after.new".split("."));
+function ai(e) {
+	return [
+		e.title,
+		e.summary,
+		...e.extractedEntities,
+		...e.narrativeTags,
+		String(e.category)
+	].join(" ").toLowerCase();
+}
+function oi(e) {
+	return u("sha256").update(ai(e)).digest("hex").slice(0, 32);
+}
+function si(e) {
+	let t = ui(e);
+	if (t.length === 0) return null;
+	let n = Array(256).fill(0);
+	for (let e of t) {
+		let t = di(e) % 256, r = di(`${e}#sign`) & 1 ? -1 : 1;
+		n[t] += r;
+	}
+	let r = Math.sqrt(n.reduce((e, t) => e + t * t, 0));
+	return r === 0 ? null : n.map((e) => e / r);
+}
+function ci(e) {
+	return si(ai(e));
+}
+function li(e, t) {
+	if (e.length !== t.length || e.length === 0) return 0;
+	let n = 0;
+	for (let r = 0; r < e.length; r += 1) n += e[r] * t[r];
+	return Math.max(-1, Math.min(1, n));
+}
+function ui(e) {
+	return e.toLowerCase().split(/[^a-z0-9]+/).filter((e) => e.length > 2 && !ii.has(e));
+}
+function di(e) {
+	let t = 2166136261;
+	for (let n = 0; n < e.length; n += 1) t ^= e.charCodeAt(n), t = Math.imul(t, 16777619);
+	return t >>> 0;
+}
+//#endregion
+//#region src/intel.ts
+var fi = "HISTORICAL_PLAYBOOK_UNAVAILABLE", pi = "RETURN_PROFILE_UNAVAILABLE";
+function mi(e, t, n = Date.now()) {
+	return {
+		queryEventId: e,
+		generatedAt: n,
+		embeddingModel: "none",
+		available: !1,
+		unavailableReason: t,
+		matches: []
+	};
+}
+//#endregion
+//#region electron/intel/historicalPlaybookService.ts
+var hi = 864e5, gi = 3, _i = class {
+	source;
+	constructor(e) {
+		this.source = e;
+	}
+	playbookFor(e, t = {}) {
+		let n = t.now ?? Date.now(), r = this.source.listWorldIntelEvents(400), i = r.find((t) => t.id === e);
+		if (!i) return mi(e, "Event not found in local store.", n);
+		let a = this.ensureEmbeddings(r), o = a.get(e);
+		if (!o) return mi(e, `${fi}: no embedding for the query event.`, n);
+		let s = r.filter((t) => t.timestamp < i.timestamp && t.id !== e && t.dedupeHash !== i.dedupeHash).map((e) => ({
+			event: e,
+			vector: a.get(e.id)
+		})).filter((e) => !!e.vector).map((e) => ({
+			event: e.event,
+			similarity: li(o, e.vector)
+		})).sort((e, t) => t.similarity - e.similarity).slice(0, gi);
+		return s.length === 0 ? mi(e, `${fi}: no prior comparable events (insufficient history).`, n) : {
+			queryEventId: e,
+			generatedAt: n,
+			embeddingModel: ri,
+			available: !0,
+			matches: s.map((e) => this.toMatch(i, e.event, e.similarity))
+		};
+	}
+	ensureEmbeddings(e) {
+		let t = new Map(this.source.listWorldIntelEmbeddings(800).map((e) => [e.eventId, e])), n = /* @__PURE__ */ new Map();
+		for (let r of e) {
+			let e = oi(r), i = t.get(r.id);
+			if (i && i.summaryHash === e && i.embeddingModel === "lexical-hash-v1" && i.embeddingVector.length === 256) {
+				n.set(r.id, i.embeddingVector);
+				continue;
+			}
+			let a = ci(r);
+			if (a) {
+				n.set(r.id, a);
+				try {
+					this.source.saveWorldIntelEmbedding({
+						id: `emb-${r.id}`,
+						eventId: r.id,
+						timestamp: r.timestamp,
+						summaryHash: e,
+						embeddingModel: ri,
+						embeddingVector: a,
+						sourceEventCategory: String(r.category),
+						provenance: "local-computed",
+						createdAt: Date.now()
+					});
+				} catch {}
+			}
+		}
+		return n;
+	}
+	toMatch(e, t, n) {
+		let r = bi(e.affectedAssets, t.affectedAssets), i = bi(e.narrativeTags, t.narrativeTags), a = [`${Math.round(n * 100)}% lexical similarity`];
+		return e.category === t.category && a.push(`same category (${String(t.category)})`), r.length > 0 && a.push(`shared assets: ${r.slice(0, 4).join(", ")}`), i.length > 0 && a.push(`shared narrative: ${i.slice(0, 3).join(", ")}`), {
+			eventId: t.id,
+			title: t.title,
+			timestamp: t.timestamp,
+			category: String(t.category),
+			similarity: n,
+			linkedAssets: t.affectedAssets,
+			matchReason: a.join(" · "),
+			provenance: "local-computed",
+			returnProfile: this.returnProfileFor(t)
+		};
+	}
+	returnProfileFor(e) {
+		for (let t of e.affectedAssets) {
+			let n = this.source.listMarketTicks(t, 800).map((e) => ({
+				price: e.price,
+				time: e.observedAt
+			})).filter((e) => Number.isFinite(e.price) && Number.isFinite(e.time)).sort((e, t) => e.time - t.time);
+			if (n.length === 0) continue;
+			let r = yi(n, e.timestamp, 3 * hi);
+			if (r === null) continue;
+			let i = vi(n, e.timestamp, 1 * hi, r), a = vi(n, e.timestamp, 5 * hi, r), o = vi(n, e.timestamp, 7 * hi, r);
+			return {
+				symbol: t,
+				oneDayPct: i,
+				fiveDayPct: a,
+				sevenDayPct: o,
+				provenance: "math-derived",
+				unavailableReason: i === null && a === null && o === null ? pi : void 0
+			};
+		}
+		return null;
+	}
+};
+function vi(e, t, n, r) {
+	let i = yi(e, t + n, 2 * hi);
+	return i === null || r === 0 ? null : (i - r) / r * 100;
+}
+function yi(e, t, n) {
+	let r = null, i = Infinity;
+	for (let n of e) {
+		let e = Math.abs(n.time - t);
+		e < i && (r = n, i = e);
+	}
+	return !r || i > n ? null : r.price;
+}
+function bi(e, t) {
+	let n = new Set(t.map((e) => e.toUpperCase()));
+	return [...new Set(e.filter((e) => n.has(e.toUpperCase())))];
 }
 //#endregion
 //#region src/engine/graphMutator.ts
-var At = {
+var xi = {
 	Sovereign: "sovereign",
 	Location: "location",
 	Commodity: "commodity",
 	Corporation: "corporation",
 	Infrastructure: "infrastructure"
 };
-function jt(e) {
+function Si(e) {
 	return e.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 64);
 }
-function Mt(e) {
+function Ci(e) {
 	return Math.min(1, Math.max(0, e));
 }
-var Nt = class {
+var wi = class {
 	nodes = /* @__PURE__ */ new Map();
 	adjacency = /* @__PURE__ */ new Map();
 	decayFactor;
@@ -3646,15 +6043,15 @@ var Nt = class {
 		return e;
 	}
 	upsertConnection(e) {
-		let t = this.now(), n = e.confidence_metrics.score, r = `event:${jt(e.event_summary)}`, i = [];
+		let t = this.now(), n = e.confidence_metrics.score, r = `event:${Si(e.event_summary)}`, i = [];
 		this.ensureNode(r, e.event_summary, "event", t, e.primary_macro_theme) && i.push(r);
 		for (let a of e.extracted_entities) {
-			let o = `entity:${jt(a.name)}`;
-			this.ensureNode(o, a.name, At[a.type] ?? "infrastructure", t, e.primary_macro_theme) && i.push(o), this.reinforceEdge(r, o, "involves", .6, n, "Volatility_Expansion", t);
+			let o = `entity:${Si(a.name)}`;
+			this.ensureNode(o, a.name, xi[a.type] ?? "infrastructure", t, e.primary_macro_theme) && i.push(o), this.reinforceEdge(r, o, "involves", .6, n, "Volatility_Expansion", t);
 		}
 		let a = 0, o = 0;
 		for (let s of e.downstream_exposure_chain) {
-			let c = `asset:${jt(s.node_name)}`;
+			let c = `asset:${Si(s.node_name)}`;
 			this.ensureNode(c, s.node_name, "asset", t, e.primary_macro_theme) && i.push(c);
 			let l = s.transmission_mechanism || s.exposure_direction, u = this.hasEdge(r, c);
 			this.reinforceEdge(r, c, l, s.exposure_weight, n, s.exposure_direction, t), u ? o += 1 : a += 1;
@@ -3672,17 +6069,17 @@ var Nt = class {
 		this.ensureNode(e.source.id, e.source.label, e.source.kind, t), this.ensureNode(e.target.id, e.target.label, e.target.kind, t);
 		let n = this.adjacency.get(e.source.id) ?? [], r = n.find((t) => t.target === e.target.id);
 		if (r) {
-			r.weight = Mt(e.weight), r.relation = e.relation, r.direction = e.direction ?? r.direction, r.provenance = e.provenance, r.confidence = Mt(e.confidence ?? e.weight), r.lastReinforcedAt = t, r.lastDecayedAt = t, r.reinforcements += 1;
+			r.weight = Ci(e.weight), r.relation = e.relation, r.direction = e.direction ?? r.direction, r.provenance = e.provenance, r.confidence = Ci(e.confidence ?? e.weight), r.lastReinforcedAt = t, r.lastDecayedAt = t, r.reinforcements += 1;
 			return;
 		}
 		n.push({
 			source: e.source.id,
 			target: e.target.id,
 			relation: e.relation,
-			weight: Mt(e.weight),
+			weight: Ci(e.weight),
 			direction: e.direction ?? "Volatility_Expansion",
 			provenance: e.provenance,
-			confidence: Mt(e.confidence ?? e.weight),
+			confidence: Ci(e.confidence ?? e.weight),
 			createdAt: t,
 			lastReinforcedAt: t,
 			lastDecayedAt: t,
@@ -3796,7 +6193,7 @@ var Nt = class {
 		}
 		for (let t of [...this.nodes.keys()]) e.has(t) || this.nodes.delete(t);
 	}
-}, Pt = [
+}, Ti = [
 	"Geopolitical Choke Point",
 	"Supply Chain Disruption",
 	"Monetary Policy Shocks",
@@ -3804,23 +6201,23 @@ var Nt = class {
 	"Regulatory Constraints",
 	"Resource Scarcity",
 	"Commodity Shock"
-], Ft = [
+], Ei = [
 	"Sovereign",
 	"Location",
 	"Commodity",
 	"Corporation",
 	"Infrastructure"
-], It = [
+], Di = [
 	"Bullish_Catalyst",
 	"Bearish_Headwind",
 	"Volatility_Expansion"
-], Lt = {
+], Oi = {
 	type: "object",
 	properties: {
 		event_summary: { type: "string" },
 		primary_macro_theme: {
 			type: "string",
-			enum: [...Pt]
+			enum: [...Ti]
 		},
 		extracted_entities: {
 			type: "array",
@@ -3830,7 +6227,7 @@ var Nt = class {
 					name: { type: "string" },
 					type: {
 						type: "string",
-						enum: [...Ft]
+						enum: [...Ei]
 					}
 				},
 				required: ["name", "type"]
@@ -3844,7 +6241,7 @@ var Nt = class {
 					node_name: { type: "string" },
 					exposure_direction: {
 						type: "string",
-						enum: [...It]
+						enum: [...Di]
 					},
 					exposure_weight: {
 						type: "number",
@@ -3882,51 +6279,51 @@ var Nt = class {
 		"confidence_metrics"
 	]
 };
-function Rt(e) {
+function ki(e) {
 	let t = typeof e == "number" ? e : Number(e);
 	return Number.isFinite(t) ? Math.min(1, Math.max(0, t)) : 0;
 }
-function H(e) {
+function Ai(e) {
 	return typeof e == "string" ? e.trim() : "";
 }
-function zt(e, t, n) {
+function ji(e, t, n) {
 	return typeof e == "string" && t.includes(e) ? e : n;
 }
-function Bt(e) {
+function Mi(e) {
 	if (!e || typeof e != "object") return null;
-	let t = e, n = H(t.event_summary);
+	let t = e, n = Ai(t.event_summary);
 	if (n === "") return null;
 	let r = (Array.isArray(t.extracted_entities) ? t.extracted_entities : []).map((e) => {
 		if (!e || typeof e != "object") return null;
-		let t = e, n = H(t.name);
+		let t = e, n = Ai(t.name);
 		return n === "" ? null : {
 			name: n,
-			type: zt(t.type, Ft, "Infrastructure")
+			type: ji(t.type, Ei, "Infrastructure")
 		};
 	}).filter((e) => e !== null), i = (Array.isArray(t.downstream_exposure_chain) ? t.downstream_exposure_chain : []).map((e) => {
 		if (!e || typeof e != "object") return null;
-		let t = e, n = H(t.node_name);
+		let t = e, n = Ai(t.node_name);
 		return n === "" ? null : {
 			node_name: n,
-			exposure_direction: zt(t.exposure_direction, It, "Volatility_Expansion"),
-			exposure_weight: Rt(t.exposure_weight),
-			transmission_mechanism: H(t.transmission_mechanism)
+			exposure_direction: ji(t.exposure_direction, Di, "Volatility_Expansion"),
+			exposure_weight: ki(t.exposure_weight),
+			transmission_mechanism: Ai(t.transmission_mechanism)
 		};
 	}).filter((e) => e !== null), a = t.confidence_metrics && typeof t.confidence_metrics == "object" ? t.confidence_metrics : {};
 	return {
 		event_summary: n,
-		primary_macro_theme: zt(t.primary_macro_theme, Pt, "Supply Chain Disruption"),
+		primary_macro_theme: ji(t.primary_macro_theme, Ti, "Supply Chain Disruption"),
 		extracted_entities: r,
 		downstream_exposure_chain: i,
 		confidence_metrics: {
-			score: Rt(a.score),
-			primary_uncertainty: H(a.primary_uncertainty)
+			score: ki(a.score),
+			primary_uncertainty: Ai(a.primary_uncertainty)
 		}
 	};
 }
 //#endregion
 //#region src/engine/cognitiveParser.ts
-var Vt = "You are the primary cognitive node of Atlasz Intel, a local financial intelligence engine. Map the physical and macro plumbing hidden behind unstructured text.\n\nRules:\n1. NO PROSE. Output must start with '{' and end with '}'. No preamble.\n2. Adhere 100% to the enforced JSON schema. Every field is required. Do not invent keys.\n3. Look past hype: identify structural dependencies — sectors, raw materials, shipping lanes, and corporate anchors in the blast radius.\n4. Be conservative with exposure weights. A direct refinery hit is ~1.0 exposure to its equity; a secondary consumer-goods tariff is ~0.3.\n5. Set confidence by verifiable facts in the text versus speculative narrative. State the biggest remaining uncertainty.", Ht = class {
+var Ni = "You are the primary cognitive node of Atlasz Intel, a local financial intelligence engine. Map the physical and macro plumbing hidden behind unstructured text.\n\nRules:\n1. NO PROSE. Output must start with '{' and end with '}'. No preamble.\n2. Adhere 100% to the enforced JSON schema. Every field is required. Do not invent keys.\n3. Look past hype: identify structural dependencies — sectors, raw materials, shipping lanes, and corporate anchors in the blast radius.\n4. Be conservative with exposure weights. A direct refinery hit is ~1.0 exposure to its equity; a secondary consumer-goods tariff is ~0.3.\n5. Set confidence by verifiable facts in the text versus speculative narrative. State the biggest remaining uncertainty.", Pi = class {
 	endpoint;
 	model;
 	timeoutMs;
@@ -3940,7 +6337,7 @@ var Vt = "You are the primary cognitive node of Atlasz Intel, a local financial 
 		let n = typeof e?.headline == "string" ? e.headline.trim() : "";
 		if (n === "") return null;
 		if (!this.fetchImpl) return this.warn("fetch is unavailable in this runtime; failing closed"), null;
-		let r = t.timeoutMs && t.timeoutMs > 0 ? t.timeoutMs : this.timeoutMs, i = t.instruction ? `${Vt}\n\n${t.instruction}` : Vt, a = typeof e.context == "string" && e.context.trim() !== "" ? e.context.trim() : "", o = new AbortController(), s = setTimeout(() => o.abort(), r);
+		let r = t.timeoutMs && t.timeoutMs > 0 ? t.timeoutMs : this.timeoutMs, i = t.instruction ? `${Ni}\n\n${t.instruction}` : Ni, a = typeof e.context == "string" && e.context.trim() !== "" ? e.context.trim() : "", o = new AbortController(), s = setTimeout(() => o.abort(), r);
 		try {
 			let t = await this.fetchImpl(this.endpoint, {
 				method: "POST",
@@ -3949,7 +6346,7 @@ var Vt = "You are the primary cognitive node of Atlasz Intel, a local financial 
 				body: JSON.stringify({
 					model: this.model,
 					stream: !1,
-					format: Lt,
+					format: Oi,
 					options: {
 						temperature: 0,
 						top_p: .1
@@ -3972,7 +6369,7 @@ var Vt = "You are the primary cognitive node of Atlasz Intel, a local financial 
 			} catch {
 				return this.warn("ollama content was not valid JSON; failing closed"), null;
 			}
-			let l = Ut(c), u = Bt(c);
+			let l = Fi(c), u = Mi(c);
 			return u ? {
 				extraction: u,
 				validationIssueCount: l,
@@ -4008,7 +6405,7 @@ var Vt = "You are the primary cognitive node of Atlasz Intel, a local financial 
 		return n ? e.upsertConnection(n.extraction) : null;
 	}
 };
-function Ut(e) {
+function Fi(e) {
 	if (!e || typeof e != "object") return 1;
 	let t = e, n = 0;
 	if ((typeof t.event_summary != "string" || t.event_summary.trim() === "") && (n += 1), Array.isArray(t.extracted_entities) || (n += 1), !Array.isArray(t.downstream_exposure_chain)) n += 1;
@@ -4024,21 +6421,21 @@ function Ut(e) {
 }
 //#endregion
 //#region electron/ingest/types.ts
-function U(e) {
+function W(e) {
 	let t = 2166136261;
 	for (let n = 0; n < e.length; n += 1) t ^= e.charCodeAt(n), t = Math.imul(t, 16777619);
 	return (t >>> 0).toString(36);
 }
-function W(e, t, n) {
+function G(e, t, n) {
 	return Math.min(n, Math.max(t, e));
 }
-function Wt(e) {
+function Ii(e) {
 	let t = typeof e == "number" ? e : Number(e);
 	return Number.isFinite(t) ? t : null;
 }
 //#endregion
 //#region electron/ingest/cognitiveTaskManager.ts
-var Gt = class extends u {
+var Li = class extends d {
 	enabled;
 	endpoint;
 	model;
@@ -4057,7 +6454,7 @@ var Gt = class extends u {
 	validationFailures = 0;
 	processing = !1;
 	constructor(e = {}) {
-		super(), this.on("error", () => void 0), this.enabled = e.enabled ?? process.env.ATLASZ_ENABLE_OLLAMA === "1", this.endpoint = e.endpoint ?? process.env.ATLASZ_OLLAMA_ENDPOINT ?? "http://localhost:11434/api/chat", this.model = e.model ?? process.env.ATLASZ_OLLAMA_MODEL ?? "qwen2.5:7b", this.initialTimeoutMs = e.requestTimeoutMs ?? 18e3, this.minTimeoutMs = e.minTimeoutMs ?? 3e3, this.maxTimeoutMs = e.maxTimeoutMs ?? 3e4, this.latencyWindowSize = e.latencyWindowSize ?? 8, this.timeoutScale = e.timeoutScale ?? 1.5, this.maxQueueSize = e.maxQueueSize ?? 250, this.parser = new Ht({
+		super(), this.on("error", () => void 0), this.enabled = e.enabled ?? process.env.ATLASZ_ENABLE_OLLAMA === "1", this.endpoint = e.endpoint ?? process.env.ATLASZ_OLLAMA_ENDPOINT ?? "http://localhost:11434/api/chat", this.model = e.model ?? process.env.ATLASZ_OLLAMA_MODEL ?? "qwen2.5:7b", this.initialTimeoutMs = e.requestTimeoutMs ?? 18e3, this.minTimeoutMs = e.minTimeoutMs ?? 3e3, this.maxTimeoutMs = e.maxTimeoutMs ?? 3e4, this.latencyWindowSize = e.latencyWindowSize ?? 8, this.timeoutScale = e.timeoutScale ?? 1.5, this.maxQueueSize = e.maxQueueSize ?? 250, this.parser = new Pi({
 			endpoint: this.endpoint,
 			model: this.model,
 			timeoutMs: this.maxTimeoutMs,
@@ -4076,7 +6473,7 @@ var Gt = class extends u {
 	enqueueBatch(e) {
 		if (!this.enabled || e.length === 0) return;
 		let t = Math.max(...e.map((e) => e.observedAt)), n = [...new Set(e.map((e) => e.sourceName))], r = {
-			id: `batch-${U(e.map((e) => e.id).join("|"))}`,
+			id: `batch-${W(e.map((e) => e.id).join("|"))}`,
 			title: `Batch summary of ${e.length} public market narratives`,
 			sourceName: n.length === 1 ? n[0] : "Atlasz public narrative batch",
 			sourceUrl: e[0].sourceUrl,
@@ -4118,7 +6515,7 @@ var Gt = class extends u {
 	}
 	currentTimeoutMs() {
 		let e = this.rollingAverageLatencyMs();
-		return e ? Math.round(W(e * this.timeoutScale, this.minTimeoutMs, this.maxTimeoutMs)) : this.initialTimeoutMs;
+		return e ? Math.round(G(e * this.timeoutScale, this.minTimeoutMs, this.maxTimeoutMs)) : this.initialTimeoutMs;
 	}
 	rollingAverageLatencyMs() {
 		if (this.successfulDurationsMs.length === 0) return;
@@ -4150,14 +6547,14 @@ var Gt = class extends u {
 			context: `${t.summary}\n${t.rawText.slice(0, 1800)}`.trim()
 		}, {
 			timeoutMs: r,
-			instruction: Kt(n)
+			instruction: Ri(n)
 		});
 		if (!a) return this.failedExtractions += 1, this.markFailure(t.sourceName), null;
 		let o = Date.now() - i;
 		this.recordSuccessfulDuration(o), a.validationIssueCount > 0 ? this.markFailure(t.sourceName, a.validationIssueCount) : this.markSuccess(t.sourceName);
 		let s = this.sourcePenalty(t.sourceName);
 		return this.successfulExtractions += 1, {
-			extraction: qt(a.extraction, s),
+			extraction: zi(a.extraction, s),
 			meta: {
 				durationMs: o,
 				timeoutMs: r,
@@ -4194,30 +6591,30 @@ var Gt = class extends u {
 	}
 	recomputePenalty(e) {
 		let t = Math.max(1, e.attempts), n = e.validationFailures / t, r = Math.min(.35, e.structuralIssues * .035);
-		e.penalty = Number(W(1 - n * .65 - r, .25, 1).toFixed(3));
+		e.penalty = Number(G(1 - n * .65 - r, .25, 1).toFixed(3));
 	}
 };
-function Kt(e) {
+function Ri(e) {
 	let t = "You convert public market/news text into strictly structured, non-predictive exposure mapping. Do not give trading advice. Return only JSON matching the schema.";
 	return e === "batch-summary" ? `${t} This input is a high-velocity batch; summarize only the dominant shared macro theme and the strongest exposure chains.` : e === "keyword-priority" ? `${t} This input was selected during elevated narrative velocity; ignore weak tangential references and extract only high-conviction exposure links.` : t;
 }
-function qt(e, t) {
+function zi(e, t) {
 	return {
 		...e,
 		confidence_metrics: {
 			...e.confidence_metrics,
-			score: W(e.confidence_metrics.score * t, 0, 1),
+			score: G(e.confidence_metrics.score * t, 0, 1),
 			primary_uncertainty: t < .95 ? `${e.confidence_metrics.primary_uncertainty} Source reliability penalty applied: ${t.toFixed(2)}.` : e.confidence_metrics.primary_uncertainty
 		},
 		downstream_exposure_chain: e.downstream_exposure_chain.map((e) => ({
 			...e,
-			exposure_weight: W(e.exposure_weight * t, 0, 1)
+			exposure_weight: G(e.exposure_weight * t, 0, 1)
 		}))
 	};
 }
 //#endregion
 //#region electron/ingest/exposureMatrix.ts
-var Jt = [
+var Bi = [
 	{
 		keywords: [
 			"taiwan",
@@ -4408,9 +6805,9 @@ var Jt = [
 		confidence: .58
 	}
 ];
-function Yt(e, t = `event:${U(e)}`) {
+function Vi(e, t = `event:${W(e)}`) {
 	let n = e.toLowerCase(), r = [];
-	for (let e of Jt) {
+	for (let e of Bi) {
 		let i = e.keywords.find((e) => n.includes(e));
 		i && r.push({
 			eventId: t,
@@ -4420,9 +6817,9 @@ function Yt(e, t = `event:${U(e)}`) {
 			reason: `${e.theme}: ${e.reason}`
 		});
 	}
-	return Xt(r);
+	return Hi(r);
 }
-function Xt(e) {
+function Hi(e) {
 	let t = /* @__PURE__ */ new Map();
 	for (let n of e) {
 		let e = t.get(n.keyword);
@@ -4441,7 +6838,7 @@ function Xt(e) {
 }
 //#endregion
 //#region electron/ingest/polymarketGammaService.ts
-var Zt = "inflation OR fed OR election OR tariffs OR Taiwan OR oil OR recession", Qt = class extends u {
+var Ui = "inflation OR fed OR election OR tariffs OR Taiwan OR oil OR recession", Wi = class extends d {
 	intervalMs;
 	requestTimeoutMs;
 	query;
@@ -4450,7 +6847,7 @@ var Zt = "inflation OR fed OR election OR tariffs OR Taiwan OR oil OR recession"
 	running = !1;
 	seen = /* @__PURE__ */ new Map();
 	constructor(e = {}) {
-		super(), this.on("error", () => void 0), this.intervalMs = e.intervalMs ?? 5 * 6e4, this.requestTimeoutMs = e.requestTimeoutMs ?? 12e3, this.query = e.query ?? Zt, this.limit = e.limit ?? 40;
+		super(), this.on("error", () => void 0), this.intervalMs = e.intervalMs ?? 5 * 6e4, this.requestTimeoutMs = e.requestTimeoutMs ?? 12e3, this.query = e.query ?? Ui, this.limit = e.limit ?? 40;
 	}
 	on(e, t) {
 		return super.on(e, t);
@@ -4476,7 +6873,7 @@ var Zt = "inflation OR fed OR election OR tariffs OR Taiwan OR oil OR recession"
 			if (!n.ok) throw Error(`Polymarket Gamma HTTP ${n.status}`);
 			let r = await n.json(), i = Array.isArray(r) ? r : [];
 			for (let e of i) {
-				let t = $t(e);
+				let t = Gi(e);
 				!t || this.wasSeenRecently(t.id, t.probability) || (this.seen.set(t.id, t.probability), this.emit("probability", t));
 			}
 		} catch (e) {
@@ -4490,52 +6887,52 @@ var Zt = "inflation OR fed OR election OR tariffs OR Taiwan OR oil OR recession"
 		return n !== void 0 && Math.abs(n - t) < .01;
 	}
 };
-function $t(e) {
-	let t = G(e.question) || G(e.title);
+function Gi(e) {
+	let t = Yi(e.question) || Yi(e.title);
 	if (!t) return null;
-	let n = en(e);
+	let n = Ki(e);
 	if (n === null) return null;
-	let r = G(e.slug);
+	let r = Yi(e.slug);
 	return {
-		id: `polymarket-${G(e.id) || U(t)}`,
+		id: `polymarket-${Yi(e.id) || W(t)}`,
 		title: t,
 		probability: n,
 		sourceUrl: r ? `https://polymarket.com/event/${r}` : "https://polymarket.com/",
 		observedAt: Date.now(),
-		tags: nn(e.tags)
+		tags: Ji(e.tags)
 	};
 }
-function en(e) {
-	let t = tn(e.outcomePrices);
+function Ki(e) {
+	let t = qi(e.outcomePrices);
 	if (t.length === 0) return null;
 	let n = t.filter((e) => e >= .01 && e <= .99);
 	return n.length === 0 ? null : Math.max(...n);
 }
-function tn(e) {
-	if (Array.isArray(e)) return e.map(Wt).filter((e) => e !== null);
+function qi(e) {
+	if (Array.isArray(e)) return e.map(Ii).filter((e) => e !== null);
 	if (typeof e == "string") try {
-		return tn(JSON.parse(e));
+		return qi(JSON.parse(e));
 	} catch {
-		return e.split(",").map((e) => Wt(e.trim())).filter((e) => e !== null);
+		return e.split(",").map((e) => Ii(e.trim())).filter((e) => e !== null);
 	}
 	return [];
 }
-function nn(e) {
+function Ji(e) {
 	return Array.isArray(e) ? e.map((e) => {
 		if (typeof e == "string") return e;
 		if (e && typeof e == "object") {
 			let t = e;
-			return G(t.label) || G(t.name);
+			return Yi(t.label) || Yi(t.name);
 		}
 		return "";
 	}).filter((e) => e.length > 0).slice(0, 5) : [];
 }
-function G(e) {
+function Yi(e) {
 	return typeof e == "string" ? e.trim() : "";
 }
 //#endregion
 //#region node_modules/xml2js/lib/defaults.js
-var rn = /* @__PURE__ */ v(((e) => {
+var Xi = /* @__PURE__ */ y(((e) => {
 	(function() {
 		e.defaults = {
 			"0.1": {
@@ -4606,7 +7003,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}
 		};
 	}).call(e);
-})), K = /* @__PURE__ */ v(((e, t) => {
+})), K = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e, n, r, i, a, o, s, c = [].slice, l = {}.hasOwnProperty;
 		e = function() {
@@ -4633,7 +7030,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			return a(e.valueOf) ? e.valueOf() : e;
 		}, t.exports.assign = e, t.exports.isFunction = a, t.exports.isObject = o, t.exports.isArray = r, t.exports.isEmpty = i, t.exports.isPlainObject = s, t.exports.getValue = n;
 	}).call(e);
-})), an = /* @__PURE__ */ v(((e, t) => {
+})), Zi = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		t.exports = (function() {
 			function e() {}
@@ -4650,7 +7047,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, e;
 		})();
 	}).call(e);
-})), on = /* @__PURE__ */ v(((e, t) => {
+})), Qi = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		t.exports = (function() {
 			function e() {}
@@ -4659,7 +7056,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, e;
 		})();
 	}).call(e);
-})), sn = /* @__PURE__ */ v(((e, t) => {
+})), $i = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		t.exports = (function() {
 			function e(e) {
@@ -4674,9 +7071,9 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, e;
 		})();
 	}).call(e);
-})), cn = /* @__PURE__ */ v(((e, t) => {
+})), ea = /* @__PURE__ */ y(((e, t) => {
 	(function() {
-		var e = on(), n = sn();
+		var e = Qi(), n = $i();
 		t.exports = (function() {
 			function t() {
 				this.defaultParams = {
@@ -4710,7 +7107,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, t;
 		})();
 	}).call(e);
-})), q = /* @__PURE__ */ v(((e, t) => {
+})), q = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		t.exports = {
 			Element: 1,
@@ -4732,7 +7129,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			Dummy: 205
 		};
 	}).call(e);
-})), ln = /* @__PURE__ */ v(((e, t) => {
+})), ta = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e = q();
 		J(), t.exports = (function() {
@@ -4770,7 +7167,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, t;
 		})();
 	}).call(e);
-})), un = /* @__PURE__ */ v(((e, t) => {
+})), na = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		t.exports = (function() {
 			function e(e) {
@@ -4799,7 +7196,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, e;
 		})();
 	}).call(e);
-})), dn = /* @__PURE__ */ v(((e, t) => {
+})), ra = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e, n, r, i, a, o, s, c, l = function(e, t) {
 			for (var n in t) u.call(t, n) && (e[n] = t[n]);
@@ -4808,7 +7205,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, u = {}.hasOwnProperty;
-		c = K(), s = c.isObject, o = c.isFunction, a = c.getValue, i = J(), e = q(), n = ln(), r = un(), t.exports = (function(t) {
+		c = K(), s = c.isObject, o = c.isFunction, a = c.getValue, i = J(), e = q(), n = ta(), r = na(), t.exports = (function(t) {
 			l(i, t);
 			function i(t, n, r) {
 				var a, o, s, c;
@@ -4908,7 +7305,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, i;
 		})(i);
 	}).call(e);
-})), fn = /* @__PURE__ */ v(((e, t) => {
+})), ia = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e, n = function(e, t) {
 			for (var n in t) r.call(t, n) && (e[n] = t[n]);
@@ -4955,7 +7352,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, t;
 		})(e);
 	}).call(e);
-})), pn = /* @__PURE__ */ v(((e, t) => {
+})), aa = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e, n, r = function(e, t) {
 			for (var n in t) i.call(t, n) && (e[n] = t[n]);
@@ -4964,7 +7361,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, i = {}.hasOwnProperty;
-		e = q(), n = fn(), t.exports = (function(t) {
+		e = q(), n = ia(), t.exports = (function(t) {
 			r(n, t);
 			function n(t, r) {
 				if (n.__super__.constructor.call(this, t), r == null) throw Error("Missing CDATA text. " + this.debugInfo());
@@ -4977,7 +7374,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), mn = /* @__PURE__ */ v(((e, t) => {
+})), oa = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e, n, r = function(e, t) {
 			for (var n in t) i.call(t, n) && (e[n] = t[n]);
@@ -4986,7 +7383,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, i = {}.hasOwnProperty;
-		e = q(), n = fn(), t.exports = (function(t) {
+		e = q(), n = ia(), t.exports = (function(t) {
 			r(n, t);
 			function n(t, r) {
 				if (n.__super__.constructor.call(this, t), r == null) throw Error("Missing comment text. " + this.debugInfo());
@@ -4999,7 +7396,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), hn = /* @__PURE__ */ v(((e, t) => {
+})), sa = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e, n, r, i = function(e, t) {
 			for (var n in t) a.call(t, n) && (e[n] = t[n]);
@@ -5019,7 +7416,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), gn = /* @__PURE__ */ v(((e, t) => {
+})), ca = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e, n, r = function(e, t) {
 			for (var n in t) i.call(t, n) && (e[n] = t[n]);
@@ -5044,7 +7441,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), _n = /* @__PURE__ */ v(((e, t) => {
+})), la = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e, n, r, i = function(e, t) {
 			for (var n in t) a.call(t, n) && (e[n] = t[n]);
@@ -5082,7 +7479,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), vn = /* @__PURE__ */ v(((e, t) => {
+})), ua = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e, n, r = function(e, t) {
 			for (var n in t) i.call(t, n) && (e[n] = t[n]);
@@ -5102,7 +7499,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), yn = /* @__PURE__ */ v(((e, t) => {
+})), da = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e, n, r = function(e, t) {
 			for (var n in t) i.call(t, n) && (e[n] = t[n]);
@@ -5127,7 +7524,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), bn = /* @__PURE__ */ v(((e, t) => {
+})), fa = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e, n, r, i, a, o, s, c, l = function(e, t) {
 			for (var n in t) u.call(t, n) && (e[n] = t[n]);
@@ -5136,7 +7533,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, u = {}.hasOwnProperty;
-		c = K().isObject, s = J(), e = q(), n = gn(), i = _n(), r = vn(), a = yn(), o = un(), t.exports = (function(t) {
+		c = K().isObject, s = J(), e = q(), n = ca(), i = la(), r = ua(), a = da(), o = na(), t.exports = (function(t) {
 			l(s, t);
 			function s(t, n, r) {
 				var i, a, o, l, u, d;
@@ -5196,7 +7593,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, s;
 		})(s);
 	}).call(e);
-})), xn = /* @__PURE__ */ v(((e, t) => {
+})), pa = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e, n, r = function(e, t) {
 			for (var n in t) i.call(t, n) && (e[n] = t[n]);
@@ -5218,7 +7615,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), Sn = /* @__PURE__ */ v(((e, t) => {
+})), ma = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e, n, r = function(e, t) {
 			for (var n in t) i.call(t, n) && (e[n] = t[n]);
@@ -5227,7 +7624,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, i = {}.hasOwnProperty;
-		e = q(), n = fn(), t.exports = (function(t) {
+		e = q(), n = ia(), t.exports = (function(t) {
 			r(n, t);
 			function n(t, r) {
 				if (n.__super__.constructor.call(this, t), r == null) throw Error("Missing element text. " + this.debugInfo());
@@ -5251,7 +7648,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), Cn = /* @__PURE__ */ v(((e, t) => {
+})), ha = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e, n, r = function(e, t) {
 			for (var n in t) i.call(t, n) && (e[n] = t[n]);
@@ -5260,7 +7657,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, i = {}.hasOwnProperty;
-		e = q(), n = fn(), t.exports = (function(t) {
+		e = q(), n = ia(), t.exports = (function(t) {
 			r(n, t);
 			function n(t, r, i) {
 				if (n.__super__.constructor.call(this, t), r == null) throw Error("Missing instruction target. " + this.debugInfo());
@@ -5275,7 +7672,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), wn = /* @__PURE__ */ v(((e, t) => {
+})), ga = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e, n, r = function(e, t) {
 			for (var n in t) i.call(t, n) && (e[n] = t[n]);
@@ -5296,7 +7693,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), Tn = /* @__PURE__ */ v(((e, t) => {
+})), _a = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		t.exports = (function() {
 			function e(e) {
@@ -5311,7 +7708,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, e;
 		})();
 	}).call(e);
-})), En = /* @__PURE__ */ v(((e, t) => {
+})), va = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		t.exports = {
 			Disconnected: 1,
@@ -5322,12 +7719,12 @@ var rn = /* @__PURE__ */ v(((e) => {
 			ImplementationSpecific: 32
 		};
 	}).call(e);
-})), J = /* @__PURE__ */ v(((e, t) => {
+})), J = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e, n, r, i, a, o, s, c, l, u, d, f, p, m, h, g, _, v = {}.hasOwnProperty;
 		_ = K(), g = _.isObject, h = _.isFunction, m = _.isEmpty, p = _.getValue, c = null, r = null, i = null, a = null, o = null, d = null, f = null, u = null, s = null, n = null, l = null, e = null, t.exports = (function() {
 			function t(t) {
-				this.parent = t, this.parent && (this.options = this.parent.options, this.stringify = this.parent.stringify), this.value = null, this.children = [], this.baseURI = null, c || (c = dn(), r = pn(), i = mn(), a = hn(), o = bn(), d = xn(), f = Sn(), u = Cn(), s = wn(), n = q(), l = Tn(), un(), e = En());
+				this.parent = t, this.parent && (this.options = this.parent.options, this.stringify = this.parent.stringify), this.value = null, this.children = [], this.baseURI = null, c || (c = ra(), r = aa(), i = oa(), a = sa(), o = fa(), d = pa(), f = ma(), u = ha(), s = ga(), n = q(), l = _a(), na(), e = va());
 			}
 			return Object.defineProperty(t.prototype, "nodeName", { get: function() {
 				return this.name;
@@ -5558,7 +7955,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, t;
 		})();
 	}).call(e);
-})), Dn = /* @__PURE__ */ v(((e, t) => {
+})), ya = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e = function(e, t) {
 			return function() {
@@ -5636,7 +8033,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, t;
 		})();
 	}).call(e);
-})), On = /* @__PURE__ */ v(((e, t) => {
+})), ba = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		t.exports = {
 			None: 0,
@@ -5645,10 +8042,10 @@ var rn = /* @__PURE__ */ v(((e) => {
 			CloseTag: 3
 		};
 	}).call(e);
-})), kn = /* @__PURE__ */ v(((e, t) => {
+})), xa = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e, n, r, i = {}.hasOwnProperty;
-		r = K().assign, e = q(), hn(), bn(), pn(), mn(), dn(), xn(), Sn(), Cn(), wn(), gn(), vn(), _n(), yn(), n = On(), t.exports = (function() {
+		r = K().assign, e = q(), sa(), fa(), aa(), oa(), ra(), pa(), ma(), ha(), ga(), ca(), ua(), la(), da(), n = ba(), t.exports = (function() {
 			function t(e) {
 				var t, n, r;
 				for (t in e ||= {}, this.options = e, n = e.writer || {}, n) i.call(n, t) && (r = n[t], this["_" + t] = this[t], this[t] = r);
@@ -5739,7 +8136,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, t.prototype.openNode = function(e, t, n) {}, t.prototype.closeNode = function(e, t, n) {}, t.prototype.openAttribute = function(e, t, n) {}, t.prototype.closeAttribute = function(e, t, n) {}, t;
 		})();
 	}).call(e);
-})), An = /* @__PURE__ */ v(((e, t) => {
+})), Sa = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e, n = function(e, t) {
 			for (var n in t) r.call(t, n) && (e[n] = t[n]);
@@ -5748,7 +8145,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}
 			return i.prototype = t.prototype, e.prototype = new i(), e.__super__ = t.prototype, e;
 		}, r = {}.hasOwnProperty;
-		e = kn(), t.exports = (function(e) {
+		e = xa(), t.exports = (function(e) {
 			n(t, e);
 			function t(e) {
 				t.__super__.constructor.call(this, e);
@@ -5760,7 +8157,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, t;
 		})(e);
 	}).call(e);
-})), jn = /* @__PURE__ */ v(((e, t) => {
+})), Ca = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e, n, r, i, a, o, s, c = function(e, t) {
 			for (var n in t) l.call(t, n) && (e[n] = t[n]);
@@ -5769,7 +8166,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, l = {}.hasOwnProperty;
-		s = K().isPlainObject, r = an(), n = cn(), i = J(), e = q(), o = Dn(), a = An(), t.exports = (function(t) {
+		s = K().isPlainObject, r = Zi(), n = ea(), i = J(), e = q(), o = ya(), a = Sa(), t.exports = (function(t) {
 			c(i, t);
 			function i(t) {
 				i.__super__.constructor.call(this, null), this.name = "#document", this.type = e.Document, this.documentURI = null, this.domConfig = new n(), t ||= {}, t.writer ||= new a(), this.options = t, this.stringify = new o(t);
@@ -5852,13 +8249,13 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, i;
 		})(i);
 	}).call(e);
-})), Mn = /* @__PURE__ */ v(((e, t) => {
+})), wa = /* @__PURE__ */ y(((e, t) => {
 	(function() {
-		var e, n, r, i, a, o, s, c, l, u, d, f, p, m, h, g, _, v, y, b, x, S, C, w = {}.hasOwnProperty;
-		C = K(), x = C.isObject, b = C.isFunction, S = C.isPlainObject, y = C.getValue, e = q(), f = jn(), p = dn(), i = pn(), a = mn(), h = xn(), v = Sn(), m = Cn(), u = hn(), d = bn(), o = gn(), c = _n(), s = vn(), l = yn(), r = ln(), _ = Dn(), g = An(), n = On(), t.exports = (function() {
+		var e, n, r, i, a, o, s, c, l, u, d, f, p, m, h, g, _, v, y, b, x, ee, S, C = {}.hasOwnProperty;
+		S = K(), x = S.isObject, b = S.isFunction, ee = S.isPlainObject, y = S.getValue, e = q(), f = Ca(), p = ra(), i = aa(), a = oa(), h = pa(), v = ma(), m = ha(), u = sa(), d = fa(), o = ca(), c = la(), s = ua(), l = da(), r = ta(), _ = ya(), g = Sa(), n = ba(), t.exports = (function() {
 			function t(t, n, r) {
 				var i;
-				this.name = "?xml", this.type = e.Document, t ||= {}, i = {}, t.writer ? S(t.writer) && (i = t.writer, t.writer = new g()) : t.writer = new g(), this.options = t, this.writer = t.writer, this.writerOptions = this.writer.filterOptions(i), this.stringify = new _(t), this.onDataCallback = n || function() {}, this.onEndCallback = r || function() {}, this.currentNode = null, this.currentLevel = -1, this.openTags = {}, this.documentStarted = !1, this.documentCompleted = !1, this.root = null;
+				this.name = "?xml", this.type = e.Document, t ||= {}, i = {}, t.writer ? ee(t.writer) && (i = t.writer, t.writer = new g()) : t.writer = new g(), this.options = t, this.writer = t.writer, this.writerOptions = this.writer.filterOptions(i), this.stringify = new _(t), this.onDataCallback = n || function() {}, this.onEndCallback = r || function() {}, this.currentNode = null, this.currentLevel = -1, this.openTags = {}, this.documentStarted = !1, this.documentCompleted = !1, this.root = null;
 			}
 			return t.prototype.createChildNode = function(t) {
 				var n, r, i, a, o, s, c, l;
@@ -5870,7 +8267,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 						this.comment(t.value);
 						break;
 					case e.Element:
-						for (r in i = {}, c = t.attribs, c) w.call(c, r) && (n = c[r], i[r] = n.value);
+						for (r in i = {}, c = t.attribs, c) C.call(c, r) && (n = c[r], i[r] = n.value);
 						this.node(t.name, i);
 						break;
 					case e.Dummy:
@@ -5905,7 +8302,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, t.prototype.attribute = function(e, t) {
 				var n, i;
 				if (!this.currentNode || this.currentNode.children) throw Error("att() can only be used immediately after an ele() call in callback mode. " + this.debugInfo(e));
-				if (e != null && (e = y(e)), x(e)) for (n in e) w.call(e, n) && (i = e[n], this.attribute(n, i));
+				if (e != null && (e = y(e)), x(e)) for (n in e) C.call(e, n) && (i = e[n], this.attribute(n, i));
 				else b(t) && (t = t.apply()), this.options.keepNullAttributes && t == null ? this.currentNode.attribs[e] = new r(this, e, "") : t != null && (this.currentNode.attribs[e] = new r(this, e, t));
 				return this;
 			}, t.prototype.text = function(e) {
@@ -5923,7 +8320,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, t.prototype.instruction = function(e, t) {
 				var n, r, i, a, o;
 				if (this.openCurrent(), e != null && (e = y(e)), t != null && (t = y(t)), Array.isArray(e)) for (n = 0, a = e.length; n < a; n++) r = e[n], this.instruction(r);
-				else if (x(e)) for (r in e) w.call(e, r) && (i = e[r], this.instruction(r, i));
+				else if (x(e)) for (r in e) C.call(e, r) && (i = e[r], this.instruction(r, i));
 				else b(t) && (t = t.apply()), o = new m(this, e, t), this.onData(this.writer.processingInstruction(o, this.writerOptions, this.currentLevel + 1), this.currentLevel + 1);
 				return this;
 			}, t.prototype.declaration = function(e, t, n) {
@@ -5961,7 +8358,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 				var r, i, a, o;
 				if (!t.isOpen) {
 					if (!this.root && this.currentLevel === 0 && t.type === e.Element && (this.root = t), i = "", t.type === e.Element) {
-						for (a in this.writerOptions.state = n.OpenTag, i = this.writer.indent(t, this.writerOptions, this.currentLevel) + "<" + t.name, o = t.attribs, o) w.call(o, a) && (r = o[a], i += this.writer.attribute(r, this.writerOptions, this.currentLevel));
+						for (a in this.writerOptions.state = n.OpenTag, i = this.writer.indent(t, this.writerOptions, this.currentLevel) + "<" + t.name, o = t.attribs, o) C.call(o, a) && (r = o[a], i += this.writer.attribute(r, this.writerOptions, this.currentLevel));
 						i += (t.children ? ">" : "/>") + this.writer.endline(t, this.writerOptions, this.currentLevel), this.writerOptions.state = n.InsideTag;
 					} else this.writerOptions.state = n.OpenTag, i = this.writer.indent(t, this.writerOptions, this.currentLevel) + "<!DOCTYPE " + t.rootNodeName, t.pubID && t.sysID ? i += " PUBLIC \"" + t.pubID + "\" \"" + t.sysID + "\"" : t.sysID && (i += " SYSTEM \"" + t.sysID + "\""), t.children ? (i += " [", this.writerOptions.state = n.InsideTag) : (this.writerOptions.state = n.CloseTag, i += ">"), i += this.writer.endline(t, this.writerOptions, this.currentLevel);
 					return this.onData(i, this.currentLevel), t.isOpen = !0;
@@ -6018,7 +8415,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, t;
 		})();
 	}).call(e);
-})), Nn = /* @__PURE__ */ v(((e, t) => {
+})), Ta = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e, n, r, i = function(e, t) {
 			for (var n in t) a.call(t, n) && (e[n] = t[n]);
@@ -6027,7 +8424,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, a = {}.hasOwnProperty;
-		e = q(), r = kn(), n = On(), t.exports = (function(t) {
+		e = q(), r = xa(), n = ba(), t.exports = (function(t) {
 			i(r, t);
 			function r(e, t) {
 				this.stream = e, r.__super__.constructor.call(this, t);
@@ -6083,10 +8480,10 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, r;
 		})(r);
 	}).call(e);
-})), Pn = /* @__PURE__ */ v(((e, t) => {
+})), Ea = /* @__PURE__ */ y(((e, t) => {
 	(function() {
 		var e, n, r, i, a, o, s, c, l, u = K();
-		c = u.assign, l = u.isFunction, r = an(), i = jn(), a = Mn(), s = An(), o = Nn(), e = q(), n = On(), t.exports.create = function(e, t, n, r) {
+		c = u.assign, l = u.isFunction, r = Zi(), i = Ca(), a = wa(), s = Sa(), o = Ta(), e = q(), n = ba(), t.exports.create = function(e, t, n, r) {
 			var a, o;
 			if (e == null) throw Error("Root element needs a name.");
 			return r = c({}, t, n, r), a = new i(r), o = a.element(e), r.headless || (a.declaration(r), (r.pubID != null || r.sysID != null) && a.dtd(r)), o;
@@ -6099,10 +8496,10 @@ var rn = /* @__PURE__ */ v(((e) => {
 			return new o(e, t);
 		}, t.exports.implementation = new r(), t.exports.nodeType = e, t.exports.writerState = n;
 	}).call(e);
-})), Fn = /* @__PURE__ */ v(((e) => {
+})), Da = /* @__PURE__ */ y(((e) => {
 	(function() {
 		var t, n, r, i, a, o = {}.hasOwnProperty;
-		t = Pn(), n = rn().defaults, i = function(e) {
+		t = Ea(), n = Xi().defaults, i = function(e) {
 			return typeof e == "string" && (e.indexOf("&") >= 0 || e.indexOf(">") >= 0 || e.indexOf("<") >= 0);
 		}, a = function(e) {
 			return "<![CDATA[" + r(e) + "]]>";
@@ -6136,7 +8533,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}, e;
 		})();
 	}).call(e);
-})), In = /* @__PURE__ */ v(((e) => {
+})), Oa = /* @__PURE__ */ y(((e) => {
 	(function(e) {
 		e.parser = function(e, t) {
 			return new n(e, t);
@@ -6178,7 +8575,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 		function n(t, r) {
 			if (!(this instanceof n)) return new n(t, r);
 			var a = this;
-			i(a), a.q = a.c = "", a.bufferCheckPosition = e.MAX_BUFFER_LENGTH, a.encoding = null, a.opt = r || {}, a.opt.lowercase = a.opt.lowercase || a.opt.lowercasetags, a.looseCase = a.opt.lowercase ? "toLowerCase" : "toUpperCase", a.opt.maxEntityCount = a.opt.maxEntityCount || 512, a.opt.maxEntityDepth = a.opt.maxEntityDepth || 4, a.entityCount = a.entityDepth = 0, a.tags = [], a.closed = a.closedRoot = a.sawRoot = !1, a.tag = a.error = null, a.strict = !!t, a.noscript = !!(t || a.opt.noscript), a.state = T.BEGIN, a.strictEntities = a.opt.strictEntities, a.ENTITIES = a.strictEntities ? Object.create(e.XML_ENTITIES) : Object.create(e.ENTITIES), a.attribList = [], a.opt.xmlns && (a.ns = Object.create(h)), a.opt.unquotedAttributeValues === void 0 && (a.opt.unquotedAttributeValues = !t), a.trackPosition = a.opt.position !== !1, a.trackPosition && (a.position = a.line = a.column = 0), E(a, "onready");
+			i(a), a.q = a.c = "", a.bufferCheckPosition = e.MAX_BUFFER_LENGTH, a.encoding = null, a.opt = r || {}, a.opt.lowercase = a.opt.lowercase || a.opt.lowercasetags, a.looseCase = a.opt.lowercase ? "toLowerCase" : "toUpperCase", a.opt.maxEntityCount = a.opt.maxEntityCount || 512, a.opt.maxEntityDepth = a.opt.maxEntityDepth || 4, a.entityCount = a.entityDepth = 0, a.tags = [], a.closed = a.closedRoot = a.sawRoot = !1, a.tag = a.error = null, a.strict = !!t, a.noscript = !!(t || a.opt.noscript), a.state = w.BEGIN, a.strictEntities = a.opt.strictEntities, a.ENTITIES = a.strictEntities ? Object.create(e.XML_ENTITIES) : Object.create(e.ENTITIES), a.attribList = [], a.opt.xmlns && (a.ns = Object.create(h)), a.opt.unquotedAttributeValues === void 0 && (a.opt.unquotedAttributeValues = !t), a.trackPosition = a.opt.position !== !1, a.trackPosition && (a.position = a.line = a.column = 0), T(a, "onready");
 		}
 		Object.create || (Object.create = function(e) {
 			function t() {}
@@ -6193,15 +8590,15 @@ var rn = /* @__PURE__ */ v(((e) => {
 				var s = n[t[a]].length;
 				if (s > r) switch (t[a]) {
 					case "textNode":
-						O(n);
+						se(n);
 						break;
 					case "cdata":
-						D(n, "oncdata", n.cdata), n.cdata = "";
+						E(n, "oncdata", n.cdata), n.cdata = "";
 						break;
 					case "script":
-						D(n, "onscript", n.script), n.script = "";
+						E(n, "onscript", n.script), n.script = "";
 						break;
-					default: A(n, "Max buffer length exceeded: " + t[a]);
+					default: D(n, "Max buffer length exceeded: " + t[a]);
 				}
 				i = Math.max(i, s);
 			}
@@ -6211,13 +8608,13 @@ var rn = /* @__PURE__ */ v(((e) => {
 			for (var n = 0, r = t.length; n < r; n++) e[t[n]] = "";
 		}
 		function a(e) {
-			O(e), e.cdata !== "" && (D(e, "oncdata", e.cdata), e.cdata = ""), e.script !== "" && (D(e, "onscript", e.script), e.script = "");
+			se(e), e.cdata !== "" && (E(e, "oncdata", e.cdata), e.cdata = ""), e.script !== "" && (E(e, "onscript", e.script), e.script = "");
 		}
 		n.prototype = {
 			end: function() {
-				j(this);
+				le(this);
 			},
-			write: ue,
+			write: M,
 			resume: function() {
 				return this.error = null, this;
 			},
@@ -6310,53 +8707,53 @@ var rn = /* @__PURE__ */ v(((e) => {
 		function x(e) {
 			return e === "\"" || e === "'";
 		}
-		function S(e) {
+		function ee(e) {
 			return e === ">" || b(e);
 		}
-		function w(e, t) {
+		function S(e, t) {
 			return e.test(t);
 		}
-		function ee(e, t) {
-			return !w(e, t);
+		function te(e, t) {
+			return !S(e, t);
 		}
-		var T = 0;
-		for (var te in e.STATE = {
-			BEGIN: T++,
-			BEGIN_WHITESPACE: T++,
-			TEXT: T++,
-			TEXT_ENTITY: T++,
-			OPEN_WAKA: T++,
-			SGML_DECL: T++,
-			SGML_DECL_QUOTED: T++,
-			DOCTYPE: T++,
-			DOCTYPE_QUOTED: T++,
-			DOCTYPE_DTD: T++,
-			DOCTYPE_DTD_QUOTED: T++,
-			COMMENT_STARTING: T++,
-			COMMENT: T++,
-			COMMENT_ENDING: T++,
-			COMMENT_ENDED: T++,
-			CDATA: T++,
-			CDATA_ENDING: T++,
-			CDATA_ENDING_2: T++,
-			PROC_INST: T++,
-			PROC_INST_BODY: T++,
-			PROC_INST_ENDING: T++,
-			OPEN_TAG: T++,
-			OPEN_TAG_SLASH: T++,
-			ATTRIB: T++,
-			ATTRIB_NAME: T++,
-			ATTRIB_NAME_SAW_WHITE: T++,
-			ATTRIB_VALUE: T++,
-			ATTRIB_VALUE_QUOTED: T++,
-			ATTRIB_VALUE_CLOSED: T++,
-			ATTRIB_VALUE_UNQUOTED: T++,
-			ATTRIB_VALUE_ENTITY_Q: T++,
-			ATTRIB_VALUE_ENTITY_U: T++,
-			CLOSE_TAG: T++,
-			CLOSE_TAG_SAW_WHITE: T++,
-			SCRIPT: T++,
-			SCRIPT_ENDING: T++
+		var w = 0;
+		for (var ne in e.STATE = {
+			BEGIN: w++,
+			BEGIN_WHITESPACE: w++,
+			TEXT: w++,
+			TEXT_ENTITY: w++,
+			OPEN_WAKA: w++,
+			SGML_DECL: w++,
+			SGML_DECL_QUOTED: w++,
+			DOCTYPE: w++,
+			DOCTYPE_QUOTED: w++,
+			DOCTYPE_DTD: w++,
+			DOCTYPE_DTD_QUOTED: w++,
+			COMMENT_STARTING: w++,
+			COMMENT: w++,
+			COMMENT_ENDING: w++,
+			COMMENT_ENDED: w++,
+			CDATA: w++,
+			CDATA_ENDING: w++,
+			CDATA_ENDING_2: w++,
+			PROC_INST: w++,
+			PROC_INST_BODY: w++,
+			PROC_INST_ENDING: w++,
+			OPEN_TAG: w++,
+			OPEN_TAG_SLASH: w++,
+			ATTRIB: w++,
+			ATTRIB_NAME: w++,
+			ATTRIB_NAME_SAW_WHITE: w++,
+			ATTRIB_VALUE: w++,
+			ATTRIB_VALUE_QUOTED: w++,
+			ATTRIB_VALUE_CLOSED: w++,
+			ATTRIB_VALUE_UNQUOTED: w++,
+			ATTRIB_VALUE_ENTITY_Q: w++,
+			ATTRIB_VALUE_ENTITY_U: w++,
+			CLOSE_TAG: w++,
+			CLOSE_TAG_SAW_WHITE: w++,
+			SCRIPT: w++,
+			SCRIPT_ENDING: w++
 		}, e.XML_ENTITIES = {
 			amp: "&",
 			gt: ">",
@@ -6620,323 +9017,323 @@ var rn = /* @__PURE__ */ v(((e) => {
 		}, Object.keys(e.ENTITIES).forEach(function(t) {
 			var n = e.ENTITIES[t], r = typeof n == "number" ? String.fromCharCode(n) : n;
 			e.ENTITIES[t] = r;
-		}), e.STATE) e.STATE[e.STATE[te]] = te;
-		T = e.STATE;
-		function E(e, t, n) {
+		}), e.STATE) e.STATE[e.STATE[ne]] = ne;
+		w = e.STATE;
+		function T(e, t, n) {
 			e[t] && e[t](n);
 		}
-		function ne(e) {
+		function re(e) {
 			var t = e && e.match(/(?:^|\s)encoding\s*=\s*(['"])([^'"]+)\1/i);
 			return t ? t[2] : null;
 		}
-		function re(e) {
+		function ie(e) {
 			return e ? e.toLowerCase().replace(/[^a-z0-9]/g, "") : null;
 		}
-		function ie(e, t) {
-			let n = re(e), r = re(t);
+		function ae(e, t) {
+			let n = ie(e), r = ie(t);
 			return !n || !r ? !0 : r === "utf16" ? n === "utf16le" || n === "utf16be" : n === r;
 		}
-		function ae(e, t) {
+		function oe(e, t) {
 			if (!(!e.strict || !e.encoding || !t || t.name !== "xml")) {
-				var n = ne(t.body);
-				n && !ie(e.encoding, n) && M(e, "XML declaration encoding " + n + " does not match detected stream encoding " + e.encoding.toUpperCase());
+				var n = re(t.body);
+				n && !ae(e.encoding, n) && O(e, "XML declaration encoding " + n + " does not match detected stream encoding " + e.encoding.toUpperCase());
 			}
 		}
-		function D(e, t, n) {
-			e.textNode && O(e), E(e, t, n);
+		function E(e, t, n) {
+			e.textNode && se(e), T(e, t, n);
 		}
-		function O(e) {
-			e.textNode = k(e.opt, e.textNode), e.textNode && E(e, "ontext", e.textNode), e.textNode = "";
+		function se(e) {
+			e.textNode = ce(e.opt, e.textNode), e.textNode && T(e, "ontext", e.textNode), e.textNode = "";
 		}
-		function k(e, t) {
+		function ce(e, t) {
 			return e.trim && (t = t.trim()), e.normalize && (t = t.replace(/\s+/g, " ")), t;
 		}
-		function A(e, t) {
-			return O(e), e.trackPosition && (t += "\nLine: " + e.line + "\nColumn: " + e.column + "\nChar: " + e.c), t = Error(t), e.error = t, E(e, "onerror", t), e;
+		function D(e, t) {
+			return se(e), e.trackPosition && (t += "\nLine: " + e.line + "\nColumn: " + e.column + "\nChar: " + e.c), t = Error(t), e.error = t, T(e, "onerror", t), e;
 		}
-		function j(e) {
-			return e.sawRoot && !e.closedRoot && M(e, "Unclosed root tag"), e.state !== T.BEGIN && e.state !== T.BEGIN_WHITESPACE && e.state !== T.TEXT && A(e, "Unexpected end"), O(e), e.c = "", e.closed = !0, E(e, "onend"), n.call(e, e.strict, e.opt), e;
+		function le(e) {
+			return e.sawRoot && !e.closedRoot && O(e, "Unclosed root tag"), e.state !== w.BEGIN && e.state !== w.BEGIN_WHITESPACE && e.state !== w.TEXT && D(e, "Unexpected end"), se(e), e.c = "", e.closed = !0, T(e, "onend"), n.call(e, e.strict, e.opt), e;
 		}
-		function M(e, t) {
+		function O(e, t) {
 			if (typeof e != "object" || !(e instanceof n)) throw Error("bad call to strictFail");
-			e.strict && A(e, t);
+			e.strict && D(e, t);
 		}
-		function oe(e) {
+		function ue(e) {
 			e.strict || (e.tagName = e.tagName[e.looseCase]());
 			var t = e.tags[e.tags.length - 1] || e, n = e.tag = {
 				name: e.tagName,
 				attributes: {}
 			};
-			e.opt.xmlns && (n.ns = t.ns), e.attribList.length = 0, D(e, "onopentagstart", n);
+			e.opt.xmlns && (n.ns = t.ns), e.attribList.length = 0, E(e, "onopentagstart", n);
 		}
-		function se(e, t) {
+		function de(e, t) {
 			var n = e.indexOf(":") < 0 ? ["", e] : e.split(":"), r = n[0], i = n[1];
 			return t && e === "xmlns" && (r = "xmlns", i = ""), {
 				prefix: r,
 				local: i
 			};
 		}
-		function ce(e) {
+		function k(e) {
 			if (e.strict || (e.attribName = e.attribName[e.looseCase]()), e.attribList.indexOf(e.attribName) !== -1 || e.tag.attributes.hasOwnProperty(e.attribName)) {
 				e.attribName = e.attribValue = "";
 				return;
 			}
 			if (e.opt.xmlns) {
-				var t = se(e.attribName, !0), n = t.prefix, r = t.local;
-				if (n === "xmlns") if (r === "xml" && e.attribValue !== p) M(e, "xml: prefix must be bound to " + p + "\nActual: " + e.attribValue);
-				else if (r === "xmlns" && e.attribValue !== m) M(e, "xmlns: prefix must be bound to " + m + "\nActual: " + e.attribValue);
+				var t = de(e.attribName, !0), n = t.prefix, r = t.local;
+				if (n === "xmlns") if (r === "xml" && e.attribValue !== p) O(e, "xml: prefix must be bound to " + p + "\nActual: " + e.attribValue);
+				else if (r === "xmlns" && e.attribValue !== m) O(e, "xmlns: prefix must be bound to " + m + "\nActual: " + e.attribValue);
 				else {
 					var i = e.tag, a = e.tags[e.tags.length - 1] || e;
 					i.ns === a.ns && (i.ns = Object.create(a.ns)), i.ns[r] = e.attribValue;
 				}
 				e.attribList.push([e.attribName, e.attribValue]);
-			} else e.tag.attributes[e.attribName] = e.attribValue, D(e, "onattribute", {
+			} else e.tag.attributes[e.attribName] = e.attribValue, E(e, "onattribute", {
 				name: e.attribName,
 				value: e.attribValue
 			});
 			e.attribName = e.attribValue = "";
 		}
-		function N(e, t) {
+		function A(e, t) {
 			if (e.opt.xmlns) {
-				var n = e.tag, r = se(e.tagName);
-				n.prefix = r.prefix, n.local = r.local, n.uri = n.ns[r.prefix] || "", n.prefix && !n.uri && (M(e, "Unbound namespace prefix: " + JSON.stringify(e.tagName)), n.uri = r.prefix);
+				var n = e.tag, r = de(e.tagName);
+				n.prefix = r.prefix, n.local = r.local, n.uri = n.ns[r.prefix] || "", n.prefix && !n.uri && (O(e, "Unbound namespace prefix: " + JSON.stringify(e.tagName)), n.uri = r.prefix);
 				var i = e.tags[e.tags.length - 1] || e;
 				n.ns && i.ns !== n.ns && Object.keys(n.ns).forEach(function(t) {
-					D(e, "onopennamespace", {
+					E(e, "onopennamespace", {
 						prefix: t,
 						uri: n.ns[t]
 					});
 				});
 				for (var a = 0, o = e.attribList.length; a < o; a++) {
-					var s = e.attribList[a], c = s[0], l = s[1], u = se(c, !0), d = u.prefix, f = u.local, p = d === "" ? "" : n.ns[d] || "", m = {
+					var s = e.attribList[a], c = s[0], l = s[1], u = de(c, !0), d = u.prefix, f = u.local, p = d === "" ? "" : n.ns[d] || "", m = {
 						name: c,
 						value: l,
 						prefix: d,
 						local: f,
 						uri: p
 					};
-					d && d !== "xmlns" && !p && (M(e, "Unbound namespace prefix: " + JSON.stringify(d)), m.uri = d), e.tag.attributes[c] = m, D(e, "onattribute", m);
+					d && d !== "xmlns" && !p && (O(e, "Unbound namespace prefix: " + JSON.stringify(d)), m.uri = d), e.tag.attributes[c] = m, E(e, "onattribute", m);
 				}
 				e.attribList.length = 0;
 			}
-			e.tag.isSelfClosing = !!t, e.sawRoot = !0, e.tags.push(e.tag), D(e, "onopentag", e.tag), t || (!e.noscript && e.tagName.toLowerCase() === "script" ? e.state = T.SCRIPT : e.state = T.TEXT, e.tag = null, e.tagName = ""), e.attribName = e.attribValue = "", e.attribList.length = 0;
+			e.tag.isSelfClosing = !!t, e.sawRoot = !0, e.tags.push(e.tag), E(e, "onopentag", e.tag), t || (!e.noscript && e.tagName.toLowerCase() === "script" ? e.state = w.SCRIPT : e.state = w.TEXT, e.tag = null, e.tagName = ""), e.attribName = e.attribValue = "", e.attribList.length = 0;
 		}
-		function le(e) {
+		function fe(e) {
 			if (!e.tagName) {
-				M(e, "Weird empty close tag."), e.textNode += "</>", e.state = T.TEXT;
+				O(e, "Weird empty close tag."), e.textNode += "</>", e.state = w.TEXT;
 				return;
 			}
 			if (e.script) {
 				if (e.tagName !== "script") {
-					e.script += "</" + e.tagName + ">", e.tagName = "", e.state = T.SCRIPT;
+					e.script += "</" + e.tagName + ">", e.tagName = "", e.state = w.SCRIPT;
 					return;
 				}
-				D(e, "onscript", e.script), e.script = "";
+				E(e, "onscript", e.script), e.script = "";
 			}
 			var t = e.tags.length, n = e.tagName;
 			e.strict || (n = n[e.looseCase]());
-			for (var r = n; t-- && e.tags[t].name !== r;) M(e, "Unexpected close tag");
+			for (var r = n; t-- && e.tags[t].name !== r;) O(e, "Unexpected close tag");
 			if (t < 0) {
-				M(e, "Unmatched closing tag: " + e.tagName), e.textNode += "</" + e.tagName + ">", e.state = T.TEXT;
+				O(e, "Unmatched closing tag: " + e.tagName), e.textNode += "</" + e.tagName + ">", e.state = w.TEXT;
 				return;
 			}
 			e.tagName = n;
 			for (var i = e.tags.length; i-- > t;) {
 				var a = e.tag = e.tags.pop();
-				e.tagName = e.tag.name, D(e, "onclosetag", e.tagName);
+				e.tagName = e.tag.name, E(e, "onclosetag", e.tagName);
 				var o = {};
 				for (var s in a.ns) o[s] = a.ns[s];
 				var c = e.tags[e.tags.length - 1] || e;
 				e.opt.xmlns && a.ns !== c.ns && Object.keys(a.ns).forEach(function(t) {
 					var n = a.ns[t];
-					D(e, "onclosenamespace", {
+					E(e, "onclosenamespace", {
 						prefix: t,
 						uri: n
 					});
 				});
 			}
-			t === 0 && (e.closedRoot = !0), e.tagName = e.attribValue = e.attribName = "", e.attribList.length = 0, e.state = T.TEXT;
+			t === 0 && (e.closedRoot = !0), e.tagName = e.attribValue = e.attribName = "", e.attribList.length = 0, e.state = w.TEXT;
 		}
-		function P(e) {
+		function j(e) {
 			var t = e.entity, n = t.toLowerCase(), r, i = "";
-			return e.ENTITIES[t] ? e.ENTITIES[t] : e.ENTITIES[n] ? e.ENTITIES[n] : (t = n, t.charAt(0) === "#" && (t.charAt(1) === "x" ? (t = t.slice(2), r = parseInt(t, 16), i = r.toString(16)) : (t = t.slice(1), r = parseInt(t, 10), i = r.toString(10))), t = t.replace(/^0+/, ""), isNaN(r) || i.toLowerCase() !== t || r < 0 || r > 1114111 ? (M(e, "Invalid character entity"), "&" + e.entity + ";") : String.fromCodePoint(r));
+			return e.ENTITIES[t] ? e.ENTITIES[t] : e.ENTITIES[n] ? e.ENTITIES[n] : (t = n, t.charAt(0) === "#" && (t.charAt(1) === "x" ? (t = t.slice(2), r = parseInt(t, 16), i = r.toString(16)) : (t = t.slice(1), r = parseInt(t, 10), i = r.toString(10))), t = t.replace(/^0+/, ""), isNaN(r) || i.toLowerCase() !== t || r < 0 || r > 1114111 ? (O(e, "Invalid character entity"), "&" + e.entity + ";") : String.fromCodePoint(r));
 		}
-		function F(e, t) {
-			t === "<" ? (e.state = T.OPEN_WAKA, e.startTagPosition = e.position) : b(t) || (M(e, "Non-whitespace before first tag."), e.textNode = t, e.state = T.TEXT);
+		function pe(e, t) {
+			t === "<" ? (e.state = w.OPEN_WAKA, e.startTagPosition = e.position) : b(t) || (O(e, "Non-whitespace before first tag."), e.textNode = t, e.state = w.TEXT);
 		}
-		function I(e, t) {
+		function me(e, t) {
 			var n = "";
 			return t < e.length && (n = e.charAt(t)), n;
 		}
-		function ue(t) {
+		function M(t) {
 			var n = this;
 			if (this.error) throw this.error;
-			if (n.closed) return A(n, "Cannot write after close. Assign an onready handler.");
-			if (t === null) return j(n);
+			if (n.closed) return D(n, "Cannot write after close. Assign an onready handler.");
+			if (t === null) return le(n);
 			typeof t == "object" && (t = t.toString());
-			for (var i = 0, a = ""; a = I(t, i++), n.c = a, a;) switch (n.trackPosition && (n.position++, a === "\n" ? (n.line++, n.column = 0) : n.column++), n.state) {
-				case T.BEGIN:
-					if (n.state = T.BEGIN_WHITESPACE, a === "﻿") continue;
-					F(n, a);
+			for (var i = 0, a = ""; a = me(t, i++), n.c = a, a;) switch (n.trackPosition && (n.position++, a === "\n" ? (n.line++, n.column = 0) : n.column++), n.state) {
+				case w.BEGIN:
+					if (n.state = w.BEGIN_WHITESPACE, a === "﻿") continue;
+					pe(n, a);
 					continue;
-				case T.BEGIN_WHITESPACE:
-					F(n, a);
+				case w.BEGIN_WHITESPACE:
+					pe(n, a);
 					continue;
-				case T.TEXT:
+				case w.TEXT:
 					if (n.sawRoot && !n.closedRoot) {
-						for (var o = i - 1; a && a !== "<" && a !== "&";) a = I(t, i++), a && n.trackPosition && (n.position++, a === "\n" ? (n.line++, n.column = 0) : n.column++);
+						for (var o = i - 1; a && a !== "<" && a !== "&";) a = me(t, i++), a && n.trackPosition && (n.position++, a === "\n" ? (n.line++, n.column = 0) : n.column++);
 						n.textNode += t.substring(o, i - 1);
 					}
-					a === "<" && !(n.sawRoot && n.closedRoot && !n.strict) ? (n.state = T.OPEN_WAKA, n.startTagPosition = n.position) : (!b(a) && (!n.sawRoot || n.closedRoot) && M(n, "Text data outside of root node."), a === "&" ? n.state = T.TEXT_ENTITY : n.textNode += a);
+					a === "<" && !(n.sawRoot && n.closedRoot && !n.strict) ? (n.state = w.OPEN_WAKA, n.startTagPosition = n.position) : (!b(a) && (!n.sawRoot || n.closedRoot) && O(n, "Text data outside of root node."), a === "&" ? n.state = w.TEXT_ENTITY : n.textNode += a);
 					continue;
-				case T.SCRIPT:
-					a === "<" ? n.state = T.SCRIPT_ENDING : n.script += a;
+				case w.SCRIPT:
+					a === "<" ? n.state = w.SCRIPT_ENDING : n.script += a;
 					continue;
-				case T.SCRIPT_ENDING:
-					a === "/" ? n.state = T.CLOSE_TAG : (n.script += "<" + a, n.state = T.SCRIPT);
+				case w.SCRIPT_ENDING:
+					a === "/" ? n.state = w.CLOSE_TAG : (n.script += "<" + a, n.state = w.SCRIPT);
 					continue;
-				case T.OPEN_WAKA:
-					if (a === "!") n.state = T.SGML_DECL, n.sgmlDecl = "";
-					else if (!b(a)) if (w(g, a)) n.state = T.OPEN_TAG, n.tagName = a;
-					else if (a === "/") n.state = T.CLOSE_TAG, n.tagName = "";
-					else if (a === "?") n.state = T.PROC_INST, n.procInstName = n.procInstBody = "";
+				case w.OPEN_WAKA:
+					if (a === "!") n.state = w.SGML_DECL, n.sgmlDecl = "";
+					else if (!b(a)) if (S(g, a)) n.state = w.OPEN_TAG, n.tagName = a;
+					else if (a === "/") n.state = w.CLOSE_TAG, n.tagName = "";
+					else if (a === "?") n.state = w.PROC_INST, n.procInstName = n.procInstBody = "";
 					else {
-						if (M(n, "Unencoded <"), n.startTagPosition + 1 < n.position) {
+						if (O(n, "Unencoded <"), n.startTagPosition + 1 < n.position) {
 							var s = n.position - n.startTagPosition;
 							a = Array(s).join(" ") + a;
 						}
-						n.textNode += "<" + a, n.state = T.TEXT;
+						n.textNode += "<" + a, n.state = w.TEXT;
 					}
 					continue;
-				case T.SGML_DECL:
+				case w.SGML_DECL:
 					if (n.sgmlDecl + a === "--") {
-						n.state = T.COMMENT, n.comment = "", n.sgmlDecl = "";
+						n.state = w.COMMENT, n.comment = "", n.sgmlDecl = "";
 						continue;
 					}
-					n.doctype && n.doctype !== !0 && n.sgmlDecl ? (n.state = T.DOCTYPE_DTD, n.doctype += "<!" + n.sgmlDecl + a, n.sgmlDecl = "") : (n.sgmlDecl + a).toUpperCase() === d ? (D(n, "onopencdata"), n.state = T.CDATA, n.sgmlDecl = "", n.cdata = "") : (n.sgmlDecl + a).toUpperCase() === f ? (n.state = T.DOCTYPE, (n.doctype || n.sawRoot) && M(n, "Inappropriately located doctype declaration"), n.doctype = "", n.sgmlDecl = "") : a === ">" ? (D(n, "onsgmldeclaration", n.sgmlDecl), n.sgmlDecl = "", n.state = T.TEXT) : (x(a) && (n.state = T.SGML_DECL_QUOTED), n.sgmlDecl += a);
+					n.doctype && n.doctype !== !0 && n.sgmlDecl ? (n.state = w.DOCTYPE_DTD, n.doctype += "<!" + n.sgmlDecl + a, n.sgmlDecl = "") : (n.sgmlDecl + a).toUpperCase() === d ? (E(n, "onopencdata"), n.state = w.CDATA, n.sgmlDecl = "", n.cdata = "") : (n.sgmlDecl + a).toUpperCase() === f ? (n.state = w.DOCTYPE, (n.doctype || n.sawRoot) && O(n, "Inappropriately located doctype declaration"), n.doctype = "", n.sgmlDecl = "") : a === ">" ? (E(n, "onsgmldeclaration", n.sgmlDecl), n.sgmlDecl = "", n.state = w.TEXT) : (x(a) && (n.state = w.SGML_DECL_QUOTED), n.sgmlDecl += a);
 					continue;
-				case T.SGML_DECL_QUOTED:
-					a === n.q && (n.state = T.SGML_DECL, n.q = ""), n.sgmlDecl += a;
+				case w.SGML_DECL_QUOTED:
+					a === n.q && (n.state = w.SGML_DECL, n.q = ""), n.sgmlDecl += a;
 					continue;
-				case T.DOCTYPE:
-					a === ">" ? (n.state = T.TEXT, D(n, "ondoctype", n.doctype), n.doctype = !0) : (n.doctype += a, a === "[" ? n.state = T.DOCTYPE_DTD : x(a) && (n.state = T.DOCTYPE_QUOTED, n.q = a));
+				case w.DOCTYPE:
+					a === ">" ? (n.state = w.TEXT, E(n, "ondoctype", n.doctype), n.doctype = !0) : (n.doctype += a, a === "[" ? n.state = w.DOCTYPE_DTD : x(a) && (n.state = w.DOCTYPE_QUOTED, n.q = a));
 					continue;
-				case T.DOCTYPE_QUOTED:
-					n.doctype += a, a === n.q && (n.q = "", n.state = T.DOCTYPE);
+				case w.DOCTYPE_QUOTED:
+					n.doctype += a, a === n.q && (n.q = "", n.state = w.DOCTYPE);
 					continue;
-				case T.DOCTYPE_DTD:
-					a === "]" ? (n.doctype += a, n.state = T.DOCTYPE) : a === "<" ? (n.state = T.OPEN_WAKA, n.startTagPosition = n.position) : x(a) ? (n.doctype += a, n.state = T.DOCTYPE_DTD_QUOTED, n.q = a) : n.doctype += a;
+				case w.DOCTYPE_DTD:
+					a === "]" ? (n.doctype += a, n.state = w.DOCTYPE) : a === "<" ? (n.state = w.OPEN_WAKA, n.startTagPosition = n.position) : x(a) ? (n.doctype += a, n.state = w.DOCTYPE_DTD_QUOTED, n.q = a) : n.doctype += a;
 					continue;
-				case T.DOCTYPE_DTD_QUOTED:
-					n.doctype += a, a === n.q && (n.state = T.DOCTYPE_DTD, n.q = "");
+				case w.DOCTYPE_DTD_QUOTED:
+					n.doctype += a, a === n.q && (n.state = w.DOCTYPE_DTD, n.q = "");
 					continue;
-				case T.COMMENT:
-					a === "-" ? n.state = T.COMMENT_ENDING : n.comment += a;
+				case w.COMMENT:
+					a === "-" ? n.state = w.COMMENT_ENDING : n.comment += a;
 					continue;
-				case T.COMMENT_ENDING:
-					a === "-" ? (n.state = T.COMMENT_ENDED, n.comment = k(n.opt, n.comment), n.comment && D(n, "oncomment", n.comment), n.comment = "") : (n.comment += "-" + a, n.state = T.COMMENT);
+				case w.COMMENT_ENDING:
+					a === "-" ? (n.state = w.COMMENT_ENDED, n.comment = ce(n.opt, n.comment), n.comment && E(n, "oncomment", n.comment), n.comment = "") : (n.comment += "-" + a, n.state = w.COMMENT);
 					continue;
-				case T.COMMENT_ENDED:
-					a === ">" ? n.doctype && n.doctype !== !0 ? n.state = T.DOCTYPE_DTD : n.state = T.TEXT : (M(n, "Malformed comment"), n.comment += "--" + a, n.state = T.COMMENT);
+				case w.COMMENT_ENDED:
+					a === ">" ? n.doctype && n.doctype !== !0 ? n.state = w.DOCTYPE_DTD : n.state = w.TEXT : (O(n, "Malformed comment"), n.comment += "--" + a, n.state = w.COMMENT);
 					continue;
-				case T.CDATA:
-					for (var o = i - 1; a && a !== "]";) a = I(t, i++), a && n.trackPosition && (n.position++, a === "\n" ? (n.line++, n.column = 0) : n.column++);
-					n.cdata += t.substring(o, i - 1), a === "]" && (n.state = T.CDATA_ENDING);
+				case w.CDATA:
+					for (var o = i - 1; a && a !== "]";) a = me(t, i++), a && n.trackPosition && (n.position++, a === "\n" ? (n.line++, n.column = 0) : n.column++);
+					n.cdata += t.substring(o, i - 1), a === "]" && (n.state = w.CDATA_ENDING);
 					continue;
-				case T.CDATA_ENDING:
-					a === "]" ? n.state = T.CDATA_ENDING_2 : (n.cdata += "]" + a, n.state = T.CDATA);
+				case w.CDATA_ENDING:
+					a === "]" ? n.state = w.CDATA_ENDING_2 : (n.cdata += "]" + a, n.state = w.CDATA);
 					continue;
-				case T.CDATA_ENDING_2:
-					a === ">" ? (n.cdata && D(n, "oncdata", n.cdata), D(n, "onclosecdata"), n.cdata = "", n.state = T.TEXT) : a === "]" ? n.cdata += "]" : (n.cdata += "]]" + a, n.state = T.CDATA);
+				case w.CDATA_ENDING_2:
+					a === ">" ? (n.cdata && E(n, "oncdata", n.cdata), E(n, "onclosecdata"), n.cdata = "", n.state = w.TEXT) : a === "]" ? n.cdata += "]" : (n.cdata += "]]" + a, n.state = w.CDATA);
 					continue;
-				case T.PROC_INST:
-					a === "?" ? n.state = T.PROC_INST_ENDING : b(a) ? n.state = T.PROC_INST_BODY : n.procInstName += a;
+				case w.PROC_INST:
+					a === "?" ? n.state = w.PROC_INST_ENDING : b(a) ? n.state = w.PROC_INST_BODY : n.procInstName += a;
 					continue;
-				case T.PROC_INST_BODY:
+				case w.PROC_INST_BODY:
 					if (!n.procInstBody && b(a)) continue;
-					a === "?" ? n.state = T.PROC_INST_ENDING : n.procInstBody += a;
+					a === "?" ? n.state = w.PROC_INST_ENDING : n.procInstBody += a;
 					continue;
-				case T.PROC_INST_ENDING:
+				case w.PROC_INST_ENDING:
 					if (a === ">") {
 						let e = {
 							name: n.procInstName,
 							body: n.procInstBody
 						};
-						ae(n, e), D(n, "onprocessinginstruction", e), n.procInstName = n.procInstBody = "", n.state = T.TEXT;
-					} else n.procInstBody += "?" + a, n.state = T.PROC_INST_BODY;
+						oe(n, e), E(n, "onprocessinginstruction", e), n.procInstName = n.procInstBody = "", n.state = w.TEXT;
+					} else n.procInstBody += "?" + a, n.state = w.PROC_INST_BODY;
 					continue;
-				case T.OPEN_TAG:
-					w(_, a) ? n.tagName += a : (oe(n), a === ">" ? N(n) : a === "/" ? n.state = T.OPEN_TAG_SLASH : (b(a) || M(n, "Invalid character in tag name"), n.state = T.ATTRIB));
+				case w.OPEN_TAG:
+					S(_, a) ? n.tagName += a : (ue(n), a === ">" ? A(n) : a === "/" ? n.state = w.OPEN_TAG_SLASH : (b(a) || O(n, "Invalid character in tag name"), n.state = w.ATTRIB));
 					continue;
-				case T.OPEN_TAG_SLASH:
-					a === ">" ? (N(n, !0), le(n)) : (M(n, "Forward-slash in opening tag not followed by >"), n.state = T.ATTRIB);
+				case w.OPEN_TAG_SLASH:
+					a === ">" ? (A(n, !0), fe(n)) : (O(n, "Forward-slash in opening tag not followed by >"), n.state = w.ATTRIB);
 					continue;
-				case T.ATTRIB:
+				case w.ATTRIB:
 					if (b(a)) continue;
-					a === ">" ? N(n) : a === "/" ? n.state = T.OPEN_TAG_SLASH : w(g, a) ? (n.attribName = a, n.attribValue = "", n.state = T.ATTRIB_NAME) : M(n, "Invalid attribute name");
+					a === ">" ? A(n) : a === "/" ? n.state = w.OPEN_TAG_SLASH : S(g, a) ? (n.attribName = a, n.attribValue = "", n.state = w.ATTRIB_NAME) : O(n, "Invalid attribute name");
 					continue;
-				case T.ATTRIB_NAME:
-					a === "=" ? n.state = T.ATTRIB_VALUE : a === ">" ? (M(n, "Attribute without value"), n.attribValue = n.attribName, ce(n), N(n)) : b(a) ? n.state = T.ATTRIB_NAME_SAW_WHITE : w(_, a) ? n.attribName += a : M(n, "Invalid attribute name");
+				case w.ATTRIB_NAME:
+					a === "=" ? n.state = w.ATTRIB_VALUE : a === ">" ? (O(n, "Attribute without value"), n.attribValue = n.attribName, k(n), A(n)) : b(a) ? n.state = w.ATTRIB_NAME_SAW_WHITE : S(_, a) ? n.attribName += a : O(n, "Invalid attribute name");
 					continue;
-				case T.ATTRIB_NAME_SAW_WHITE:
-					if (a === "=") n.state = T.ATTRIB_VALUE;
+				case w.ATTRIB_NAME_SAW_WHITE:
+					if (a === "=") n.state = w.ATTRIB_VALUE;
 					else if (b(a)) continue;
-					else M(n, "Attribute without value"), n.tag.attributes[n.attribName] = "", n.attribValue = "", D(n, "onattribute", {
+					else O(n, "Attribute without value"), n.tag.attributes[n.attribName] = "", n.attribValue = "", E(n, "onattribute", {
 						name: n.attribName,
 						value: ""
-					}), n.attribName = "", a === ">" ? N(n) : w(g, a) ? (n.attribName = a, n.state = T.ATTRIB_NAME) : (M(n, "Invalid attribute name"), n.state = T.ATTRIB);
+					}), n.attribName = "", a === ">" ? A(n) : S(g, a) ? (n.attribName = a, n.state = w.ATTRIB_NAME) : (O(n, "Invalid attribute name"), n.state = w.ATTRIB);
 					continue;
-				case T.ATTRIB_VALUE:
+				case w.ATTRIB_VALUE:
 					if (b(a)) continue;
-					x(a) ? (n.q = a, n.state = T.ATTRIB_VALUE_QUOTED) : (n.opt.unquotedAttributeValues || A(n, "Unquoted attribute value"), n.state = T.ATTRIB_VALUE_UNQUOTED, n.attribValue = a);
+					x(a) ? (n.q = a, n.state = w.ATTRIB_VALUE_QUOTED) : (n.opt.unquotedAttributeValues || D(n, "Unquoted attribute value"), n.state = w.ATTRIB_VALUE_UNQUOTED, n.attribValue = a);
 					continue;
-				case T.ATTRIB_VALUE_QUOTED:
+				case w.ATTRIB_VALUE_QUOTED:
 					if (a !== n.q) {
-						a === "&" ? n.state = T.ATTRIB_VALUE_ENTITY_Q : n.attribValue += a;
+						a === "&" ? n.state = w.ATTRIB_VALUE_ENTITY_Q : n.attribValue += a;
 						continue;
 					}
-					ce(n), n.q = "", n.state = T.ATTRIB_VALUE_CLOSED;
+					k(n), n.q = "", n.state = w.ATTRIB_VALUE_CLOSED;
 					continue;
-				case T.ATTRIB_VALUE_CLOSED:
-					b(a) ? n.state = T.ATTRIB : a === ">" ? N(n) : a === "/" ? n.state = T.OPEN_TAG_SLASH : w(g, a) ? (M(n, "No whitespace between attributes"), n.attribName = a, n.attribValue = "", n.state = T.ATTRIB_NAME) : M(n, "Invalid attribute name");
+				case w.ATTRIB_VALUE_CLOSED:
+					b(a) ? n.state = w.ATTRIB : a === ">" ? A(n) : a === "/" ? n.state = w.OPEN_TAG_SLASH : S(g, a) ? (O(n, "No whitespace between attributes"), n.attribName = a, n.attribValue = "", n.state = w.ATTRIB_NAME) : O(n, "Invalid attribute name");
 					continue;
-				case T.ATTRIB_VALUE_UNQUOTED:
-					if (!S(a)) {
-						a === "&" ? n.state = T.ATTRIB_VALUE_ENTITY_U : n.attribValue += a;
+				case w.ATTRIB_VALUE_UNQUOTED:
+					if (!ee(a)) {
+						a === "&" ? n.state = w.ATTRIB_VALUE_ENTITY_U : n.attribValue += a;
 						continue;
 					}
-					ce(n), a === ">" ? N(n) : n.state = T.ATTRIB;
+					k(n), a === ">" ? A(n) : n.state = w.ATTRIB;
 					continue;
-				case T.CLOSE_TAG:
-					if (n.tagName) a === ">" ? le(n) : w(_, a) ? n.tagName += a : n.script ? (n.script += "</" + n.tagName + a, n.tagName = "", n.state = T.SCRIPT) : (b(a) || M(n, "Invalid tagname in closing tag"), n.state = T.CLOSE_TAG_SAW_WHITE);
+				case w.CLOSE_TAG:
+					if (n.tagName) a === ">" ? fe(n) : S(_, a) ? n.tagName += a : n.script ? (n.script += "</" + n.tagName + a, n.tagName = "", n.state = w.SCRIPT) : (b(a) || O(n, "Invalid tagname in closing tag"), n.state = w.CLOSE_TAG_SAW_WHITE);
 					else {
 						if (b(a)) continue;
-						ee(g, a) ? n.script ? (n.script += "</" + a, n.state = T.SCRIPT) : M(n, "Invalid tagname in closing tag.") : n.tagName = a;
+						te(g, a) ? n.script ? (n.script += "</" + a, n.state = w.SCRIPT) : O(n, "Invalid tagname in closing tag.") : n.tagName = a;
 					}
 					continue;
-				case T.CLOSE_TAG_SAW_WHITE:
+				case w.CLOSE_TAG_SAW_WHITE:
 					if (b(a)) continue;
-					a === ">" ? le(n) : M(n, "Invalid characters in closing tag");
+					a === ">" ? fe(n) : O(n, "Invalid characters in closing tag");
 					continue;
-				case T.TEXT_ENTITY:
-				case T.ATTRIB_VALUE_ENTITY_Q:
-				case T.ATTRIB_VALUE_ENTITY_U:
+				case w.TEXT_ENTITY:
+				case w.ATTRIB_VALUE_ENTITY_Q:
+				case w.ATTRIB_VALUE_ENTITY_U:
 					var c, l;
 					switch (n.state) {
-						case T.TEXT_ENTITY:
-							c = T.TEXT, l = "textNode";
+						case w.TEXT_ENTITY:
+							c = w.TEXT, l = "textNode";
 							break;
-						case T.ATTRIB_VALUE_ENTITY_Q:
-							c = T.ATTRIB_VALUE_QUOTED, l = "attribValue";
+						case w.ATTRIB_VALUE_ENTITY_Q:
+							c = w.ATTRIB_VALUE_QUOTED, l = "attribValue";
 							break;
-						case T.ATTRIB_VALUE_ENTITY_U:
-							c = T.ATTRIB_VALUE_UNQUOTED, l = "attribValue";
+						case w.ATTRIB_VALUE_ENTITY_U:
+							c = w.ATTRIB_VALUE_UNQUOTED, l = "attribValue";
 							break;
 					}
 					if (a === ";") {
-						var u = P(n);
-						n.opt.unparsedEntities && !Object.values(e.XML_ENTITIES).includes(u) ? ((n.entityCount += 1) > n.opt.maxEntityCount && A(n, "Parsed entity count exceeds max entity count"), (n.entityDepth += 1) > n.opt.maxEntityDepth && A(n, "Parsed entity depth exceeds max entity depth"), n.entity = "", n.state = c, n.write(u), --n.entityDepth) : (n[l] += u, n.entity = "", n.state = c);
-					} else w(n.entity.length ? y : v, a) ? n.entity += a : (M(n, "Invalid character in entity name"), n[l] += "&" + n.entity + a, n.entity = "", n.state = c);
+						var u = j(n);
+						n.opt.unparsedEntities && !Object.values(e.XML_ENTITIES).includes(u) ? ((n.entityCount += 1) > n.opt.maxEntityCount && D(n, "Parsed entity count exceeds max entity count"), (n.entityDepth += 1) > n.opt.maxEntityDepth && D(n, "Parsed entity depth exceeds max entity depth"), n.entity = "", n.state = c, n.write(u), --n.entityDepth) : (n[l] += u, n.entity = "", n.state = c);
+					} else S(n.entity.length ? y : v, a) ? n.entity += a : (O(n, "Invalid character in entity name"), n[l] += "&" + n.entity + a, n.entity = "", n.state = c);
 					continue;
 				default: throw Error(n, "Unknown state: " + n.state);
 			}
@@ -6962,13 +9359,13 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}) : String.fromCodePoint = n;
 		})();
 	})(e === void 0 ? e.sax = {} : e);
-})), Ln = /* @__PURE__ */ v(((e) => {
+})), ka = /* @__PURE__ */ y(((e) => {
 	(function() {
 		e.stripBOM = function(e) {
 			return e[0] === "﻿" ? e.substring(1) : e;
 		};
 	}).call(e);
-})), Rn = /* @__PURE__ */ v(((e) => {
+})), Aa = /* @__PURE__ */ y(((e) => {
 	(function() {
 		var t = /* @__PURE__ */ new RegExp(/(?!xmlns)^.*:/);
 		e.normalize = function(e) {
@@ -6983,7 +9380,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			return /^(?:true|false)$/i.test(e) && (e = e.toLowerCase() === "true"), e;
 		};
 	}).call(e);
-})), zn = /* @__PURE__ */ v(((e) => {
+})), ja = /* @__PURE__ */ y(((e) => {
 	(function() {
 		var t, n, r, i, a, o, s, c, l = function(e, t) {
 			return function() {
@@ -6996,7 +9393,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, d = {}.hasOwnProperty;
-		s = In(), r = C("events"), t = Ln(), o = Rn(), c = C("timers").setImmediate, n = rn().defaults, i = function(e) {
+		s = Oa(), r = C("events"), t = ka(), o = Aa(), c = C("timers").setImmediate, n = Xi().defaults, i = function(e) {
 			return typeof e == "object" && !!e && Object.keys(e).length === 0;
 		}, a = function(e, t, n) {
 			var r, i, a;
@@ -7108,7 +9505,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			return typeof n == "object" && (r = n), i = new e.Parser(r), i.parseStringPromise(t);
 		};
 	}).call(e);
-})), Bn = /* @__PURE__ */ v(((e) => {
+})), Ma = /* @__PURE__ */ y(((e) => {
 	(function() {
 		var t, n, r, i, a = function(e, t) {
 			for (var n in t) o.call(t, n) && (e[n] = t[n]);
@@ -7117,7 +9514,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, o = {}.hasOwnProperty;
-		n = rn(), t = Fn(), r = zn(), i = Rn(), e.defaults = n.defaults, e.processors = i, e.ValidationError = (function(e) {
+		n = Xi(), t = Da(), r = ja(), i = Aa(), e.defaults = n.defaults, e.processors = i, e.ValidationError = (function(e) {
 			a(t, e);
 			function t(e) {
 				this.message = e;
@@ -7125,7 +9522,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			return t;
 		})(Error), e.Builder = t.Builder, e.Parser = r.Parser, e.parseString = r.parseString, e.parseStringPromise = r.parseStringPromise;
 	}).call(e);
-})), Vn = /* @__PURE__ */ v(((e, t) => {
+})), Na = /* @__PURE__ */ y(((e, t) => {
 	var n = t.exports = {};
 	n.feed = [
 		["author", "creator"],
@@ -7195,23 +9592,23 @@ var rn = /* @__PURE__ */ v(((e) => {
 		"keywords",
 		"episodeType"
 	].map(r);
-})), Hn = /* @__PURE__ */ y({
+})), Pa = /* @__PURE__ */ b({
 	AElig: () => "Æ",
 	AMP: () => "&",
 	Aacute: () => "Á",
 	Abreve: () => "Ă",
 	Acirc: () => "Â",
 	Acy: () => "А",
-	Afr: () => Wn,
+	Afr: () => Ia,
 	Agrave: () => "À",
 	Alpha: () => "Α",
 	Amacr: () => "Ā",
 	And: () => "⩓",
 	Aogon: () => "Ą",
-	Aopf: () => Kn,
+	Aopf: () => Ra,
 	ApplyFunction: () => "⁡",
 	Aring: () => "Å",
-	Ascr: () => Jn,
+	Ascr: () => Ba,
 	Assign: () => "≔",
 	Atilde: () => "Ã",
 	Auml: () => "Ä",
@@ -7222,8 +9619,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 	Because: () => "∵",
 	Bernoullis: () => "ℬ",
 	Beta: () => "Β",
-	Bfr: () => Xn,
-	Bopf: () => er,
+	Bfr: () => Ha,
+	Bopf: () => Ka,
 	Breve: () => "˘",
 	Bscr: () => "ℬ",
 	Bumpeq: () => "≎",
@@ -7258,7 +9655,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	Coproduct: () => "∐",
 	CounterClockwiseContourIntegral: () => "∳",
 	Cross: () => "⨯",
-	Cscr: () => or,
+	Cscr: () => Qa,
 	Cup: () => "⋓",
 	CupCap: () => "≍",
 	DD: () => "ⅅ",
@@ -7273,7 +9670,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	Dcy: () => "Д",
 	Del: () => "∇",
 	Delta: () => "Δ",
-	Dfr: () => lr,
+	Dfr: () => to,
 	DiacriticalAcute: () => "´",
 	DiacriticalDot: () => "˙",
 	DiacriticalDoubleAcute: () => "˝",
@@ -7281,7 +9678,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	DiacriticalTilde: () => "˜",
 	Diamond: () => "⋄",
 	DifferentialD: () => "ⅆ",
-	Dopf: () => dr,
+	Dopf: () => ro,
 	Dot: () => "¨",
 	DotDot: () => "⃜",
 	DotEqual: () => "≐",
@@ -7313,7 +9710,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	DownTee: () => "⊤",
 	DownTeeArrow: () => "↧",
 	Downarrow: () => "⇓",
-	Dscr: () => pr,
+	Dscr: () => ao,
 	Dstrok: () => "Đ",
 	ENG: () => "Ŋ",
 	ETH: () => "Ð",
@@ -7322,14 +9719,14 @@ var rn = /* @__PURE__ */ v(((e) => {
 	Ecirc: () => "Ê",
 	Ecy: () => "Э",
 	Edot: () => "Ė",
-	Efr: () => hr,
+	Efr: () => so,
 	Egrave: () => "È",
 	Element: () => "∈",
 	Emacr: () => "Ē",
 	EmptySmallSquare: () => "◻",
 	EmptyVerySmallSquare: () => "▫",
 	Eogon: () => "Ę",
-	Eopf: () => _r,
+	Eopf: () => lo,
 	Epsilon: () => "Ε",
 	Equal: () => "⩵",
 	EqualTilde: () => "≂",
@@ -7341,10 +9738,10 @@ var rn = /* @__PURE__ */ v(((e) => {
 	Exists: () => "∃",
 	ExponentialE: () => "ⅇ",
 	Fcy: () => "Ф",
-	Ffr: () => yr,
+	Ffr: () => fo,
 	FilledSmallSquare: () => "◼",
 	FilledVerySmallSquare: () => "▪",
-	Fopf: () => xr,
+	Fopf: () => mo,
 	ForAll: () => "∀",
 	Fouriertrf: () => "ℱ",
 	Fscr: () => "ℱ",
@@ -7357,9 +9754,9 @@ var rn = /* @__PURE__ */ v(((e) => {
 	Gcirc: () => "Ĝ",
 	Gcy: () => "Г",
 	Gdot: () => "Ġ",
-	Gfr: () => Tr,
+	Gfr: () => vo,
 	Gg: () => "⋙",
-	Gopf: () => Dr,
+	Gopf: () => bo,
 	GreaterEqual: () => "≥",
 	GreaterEqualLess: () => "⋛",
 	GreaterFullEqual: () => "≧",
@@ -7367,7 +9764,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	GreaterLess: () => "≷",
 	GreaterSlantEqual: () => "⩾",
 	GreaterTilde: () => "≳",
-	Gscr: () => kr,
+	Gscr: () => So,
 	Gt: () => "≫",
 	HARDcy: () => "Ъ",
 	Hacek: () => "ˇ",
@@ -7400,7 +9797,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	InvisibleComma: () => "⁣",
 	InvisibleTimes: () => "⁢",
 	Iogon: () => "Į",
-	Iopf: () => Ir,
+	Iopf: () => ko,
 	Iota: () => "Ι",
 	Iscr: () => "ℐ",
 	Itilde: () => "Ĩ",
@@ -7408,9 +9805,9 @@ var rn = /* @__PURE__ */ v(((e) => {
 	Iuml: () => "Ï",
 	Jcirc: () => "Ĵ",
 	Jcy: () => "Й",
-	Jfr: () => zr,
-	Jopf: () => Vr,
-	Jscr: () => Ur,
+	Jfr: () => Mo,
+	Jopf: () => Po,
+	Jscr: () => Io,
 	Jsercy: () => "Ј",
 	Jukcy: () => "Є",
 	KHcy: () => "Х",
@@ -7418,9 +9815,9 @@ var rn = /* @__PURE__ */ v(((e) => {
 	Kappa: () => "Κ",
 	Kcedil: () => "Ķ",
 	Kcy: () => "К",
-	Kfr: () => Gr,
-	Kopf: () => qr,
-	Kscr: () => Yr,
+	Kfr: () => Ro,
+	Kopf: () => Bo,
+	Kscr: () => Ho,
 	LJcy: () => "Љ",
 	LT: () => "<",
 	Lacute: () => "Ĺ",
@@ -7463,7 +9860,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	LessLess: () => "⪡",
 	LessSlantEqual: () => "⩽",
 	LessTilde: () => "≲",
-	Lfr: () => $r,
+	Lfr: () => Ko,
 	Ll: () => "⋘",
 	Lleftarrow: () => "⇚",
 	Lmidot: () => "Ŀ",
@@ -7473,7 +9870,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	Longleftarrow: () => "⟸",
 	Longleftrightarrow: () => "⟺",
 	Longrightarrow: () => "⟹",
-	Lopf: () => ti,
+	Lopf: () => Jo,
 	LowerLeftArrow: () => "↙",
 	LowerRightArrow: () => "↘",
 	Lscr: () => "ℒ",
@@ -7484,9 +9881,9 @@ var rn = /* @__PURE__ */ v(((e) => {
 	Mcy: () => "М",
 	MediumSpace: () => " ",
 	Mellintrf: () => "ℳ",
-	Mfr: () => oi,
+	Mfr: () => $o,
 	MinusPlus: () => "∓",
-	Mopf: () => ci,
+	Mopf: () => ts,
 	Mscr: () => "ℳ",
 	Mu: () => "Μ",
 	NJcy: () => "Њ",
@@ -7501,7 +9898,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	NestedGreaterGreater: () => "≫",
 	NestedLessLess: () => "≪",
 	NewLine: () => "\n",
-	Nfr: () => yi,
+	Nfr: () => fs,
 	NoBreak: () => "⁠",
 	NonBreakingSpace: () => "\xA0",
 	Nopf: () => "ℕ",
@@ -7511,53 +9908,53 @@ var rn = /* @__PURE__ */ v(((e) => {
 	NotDoubleVerticalBar: () => "∦",
 	NotElement: () => "∉",
 	NotEqual: () => "≠",
-	NotEqualTilde: () => Ii,
+	NotEqualTilde: () => ks,
 	NotExists: () => "∄",
 	NotGreater: () => "≯",
 	NotGreaterEqual: () => "≱",
-	NotGreaterFullEqual: () => Li,
-	NotGreaterGreater: () => Ri,
+	NotGreaterFullEqual: () => As,
+	NotGreaterGreater: () => js,
 	NotGreaterLess: () => "≹",
-	NotGreaterSlantEqual: () => zi,
+	NotGreaterSlantEqual: () => Ms,
 	NotGreaterTilde: () => "≵",
-	NotHumpDownHump: () => Bi,
-	NotHumpEqual: () => Vi,
+	NotHumpDownHump: () => Ns,
+	NotHumpEqual: () => Ps,
 	NotLeftTriangle: () => "⋪",
-	NotLeftTriangleBar: () => Wi,
+	NotLeftTriangleBar: () => Ls,
 	NotLeftTriangleEqual: () => "⋬",
 	NotLess: () => "≮",
 	NotLessEqual: () => "≰",
 	NotLessGreater: () => "≸",
-	NotLessLess: () => Gi,
-	NotLessSlantEqual: () => Ki,
+	NotLessLess: () => Rs,
+	NotLessSlantEqual: () => zs,
 	NotLessTilde: () => "≴",
-	NotNestedGreaterGreater: () => qi,
-	NotNestedLessLess: () => Ji,
+	NotNestedGreaterGreater: () => Bs,
+	NotNestedLessLess: () => Vs,
 	NotPrecedes: () => "⊀",
-	NotPrecedesEqual: () => Yi,
+	NotPrecedesEqual: () => Hs,
 	NotPrecedesSlantEqual: () => "⋠",
 	NotReverseElement: () => "∌",
 	NotRightTriangle: () => "⋫",
-	NotRightTriangleBar: () => Xi,
+	NotRightTriangleBar: () => Us,
 	NotRightTriangleEqual: () => "⋭",
-	NotSquareSubset: () => Zi,
+	NotSquareSubset: () => Ws,
 	NotSquareSubsetEqual: () => "⋢",
-	NotSquareSuperset: () => Qi,
+	NotSquareSuperset: () => Gs,
 	NotSquareSupersetEqual: () => "⋣",
-	NotSubset: () => $i,
+	NotSubset: () => Ks,
 	NotSubsetEqual: () => "⊈",
 	NotSucceeds: () => "⊁",
-	NotSucceedsEqual: () => ea,
+	NotSucceedsEqual: () => qs,
 	NotSucceedsSlantEqual: () => "⋡",
-	NotSucceedsTilde: () => ta,
-	NotSuperset: () => na,
+	NotSucceedsTilde: () => Js,
+	NotSuperset: () => Ys,
 	NotSupersetEqual: () => "⊉",
 	NotTilde: () => "≁",
 	NotTildeEqual: () => "≄",
 	NotTildeFullEqual: () => "≇",
 	NotTildeTilde: () => "≉",
 	NotVerticalBar: () => "∤",
-	Nscr: () => ua,
+	Nscr: () => rc,
 	Ntilde: () => "Ñ",
 	Nu: () => "Ν",
 	OElig: () => "Œ",
@@ -7565,16 +9962,16 @@ var rn = /* @__PURE__ */ v(((e) => {
 	Ocirc: () => "Ô",
 	Ocy: () => "О",
 	Odblac: () => "Ő",
-	Ofr: () => Da,
+	Ofr: () => bc,
 	Ograve: () => "Ò",
 	Omacr: () => "Ō",
 	Omega: () => "Ω",
 	Omicron: () => "Ο",
-	Oopf: () => ka,
+	Oopf: () => Sc,
 	OpenCurlyDoubleQuote: () => "“",
 	OpenCurlyQuote: () => "‘",
 	Or: () => "⩔",
-	Oscr: () => ja,
+	Oscr: () => wc,
 	Oslash: () => "Ø",
 	Otilde: () => "Õ",
 	Otimes: () => "⨷",
@@ -7585,7 +9982,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	OverParenthesis: () => "⏜",
 	PartialD: () => "∂",
 	Pcy: () => "П",
-	Pfr: () => Ma,
+	Pfr: () => Tc,
 	Phi: () => "Φ",
 	Pi: () => "Π",
 	PlusMinus: () => "±",
@@ -7600,12 +9997,12 @@ var rn = /* @__PURE__ */ v(((e) => {
 	Product: () => "∏",
 	Proportion: () => "∷",
 	Proportional: () => "∝",
-	Pscr: () => Fa,
+	Pscr: () => Oc,
 	Psi: () => "Ψ",
 	QUOT: () => "\"",
-	Qfr: () => La,
+	Qfr: () => Ac,
 	Qopf: () => "ℚ",
-	Qscr: () => Ba,
+	Qscr: () => Nc,
 	RBarr: () => "⤐",
 	REG: () => "®",
 	Racute: () => "Ŕ",
@@ -7659,14 +10056,14 @@ var rn = /* @__PURE__ */ v(((e) => {
 	Scedil: () => "Ş",
 	Scirc: () => "Ŝ",
 	Scy: () => "С",
-	Sfr: () => Ka,
+	Sfr: () => zc,
 	ShortDownArrow: () => "↓",
 	ShortLeftArrow: () => "←",
 	ShortRightArrow: () => "→",
 	ShortUpArrow: () => "↑",
 	Sigma: () => "Σ",
 	SmallCircle: () => "∘",
-	Sopf: () => Ya,
+	Sopf: () => Hc,
 	Sqrt: () => "√",
 	Square: () => "□",
 	SquareIntersection: () => "⊓",
@@ -7675,7 +10072,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	SquareSuperset: () => "⊐",
 	SquareSupersetEqual: () => "⊒",
 	SquareUnion: () => "⊔",
-	Sscr: () => $a,
+	Sscr: () => Kc,
 	Star: () => "⋆",
 	Sub: () => "⋐",
 	Subset: () => "⋐",
@@ -7699,18 +10096,18 @@ var rn = /* @__PURE__ */ v(((e) => {
 	Tcaron: () => "Ť",
 	Tcedil: () => "Ţ",
 	Tcy: () => "Т",
-	Tfr: () => to,
+	Tfr: () => Jc,
 	Therefore: () => "∴",
 	Theta: () => "Θ",
-	ThickSpace: () => ro,
+	ThickSpace: () => Xc,
 	ThinSpace: () => " ",
 	Tilde: () => "∼",
 	TildeEqual: () => "≃",
 	TildeFullEqual: () => "≅",
 	TildeTilde: () => "≈",
-	Topf: () => io,
+	Topf: () => Zc,
 	TripleDot: () => "⃛",
-	Tscr: () => oo,
+	Tscr: () => $c,
 	Tstrok: () => "Ŧ",
 	Uacute: () => "Ú",
 	Uarr: () => "↟",
@@ -7720,7 +10117,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	Ucirc: () => "Û",
 	Ucy: () => "У",
 	Udblac: () => "Ű",
-	Ufr: () => co,
+	Ufr: () => tl,
 	Ugrave: () => "Ù",
 	Umacr: () => "Ū",
 	UnderBar: () => "_",
@@ -7730,7 +10127,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	Union: () => "⋃",
 	UnionPlus: () => "⊎",
 	Uogon: () => "Ų",
-	Uopf: () => uo,
+	Uopf: () => rl,
 	UpArrow: () => "↑",
 	UpArrowBar: () => "⤒",
 	UpArrowDownArrow: () => "⇅",
@@ -7745,7 +10142,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	Upsi: () => "ϒ",
 	Upsilon: () => "Υ",
 	Uring: () => "Ů",
-	Uscr: () => po,
+	Uscr: () => al,
 	Utilde: () => "Ũ",
 	Uuml: () => "Ü",
 	VDash: () => "⊫",
@@ -7761,28 +10158,28 @@ var rn = /* @__PURE__ */ v(((e) => {
 	VerticalSeparator: () => "❘",
 	VerticalTilde: () => "≀",
 	VeryThinSpace: () => " ",
-	Vfr: () => yo,
-	Vopf: () => Co,
-	Vscr: () => To,
+	Vfr: () => dl,
+	Vopf: () => hl,
+	Vscr: () => _l,
 	Vvdash: () => "⊪",
 	Wcirc: () => "Ŵ",
 	Wedge: () => "⋀",
-	Wfr: () => jo,
-	Wopf: () => No,
-	Wscr: () => Fo,
-	Xfr: () => Lo,
+	Wfr: () => Cl,
+	Wopf: () => Tl,
+	Wscr: () => Dl,
+	Xfr: () => kl,
 	Xi: () => "Ξ",
-	Xopf: () => zo,
-	Xscr: () => Vo,
+	Xopf: () => jl,
+	Xscr: () => Nl,
 	YAcy: () => "Я",
 	YIcy: () => "Ї",
 	YUcy: () => "Ю",
 	Yacute: () => "Ý",
 	Ycirc: () => "Ŷ",
 	Ycy: () => "Ы",
-	Yfr: () => Uo,
-	Yopf: () => Go,
-	Yscr: () => qo,
+	Yfr: () => Fl,
+	Yopf: () => Ll,
+	Yscr: () => zl,
 	Yuml: () => "Ÿ",
 	ZHcy: () => "Ж",
 	Zacute: () => "Ź",
@@ -7793,18 +10190,18 @@ var rn = /* @__PURE__ */ v(((e) => {
 	Zeta: () => "Ζ",
 	Zfr: () => "ℨ",
 	Zopf: () => "ℤ",
-	Zscr: () => Zo,
+	Zscr: () => Ul,
 	aacute: () => "á",
 	abreve: () => "ă",
 	ac: () => "∾",
-	acE: () => Un,
+	acE: () => Fa,
 	acd: () => "∿",
 	acirc: () => "â",
 	acute: () => "´",
 	acy: () => "а",
 	aelig: () => "æ",
 	af: () => "⁡",
-	afr: () => Gn,
+	afr: () => La,
 	agrave: () => "à",
 	alefsym: () => "ℵ",
 	aleph: () => "ℵ",
@@ -7836,7 +10233,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	angst: () => "Å",
 	angzarr: () => "⍼",
 	aogon: () => "ą",
-	aopf: () => qn,
+	aopf: () => za,
 	ap: () => "≈",
 	apE: () => "⩰",
 	apacir: () => "⩯",
@@ -7846,7 +10243,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	approx: () => "≈",
 	approxeq: () => "≊",
 	aring: () => "å",
-	ascr: () => Yn,
+	ascr: () => Va,
 	ast: () => "*",
 	asymp: () => "≈",
 	asympeq: () => "≍",
@@ -7876,7 +10273,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	beta: () => "β",
 	beth: () => "ℶ",
 	between: () => "≬",
-	bfr: () => Zn,
+	bfr: () => Ua,
 	bigcap: () => "⋂",
 	bigcirc: () => "◯",
 	bigcup: () => "⋃",
@@ -7902,10 +10299,10 @@ var rn = /* @__PURE__ */ v(((e) => {
 	blk14: () => "░",
 	blk34: () => "▓",
 	block: () => "█",
-	bne: () => Qn,
-	bnequiv: () => $n,
+	bne: () => Wa,
+	bnequiv: () => Ga,
 	bnot: () => "⌐",
-	bopf: () => tr,
+	bopf: () => qa,
 	bot: () => "⊥",
 	bottom: () => "⊥",
 	bowtie: () => "⋈",
@@ -7956,7 +10353,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	bprime: () => "‵",
 	breve: () => "˘",
 	brvbar: () => "¦",
-	bscr: () => nr,
+	bscr: () => Ja,
 	bsemi: () => "⁏",
 	bsim: () => "∽",
 	bsime: () => "⋍",
@@ -7976,7 +10373,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	capcap: () => "⩋",
 	capcup: () => "⩇",
 	capdot: () => "⩀",
-	caps: () => rr,
+	caps: () => Ya,
 	caret: () => "⁁",
 	caron: () => "ˇ",
 	ccaps: () => "⩍",
@@ -7990,7 +10387,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	cemptyv: () => "⦲",
 	cent: () => "¢",
 	centerdot: () => "·",
-	cfr: () => ir,
+	cfr: () => Xa,
 	chcy: () => "ч",
 	check: () => "✓",
 	checkmark: () => "✓",
@@ -8024,13 +10421,13 @@ var rn = /* @__PURE__ */ v(((e) => {
 	cong: () => "≅",
 	congdot: () => "⩭",
 	conint: () => "∮",
-	copf: () => ar,
+	copf: () => Za,
 	coprod: () => "∐",
 	copy: () => "©",
 	copysr: () => "℗",
 	crarr: () => "↵",
 	cross: () => "✗",
-	cscr: () => sr,
+	cscr: () => $a,
 	csub: () => "⫏",
 	csube: () => "⫑",
 	csup: () => "⫐",
@@ -8048,7 +10445,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	cupcup: () => "⩊",
 	cupdot: () => "⊍",
 	cupor: () => "⩅",
-	cups: () => cr,
+	cups: () => eo,
 	curarr: () => "↷",
 	curarrm: () => "⤼",
 	curlyeqprec: () => "⋞",
@@ -8078,12 +10475,12 @@ var rn = /* @__PURE__ */ v(((e) => {
 	ddagger: () => "‡",
 	ddarr: () => "⇊",
 	ddotseq: () => "⩷",
-	default: () => $o,
+	default: () => Gl,
 	deg: () => "°",
 	delta: () => "δ",
 	demptyv: () => "⦱",
 	dfisht: () => "⥿",
-	dfr: () => ur,
+	dfr: () => no,
 	dharl: () => "⇃",
 	dharr: () => "⇂",
 	diam: () => "⋄",
@@ -8101,7 +10498,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	dlcorn: () => "⌞",
 	dlcrop: () => "⌍",
 	dollar: () => "$",
-	dopf: () => fr,
+	dopf: () => io,
 	dot: () => "˙",
 	doteq: () => "≐",
 	doteqdot: () => "≑",
@@ -8116,7 +10513,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	drbkarow: () => "⤐",
 	drcorn: () => "⌟",
 	drcrop: () => "⌌",
-	dscr: () => mr,
+	dscr: () => oo,
 	dscy: () => "ѕ",
 	dsol: () => "⧶",
 	dstrok: () => "đ",
@@ -8140,7 +10537,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	edot: () => "ė",
 	ee: () => "ⅇ",
 	efDot: () => "≒",
-	efr: () => gr,
+	efr: () => co,
 	eg: () => "⪚",
 	egrave: () => "è",
 	egs: () => "⪖",
@@ -8160,7 +10557,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	eng: () => "ŋ",
 	ensp: () => " ",
 	eogon: () => "ę",
-	eopf: () => vr,
+	eopf: () => uo,
 	epar: () => "⋕",
 	eparsl: () => "⧣",
 	eplus: () => "⩱",
@@ -8196,14 +10593,14 @@ var rn = /* @__PURE__ */ v(((e) => {
 	ffilig: () => "ﬃ",
 	fflig: () => "ﬀ",
 	ffllig: () => "ﬄ",
-	ffr: () => br,
+	ffr: () => po,
 	filig: () => "ﬁ",
 	fjlig: () => "fj",
 	flat: () => "♭",
 	fllig: () => "ﬂ",
 	fltns: () => "▱",
 	fnof: () => "ƒ",
-	fopf: () => Sr,
+	fopf: () => ho,
 	forall: () => "∀",
 	fork: () => "⋔",
 	forkv: () => "⫙",
@@ -8225,7 +10622,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	frac78: () => "⅞",
 	frasl: () => "⁄",
 	frown: () => "⌢",
-	fscr: () => Cr,
+	fscr: () => go,
 	gE: () => "≧",
 	gEl: () => "⪌",
 	gacute: () => "ǵ",
@@ -8246,9 +10643,9 @@ var rn = /* @__PURE__ */ v(((e) => {
 	gesdot: () => "⪀",
 	gesdoto: () => "⪂",
 	gesdotol: () => "⪄",
-	gesl: () => wr,
+	gesl: () => _o,
 	gesles: () => "⪔",
-	gfr: () => Er,
+	gfr: () => yo,
 	gg: () => "≫",
 	ggg: () => "⋙",
 	gimel: () => "ℷ",
@@ -8264,7 +10661,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	gneq: () => "⪈",
 	gneqq: () => "≩",
 	gnsim: () => "⋧",
-	gopf: () => Or,
+	gopf: () => xo,
 	grave: () => "`",
 	gscr: () => "ℊ",
 	gsim: () => "≳",
@@ -8283,8 +10680,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 	gtreqqless: () => "⪌",
 	gtrless: () => "≷",
 	gtrsim: () => "≳",
-	gvertneqq: () => Ar,
-	gvnE: () => jr,
+	gvertneqq: () => Co,
+	gvnE: () => wo,
 	hArr: () => "⇔",
 	hairsp: () => " ",
 	half: () => "½",
@@ -8299,16 +10696,16 @@ var rn = /* @__PURE__ */ v(((e) => {
 	heartsuit: () => "♥",
 	hellip: () => "…",
 	hercon: () => "⊹",
-	hfr: () => Mr,
+	hfr: () => To,
 	hksearow: () => "⤥",
 	hkswarow: () => "⤦",
 	hoarr: () => "⇿",
 	homtht: () => "∻",
 	hookleftarrow: () => "↩",
 	hookrightarrow: () => "↪",
-	hopf: () => Nr,
+	hopf: () => Eo,
 	horbar: () => "―",
-	hscr: () => Pr,
+	hscr: () => Do,
 	hslash: () => "ℏ",
 	hstrok: () => "ħ",
 	hybull: () => "⁃",
@@ -8320,7 +10717,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	iecy: () => "е",
 	iexcl: () => "¡",
 	iff: () => "⇔",
-	ifr: () => Fr,
+	ifr: () => Oo,
 	igrave: () => "ì",
 	ii: () => "ⅈ",
 	iiiint: () => "⨌",
@@ -8347,11 +10744,11 @@ var rn = /* @__PURE__ */ v(((e) => {
 	intprod: () => "⨼",
 	iocy: () => "ё",
 	iogon: () => "į",
-	iopf: () => Lr,
+	iopf: () => Ao,
 	iota: () => "ι",
 	iprod: () => "⨼",
 	iquest: () => "¿",
-	iscr: () => Rr,
+	iscr: () => jo,
 	isin: () => "∈",
 	isinE: () => "⋹",
 	isindot: () => "⋵",
@@ -8364,22 +10761,22 @@ var rn = /* @__PURE__ */ v(((e) => {
 	iuml: () => "ï",
 	jcirc: () => "ĵ",
 	jcy: () => "й",
-	jfr: () => Br,
+	jfr: () => No,
 	jmath: () => "ȷ",
-	jopf: () => Hr,
-	jscr: () => Wr,
+	jopf: () => Fo,
+	jscr: () => Lo,
 	jsercy: () => "ј",
 	jukcy: () => "є",
 	kappa: () => "κ",
 	kappav: () => "ϰ",
 	kcedil: () => "ķ",
 	kcy: () => "к",
-	kfr: () => Kr,
+	kfr: () => zo,
 	kgreen: () => "ĸ",
 	khcy: () => "х",
 	kjcy: () => "ќ",
-	kopf: () => Jr,
-	kscr: () => Xr,
+	kopf: () => Vo,
+	kscr: () => Uo,
 	lAarr: () => "⇚",
 	lArr: () => "⇐",
 	lAtail: () => "⤛",
@@ -8408,7 +10805,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	lat: () => "⪫",
 	latail: () => "⤙",
 	late: () => "⪭",
-	lates: () => Zr,
+	lates: () => Wo,
 	lbarr: () => "⤌",
 	lbbrk: () => "❲",
 	lbrace: () => "{",
@@ -8447,7 +10844,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	lesdot: () => "⩿",
 	lesdoto: () => "⪁",
 	lesdotor: () => "⪃",
-	lesg: () => Qr,
+	lesg: () => Go,
 	lesges: () => "⪓",
 	lessapprox: () => "⪅",
 	lessdot: () => "⋖",
@@ -8457,7 +10854,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	lesssim: () => "≲",
 	lfisht: () => "⥼",
 	lfloor: () => "⌊",
-	lfr: () => ei,
+	lfr: () => qo,
 	lg: () => "≶",
 	lgE: () => "⪑",
 	lhard: () => "↽",
@@ -8490,7 +10887,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	looparrowleft: () => "↫",
 	looparrowright: () => "↬",
 	lopar: () => "⦅",
-	lopf: () => ni,
+	lopf: () => Yo,
 	loplus: () => "⨭",
 	lotimes: () => "⨴",
 	lowast: () => "∗",
@@ -8507,7 +10904,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	lrm: () => "‎",
 	lrtri: () => "⊿",
 	lsaquo: () => "‹",
-	lscr: () => ri,
+	lscr: () => Xo,
 	lsh: () => "↰",
 	lsim: () => "≲",
 	lsime: () => "⪍",
@@ -8530,8 +10927,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 	ltrif: () => "◂",
 	lurdshar: () => "⥊",
 	luruhar: () => "⥦",
-	lvertneqq: () => ii,
-	lvnE: () => ai,
+	lvertneqq: () => Zo,
+	lvnE: () => Qo,
 	mDDot: () => "∺",
 	macr: () => "¯",
 	male: () => "♂",
@@ -8547,7 +10944,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	mcy: () => "м",
 	mdash: () => "—",
 	measuredangle: () => "∡",
-	mfr: () => si,
+	mfr: () => es,
 	mho: () => "℧",
 	micro: () => "µ",
 	mid: () => "∣",
@@ -8562,43 +10959,43 @@ var rn = /* @__PURE__ */ v(((e) => {
 	mldr: () => "…",
 	mnplus: () => "∓",
 	models: () => "⊧",
-	mopf: () => li,
+	mopf: () => ns,
 	mp: () => "∓",
-	mscr: () => ui,
+	mscr: () => rs,
 	mstpos: () => "∾",
 	mu: () => "μ",
 	multimap: () => "⊸",
 	mumap: () => "⊸",
-	nGg: () => Ti,
-	nGt: () => Ei,
-	nGtv: () => Di,
+	nGg: () => vs,
+	nGt: () => ys,
+	nGtv: () => bs,
 	nLeftarrow: () => "⇍",
 	nLeftrightarrow: () => "⇎",
-	nLl: () => Mi,
-	nLt: () => Ni,
-	nLtv: () => Pi,
+	nLl: () => Ts,
+	nLt: () => Es,
+	nLtv: () => Ds,
 	nRightarrow: () => "⇏",
 	nVDash: () => "⊯",
 	nVdash: () => "⊮",
 	nabla: () => "∇",
 	nacute: () => "ń",
-	nang: () => di,
+	nang: () => is,
 	nap: () => "≉",
-	napE: () => fi,
-	napid: () => pi,
+	napE: () => as,
+	napid: () => os,
 	napos: () => "ŉ",
 	napprox: () => "≉",
 	natur: () => "♮",
 	natural: () => "♮",
 	naturals: () => "ℕ",
 	nbsp: () => "\xA0",
-	nbump: () => mi,
-	nbumpe: () => hi,
+	nbump: () => ss,
+	nbumpe: () => cs,
 	ncap: () => "⩃",
 	ncaron: () => "ň",
 	ncedil: () => "ņ",
 	ncong: () => "≇",
-	ncongdot: () => gi,
+	ncongdot: () => ls,
 	ncup: () => "⩂",
 	ncy: () => "н",
 	ndash: () => "–",
@@ -8607,19 +11004,19 @@ var rn = /* @__PURE__ */ v(((e) => {
 	nearhk: () => "⤤",
 	nearr: () => "↗",
 	nearrow: () => "↗",
-	nedot: () => _i,
+	nedot: () => us,
 	nequiv: () => "≢",
 	nesear: () => "⤨",
-	nesim: () => vi,
+	nesim: () => ds,
 	nexist: () => "∄",
 	nexists: () => "∄",
-	nfr: () => bi,
-	ngE: () => xi,
+	nfr: () => ps,
+	ngE: () => ms,
 	nge: () => "≱",
 	ngeq: () => "≱",
-	ngeqq: () => Si,
-	ngeqslant: () => Ci,
-	nges: () => wi,
+	ngeqq: () => hs,
+	ngeqslant: () => gs,
+	nges: () => _s,
 	ngsim: () => "≵",
 	ngt: () => "≯",
 	ngtr: () => "≯",
@@ -8632,27 +11029,27 @@ var rn = /* @__PURE__ */ v(((e) => {
 	niv: () => "∋",
 	njcy: () => "њ",
 	nlArr: () => "⇍",
-	nlE: () => Oi,
+	nlE: () => xs,
 	nlarr: () => "↚",
 	nldr: () => "‥",
 	nle: () => "≰",
 	nleftarrow: () => "↚",
 	nleftrightarrow: () => "↮",
 	nleq: () => "≰",
-	nleqq: () => ki,
-	nleqslant: () => Ai,
-	nles: () => ji,
+	nleqq: () => Ss,
+	nleqslant: () => Cs,
+	nles: () => ws,
 	nless: () => "≮",
 	nlsim: () => "≴",
 	nlt: () => "≮",
 	nltri: () => "⋪",
 	nltrie: () => "⋬",
 	nmid: () => "∤",
-	nopf: () => Fi,
+	nopf: () => Os,
 	not: () => "¬",
 	notin: () => "∉",
-	notinE: () => Ui,
-	notindot: () => Hi,
+	notinE: () => Is,
+	notindot: () => Fs,
 	notinva: () => "∉",
 	notinvb: () => "⋷",
 	notinvc: () => "⋶",
@@ -8662,25 +11059,25 @@ var rn = /* @__PURE__ */ v(((e) => {
 	notnivc: () => "⋽",
 	npar: () => "∦",
 	nparallel: () => "∦",
-	nparsl: () => ra,
-	npart: () => ia,
+	nparsl: () => Xs,
+	npart: () => Zs,
 	npolint: () => "⨔",
 	npr: () => "⊀",
 	nprcue: () => "⋠",
-	npre: () => oa,
+	npre: () => $s,
 	nprec: () => "⊀",
-	npreceq: () => aa,
+	npreceq: () => Qs,
 	nrArr: () => "⇏",
 	nrarr: () => "↛",
-	nrarrc: () => sa,
-	nrarrw: () => ca,
+	nrarrc: () => ec,
+	nrarrw: () => tc,
 	nrightarrow: () => "↛",
 	nrtri: () => "⋫",
 	nrtrie: () => "⋭",
 	nsc: () => "⊁",
 	nsccue: () => "⋡",
-	nsce: () => la,
-	nscr: () => da,
+	nsce: () => nc,
+	nscr: () => ic,
 	nshortmid: () => "∤",
 	nshortparallel: () => "∦",
 	nsim: () => "≁",
@@ -8691,19 +11088,19 @@ var rn = /* @__PURE__ */ v(((e) => {
 	nsqsube: () => "⋢",
 	nsqsupe: () => "⋣",
 	nsub: () => "⊄",
-	nsubE: () => fa,
+	nsubE: () => ac,
 	nsube: () => "⊈",
-	nsubset: () => pa,
+	nsubset: () => oc,
 	nsubseteq: () => "⊈",
-	nsubseteqq: () => ma,
+	nsubseteqq: () => sc,
 	nsucc: () => "⊁",
-	nsucceq: () => ha,
+	nsucceq: () => cc,
 	nsup: () => "⊅",
-	nsupE: () => ga,
+	nsupE: () => lc,
 	nsupe: () => "⊉",
-	nsupset: () => _a,
+	nsupset: () => uc,
 	nsupseteq: () => "⊉",
-	nsupseteqq: () => va,
+	nsupseteqq: () => dc,
 	ntgl: () => "≹",
 	ntilde: () => "ñ",
 	ntlg: () => "≸",
@@ -8717,18 +11114,18 @@ var rn = /* @__PURE__ */ v(((e) => {
 	numsp: () => " ",
 	nvDash: () => "⊭",
 	nvHarr: () => "⤄",
-	nvap: () => ya,
+	nvap: () => fc,
 	nvdash: () => "⊬",
-	nvge: () => ba,
-	nvgt: () => xa,
+	nvge: () => pc,
+	nvgt: () => mc,
 	nvinfin: () => "⧞",
 	nvlArr: () => "⤂",
-	nvle: () => Sa,
-	nvlt: () => Ca,
-	nvltrie: () => wa,
+	nvle: () => hc,
+	nvlt: () => gc,
+	nvltrie: () => _c,
 	nvrArr: () => "⤃",
-	nvrtrie: () => Ta,
-	nvsim: () => Ea,
+	nvrtrie: () => vc,
+	nvsim: () => yc,
 	nwArr: () => "⇖",
 	nwarhk: () => "⤣",
 	nwarr: () => "↖",
@@ -8747,7 +11144,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	odsold: () => "⦼",
 	oelig: () => "œ",
 	ofcir: () => "⦿",
-	ofr: () => Oa,
+	ofr: () => xc,
 	ogon: () => "˛",
 	ograve: () => "ò",
 	ogt: () => "⧁",
@@ -8764,7 +11161,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	omicron: () => "ο",
 	omid: () => "⦶",
 	ominus: () => "⊖",
-	oopf: () => Aa,
+	oopf: () => Cc,
 	opar: () => "⦷",
 	operp: () => "⦹",
 	oplus: () => "⊕",
@@ -8799,7 +11196,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	permil: () => "‰",
 	perp: () => "⊥",
 	pertenk: () => "‱",
-	pfr: () => Na,
+	pfr: () => Ec,
 	phi: () => "φ",
 	phiv: () => "ϕ",
 	phmmat: () => "ℳ",
@@ -8822,7 +11219,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	plustwo: () => "⨧",
 	pm: () => "±",
 	pointint: () => "⨕",
-	popf: () => Pa,
+	popf: () => Dc,
 	pound: () => "£",
 	pr: () => "≺",
 	prE: () => "⪳",
@@ -8850,14 +11247,14 @@ var rn = /* @__PURE__ */ v(((e) => {
 	propto: () => "∝",
 	prsim: () => "≾",
 	prurel: () => "⊰",
-	pscr: () => Ia,
+	pscr: () => kc,
 	psi: () => "ψ",
 	puncsp: () => " ",
-	qfr: () => Ra,
+	qfr: () => jc,
 	qint: () => "⨌",
-	qopf: () => za,
+	qopf: () => Mc,
 	qprime: () => "⁗",
-	qscr: () => Va,
+	qscr: () => Pc,
 	quaternions: () => "ℍ",
 	quatint: () => "⨖",
 	quest: () => "?",
@@ -8868,7 +11265,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	rAtail: () => "⤜",
 	rBarr: () => "⤏",
 	rHar: () => "⥤",
-	race: () => Ha,
+	race: () => Fc,
 	racute: () => "ŕ",
 	radic: () => "√",
 	raemptyv: () => "⦳",
@@ -8917,7 +11314,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	reg: () => "®",
 	rfisht: () => "⥽",
 	rfloor: () => "⌋",
-	rfr: () => Ua,
+	rfr: () => Ic,
 	rhard: () => "⇁",
 	rharu: () => "⇀",
 	rharul: () => "⥬",
@@ -8944,7 +11341,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	roarr: () => "⇾",
 	robrk: () => "⟧",
 	ropar: () => "⦆",
-	ropf: () => Wa,
+	ropf: () => Lc,
 	roplus: () => "⨮",
 	rotimes: () => "⨵",
 	rpar: () => ")",
@@ -8952,7 +11349,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	rppolint: () => "⨒",
 	rrarr: () => "⇉",
 	rsaquo: () => "›",
-	rscr: () => Ga,
+	rscr: () => Rc,
 	rsh: () => "↱",
 	rsqb: () => "]",
 	rsquo: () => "’",
@@ -8994,7 +11391,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	setminus: () => "∖",
 	setmn: () => "∖",
 	sext: () => "✶",
-	sfr: () => qa,
+	sfr: () => Bc,
 	sfrown: () => "⌢",
 	sharp: () => "♯",
 	shchcy: () => "щ",
@@ -9024,19 +11421,19 @@ var rn = /* @__PURE__ */ v(((e) => {
 	smile: () => "⌣",
 	smt: () => "⪪",
 	smte: () => "⪬",
-	smtes: () => Ja,
+	smtes: () => Vc,
 	softcy: () => "ь",
 	sol: () => "/",
 	solb: () => "⧄",
 	solbar: () => "⌿",
-	sopf: () => Xa,
+	sopf: () => Uc,
 	spades: () => "♠",
 	spadesuit: () => "♠",
 	spar: () => "∥",
 	sqcap: () => "⊓",
-	sqcaps: () => Za,
+	sqcaps: () => Wc,
 	sqcup: () => "⊔",
-	sqcups: () => Qa,
+	sqcups: () => Gc,
 	sqsub: () => "⊏",
 	sqsube: () => "⊑",
 	sqsubset: () => "⊏",
@@ -9050,7 +11447,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	squarf: () => "▪",
 	squf: () => "▪",
 	srarr: () => "→",
-	sscr: () => eo,
+	sscr: () => qc,
 	ssetmn: () => "∖",
 	ssmile: () => "⌣",
 	sstarf: () => "⋆",
@@ -9125,7 +11522,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	tcy: () => "т",
 	tdot: () => "⃛",
 	telrec: () => "⌕",
-	tfr: () => no,
+	tfr: () => Yc,
 	there4: () => "∴",
 	therefore: () => "∴",
 	theta: () => "θ",
@@ -9147,7 +11544,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	top: () => "⊤",
 	topbot: () => "⌶",
 	topcir: () => "⫱",
-	topf: () => ao,
+	topf: () => Qc,
 	topfork: () => "⫚",
 	tosa: () => "⤩",
 	tprime: () => "‴",
@@ -9166,7 +11563,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	trisb: () => "⧍",
 	tritime: () => "⨻",
 	trpezium: () => "⏢",
-	tscr: () => so,
+	tscr: () => el,
 	tscy: () => "ц",
 	tshcy: () => "ћ",
 	tstrok: () => "ŧ",
@@ -9185,7 +11582,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	udblac: () => "ű",
 	udhar: () => "⥮",
 	ufisht: () => "⥾",
-	ufr: () => lo,
+	ufr: () => nl,
 	ugrave: () => "ù",
 	uharl: () => "↿",
 	uharr: () => "↾",
@@ -9197,7 +11594,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	umacr: () => "ū",
 	uml: () => "¨",
 	uogon: () => "ų",
-	uopf: () => fo,
+	uopf: () => il,
 	uparrow: () => "↑",
 	updownarrow: () => "↕",
 	upharpoonleft: () => "↿",
@@ -9212,7 +11609,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	urcrop: () => "⌎",
 	uring: () => "ů",
 	urtri: () => "◹",
-	uscr: () => mo,
+	uscr: () => ol,
 	utdot: () => "⋰",
 	utilde: () => "ũ",
 	utri: () => "▵",
@@ -9234,10 +11631,10 @@ var rn = /* @__PURE__ */ v(((e) => {
 	varr: () => "↕",
 	varrho: () => "ϱ",
 	varsigma: () => "ς",
-	varsubsetneq: () => ho,
-	varsubsetneqq: () => go,
-	varsupsetneq: () => _o,
-	varsupsetneqq: () => vo,
+	varsubsetneq: () => sl,
+	varsubsetneqq: () => cl,
+	varsupsetneq: () => ll,
+	varsupsetneqq: () => ul,
 	vartheta: () => "ϑ",
 	vartriangleleft: () => "⊲",
 	vartriangleright: () => "⊳",
@@ -9249,35 +11646,35 @@ var rn = /* @__PURE__ */ v(((e) => {
 	vellip: () => "⋮",
 	verbar: () => "|",
 	vert: () => "|",
-	vfr: () => bo,
+	vfr: () => fl,
 	vltri: () => "⊲",
-	vnsub: () => xo,
-	vnsup: () => So,
-	vopf: () => wo,
+	vnsub: () => pl,
+	vnsup: () => ml,
+	vopf: () => gl,
 	vprop: () => "∝",
 	vrtri: () => "⊳",
-	vscr: () => Eo,
-	vsubnE: () => Do,
-	vsubne: () => Oo,
-	vsupnE: () => ko,
-	vsupne: () => Ao,
+	vscr: () => vl,
+	vsubnE: () => yl,
+	vsubne: () => bl,
+	vsupnE: () => xl,
+	vsupne: () => Sl,
 	vzigzag: () => "⦚",
 	wcirc: () => "ŵ",
 	wedbar: () => "⩟",
 	wedge: () => "∧",
 	wedgeq: () => "≙",
 	weierp: () => "℘",
-	wfr: () => Mo,
-	wopf: () => Po,
+	wfr: () => wl,
+	wopf: () => El,
 	wp: () => "℘",
 	wr: () => "≀",
 	wreath: () => "≀",
-	wscr: () => Io,
+	wscr: () => Ol,
 	xcap: () => "⋂",
 	xcirc: () => "◯",
 	xcup: () => "⋃",
 	xdtri: () => "▽",
-	xfr: () => Ro,
+	xfr: () => Al,
 	xhArr: () => "⟺",
 	xharr: () => "⟷",
 	xi: () => "ξ",
@@ -9286,12 +11683,12 @@ var rn = /* @__PURE__ */ v(((e) => {
 	xmap: () => "⟼",
 	xnis: () => "⋻",
 	xodot: () => "⨀",
-	xopf: () => Bo,
+	xopf: () => Ml,
 	xoplus: () => "⨁",
 	xotime: () => "⨂",
 	xrArr: () => "⟹",
 	xrarr: () => "⟶",
-	xscr: () => Ho,
+	xscr: () => Pl,
 	xsqcup: () => "⨆",
 	xuplus: () => "⨄",
 	xutri: () => "△",
@@ -9302,10 +11699,10 @@ var rn = /* @__PURE__ */ v(((e) => {
 	ycirc: () => "ŷ",
 	ycy: () => "ы",
 	yen: () => "¥",
-	yfr: () => Wo,
+	yfr: () => Il,
 	yicy: () => "ї",
-	yopf: () => Ko,
-	yscr: () => Jo,
+	yopf: () => Rl,
+	yscr: () => Bl,
 	yucy: () => "ю",
 	yuml: () => "ÿ",
 	zacute: () => "ź",
@@ -9314,22 +11711,22 @@ var rn = /* @__PURE__ */ v(((e) => {
 	zdot: () => "ż",
 	zeetrf: () => "ℨ",
 	zeta: () => "ζ",
-	zfr: () => Yo,
+	zfr: () => Vl,
 	zhcy: () => "ж",
 	zigrarr: () => "⇝",
-	zopf: () => Xo,
-	zscr: () => Qo,
+	zopf: () => Hl,
+	zscr: () => Wl,
 	zwj: () => "‍",
 	zwnj: () => "‌"
-}), Un, Wn, Gn, Kn, qn, Jn, Yn, Xn, Zn, Qn, $n, er, tr, nr, rr, ir, ar, or, sr, cr, lr, ur, dr, fr, pr, mr, hr, gr, _r, vr, yr, br, xr, Sr, Cr, wr, Tr, Er, Dr, Or, kr, Ar, jr, Mr, Nr, Pr, Fr, Ir, Lr, Rr, zr, Br, Vr, Hr, Ur, Wr, Gr, Kr, qr, Jr, Yr, Xr, Zr, Qr, $r, ei, ti, ni, ri, ii, ai, oi, si, ci, li, ui, di, fi, pi, mi, hi, gi, _i, vi, yi, bi, xi, Si, Ci, wi, Ti, Ei, Di, Oi, ki, Ai, ji, Mi, Ni, Pi, Fi, Ii, Li, Ri, zi, Bi, Vi, Hi, Ui, Wi, Gi, Ki, qi, Ji, Yi, Xi, Zi, Qi, $i, ea, ta, na, ra, ia, aa, oa, sa, ca, la, ua, da, fa, pa, ma, ha, ga, _a, va, ya, ba, xa, Sa, Ca, wa, Ta, Ea, Da, Oa, ka, Aa, ja, Ma, Na, Pa, Fa, Ia, La, Ra, za, Ba, Va, Ha, Ua, Wa, Ga, Ka, qa, Ja, Ya, Xa, Za, Qa, $a, eo, to, no, ro, io, ao, oo, so, co, lo, uo, fo, po, mo, ho, go, _o, vo, yo, bo, xo, So, Co, wo, To, Eo, Do, Oo, ko, Ao, jo, Mo, No, Po, Fo, Io, Lo, Ro, zo, Bo, Vo, Ho, Uo, Wo, Go, Ko, qo, Jo, Yo, Xo, Zo, Qo, $o, es = _((() => {
-	Un = "∾̳", Wn = "𝔄", Gn = "𝔞", Kn = "𝔸", qn = "𝕒", Jn = "𝒜", Yn = "𝒶", Xn = "𝔅", Zn = "𝔟", Qn = "=⃥", $n = "≡⃥", er = "𝔹", tr = "𝕓", nr = "𝒷", rr = "∩︀", ir = "𝔠", ar = "𝕔", or = "𝒞", sr = "𝒸", cr = "∪︀", lr = "𝔇", ur = "𝔡", dr = "𝔻", fr = "𝕕", pr = "𝒟", mr = "𝒹", hr = "𝔈", gr = "𝔢", _r = "𝔼", vr = "𝕖", yr = "𝔉", br = "𝔣", xr = "𝔽", Sr = "𝕗", Cr = "𝒻", wr = "⋛︀", Tr = "𝔊", Er = "𝔤", Dr = "𝔾", Or = "𝕘", kr = "𝒢", Ar = "≩︀", jr = "≩︀", Mr = "𝔥", Nr = "𝕙", Pr = "𝒽", Fr = "𝔦", Ir = "𝕀", Lr = "𝕚", Rr = "𝒾", zr = "𝔍", Br = "𝔧", Vr = "𝕁", Hr = "𝕛", Ur = "𝒥", Wr = "𝒿", Gr = "𝔎", Kr = "𝔨", qr = "𝕂", Jr = "𝕜", Yr = "𝒦", Xr = "𝓀", Zr = "⪭︀", Qr = "⋚︀", $r = "𝔏", ei = "𝔩", ti = "𝕃", ni = "𝕝", ri = "𝓁", ii = "≨︀", ai = "≨︀", oi = "𝔐", si = "𝔪", ci = "𝕄", li = "𝕞", ui = "𝓂", di = "∠⃒", fi = "⩰̸", pi = "≋̸", mi = "≎̸", hi = "≏̸", gi = "⩭̸", _i = "≐̸", vi = "≂̸", yi = "𝔑", bi = "𝔫", xi = "≧̸", Si = "≧̸", Ci = "⩾̸", wi = "⩾̸", Ti = "⋙̸", Ei = "≫⃒", Di = "≫̸", Oi = "≦̸", ki = "≦̸", Ai = "⩽̸", ji = "⩽̸", Mi = "⋘̸", Ni = "≪⃒", Pi = "≪̸", Fi = "𝕟", Ii = "≂̸", Li = "≧̸", Ri = "≫̸", zi = "⩾̸", Bi = "≎̸", Vi = "≏̸", Hi = "⋵̸", Ui = "⋹̸", Wi = "⧏̸", Gi = "≪̸", Ki = "⩽̸", qi = "⪢̸", Ji = "⪡̸", Yi = "⪯̸", Xi = "⧐̸", Zi = "⊏̸", Qi = "⊐̸", $i = "⊂⃒", ea = "⪰̸", ta = "≿̸", na = "⊃⃒", ra = "⫽⃥", ia = "∂̸", aa = "⪯̸", oa = "⪯̸", sa = "⤳̸", ca = "↝̸", la = "⪰̸", ua = "𝒩", da = "𝓃", fa = "⫅̸", pa = "⊂⃒", ma = "⫅̸", ha = "⪰̸", ga = "⫆̸", _a = "⊃⃒", va = "⫆̸", ya = "≍⃒", ba = "≥⃒", xa = ">⃒", Sa = "≤⃒", Ca = "<⃒", wa = "⊴⃒", Ta = "⊵⃒", Ea = "∼⃒", Da = "𝔒", Oa = "𝔬", ka = "𝕆", Aa = "𝕠", ja = "𝒪", Ma = "𝔓", Na = "𝔭", Pa = "𝕡", Fa = "𝒫", Ia = "𝓅", La = "𝔔", Ra = "𝔮", za = "𝕢", Ba = "𝒬", Va = "𝓆", Ha = "∽̱", Ua = "𝔯", Wa = "𝕣", Ga = "𝓇", Ka = "𝔖", qa = "𝔰", Ja = "⪬︀", Ya = "𝕊", Xa = "𝕤", Za = "⊓︀", Qa = "⊔︀", $a = "𝒮", eo = "𝓈", to = "𝔗", no = "𝔱", ro = "  ", io = "𝕋", ao = "𝕥", oo = "𝒯", so = "𝓉", co = "𝔘", lo = "𝔲", uo = "𝕌", fo = "𝕦", po = "𝒰", mo = "𝓊", ho = "⊊︀", go = "⫋︀", _o = "⊋︀", vo = "⫌︀", yo = "𝔙", bo = "𝔳", xo = "⊂⃒", So = "⊃⃒", Co = "𝕍", wo = "𝕧", To = "𝒱", Eo = "𝓋", Do = "⫋︀", Oo = "⊊︀", ko = "⫌︀", Ao = "⊋︀", jo = "𝔚", Mo = "𝔴", No = "𝕎", Po = "𝕨", Fo = "𝒲", Io = "𝓌", Lo = "𝔛", Ro = "𝔵", zo = "𝕏", Bo = "𝕩", Vo = "𝒳", Ho = "𝓍", Uo = "𝔜", Wo = "𝔶", Go = "𝕐", Ko = "𝕪", qo = "𝒴", Jo = "𝓎", Yo = "𝔷", Xo = "𝕫", Zo = "𝒵", Qo = "𝓏", $o = {
+}), Fa, Ia, La, Ra, za, Ba, Va, Ha, Ua, Wa, Ga, Ka, qa, Ja, Ya, Xa, Za, Qa, $a, eo, to, no, ro, io, ao, oo, so, co, lo, uo, fo, po, mo, ho, go, _o, vo, yo, bo, xo, So, Co, wo, To, Eo, Do, Oo, ko, Ao, jo, Mo, No, Po, Fo, Io, Lo, Ro, zo, Bo, Vo, Ho, Uo, Wo, Go, Ko, qo, Jo, Yo, Xo, Zo, Qo, $o, es, ts, ns, rs, is, as, os, ss, cs, ls, us, ds, fs, ps, ms, hs, gs, _s, vs, ys, bs, xs, Ss, Cs, ws, Ts, Es, Ds, Os, ks, As, js, Ms, Ns, Ps, Fs, Is, Ls, Rs, zs, Bs, Vs, Hs, Us, Ws, Gs, Ks, qs, Js, Ys, Xs, Zs, Qs, $s, ec, tc, nc, rc, ic, ac, oc, sc, cc, lc, uc, dc, fc, pc, mc, hc, gc, _c, vc, yc, bc, xc, Sc, Cc, wc, Tc, Ec, Dc, Oc, kc, Ac, jc, Mc, Nc, Pc, Fc, Ic, Lc, Rc, zc, Bc, Vc, Hc, Uc, Wc, Gc, Kc, qc, Jc, Yc, Xc, Zc, Qc, $c, el, tl, nl, rl, il, al, ol, sl, cl, ll, ul, dl, fl, pl, ml, hl, gl, _l, vl, yl, bl, xl, Sl, Cl, wl, Tl, El, Dl, Ol, kl, Al, jl, Ml, Nl, Pl, Fl, Il, Ll, Rl, zl, Bl, Vl, Hl, Ul, Wl, Gl, Kl = v((() => {
+	Fa = "∾̳", Ia = "𝔄", La = "𝔞", Ra = "𝔸", za = "𝕒", Ba = "𝒜", Va = "𝒶", Ha = "𝔅", Ua = "𝔟", Wa = "=⃥", Ga = "≡⃥", Ka = "𝔹", qa = "𝕓", Ja = "𝒷", Ya = "∩︀", Xa = "𝔠", Za = "𝕔", Qa = "𝒞", $a = "𝒸", eo = "∪︀", to = "𝔇", no = "𝔡", ro = "𝔻", io = "𝕕", ao = "𝒟", oo = "𝒹", so = "𝔈", co = "𝔢", lo = "𝔼", uo = "𝕖", fo = "𝔉", po = "𝔣", mo = "𝔽", ho = "𝕗", go = "𝒻", _o = "⋛︀", vo = "𝔊", yo = "𝔤", bo = "𝔾", xo = "𝕘", So = "𝒢", Co = "≩︀", wo = "≩︀", To = "𝔥", Eo = "𝕙", Do = "𝒽", Oo = "𝔦", ko = "𝕀", Ao = "𝕚", jo = "𝒾", Mo = "𝔍", No = "𝔧", Po = "𝕁", Fo = "𝕛", Io = "𝒥", Lo = "𝒿", Ro = "𝔎", zo = "𝔨", Bo = "𝕂", Vo = "𝕜", Ho = "𝒦", Uo = "𝓀", Wo = "⪭︀", Go = "⋚︀", Ko = "𝔏", qo = "𝔩", Jo = "𝕃", Yo = "𝕝", Xo = "𝓁", Zo = "≨︀", Qo = "≨︀", $o = "𝔐", es = "𝔪", ts = "𝕄", ns = "𝕞", rs = "𝓂", is = "∠⃒", as = "⩰̸", os = "≋̸", ss = "≎̸", cs = "≏̸", ls = "⩭̸", us = "≐̸", ds = "≂̸", fs = "𝔑", ps = "𝔫", ms = "≧̸", hs = "≧̸", gs = "⩾̸", _s = "⩾̸", vs = "⋙̸", ys = "≫⃒", bs = "≫̸", xs = "≦̸", Ss = "≦̸", Cs = "⩽̸", ws = "⩽̸", Ts = "⋘̸", Es = "≪⃒", Ds = "≪̸", Os = "𝕟", ks = "≂̸", As = "≧̸", js = "≫̸", Ms = "⩾̸", Ns = "≎̸", Ps = "≏̸", Fs = "⋵̸", Is = "⋹̸", Ls = "⧏̸", Rs = "≪̸", zs = "⩽̸", Bs = "⪢̸", Vs = "⪡̸", Hs = "⪯̸", Us = "⧐̸", Ws = "⊏̸", Gs = "⊐̸", Ks = "⊂⃒", qs = "⪰̸", Js = "≿̸", Ys = "⊃⃒", Xs = "⫽⃥", Zs = "∂̸", Qs = "⪯̸", $s = "⪯̸", ec = "⤳̸", tc = "↝̸", nc = "⪰̸", rc = "𝒩", ic = "𝓃", ac = "⫅̸", oc = "⊂⃒", sc = "⫅̸", cc = "⪰̸", lc = "⫆̸", uc = "⊃⃒", dc = "⫆̸", fc = "≍⃒", pc = "≥⃒", mc = ">⃒", hc = "≤⃒", gc = "<⃒", _c = "⊴⃒", vc = "⊵⃒", yc = "∼⃒", bc = "𝔒", xc = "𝔬", Sc = "𝕆", Cc = "𝕠", wc = "𝒪", Tc = "𝔓", Ec = "𝔭", Dc = "𝕡", Oc = "𝒫", kc = "𝓅", Ac = "𝔔", jc = "𝔮", Mc = "𝕢", Nc = "𝒬", Pc = "𝓆", Fc = "∽̱", Ic = "𝔯", Lc = "𝕣", Rc = "𝓇", zc = "𝔖", Bc = "𝔰", Vc = "⪬︀", Hc = "𝕊", Uc = "𝕤", Wc = "⊓︀", Gc = "⊔︀", Kc = "𝒮", qc = "𝓈", Jc = "𝔗", Yc = "𝔱", Xc = "  ", Zc = "𝕋", Qc = "𝕥", $c = "𝒯", el = "𝓉", tl = "𝔘", nl = "𝔲", rl = "𝕌", il = "𝕦", al = "𝒰", ol = "𝓊", sl = "⊊︀", cl = "⫋︀", ll = "⊋︀", ul = "⫌︀", dl = "𝔙", fl = "𝔳", pl = "⊂⃒", ml = "⊃⃒", hl = "𝕍", gl = "𝕧", _l = "𝒱", vl = "𝓋", yl = "⫋︀", bl = "⊊︀", xl = "⫌︀", Sl = "⊋︀", Cl = "𝔚", wl = "𝔴", Tl = "𝕎", El = "𝕨", Dl = "𝒲", Ol = "𝓌", kl = "𝔛", Al = "𝔵", jl = "𝕏", Ml = "𝕩", Nl = "𝒳", Pl = "𝓍", Fl = "𝔜", Il = "𝔶", Ll = "𝕐", Rl = "𝕪", zl = "𝒴", Bl = "𝓎", Vl = "𝔷", Hl = "𝕫", Ul = "𝒵", Wl = "𝓏", Gl = {
 		Aacute: "Á",
 		aacute: "á",
 		Abreve: "Ă",
 		abreve: "ă",
 		ac: "∾",
 		acd: "∿",
-		acE: Un,
+		acE: Fa,
 		Acirc: "Â",
 		acirc: "â",
 		acute: "´",
@@ -9338,8 +11735,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		AElig: "Æ",
 		aelig: "æ",
 		af: "⁡",
-		Afr: Wn,
-		afr: Gn,
+		Afr: Ia,
+		afr: La,
 		Agrave: "À",
 		agrave: "à",
 		alefsym: "ℵ",
@@ -9377,8 +11774,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		angzarr: "⍼",
 		Aogon: "Ą",
 		aogon: "ą",
-		Aopf: Kn,
-		aopf: qn,
+		Aopf: Ra,
+		aopf: za,
 		apacir: "⩯",
 		ap: "≈",
 		apE: "⩰",
@@ -9390,8 +11787,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		approxeq: "≊",
 		Aring: "Å",
 		aring: "å",
-		Ascr: Jn,
-		ascr: Yn,
+		Ascr: Ba,
+		ascr: Va,
 		Assign: "≔",
 		ast: "*",
 		asymp: "≈",
@@ -9430,8 +11827,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		beta: "β",
 		beth: "ℶ",
 		between: "≬",
-		Bfr: Xn,
-		bfr: Zn,
+		Bfr: Ha,
+		bfr: Ua,
 		bigcap: "⋂",
 		bigcirc: "◯",
 		bigcup: "⋃",
@@ -9457,12 +11854,12 @@ var rn = /* @__PURE__ */ v(((e) => {
 		blk14: "░",
 		blk34: "▓",
 		block: "█",
-		bne: Qn,
-		bnequiv: $n,
+		bne: Wa,
+		bnequiv: Ga,
 		bNot: "⫭",
 		bnot: "⌐",
-		Bopf: er,
-		bopf: tr,
+		Bopf: Ka,
+		bopf: qa,
 		bot: "⊥",
 		bottom: "⊥",
 		bowtie: "⋈",
@@ -9514,7 +11911,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 		breve: "˘",
 		Breve: "˘",
 		brvbar: "¦",
-		bscr: nr,
+		bscr: Ja,
 		Bscr: "ℬ",
 		bsemi: "⁏",
 		bsim: "∽",
@@ -9539,7 +11936,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 		capcup: "⩇",
 		capdot: "⩀",
 		CapitalDifferentialD: "ⅅ",
-		caps: rr,
+		caps: Ya,
 		caret: "⁁",
 		caron: "ˇ",
 		Cayleys: "ℭ",
@@ -9561,7 +11958,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 		cent: "¢",
 		centerdot: "·",
 		CenterDot: "·",
-		cfr: ir,
+		cfr: Xa,
 		Cfr: "ℭ",
 		CHcy: "Ч",
 		chcy: "ч",
@@ -9610,7 +12007,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 		conint: "∮",
 		Conint: "∯",
 		ContourIntegral: "∮",
-		copf: ar,
+		copf: Za,
 		Copf: "ℂ",
 		coprod: "∐",
 		Coproduct: "∐",
@@ -9621,8 +12018,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		crarr: "↵",
 		cross: "✗",
 		Cross: "⨯",
-		Cscr: or,
-		cscr: sr,
+		Cscr: Qa,
+		cscr: $a,
 		csub: "⫏",
 		csube: "⫑",
 		csup: "⫐",
@@ -9642,7 +12039,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 		cupcup: "⩊",
 		cupdot: "⊍",
 		cupor: "⩅",
-		cups: cr,
+		cups: eo,
 		curarr: "↷",
 		curarrm: "⤼",
 		curlyeqprec: "⋞",
@@ -9684,8 +12081,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		delta: "δ",
 		demptyv: "⦱",
 		dfisht: "⥿",
-		Dfr: lr,
-		dfr: ur,
+		Dfr: to,
+		dfr: no,
 		dHar: "⥥",
 		dharl: "⇃",
 		dharr: "⇂",
@@ -9712,8 +12109,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		dlcorn: "⌞",
 		dlcrop: "⌍",
 		dollar: "$",
-		Dopf: dr,
-		dopf: fr,
+		Dopf: ro,
+		dopf: io,
 		Dot: "¨",
 		dot: "˙",
 		DotDot: "⃜",
@@ -9759,8 +12156,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		drbkarow: "⤐",
 		drcorn: "⌟",
 		drcrop: "⌌",
-		Dscr: pr,
-		dscr: mr,
+		Dscr: ao,
+		dscr: oo,
 		DScy: "Ѕ",
 		dscy: "ѕ",
 		dsol: "⧶",
@@ -9792,8 +12189,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		eDot: "≑",
 		ee: "ⅇ",
 		efDot: "≒",
-		Efr: hr,
-		efr: gr,
+		Efr: so,
+		efr: co,
 		eg: "⪚",
 		Egrave: "È",
 		egrave: "è",
@@ -9820,8 +12217,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		ensp: " ",
 		Eogon: "Ę",
 		eogon: "ę",
-		Eopf: _r,
-		eopf: vr,
+		Eopf: lo,
+		eopf: uo,
 		epar: "⋕",
 		eparsl: "⧣",
 		eplus: "⩱",
@@ -9869,8 +12266,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		ffilig: "ﬃ",
 		fflig: "ﬀ",
 		ffllig: "ﬄ",
-		Ffr: yr,
-		ffr: br,
+		Ffr: fo,
+		ffr: po,
 		filig: "ﬁ",
 		FilledSmallSquare: "◼",
 		FilledVerySmallSquare: "▪",
@@ -9879,8 +12276,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		fllig: "ﬂ",
 		fltns: "▱",
 		fnof: "ƒ",
-		Fopf: xr,
-		fopf: Sr,
+		Fopf: mo,
+		fopf: ho,
 		forall: "∀",
 		ForAll: "∀",
 		fork: "⋔",
@@ -9904,7 +12301,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 		frac78: "⅞",
 		frasl: "⁄",
 		frown: "⌢",
-		fscr: Cr,
+		fscr: go,
 		Fscr: "ℱ",
 		gacute: "ǵ",
 		Gamma: "Γ",
@@ -9933,10 +12330,10 @@ var rn = /* @__PURE__ */ v(((e) => {
 		gesdot: "⪀",
 		gesdoto: "⪂",
 		gesdotol: "⪄",
-		gesl: wr,
+		gesl: _o,
 		gesles: "⪔",
-		Gfr: Tr,
-		gfr: Er,
+		Gfr: vo,
+		gfr: yo,
 		gg: "≫",
 		Gg: "⋙",
 		ggg: "⋙",
@@ -9954,8 +12351,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		gneq: "⪈",
 		gneqq: "≩",
 		gnsim: "⋧",
-		Gopf: Dr,
-		gopf: Or,
+		Gopf: bo,
+		gopf: xo,
 		grave: "`",
 		GreaterEqual: "≥",
 		GreaterEqualLess: "⋛",
@@ -9964,7 +12361,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 		GreaterLess: "≷",
 		GreaterSlantEqual: "⩾",
 		GreaterTilde: "≳",
-		Gscr: kr,
+		Gscr: So,
 		gscr: "ℊ",
 		gsim: "≳",
 		gsime: "⪎",
@@ -9984,8 +12381,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		gtreqqless: "⪌",
 		gtrless: "≷",
 		gtrsim: "≳",
-		gvertneqq: Ar,
-		gvnE: jr,
+		gvertneqq: Co,
+		gvnE: wo,
 		Hacek: "ˇ",
 		hairsp: " ",
 		half: "½",
@@ -10004,7 +12401,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 		heartsuit: "♥",
 		hellip: "…",
 		hercon: "⊹",
-		hfr: Mr,
+		hfr: To,
 		Hfr: "ℌ",
 		HilbertSpace: "ℋ",
 		hksearow: "⤥",
@@ -10013,11 +12410,11 @@ var rn = /* @__PURE__ */ v(((e) => {
 		homtht: "∻",
 		hookleftarrow: "↩",
 		hookrightarrow: "↪",
-		hopf: Nr,
+		hopf: Eo,
 		Hopf: "ℍ",
 		horbar: "―",
 		HorizontalLine: "─",
-		hscr: Pr,
+		hscr: Do,
 		Hscr: "ℋ",
 		hslash: "ℏ",
 		Hstrok: "Ħ",
@@ -10038,7 +12435,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 		iecy: "е",
 		iexcl: "¡",
 		iff: "⇔",
-		ifr: Fr,
+		ifr: Oo,
 		Ifr: "ℑ",
 		Igrave: "Ì",
 		igrave: "ì",
@@ -10080,13 +12477,13 @@ var rn = /* @__PURE__ */ v(((e) => {
 		iocy: "ё",
 		Iogon: "Į",
 		iogon: "į",
-		Iopf: Ir,
-		iopf: Lr,
+		Iopf: ko,
+		iopf: Ao,
 		Iota: "Ι",
 		iota: "ι",
 		iprod: "⨼",
 		iquest: "¿",
-		iscr: Rr,
+		iscr: jo,
 		Iscr: "ℐ",
 		isin: "∈",
 		isindot: "⋵",
@@ -10105,13 +12502,13 @@ var rn = /* @__PURE__ */ v(((e) => {
 		jcirc: "ĵ",
 		Jcy: "Й",
 		jcy: "й",
-		Jfr: zr,
-		jfr: Br,
+		Jfr: Mo,
+		jfr: No,
 		jmath: "ȷ",
-		Jopf: Vr,
-		jopf: Hr,
-		Jscr: Ur,
-		jscr: Wr,
+		Jopf: Po,
+		jopf: Fo,
+		Jscr: Io,
+		jscr: Lo,
 		Jsercy: "Ј",
 		jsercy: "ј",
 		Jukcy: "Є",
@@ -10123,17 +12520,17 @@ var rn = /* @__PURE__ */ v(((e) => {
 		kcedil: "ķ",
 		Kcy: "К",
 		kcy: "к",
-		Kfr: Gr,
-		kfr: Kr,
+		Kfr: Ro,
+		kfr: zo,
 		kgreen: "ĸ",
 		KHcy: "Х",
 		khcy: "х",
 		KJcy: "Ќ",
 		kjcy: "ќ",
-		Kopf: qr,
-		kopf: Jr,
-		Kscr: Yr,
-		kscr: Xr,
+		Kopf: Bo,
+		kopf: Vo,
+		Kscr: Ho,
+		kscr: Uo,
 		lAarr: "⇚",
 		Lacute: "Ĺ",
 		lacute: "ĺ",
@@ -10163,7 +12560,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 		lAtail: "⤛",
 		lat: "⪫",
 		late: "⪭",
-		lates: Zr,
+		lates: Wo,
 		lbarr: "⤌",
 		lBarr: "⤎",
 		lbbrk: "❲",
@@ -10234,7 +12631,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 		lesdot: "⩿",
 		lesdoto: "⪁",
 		lesdotor: "⪃",
-		lesg: Qr,
+		lesg: Go,
 		lesges: "⪓",
 		lessapprox: "⪅",
 		lessdot: "⋖",
@@ -10250,8 +12647,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		LessTilde: "≲",
 		lfisht: "⥼",
 		lfloor: "⌊",
-		Lfr: $r,
-		lfr: ei,
+		Lfr: Ko,
+		lfr: qo,
 		lg: "≶",
 		lgE: "⪑",
 		lHar: "⥢",
@@ -10295,8 +12692,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		looparrowleft: "↫",
 		looparrowright: "↬",
 		lopar: "⦅",
-		Lopf: ti,
-		lopf: ni,
+		Lopf: Jo,
+		lopf: Yo,
 		loplus: "⨭",
 		lotimes: "⨴",
 		lowast: "∗",
@@ -10315,7 +12712,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 		lrm: "‎",
 		lrtri: "⊿",
 		lsaquo: "‹",
-		lscr: ri,
+		lscr: Xo,
 		Lscr: "ℒ",
 		lsh: "↰",
 		Lsh: "↰",
@@ -10343,8 +12740,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		ltrPar: "⦖",
 		lurdshar: "⥊",
 		luruhar: "⥦",
-		lvertneqq: ii,
-		lvnE: ai,
+		lvertneqq: Zo,
+		lvnE: Qo,
 		macr: "¯",
 		male: "♂",
 		malt: "✠",
@@ -10364,8 +12761,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		measuredangle: "∡",
 		MediumSpace: " ",
 		Mellintrf: "ℳ",
-		Mfr: oi,
-		mfr: si,
+		Mfr: $o,
+		mfr: es,
 		mho: "℧",
 		micro: "µ",
 		midast: "*",
@@ -10381,10 +12778,10 @@ var rn = /* @__PURE__ */ v(((e) => {
 		mldr: "…",
 		mnplus: "∓",
 		models: "⊧",
-		Mopf: ci,
-		mopf: li,
+		Mopf: ts,
+		mopf: ns,
 		mp: "∓",
-		mscr: ui,
+		mscr: rs,
 		Mscr: "ℳ",
 		mstpos: "∾",
 		Mu: "Μ",
@@ -10394,25 +12791,25 @@ var rn = /* @__PURE__ */ v(((e) => {
 		nabla: "∇",
 		Nacute: "Ń",
 		nacute: "ń",
-		nang: di,
+		nang: is,
 		nap: "≉",
-		napE: fi,
-		napid: pi,
+		napE: as,
+		napid: os,
 		napos: "ŉ",
 		napprox: "≉",
 		natural: "♮",
 		naturals: "ℕ",
 		natur: "♮",
 		nbsp: "\xA0",
-		nbump: mi,
-		nbumpe: hi,
+		nbump: ss,
+		nbumpe: cs,
 		ncap: "⩃",
 		Ncaron: "Ň",
 		ncaron: "ň",
 		Ncedil: "Ņ",
 		ncedil: "ņ",
 		ncong: "≇",
-		ncongdot: gi,
+		ncongdot: ls,
 		ncup: "⩂",
 		Ncy: "Н",
 		ncy: "н",
@@ -10422,33 +12819,33 @@ var rn = /* @__PURE__ */ v(((e) => {
 		neArr: "⇗",
 		nearrow: "↗",
 		ne: "≠",
-		nedot: _i,
+		nedot: us,
 		NegativeMediumSpace: "​",
 		NegativeThickSpace: "​",
 		NegativeThinSpace: "​",
 		NegativeVeryThinSpace: "​",
 		nequiv: "≢",
 		nesear: "⤨",
-		nesim: vi,
+		nesim: ds,
 		NestedGreaterGreater: "≫",
 		NestedLessLess: "≪",
 		NewLine: "\n",
 		nexist: "∄",
 		nexists: "∄",
-		Nfr: yi,
-		nfr: bi,
-		ngE: xi,
+		Nfr: fs,
+		nfr: ps,
+		ngE: ms,
 		nge: "≱",
 		ngeq: "≱",
-		ngeqq: Si,
-		ngeqslant: Ci,
-		nges: wi,
-		nGg: Ti,
+		ngeqq: hs,
+		ngeqslant: gs,
+		nges: _s,
+		nGg: vs,
 		ngsim: "≵",
-		nGt: Ei,
+		nGt: ys,
 		ngt: "≯",
 		ngtr: "≯",
-		nGtv: Di,
+		nGtv: bs,
 		nharr: "↮",
 		nhArr: "⇎",
 		nhpar: "⫲",
@@ -10461,28 +12858,28 @@ var rn = /* @__PURE__ */ v(((e) => {
 		nlarr: "↚",
 		nlArr: "⇍",
 		nldr: "‥",
-		nlE: Oi,
+		nlE: xs,
 		nle: "≰",
 		nleftarrow: "↚",
 		nLeftarrow: "⇍",
 		nleftrightarrow: "↮",
 		nLeftrightarrow: "⇎",
 		nleq: "≰",
-		nleqq: ki,
-		nleqslant: Ai,
-		nles: ji,
+		nleqq: Ss,
+		nleqslant: Cs,
+		nles: ws,
 		nless: "≮",
-		nLl: Mi,
+		nLl: Ts,
 		nlsim: "≴",
-		nLt: Ni,
+		nLt: Es,
 		nlt: "≮",
 		nltri: "⋪",
 		nltrie: "⋬",
-		nLtv: Pi,
+		nLtv: Ds,
 		nmid: "∤",
 		NoBreak: "⁠",
 		NonBreakingSpace: "\xA0",
-		nopf: Fi,
+		nopf: Os,
 		Nopf: "ℕ",
 		Not: "⫬",
 		not: "¬",
@@ -10491,56 +12888,56 @@ var rn = /* @__PURE__ */ v(((e) => {
 		NotDoubleVerticalBar: "∦",
 		NotElement: "∉",
 		NotEqual: "≠",
-		NotEqualTilde: Ii,
+		NotEqualTilde: ks,
 		NotExists: "∄",
 		NotGreater: "≯",
 		NotGreaterEqual: "≱",
-		NotGreaterFullEqual: Li,
-		NotGreaterGreater: Ri,
+		NotGreaterFullEqual: As,
+		NotGreaterGreater: js,
 		NotGreaterLess: "≹",
-		NotGreaterSlantEqual: zi,
+		NotGreaterSlantEqual: Ms,
 		NotGreaterTilde: "≵",
-		NotHumpDownHump: Bi,
-		NotHumpEqual: Vi,
+		NotHumpDownHump: Ns,
+		NotHumpEqual: Ps,
 		notin: "∉",
-		notindot: Hi,
-		notinE: Ui,
+		notindot: Fs,
+		notinE: Is,
 		notinva: "∉",
 		notinvb: "⋷",
 		notinvc: "⋶",
-		NotLeftTriangleBar: Wi,
+		NotLeftTriangleBar: Ls,
 		NotLeftTriangle: "⋪",
 		NotLeftTriangleEqual: "⋬",
 		NotLess: "≮",
 		NotLessEqual: "≰",
 		NotLessGreater: "≸",
-		NotLessLess: Gi,
-		NotLessSlantEqual: Ki,
+		NotLessLess: Rs,
+		NotLessSlantEqual: zs,
 		NotLessTilde: "≴",
-		NotNestedGreaterGreater: qi,
-		NotNestedLessLess: Ji,
+		NotNestedGreaterGreater: Bs,
+		NotNestedLessLess: Vs,
 		notni: "∌",
 		notniva: "∌",
 		notnivb: "⋾",
 		notnivc: "⋽",
 		NotPrecedes: "⊀",
-		NotPrecedesEqual: Yi,
+		NotPrecedesEqual: Hs,
 		NotPrecedesSlantEqual: "⋠",
 		NotReverseElement: "∌",
-		NotRightTriangleBar: Xi,
+		NotRightTriangleBar: Us,
 		NotRightTriangle: "⋫",
 		NotRightTriangleEqual: "⋭",
-		NotSquareSubset: Zi,
+		NotSquareSubset: Ws,
 		NotSquareSubsetEqual: "⋢",
-		NotSquareSuperset: Qi,
+		NotSquareSuperset: Gs,
 		NotSquareSupersetEqual: "⋣",
-		NotSubset: $i,
+		NotSubset: Ks,
 		NotSubsetEqual: "⊈",
 		NotSucceeds: "⊁",
-		NotSucceedsEqual: ea,
+		NotSucceedsEqual: qs,
 		NotSucceedsSlantEqual: "⋡",
-		NotSucceedsTilde: ta,
-		NotSuperset: na,
+		NotSucceedsTilde: Js,
+		NotSuperset: Ys,
 		NotSupersetEqual: "⊉",
 		NotTilde: "≁",
 		NotTildeEqual: "≄",
@@ -10549,27 +12946,27 @@ var rn = /* @__PURE__ */ v(((e) => {
 		NotVerticalBar: "∤",
 		nparallel: "∦",
 		npar: "∦",
-		nparsl: ra,
-		npart: ia,
+		nparsl: Xs,
+		npart: Zs,
 		npolint: "⨔",
 		npr: "⊀",
 		nprcue: "⋠",
 		nprec: "⊀",
-		npreceq: aa,
-		npre: oa,
-		nrarrc: sa,
+		npreceq: Qs,
+		npre: $s,
+		nrarrc: ec,
 		nrarr: "↛",
 		nrArr: "⇏",
-		nrarrw: ca,
+		nrarrw: tc,
 		nrightarrow: "↛",
 		nRightarrow: "⇏",
 		nrtri: "⋫",
 		nrtrie: "⋭",
 		nsc: "⊁",
 		nsccue: "⋡",
-		nsce: la,
-		Nscr: ua,
-		nscr: da,
+		nsce: nc,
+		Nscr: rc,
+		nscr: ic,
 		nshortmid: "∤",
 		nshortparallel: "∦",
 		nsim: "≁",
@@ -10580,19 +12977,19 @@ var rn = /* @__PURE__ */ v(((e) => {
 		nsqsube: "⋢",
 		nsqsupe: "⋣",
 		nsub: "⊄",
-		nsubE: fa,
+		nsubE: ac,
 		nsube: "⊈",
-		nsubset: pa,
+		nsubset: oc,
 		nsubseteq: "⊈",
-		nsubseteqq: ma,
+		nsubseteqq: sc,
 		nsucc: "⊁",
-		nsucceq: ha,
+		nsucceq: cc,
 		nsup: "⊅",
-		nsupE: ga,
+		nsupE: lc,
 		nsupe: "⊉",
-		nsupset: _a,
+		nsupset: uc,
 		nsupseteq: "⊉",
-		nsupseteqq: va,
+		nsupseteqq: dc,
 		ntgl: "≹",
 		Ntilde: "Ñ",
 		ntilde: "ñ",
@@ -10606,22 +13003,22 @@ var rn = /* @__PURE__ */ v(((e) => {
 		num: "#",
 		numero: "№",
 		numsp: " ",
-		nvap: ya,
+		nvap: fc,
 		nvdash: "⊬",
 		nvDash: "⊭",
 		nVdash: "⊮",
 		nVDash: "⊯",
-		nvge: ba,
-		nvgt: xa,
+		nvge: pc,
+		nvgt: mc,
 		nvHarr: "⤄",
 		nvinfin: "⧞",
 		nvlArr: "⤂",
-		nvle: Sa,
-		nvlt: Ca,
-		nvltrie: wa,
+		nvle: hc,
+		nvlt: gc,
+		nvltrie: _c,
 		nvrArr: "⤃",
-		nvrtrie: Ta,
-		nvsim: Ea,
+		nvrtrie: vc,
+		nvsim: yc,
 		nwarhk: "⤣",
 		nwarr: "↖",
 		nwArr: "⇖",
@@ -10644,8 +13041,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		OElig: "Œ",
 		oelig: "œ",
 		ofcir: "⦿",
-		Ofr: Da,
-		ofr: Oa,
+		Ofr: bc,
+		ofr: xc,
 		ogon: "˛",
 		Ograve: "Ò",
 		ograve: "ò",
@@ -10666,8 +13063,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		omicron: "ο",
 		omid: "⦶",
 		ominus: "⊖",
-		Oopf: ka,
-		oopf: Aa,
+		Oopf: Sc,
+		oopf: Cc,
 		opar: "⦷",
 		OpenCurlyDoubleQuote: "“",
 		OpenCurlyQuote: "‘",
@@ -10686,7 +13083,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 		orslope: "⩗",
 		orv: "⩛",
 		oS: "Ⓢ",
-		Oscr: ja,
+		Oscr: wc,
 		oscr: "ℴ",
 		Oslash: "Ø",
 		oslash: "ø",
@@ -10717,8 +13114,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		permil: "‰",
 		perp: "⊥",
 		pertenk: "‱",
-		Pfr: Ma,
-		pfr: Na,
+		Pfr: Tc,
+		pfr: Ec,
 		Phi: "Φ",
 		phi: "φ",
 		phiv: "ϕ",
@@ -10745,7 +13142,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 		pm: "±",
 		Poincareplane: "ℌ",
 		pointint: "⨕",
-		popf: Pa,
+		popf: Dc,
 		Popf: "ℙ",
 		pound: "£",
 		prap: "⪷",
@@ -10783,19 +13180,19 @@ var rn = /* @__PURE__ */ v(((e) => {
 		propto: "∝",
 		prsim: "≾",
 		prurel: "⊰",
-		Pscr: Fa,
-		pscr: Ia,
+		Pscr: Oc,
+		pscr: kc,
 		Psi: "Ψ",
 		psi: "ψ",
 		puncsp: " ",
-		Qfr: La,
-		qfr: Ra,
+		Qfr: Ac,
+		qfr: jc,
 		qint: "⨌",
-		qopf: za,
+		qopf: Mc,
 		Qopf: "ℚ",
 		qprime: "⁗",
-		Qscr: Ba,
-		qscr: Va,
+		Qscr: Nc,
+		qscr: Pc,
 		quaternions: "ℍ",
 		quatint: "⨖",
 		quest: "?",
@@ -10803,7 +13200,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 		quot: "\"",
 		QUOT: "\"",
 		rAarr: "⇛",
-		race: Ha,
+		race: Fc,
 		Racute: "Ŕ",
 		racute: "ŕ",
 		radic: "√",
@@ -10868,7 +13265,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 		ReverseUpEquilibrium: "⥯",
 		rfisht: "⥽",
 		rfloor: "⌋",
-		rfr: Ua,
+		rfr: Ic,
 		Rfr: "ℜ",
 		rHar: "⥤",
 		rhard: "⇁",
@@ -10921,7 +13318,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 		roarr: "⇾",
 		robrk: "⟧",
 		ropar: "⦆",
-		ropf: Wa,
+		ropf: Lc,
 		Ropf: "ℝ",
 		roplus: "⨮",
 		rotimes: "⨵",
@@ -10932,7 +13329,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 		rrarr: "⇉",
 		Rrightarrow: "⇛",
 		rsaquo: "›",
-		rscr: Ga,
+		rscr: Rc,
 		Rscr: "ℛ",
 		rsh: "↱",
 		Rsh: "↱",
@@ -10983,8 +13380,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		setminus: "∖",
 		setmn: "∖",
 		sext: "✶",
-		Sfr: Ka,
-		sfr: qa,
+		Sfr: zc,
+		sfr: Bc,
 		sfrown: "⌢",
 		sharp: "♯",
 		SHCHcy: "Щ",
@@ -11022,21 +13419,21 @@ var rn = /* @__PURE__ */ v(((e) => {
 		smile: "⌣",
 		smt: "⪪",
 		smte: "⪬",
-		smtes: Ja,
+		smtes: Vc,
 		SOFTcy: "Ь",
 		softcy: "ь",
 		solbar: "⌿",
 		solb: "⧄",
 		sol: "/",
-		Sopf: Ya,
-		sopf: Xa,
+		Sopf: Hc,
+		sopf: Uc,
 		spades: "♠",
 		spadesuit: "♠",
 		spar: "∥",
 		sqcap: "⊓",
-		sqcaps: Za,
+		sqcaps: Wc,
 		sqcup: "⊔",
-		sqcups: Qa,
+		sqcups: Gc,
 		Sqrt: "√",
 		sqsub: "⊏",
 		sqsube: "⊑",
@@ -11058,8 +13455,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		squ: "□",
 		squf: "▪",
 		srarr: "→",
-		Sscr: $a,
-		sscr: eo,
+		Sscr: Kc,
+		sscr: qc,
 		ssetmn: "∖",
 		ssmile: "⌣",
 		sstarf: "⋆",
@@ -11153,8 +13550,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		tcy: "т",
 		tdot: "⃛",
 		telrec: "⌕",
-		Tfr: to,
-		tfr: no,
+		Tfr: Jc,
+		tfr: Yc,
 		there4: "∴",
 		therefore: "∴",
 		Therefore: "∴",
@@ -11164,7 +13561,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 		thetav: "ϑ",
 		thickapprox: "≈",
 		thicksim: "∼",
-		ThickSpace: ro,
+		ThickSpace: Xc,
 		ThinSpace: " ",
 		thinsp: " ",
 		thkap: "≈",
@@ -11185,8 +13582,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		topbot: "⌶",
 		topcir: "⫱",
 		top: "⊤",
-		Topf: io,
-		topf: ao,
+		Topf: Zc,
+		topf: Qc,
 		topfork: "⫚",
 		tosa: "⤩",
 		tprime: "‴",
@@ -11207,8 +13604,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		trisb: "⧍",
 		tritime: "⨻",
 		trpezium: "⏢",
-		Tscr: oo,
-		tscr: so,
+		Tscr: $c,
+		tscr: el,
 		TScy: "Ц",
 		tscy: "ц",
 		TSHcy: "Ћ",
@@ -11237,8 +13634,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		udblac: "ű",
 		udhar: "⥮",
 		ufisht: "⥾",
-		Ufr: co,
-		ufr: lo,
+		Ufr: tl,
+		ufr: nl,
 		Ugrave: "Ù",
 		ugrave: "ù",
 		uHar: "⥣",
@@ -11260,8 +13657,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		UnionPlus: "⊎",
 		Uogon: "Ų",
 		uogon: "ų",
-		Uopf: uo,
-		uopf: fo,
+		Uopf: rl,
+		uopf: il,
 		UpArrowBar: "⤒",
 		uparrow: "↑",
 		UpArrow: "↑",
@@ -11290,8 +13687,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		Uring: "Ů",
 		uring: "ů",
 		urtri: "◹",
-		Uscr: po,
-		uscr: mo,
+		Uscr: al,
+		uscr: ol,
 		utdot: "⋰",
 		Utilde: "Ũ",
 		utilde: "ũ",
@@ -11312,10 +13709,10 @@ var rn = /* @__PURE__ */ v(((e) => {
 		vArr: "⇕",
 		varrho: "ϱ",
 		varsigma: "ς",
-		varsubsetneq: ho,
-		varsubsetneqq: go,
-		varsupsetneq: _o,
-		varsupsetneqq: vo,
+		varsubsetneq: sl,
+		varsubsetneqq: cl,
+		varsupsetneq: ll,
+		varsupsetneqq: ul,
 		vartheta: "ϑ",
 		vartriangleleft: "⊲",
 		vartriangleright: "⊳",
@@ -11343,21 +13740,21 @@ var rn = /* @__PURE__ */ v(((e) => {
 		VerticalSeparator: "❘",
 		VerticalTilde: "≀",
 		VeryThinSpace: " ",
-		Vfr: yo,
-		vfr: bo,
+		Vfr: dl,
+		vfr: fl,
 		vltri: "⊲",
-		vnsub: xo,
-		vnsup: So,
-		Vopf: Co,
-		vopf: wo,
+		vnsub: pl,
+		vnsup: ml,
+		Vopf: hl,
+		vopf: gl,
 		vprop: "∝",
 		vrtri: "⊳",
-		Vscr: To,
-		vscr: Eo,
-		vsubnE: Do,
-		vsubne: Oo,
-		vsupnE: ko,
-		vsupne: Ao,
+		Vscr: _l,
+		vscr: vl,
+		vsubnE: yl,
+		vsubne: bl,
+		vsupnE: xl,
+		vsupne: Sl,
 		Vvdash: "⊪",
 		vzigzag: "⦚",
 		Wcirc: "Ŵ",
@@ -11367,21 +13764,21 @@ var rn = /* @__PURE__ */ v(((e) => {
 		Wedge: "⋀",
 		wedgeq: "≙",
 		weierp: "℘",
-		Wfr: jo,
-		wfr: Mo,
-		Wopf: No,
-		wopf: Po,
+		Wfr: Cl,
+		wfr: wl,
+		Wopf: Tl,
+		wopf: El,
 		wp: "℘",
 		wr: "≀",
 		wreath: "≀",
-		Wscr: Fo,
-		wscr: Io,
+		Wscr: Dl,
+		wscr: Ol,
 		xcap: "⋂",
 		xcirc: "◯",
 		xcup: "⋃",
 		xdtri: "▽",
-		Xfr: Lo,
-		xfr: Ro,
+		Xfr: kl,
+		xfr: Al,
 		xharr: "⟷",
 		xhArr: "⟺",
 		Xi: "Ξ",
@@ -11391,14 +13788,14 @@ var rn = /* @__PURE__ */ v(((e) => {
 		xmap: "⟼",
 		xnis: "⋻",
 		xodot: "⨀",
-		Xopf: zo,
-		xopf: Bo,
+		Xopf: jl,
+		xopf: Ml,
 		xoplus: "⨁",
 		xotime: "⨂",
 		xrarr: "⟶",
 		xrArr: "⟹",
-		Xscr: Vo,
-		xscr: Ho,
+		Xscr: Nl,
+		xscr: Pl,
 		xsqcup: "⨆",
 		xuplus: "⨄",
 		xutri: "△",
@@ -11413,14 +13810,14 @@ var rn = /* @__PURE__ */ v(((e) => {
 		Ycy: "Ы",
 		ycy: "ы",
 		yen: "¥",
-		Yfr: Uo,
-		yfr: Wo,
+		Yfr: Fl,
+		yfr: Il,
 		YIcy: "Ї",
 		yicy: "ї",
-		Yopf: Go,
-		yopf: Ko,
-		Yscr: qo,
-		yscr: Jo,
+		Yopf: Ll,
+		yopf: Rl,
+		Yscr: zl,
+		yscr: Bl,
 		YUcy: "Ю",
 		yucy: "ю",
 		yuml: "ÿ",
@@ -11437,19 +13834,19 @@ var rn = /* @__PURE__ */ v(((e) => {
 		ZeroWidthSpace: "​",
 		Zeta: "Ζ",
 		zeta: "ζ",
-		zfr: Yo,
+		zfr: Vl,
 		Zfr: "ℨ",
 		ZHcy: "Ж",
 		zhcy: "ж",
 		zigrarr: "⇝",
-		zopf: Xo,
+		zopf: Hl,
 		Zopf: "ℤ",
-		Zscr: Zo,
-		zscr: Qo,
+		Zscr: Ul,
+		zscr: Wl,
 		zwj: "‍",
 		zwnj: "‌"
 	};
-})), ts = /* @__PURE__ */ y({
+})), ql = /* @__PURE__ */ b({
 	AElig: () => "Æ",
 	AMP: () => "&",
 	Aacute: () => "Á",
@@ -11501,7 +13898,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	cent: () => "¢",
 	copy: () => "©",
 	curren: () => "¤",
-	default: () => ns,
+	default: () => Jl,
 	deg: () => "°",
 	divide: () => "÷",
 	eacute: () => "é",
@@ -11557,8 +13954,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 	yacute: () => "ý",
 	yen: () => "¥",
 	yuml: () => "ÿ"
-}), ns, rs = _((() => {
-	ns = {
+}), Jl, Yl = v((() => {
+	Jl = {
 		Aacute: "Á",
 		aacute: "á",
 		Acirc: "Â",
@@ -11666,23 +14063,23 @@ var rn = /* @__PURE__ */ v(((e) => {
 		yen: "¥",
 		yuml: "ÿ"
 	};
-})), is = /* @__PURE__ */ y({
+})), Xl = /* @__PURE__ */ b({
 	amp: () => "&",
 	apos: () => "'",
-	default: () => as,
+	default: () => Zl,
 	gt: () => ">",
 	lt: () => "<",
 	quot: () => "\""
-}), as, os = _((() => {
-	as = {
+}), Zl, Ql = v((() => {
+	Zl = {
 		amp: "&",
 		apos: "'",
 		gt: ">",
 		lt: "<",
 		quot: "\""
 	};
-})), ss = /* @__PURE__ */ y({ default: () => cs }), cs, ls = _((() => {
-	cs = {
+})), $l = /* @__PURE__ */ b({ default: () => eu }), eu, tu = v((() => {
+	eu = {
 		0: 65533,
 		128: 8364,
 		130: 8218,
@@ -11712,12 +14109,12 @@ var rn = /* @__PURE__ */ v(((e) => {
 		158: 382,
 		159: 376
 	};
-})), us = /* @__PURE__ */ v(((e) => {
+})), nu = /* @__PURE__ */ y(((e) => {
 	var t = e && e.__importDefault || function(e) {
 		return e && e.__esModule ? e : { default: e };
 	};
 	Object.defineProperty(e, "__esModule", { value: !0 });
-	var n = t((ls(), S(ss).default)), r = String.fromCodePoint || function(e) {
+	var n = t((tu(), S($l).default)), r = String.fromCodePoint || function(e) {
 		var t = "";
 		return e > 65535 && (e -= 65536, t += String.fromCharCode(e >>> 10 & 1023 | 55296), e = 56320 | e & 1023), t += String.fromCharCode(e), t;
 	};
@@ -11725,12 +14122,12 @@ var rn = /* @__PURE__ */ v(((e) => {
 		return e >= 55296 && e <= 57343 || e > 1114111 ? "�" : (e in n.default && (e = n.default[e]), r(e));
 	}
 	e.default = i;
-})), ds = /* @__PURE__ */ v(((e) => {
+})), ru = /* @__PURE__ */ y(((e) => {
 	var t = e && e.__importDefault || function(e) {
 		return e && e.__esModule ? e : { default: e };
 	};
 	Object.defineProperty(e, "__esModule", { value: !0 }), e.decodeHTML = e.decodeHTMLStrict = e.decodeXML = void 0;
-	var n = t((es(), S(Hn).default)), r = t((rs(), S(ts).default)), i = t((os(), S(is).default)), a = t(us()), o = /&(?:[a-zA-Z0-9]+|#[xX][\da-fA-F]+|#\d+);/g;
+	var n = t((Kl(), S(Pa).default)), r = t((Yl(), S(ql).default)), i = t((Ql(), S(Xl).default)), a = t(nu()), o = /&(?:[a-zA-Z0-9]+|#[xX][\da-fA-F]+|#\d+);/g;
 	e.decodeXML = s(i.default), e.decodeHTMLStrict = s(n.default);
 	function s(e) {
 		var t = l(e);
@@ -11760,14 +14157,14 @@ var rn = /* @__PURE__ */ v(((e) => {
 			return e[t.slice(1, -1)] || t;
 		};
 	}
-})), fs = /* @__PURE__ */ v(((e) => {
+})), iu = /* @__PURE__ */ y(((e) => {
 	var t = e && e.__importDefault || function(e) {
 		return e && e.__esModule ? e : { default: e };
 	};
 	Object.defineProperty(e, "__esModule", { value: !0 }), e.escapeUTF8 = e.escape = e.encodeNonAsciiHTML = e.encodeHTML = e.encodeXML = void 0;
-	var n = a(t((os(), S(is).default)).default), r = o(n);
+	var n = a(t((Ql(), S(Xl).default)).default), r = o(n);
 	e.encodeXML = m(n);
-	var i = a(t((es(), S(Hn).default)).default);
+	var i = a(t((Kl(), S(Pa).default)).default);
 	e.encodeHTML = u(i, o(i)), e.encodeNonAsciiHTML = m(i);
 	function a(e) {
 		return Object.keys(e).sort().reduce(function(t, n) {
@@ -11818,9 +14215,9 @@ var rn = /* @__PURE__ */ v(((e) => {
 			});
 		};
 	}
-})), ps = /* @__PURE__ */ v(((e) => {
+})), au = /* @__PURE__ */ y(((e) => {
 	Object.defineProperty(e, "__esModule", { value: !0 }), e.decodeXMLStrict = e.decodeHTML5Strict = e.decodeHTML4Strict = e.decodeHTML5 = e.decodeHTML4 = e.decodeHTMLStrict = e.decodeHTML = e.decodeXML = e.encodeHTML5 = e.encodeHTML4 = e.escapeUTF8 = e.escape = e.encodeNonAsciiHTML = e.encodeHTML = e.encodeXML = e.encode = e.decodeStrict = e.decode = void 0;
-	var t = ds(), n = fs();
+	var t = ru(), n = iu();
 	function r(e, n) {
 		return (!n || n <= 0 ? t.decodeXML : t.decodeHTML)(e);
 	}
@@ -11833,7 +14230,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 		return (!t || t <= 0 ? n.encodeXML : n.encodeHTML)(e);
 	}
 	e.encode = a;
-	var o = fs();
+	var o = iu();
 	Object.defineProperty(e, "encodeXML", {
 		enumerable: !0,
 		get: function() {
@@ -11870,7 +14267,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 			return o.encodeHTML;
 		}
 	});
-	var s = ds();
+	var s = ru();
 	Object.defineProperty(e, "decodeXML", {
 		enumerable: !0,
 		get: function() {
@@ -11912,8 +14309,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 			return s.decodeXML;
 		}
 	});
-})), ms = /* @__PURE__ */ v(((e, t) => {
-	var n = t.exports = {}, r = ps(), i = Bn();
+})), ou = /* @__PURE__ */ y(((e, t) => {
+	var n = t.exports = {}, r = au(), i = Ma();
 	n.stripHtml = function(e) {
 		return e = e.replace(/([^\n])<\/?(h|br|p|ul|ol|li|blockquote|section|table|tr|div)(?:.|\n)*?>([^\n])/gm, "$1\n$3"), e = e.replace(/<(?:.|\n)*?>/gm, ""), e;
 	}, n.getSnippet = function(e) {
@@ -11958,8 +14355,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		let t = (e.match(o) || [])[2] || "";
 		return t = t.toLowerCase(), t = c[t] || t, (!t || s.indexOf(t) === -1) && (t = a), t;
 	};
-})), hs = /* @__PURE__ */ v(((e, t) => {
-	var n = C("http"), r = C("https"), i = Bn(), a = C("url"), o = Vn(), s = ms(), c = {
+})), su = /* @__PURE__ */ y(((e, t) => {
+	var n = C("http"), r = C("https"), i = Ma(), a = C("url"), o = Na(), s = ou(), c = {
 		"User-Agent": "rss-parser",
 		Accept: "application/rss+xml"
 	}, l = 5, u = 6e4;
@@ -12104,9 +14501,9 @@ var rn = /* @__PURE__ */ v(((e) => {
 			return e["atom:link"].reduce((e, n) => (!n.$ || !t.includes(n.$.rel) || (e[n.$.rel] = n.$.href), e), {});
 		}
 	};
-})), gs = /* @__PURE__ */ x((/* @__PURE__ */ v(((e, t) => {
-	t.exports = hs();
-})))(), 1), _s = [
+})), cu = /* @__PURE__ */ ee((/* @__PURE__ */ y(((e, t) => {
+	t.exports = su();
+})))(), 1), lu = [
 	{
 		id: "cnbc-finance",
 		label: "CNBC Finance RSS",
@@ -12125,8 +14522,8 @@ var rn = /* @__PURE__ */ v(((e) => {
 		url: "https://news.google.com/rss/search?q=when:1d+(tariffs+OR+Taiwan+OR+Red+Sea+OR+inflation+OR+oil+OR+semiconductor)",
 		sector: "Macro/geopolitics"
 	}
-], vs = class extends u {
-	parser = new gs.default({ timeout: 12e3 });
+], uu = class extends d {
+	parser = new cu.default({ timeout: 12e3 });
 	feeds;
 	intervalMs;
 	requestTimeoutMs;
@@ -12136,7 +14533,7 @@ var rn = /* @__PURE__ */ v(((e) => {
 	timer = null;
 	running = !1;
 	constructor(e = {}) {
-		super(), this.on("error", () => void 0), this.feeds = e.feeds ?? _s, this.intervalMs = e.intervalMs ?? 3e4, this.requestTimeoutMs = e.requestTimeoutMs ?? 12e3, this.maxSeenTitles = e.maxSeenTitles ?? 5e3;
+		super(), this.on("error", () => void 0), this.feeds = e.feeds ?? lu, this.intervalMs = e.intervalMs ?? 3e4, this.requestTimeoutMs = e.requestTimeoutMs ?? 12e3, this.maxSeenTitles = e.maxSeenTitles ?? 5e3;
 	}
 	on(e, t) {
 		return super.on(e, t);
@@ -12152,9 +14549,9 @@ var rn = /* @__PURE__ */ v(((e) => {
 	}
 	async pollFeed(e) {
 		try {
-			let t = await xs(this.parser.parseURL(e.url), this.requestTimeoutMs, `${e.label} timed out`), n = Array.isArray(t.items) ? t.items : [];
+			let t = await pu(this.parser.parseURL(e.url), this.requestTimeoutMs, `${e.label} timed out`), n = Array.isArray(t.items) ? t.items : [];
 			for (let t of n) {
-				let n = ys(e, t);
+				let n = du(e, t);
 				!n || this.hasSeen(n.title) || (this.markSeen(n.title), this.emit("headline", n));
 			}
 		} catch (e) {
@@ -12162,26 +14559,26 @@ var rn = /* @__PURE__ */ v(((e) => {
 		}
 	}
 	hasSeen(e) {
-		return this.seenSet.has(U(e.toLowerCase()));
+		return this.seenSet.has(W(e.toLowerCase()));
 	}
 	markSeen(e) {
-		let t = U(e.toLowerCase());
+		let t = W(e.toLowerCase());
 		for (this.seenSet.add(t), this.seenTitleHashes.push(t); this.seenTitleHashes.length > this.maxSeenTitles;) {
 			let e = this.seenTitleHashes.shift();
 			e && this.seenSet.delete(e);
 		}
 	}
 };
-function ys(e, t) {
+function du(e, t) {
 	let n = t.title?.trim(), r = t.link?.trim() || e.url;
 	if (!n) return null;
-	let i = bs(t.isoDate ?? t.pubDate) ?? Date.now(), a = [
+	let i = fu(t.isoDate ?? t.pubDate) ?? Date.now(), a = [
 		n,
 		t.contentSnippet,
 		t.content
 	].filter(Boolean).join(" ");
 	return {
-		id: `rss-${e.id}-${U(`${n}:${r}`)}`,
+		id: `rss-${e.id}-${W(`${n}:${r}`)}`,
 		title: n,
 		sourceName: e.label,
 		sourceUrl: r,
@@ -12193,12 +14590,12 @@ function ys(e, t) {
 		rawText: a
 	};
 }
-function bs(e) {
+function fu(e) {
 	if (!e) return null;
 	let t = Date.parse(e);
 	return Number.isFinite(t) ? t : null;
 }
-function xs(e, t, n) {
+function pu(e, t, n) {
 	let r = null, i = new Promise((e, i) => {
 		r = setTimeout(() => i(Error(n)), t);
 	});
@@ -12208,7 +14605,7 @@ function xs(e, t, n) {
 }
 //#endregion
 //#region electron/ingest/stocktwitsPulseService.ts
-var Ss = [
+var mu = [
 	{
 		symbol: "SPY",
 		stocktwitsSymbol: "SPY"
@@ -12241,7 +14638,7 @@ var Ss = [
 		symbol: "KAS",
 		stocktwitsSymbol: "KAS.X"
 	}
-], Cs = class extends u {
+], hu = class extends d {
 	targets;
 	intervalMs;
 	requestTimeoutMs;
@@ -12250,7 +14647,7 @@ var Ss = [
 	timer = null;
 	running = !1;
 	constructor(e = {}) {
-		super(), this.on("error", () => void 0), this.targets = e.targets ?? Ss, this.intervalMs = e.intervalMs ?? 6e4, this.requestTimeoutMs = e.requestTimeoutMs ?? 1e4, this.maxSeenIdsPerSymbol = e.maxSeenIdsPerSymbol ?? 1e3;
+		super(), this.on("error", () => void 0), this.targets = e.targets ?? mu, this.intervalMs = e.intervalMs ?? 6e4, this.requestTimeoutMs = e.requestTimeoutMs ?? 1e4, this.maxSeenIdsPerSymbol = e.maxSeenIdsPerSymbol ?? 1e3;
 	}
 	on(e, t) {
 		return super.on(e, t);
@@ -12293,11 +14690,11 @@ var Ss = [
 		}
 		let l = o / a, u = s + c, d = u === 0 ? 0 : (s - c) / u, f = l - i.lastNewMessageCount / a;
 		i.lastPollAt = r, i.lastNewMessageCount = o;
-		let p = W(38 + l * 8 + Math.max(0, f) * 3 + Math.abs(d) * 16, 0, 100), m = {
+		let p = G(38 + l * 8 + Math.max(0, f) * 3 + Math.abs(d) * 16, 0, 100), m = {
 			target: e.symbol,
-			pressure: ws(p, 2),
-			mentionVelocity: ws(l, 3),
-			sentimentDivergenceIndex: ws(d, 3),
+			pressure: gu(p, 2),
+			mentionVelocity: gu(l, 3),
+			sentimentDivergenceIndex: gu(d, 3),
 			timestamp: r,
 			source: "stocktwits_public_stream"
 		};
@@ -12307,8 +14704,8 @@ var Ss = [
 			sourceUrl: t,
 			messageCount: n.length,
 			newMessageCount: o,
-			velocityPerMinute: ws(l, 3),
-			mutedSentimentIndex: ws(d, 3),
+			velocityPerMinute: gu(l, 3),
+			mutedSentimentIndex: gu(d, 3),
 			bullishCount: s,
 			bearishCount: c,
 			observedAt: r,
@@ -12330,13 +14727,13 @@ var Ss = [
 		}
 	}
 };
-function ws(e, t) {
+function gu(e, t) {
 	let n = 10 ** t;
 	return Math.round(e * n) / n;
 }
 //#endregion
 //#region electron/ingest/twitterExploreScraper.ts
-var Ts = class {
+var _u = class {
 	enabled;
 	authToken;
 	headless;
@@ -12347,14 +14744,14 @@ var Ts = class {
 		if (!this.enabled) return [];
 		throw this.authToken ? Error(`X Explore scraper scaffold is configured (headless=${this.headless}) but no browser automation adapter is installed.`) : Error("X Explore scraper requires ATLASZ_X_AUTH_TOKEN and is disabled by default.");
 	}
-}, Es = [
+}, vu = [
 	"NVDA",
 	"SPY",
 	"QQQ",
 	"XLE",
 	"GLD",
 	"TSM"
-], Ds = class extends u {
+], yu = class extends d {
 	symbols;
 	intervalMs;
 	lookbackMinutes;
@@ -12362,7 +14759,7 @@ var Ts = class {
 	client = null;
 	running = !1;
 	constructor(e = {}) {
-		super(), this.on("error", () => void 0), this.symbols = e.symbols ?? Es, this.intervalMs = e.intervalMs ?? 6e4, this.lookbackMinutes = e.lookbackMinutes ?? 8;
+		super(), this.on("error", () => void 0), this.symbols = e.symbols ?? vu, this.intervalMs = e.intervalMs ?? 6e4, this.lookbackMinutes = e.lookbackMinutes ?? 8;
 	}
 	on(e, t) {
 		return super.on(e, t);
@@ -12375,7 +14772,7 @@ var Ts = class {
 	}
 	async poll() {
 		try {
-			let e = await this.getClient(), t = /* @__PURE__ */ new Date(Date.now() - this.lookbackMinutes * 6e4), n = await Promise.allSettled(this.symbols.map(async (n) => Os(n, await e.chart(n, {
+			let e = await this.getClient(), t = /* @__PURE__ */ new Date(Date.now() - this.lookbackMinutes * 6e4), n = await Promise.allSettled(this.symbols.map(async (n) => bu(n, await e.chart(n, {
 				period1: t,
 				interval: "1m"
 			})))), r = n.map((e) => e.status === "fulfilled" ? e.value : null).filter((e) => e !== null);
@@ -12397,7 +14794,7 @@ var Ts = class {
 		return this.client;
 	}
 };
-function Os(e, t) {
+function bu(e, t) {
 	let n = [...t.quotes ?? []].reverse().find((e) => {
 		let t = e.close ?? e.regularMarketPrice;
 		return typeof t == "number" && Number.isFinite(t) && t > 0;
@@ -12408,11 +14805,11 @@ function Os(e, t) {
 		symbol: e,
 		price: r,
 		volume: Number.isFinite(n.volume) && n.volume && n.volume > 0 ? n.volume : 1,
-		timestamp: ks(n.date) ?? Date.now(),
+		timestamp: xu(n.date) ?? Date.now(),
 		source: "yahoo_finance_1m_public"
 	};
 }
-function ks(e) {
+function xu(e) {
 	if (e instanceof Date) return e.getTime();
 	if (typeof e == "number") return e;
 	if (typeof e == "string") {
@@ -12423,25 +14820,25 @@ function ks(e) {
 }
 //#endregion
 //#region electron/ingest/dataIngestOrchestrator.ts
-var As = 6e4, js = 12, Ms = 35, Ns = class extends u {
+var Su = 6e4, Cu = 12, wu = 35, Tu = class extends d {
 	persistence;
 	realtime;
 	enabled;
-	rss = new vs({ intervalMs: Y("ATLASZ_RSS_POLL_MS", 3e4) });
-	stocktwits = new Cs({ intervalMs: Y("ATLASZ_STOCKTWITS_POLL_MS", 6e4) });
-	yahoo = new Ds({ intervalMs: Y("ATLASZ_YAHOO_POLL_MS", 6e4) });
-	polymarket = new Qt({ intervalMs: Y("ATLASZ_POLYMARKET_POLL_MS", 5 * 6e4) });
-	cognitive = new Gt();
-	graphMutator = new Nt({
+	rss = new uu({ intervalMs: Y("ATLASZ_RSS_POLL_MS", 3e4) });
+	stocktwits = new hu({ intervalMs: Y("ATLASZ_STOCKTWITS_POLL_MS", 6e4) });
+	yahoo = new yu({ intervalMs: Y("ATLASZ_YAHOO_POLL_MS", 6e4) });
+	polymarket = new Wi({ intervalMs: Y("ATLASZ_POLYMARKET_POLL_MS", 5 * 6e4) });
+	cognitive = new Li();
+	graphMutator = new wi({
 		halfLifeMs: Y("ATLASZ_GRAPH_EDGE_HALFLIFE_MS", 360 * 6e4),
 		maxSilenceMs: Y("ATLASZ_GRAPH_EDGE_MAX_SILENCE_MS", 1440 * 6e4)
 	});
-	twitterExplore = new Ts();
+	twitterExplore = new _u();
 	statusState;
 	narrativeInputTimestamps = [];
 	cognitiveBatch = [];
-	mediumVelocityThreshold = Y("ATLASZ_NARRATIVE_MEDIUM_VELOCITY", js);
-	highVelocityThreshold = Y("ATLASZ_NARRATIVE_HIGH_VELOCITY", Ms);
+	mediumVelocityThreshold = Y("ATLASZ_NARRATIVE_MEDIUM_VELOCITY", Cu);
+	highVelocityThreshold = Y("ATLASZ_NARRATIVE_HIGH_VELOCITY", wu);
 	cognitiveMode = process.env.ATLASZ_ENABLE_OLLAMA === "1" ? "deep" : "disabled";
 	cognitiveSkippedCount = 0;
 	cognitiveBatchedCount = 0;
@@ -12516,8 +14913,8 @@ var As = 6e4, js = 12, Ms = 35, Ns = class extends u {
 		}), this.cognitive.on("error", (e) => this.handleError(e, "ollama_local_cognitive_layer"));
 	}
 	handleNewsEvent(e) {
-		this.recordNarrativeInput(1, e.observedAt), this.statusState.lastNewsAt = e.observedAt, this.statusState.rssHeadlineCount += 1, this.saveHeadline(Ps(e));
-		let t = Yt(e.rawText || e.title, e.id);
+		this.recordNarrativeInput(1, e.observedAt), this.statusState.lastNewsAt = e.observedAt, this.statusState.rssHeadlineCount += 1, this.saveHeadline(Eu(e));
+		let t = Vi(e.rawText || e.title, e.id);
 		this.persistExposureMatches(e, t), this.routeCognitiveEvent(e, t), this.emit("news", e), this.updateAdaptiveStatus();
 	}
 	handleProbability(e) {
@@ -12534,8 +14931,8 @@ var As = 6e4, js = 12, Ms = 35, Ns = class extends u {
 			summary: `Public market-implied probability near ${(e.probability * 100).toFixed(1)}%.`,
 			rawText: `${e.title} ${e.tags.join(" ")}`
 		};
-		this.saveHeadline(Ps(t));
-		let n = Yt(t.rawText, t.id);
+		this.saveHeadline(Eu(t));
+		let n = Vi(t.rawText, t.id);
 		this.persistExposureMatches(t, n), this.routeCognitiveEvent(t, n), this.emit("probability", e), this.updateAdaptiveStatus();
 	}
 	handleSocialBatch(e) {
@@ -12578,7 +14975,7 @@ var As = 6e4, js = 12, Ms = 35, Ns = class extends u {
 		return this.pruneNarrativeWindow(e), this.narrativeInputTimestamps.length;
 	}
 	pruneNarrativeWindow(e) {
-		for (; this.narrativeInputTimestamps.length > 0 && e - this.narrativeInputTimestamps[0] > As;) this.narrativeInputTimestamps.shift();
+		for (; this.narrativeInputTimestamps.length > 0 && e - this.narrativeInputTimestamps[0] > Su;) this.narrativeInputTimestamps.shift();
 	}
 	updateAdaptiveStatus() {
 		let e = this.cognitive.status();
@@ -12589,9 +14986,9 @@ var As = 6e4, js = 12, Ms = 35, Ns = class extends u {
 		for (let i of t) {
 			this.emit("exposure", e, i);
 			for (let t of i.affectedTickers) {
-				let a = W(i.confidence, 0, 1);
+				let a = G(i.confidence, 0, 1);
 				this.saveEntityEdge({
-					id: `exposure:${e.id}:${t}:${U(i.keyword)}`,
+					id: `exposure:${e.id}:${t}:${W(i.keyword)}`,
 					source: e.id,
 					target: t,
 					relation: i.reason,
@@ -12599,13 +14996,13 @@ var As = 6e4, js = 12, Ms = 35, Ns = class extends u {
 					createdAt: e.observedAt
 				}), n.push({
 					target: t,
-					pressure: Math.round(W(45 + a * 45, 0, 100)),
+					pressure: Math.round(G(45 + a * 45, 0, 100)),
 					mentionVelocity: Number((1 + a * 4).toFixed(3)),
 					sentimentDivergenceIndex: 0,
 					timestamp: e.observedAt,
 					source: "local_exposure_matrix"
 				}), r.push({
-					id: `signal:${e.id}:${t}:${U(i.keyword)}`,
+					id: `signal:${e.id}:${t}:${W(i.keyword)}`,
 					type: "narrative_acceleration",
 					assetOrTopicId: t,
 					severity: a >= .72 ? "high" : a >= .64 ? "elevated" : "watch",
@@ -12661,7 +15058,7 @@ var As = 6e4, js = 12, Ms = 35, Ns = class extends u {
 		}
 	}
 };
-function Ps(e) {
+function Eu(e) {
 	return {
 		id: e.id,
 		title: e.title,
@@ -12678,24 +15075,30 @@ function Y(e, t) {
 }
 //#endregion
 //#region electron/main.ts
-var { app: X, BrowserWindow: Fs, ipcMain: Z, shell: Is } = t, Ls = n(i(import.meta.url)), Rs = null, zs = null, Bs = null, Vs = null;
+var { app: X, BrowserWindow: Du, ipcMain: Z, shell: Ou } = t, ku = n(i(import.meta.url)), Au = null, ju = null, Mu = null, Nu = null, Pu = null, Fu = null;
 function Q() {
-	return Rs ||= ee(X.getPath("userData")), Rs;
+	return Au ||= w(X.getPath("userData")), Au;
 }
 function $() {
-	return zs ||= new rt({ persistence: Q() }), zs;
+	return ju ||= new yt({ persistence: Q() }), ju;
 }
-function Hs() {
-	return Bs ||= new Ct(Q()), Bs;
+function Iu() {
+	return Mu ||= new fr(Q()), Mu;
 }
-function Us() {
-	return Vs ||= new Ns({
+function Lu() {
+	return Nu ||= new ni(Q()), Nu;
+}
+function Ru() {
+	return Pu ||= new _i(Q()), Pu;
+}
+function zu() {
+	return Fu ||= new Tu({
 		persistence: Q(),
 		realtime: $()
-	}), Vs;
+	}), Fu;
 }
-function Ws() {
-	let e = new Fs({
+function Bu() {
+	let e = new Du({
 		title: "Atlasz Intel",
 		width: 1480,
 		height: 980,
@@ -12708,13 +15111,13 @@ function Ws() {
 			y: 16
 		},
 		webPreferences: {
-			preload: r(Ls, "preload.mjs"),
+			preload: r(ku, "preload.mjs"),
 			contextIsolation: !0,
 			nodeIntegration: !1,
 			sandbox: !1
 		}
 	});
-	e.webContents.setWindowOpenHandler(({ url: e }) => (Is.openExternal(e), { action: "deny" })), process.env.VITE_DEV_SERVER_URL ? e.loadURL(process.env.VITE_DEV_SERVER_URL) : e.loadFile(r(Ls, "../dist/index.html"));
+	e.webContents.setWindowOpenHandler(({ url: e }) => (Ou.openExternal(e), { action: "deny" })), process.env.VITE_DEV_SERVER_URL ? e.loadURL(process.env.VITE_DEV_SERVER_URL) : e.loadFile(r(ku, "../dist/index.html"));
 }
 Z.handle("atlasz:app-meta", () => ({
 	name: X.getName(),
@@ -12722,15 +15125,15 @@ Z.handle("atlasz:app-meta", () => ({
 	platform: process.platform,
 	dataPath: X.getPath("userData")
 })), Z.handle("atlasz:open-external", async (e, t) => {
-	await Is.openExternal(t);
-}), Z.handle("atlasz:db:status", () => ({ mode: Q().mode })), Z.handle("atlasz:db:briefs:list", () => Q().listBriefs()), Z.handle("atlasz:db:briefs:save", (e, t) => (Q().saveBrief(t), { ok: !0 })), Z.handle("atlasz:db:headlines:list", (e, t) => Q().listHeadlines(t)), Z.handle("atlasz:db:headlines:save", (e, t) => (Q().saveHeadline(t), { ok: !0 })), Z.handle("atlasz:db:decisions:list", () => Q().listDecisions()), Z.handle("atlasz:db:decisions:get", (e, t) => Q().getDecision(t)), Z.handle("atlasz:db:decisions:save", (e, t) => (Q().saveDecision(t), { ok: !0 })), Z.handle("atlasz:db:decisions:delete", (e, t) => (Q().deleteDecision(t), { ok: !0 })), Z.handle("atlasz:db:decisions:due", (e, t) => Q().decisionsDueForReview(t)), Z.handle("atlasz:realtime:start", () => $().start()), Z.handle("atlasz:realtime:stop", () => $().stop()), Z.handle("atlasz:realtime:restart", (e, t) => $().restart(t)), Z.handle("atlasz:realtime:add-asset", (e, t) => $().addAsset(t)), Z.handle("atlasz:realtime:snapshot", () => $().snapshot()), Z.handle("atlasz:realtime:status", () => $().status()), Z.handle("atlasz:realtime:health", () => $().health()), Z.handle("atlasz:realtime:traverse-risk", (e, t) => $().traverseRisk(t)), Z.handle("atlasz:realtime:replay:start", (e, t) => $().replayStart(t)), Z.handle("atlasz:realtime:replay:pause", () => $().replayPause()), Z.handle("atlasz:realtime:replay:resume", () => $().replayResume()), Z.handle("atlasz:realtime:replay:stop", () => $().replayStop()), Z.handle("atlasz:realtime:replay:speed", (e, t) => $().replaySetSpeed(t)), Z.handle("atlasz:realtime:replay:seek", (e, t) => $().replaySeek(t)), Z.handle("atlasz:world:snapshot", () => Hs().snapshot()), Z.handle("atlasz:world:refresh", () => Hs().refresh()), Z.handle("atlasz:ingest:status", () => Us().status()), X.whenReady().then(() => {
-	Q(), $(), Hs().refresh(), Us().start(), Ws(), X.on("activate", () => {
-		Fs.getAllWindows().length === 0 && Ws();
+	await Ou.openExternal(t);
+}), Z.handle("atlasz:db:status", () => ({ mode: Q().mode })), Z.handle("atlasz:db:briefs:list", () => Q().listBriefs()), Z.handle("atlasz:db:briefs:save", (e, t) => (Q().saveBrief(t), { ok: !0 })), Z.handle("atlasz:db:headlines:list", (e, t) => Q().listHeadlines(t)), Z.handle("atlasz:db:headlines:save", (e, t) => (Q().saveHeadline(t), { ok: !0 })), Z.handle("atlasz:db:decisions:list", () => Q().listDecisions()), Z.handle("atlasz:db:decisions:get", (e, t) => Q().getDecision(t)), Z.handle("atlasz:db:decisions:save", (e, t) => (Q().saveDecision(t), { ok: !0 })), Z.handle("atlasz:db:decisions:delete", (e, t) => (Q().deleteDecision(t), { ok: !0 })), Z.handle("atlasz:db:decisions:due", (e, t) => Q().decisionsDueForReview(t)), Z.handle("atlasz:realtime:start", () => $().start()), Z.handle("atlasz:realtime:stop", () => $().stop()), Z.handle("atlasz:realtime:restart", (e, t) => $().restart(t)), Z.handle("atlasz:realtime:add-asset", (e, t) => $().addAsset(t)), Z.handle("atlasz:realtime:snapshot", () => $().snapshot()), Z.handle("atlasz:realtime:status", () => $().status()), Z.handle("atlasz:realtime:health", () => $().health()), Z.handle("atlasz:realtime:traverse-risk", (e, t) => $().traverseRisk(t)), Z.handle("atlasz:realtime:replay:start", (e, t) => $().replayStart(t)), Z.handle("atlasz:realtime:replay:pause", () => $().replayPause()), Z.handle("atlasz:realtime:replay:resume", () => $().replayResume()), Z.handle("atlasz:realtime:replay:stop", () => $().replayStop()), Z.handle("atlasz:realtime:replay:speed", (e, t) => $().replaySetSpeed(t)), Z.handle("atlasz:realtime:replay:seek", (e, t) => $().replaySeek(t)), Z.handle("atlasz:world:snapshot", () => Iu().snapshot()), Z.handle("atlasz:world:refresh", () => Iu().refresh()), Z.handle("atlasz:world:favorite", (e, t, n, r) => Iu().toggleFavorite(t, n, r)), Z.handle("atlasz:quant:snapshot", () => Lu().snapshot()), Z.handle("atlasz:intel:playbook", (e, t) => Ru().playbookFor(t)), Z.handle("atlasz:ingest:status", () => zu().status()), X.whenReady().then(() => {
+	Q(), $(), Iu().refresh(), zu().start(), Bu(), X.on("activate", () => {
+		Du.getAllWindows().length === 0 && Bu();
 	});
 }), X.on("window-all-closed", () => {
 	process.platform !== "darwin" && X.quit();
 }), X.on("before-quit", () => {
-	Vs?.stop(), Vs = null, zs?.close(), zs = null, Bs = null, Rs?.close(), Rs = null;
+	Fu?.stop(), Fu = null, ju?.close(), ju = null, Mu = null, Au?.close(), Au = null;
 });
 //#endregion
-export { S as i, _ as n, y as r, v as t };
+export { S as i, v as n, b as r, y as t };

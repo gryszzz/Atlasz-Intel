@@ -2,6 +2,8 @@ import electron from 'electron'
 import type { DailyBriefRecord, DecisionRecord, WorldHeadlineRecord } from './persistence'
 import type { ConnectorId, LiveEngineSnapshot, ReplayState } from '../src/realtime'
 import type { WorldIntelSnapshot } from '../src/worldIntel'
+import type { QuantTerminalSnapshot } from '../src/quant'
+import type { HistoricalPlaybook } from '../src/intel'
 
 const { contextBridge, ipcRenderer } = electron
 
@@ -45,6 +47,14 @@ contextBridge.exposeInMainWorld('atlaszDesktop', {
   world: {
     snapshot: (): Promise<WorldIntelSnapshot> => ipcRenderer.invoke('atlasz:world:snapshot'),
     refresh: (): Promise<WorldIntelSnapshot> => ipcRenderer.invoke('atlasz:world:refresh'),
+    favorite: (kind: 'asset' | 'country' | 'event' | 'narrative', targetId: string, label: string): Promise<WorldIntelSnapshot> =>
+      ipcRenderer.invoke('atlasz:world:favorite', kind, targetId, label),
+  },
+  quant: {
+    snapshot: (): Promise<QuantTerminalSnapshot> => ipcRenderer.invoke('atlasz:quant:snapshot'),
+  },
+  intel: {
+    playbook: (eventId: string): Promise<HistoricalPlaybook> => ipcRenderer.invoke('atlasz:intel:playbook', eventId),
   },
   ingest: {
     status: () => ipcRenderer.invoke('atlasz:ingest:status'),

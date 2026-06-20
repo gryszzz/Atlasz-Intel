@@ -10,6 +10,8 @@ import type {
   RealtimeHealth,
   SourceTrust,
 } from '../../src/realtime'
+import type { MicrostructureBookUpdate } from '../../src/microstructure'
+import { StreamingScreener } from '../microstructure/streamingScreener'
 
 type WorkerConfig = {
   assets: LiveAssetConfig[]
@@ -52,6 +54,7 @@ type WorkerAuditEvent = {
 type NormalizedPayload = {
   ticks: LiveTick[]
   attention: LiveAttentionTick[]
+  bookUpdates?: MicrostructureBookUpdate[]
 }
 
 type WorkerBatchMessage = {
@@ -99,6 +102,11 @@ const pendingTicks: LiveTick[] = []
 const pendingAttention: LiveAttentionTick[] = []
 const auditQueue: WorkerAuditEvent[] = []
 const connectors = createConnectorRegistry(config)
+const microstructure = new StreamingScreener({
+  capacity: integerEnv('ATLASZ_MICROSTRUCTURE_BUFFER_SIZE', 10_000),
+  zScoreThreshold: numberEnv('ATLASZ_MICROSTRUCTURE_ZSCORE', 2.5),
+})
+const proxyLastPrices = new Map<string, number>()
 
 let activeConnectorId: ConnectorId = config.connectorId ?? (config.enablePublicWs ? 'coincap_public_ws' : 'simulated')
 let workerStatus: RealtimeHealth['workerStatus'] = 'stopped'
@@ -222,6 +230,21 @@ function ensureBatchTimer(): void {
 function acceptNormalized(payload: NormalizedPayload): void {
   const acceptedTicks = appendWithDropAccounting(pendingTicks, payload.ticks)
   const acceptedAttention = appendWithDropAccounting(pendingAttention, payload.attention)
+  const bookUpdates =
+    payload.bookUpdates && payload.bookUpdates.length > 0
+      ? payload.bookUpdates
+      : proxyBookUpdatesFromTicks(payload.ticks, payload.ticks[0]?.source ?? activeConnectorId)
+  microstructure.ingestMany(bookUpdates)
+  for (const shock of microstructure.drainShocks()) {
+    enqueueAudit('signal_generated', activeConnectorId, shock.severity === 'high' ? 'watch' : 'info', shock.explanation, {
+      signalType: 'microstructure_market_shock',
+      symbol: shock.symbol,
+      obi: shock.obi,
+      ofi: shock.ofi,
+      ofiZScore: shock.ofiZScore,
+      provenance: shock.provenance,
+    })
+  }
   packetCounter += acceptedTicks + acceptedAttention
 }
 
@@ -319,6 +342,7 @@ function buildHealth(): RealtimeHealth {
       speed: 1,
       frameCount: 0,
     },
+    microstructure: microstructure.snapshot(),
   }
 }
 
@@ -388,6 +412,7 @@ function createSimulatedConnector(workerConfig: WorkerConfig): WorkerConnector {
         const marketShock = (Math.random() - 0.5) * 0.0009
         const ticks: LiveTick[] = []
         const attention: LiveAttentionTick[] = []
+        const bookUpdates: MicrostructureBookUpdate[] = []
 
         for (const asset of assets) {
           const previous = prices.get(asset.symbol) ?? 100
@@ -405,6 +430,7 @@ function createSimulatedConnector(workerConfig: WorkerConfig): WorkerConnector {
             timestamp: now,
             source: connector.id,
           })
+          bookUpdates.push(syntheticBookUpdate(asset.symbol, nextPrice, ret, attentionSpike, now, connector.id, 'simulated'))
           attention.push({
             target: asset.symbol,
             pressure: round(clamp(38 + Math.abs(ret) * 12_000 + (attentionSpike - 1) * 5, 0, 100), 2),
@@ -430,7 +456,7 @@ function createSimulatedConnector(workerConfig: WorkerConfig): WorkerConnector {
           })
         }
 
-        emit({ ticks, attention })
+        emit({ ticks, attention, bookUpdates })
       }, Math.min(syncIntervalMs, 120))
     },
     stop() {
@@ -738,6 +764,53 @@ function attentionFromTicks(ticks: LiveTick[], source: string): LiveAttentionTic
   }))
 }
 
+function proxyBookUpdatesFromTicks(ticks: LiveTick[], source: string): MicrostructureBookUpdate[] {
+  return ticks.map((tick) => {
+    const previous = proxyLastPrices.get(tick.symbol) ?? tick.price
+    proxyLastPrices.set(tick.symbol, tick.price)
+    const signedReturn = previous > 0 ? (tick.price - previous) / previous : 0
+    const pressure = Math.tanh((tick.volume || 1) / 10)
+    return syntheticBookUpdate(
+      tick.symbol,
+      tick.price,
+      signedReturn * pressure,
+      Math.max(1, tick.volume),
+      tick.timestamp,
+      source,
+      'local-computed',
+    )
+  })
+}
+
+function syntheticBookUpdate(
+  symbol: string,
+  midPrice: number,
+  signedReturn: number,
+  intensity: number,
+  timestamp: number,
+  source: string,
+  provenance: MicrostructureBookUpdate['provenance'],
+): MicrostructureBookUpdate {
+  const packetReceivedAt = Date.now()
+  const spreadBps = Math.max(1, Math.min(18, 4 + Math.abs(signedReturn) * 12_000))
+  const halfSpread = midPrice * (spreadBps / 20_000)
+  const baseVolume = Math.max(1, 60 * intensity)
+  const skew = clamp(signedReturn * 3_500, -0.82, 0.82)
+  return {
+    symbol,
+    bidPrice: round(Math.max(0.000001, midPrice - halfSpread), 8),
+    askPrice: round(midPrice + halfSpread, 8),
+    bidVolume: round(baseVolume * (1 + skew), 6),
+    askVolume: round(baseVolume * (1 - skew), 6),
+    timestamp,
+    source,
+    provenance,
+    dataMode: 'PROXY_TRADE_FLOW_PRESSURE',
+    packetReceivedAt,
+    normalizedAt: Date.now(),
+  }
+}
+
 function round(value: number, decimals = 2): number {
   const factor = 10 ** decimals
   return Math.round(value * factor) / factor
@@ -745,4 +818,14 @@ function round(value: number, decimals = 2): number {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
+}
+
+function integerEnv(key: string, fallback: number): number {
+  const value = Number(process.env[key])
+  return Number.isInteger(value) && value > 0 ? value : fallback
+}
+
+function numberEnv(key: string, fallback: number): number {
+  const value = Number(process.env[key])
+  return Number.isFinite(value) && value > 0 ? value : fallback
 }

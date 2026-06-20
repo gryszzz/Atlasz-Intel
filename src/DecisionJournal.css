@@ -113,12 +113,14 @@
   padding: 3px 8px;
 }
 
-.dj-dir-long {
+.dj-dir-long,
+.dj-dir-positive {
   background: rgba(94, 234, 212, 0.14);
   color: var(--green, #5eead4);
 }
 
 .dj-dir-short,
+.dj-dir-negative,
 .dj-dir-avoid {
   background: rgba(239, 68, 68, 0.14);
   color: #fca5a5;

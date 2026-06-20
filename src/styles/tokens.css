@@ -1,0 +1,65 @@
+/*
+ * Atlasz design tokens
+ * Formalizes the command-center visual system. The core palette lives in
+ * index.css (:root); this file layers on the semantic scales that reusable
+ * components consume — provenance trust, severity, type/space scales, motion,
+ * and elevation. Additive only: nothing here overrides existing app styles.
+ */
+
+:root {
+  /* ===== Provenance trust palette =====
+   * One hue per provenance class. Saturation/treatment encode trust so that
+   * inferred / simulated / local data can never read as verified. */
+  --prov-verified: #2dd4bf;              /* highest trust — confirmed */
+  --prov-official-api: #38bdf8;          /* trusted — first-party API */
+  --prov-auth-gated: #818cf8;            /* trusted — authenticated/gated */
+  --prov-public-disclosure: #22d3ee;     /* official public disclosure (delayed) */
+  --prov-rss-public: #fbbf24;            /* public feed */
+  --prov-public-unauthenticated: #fb923c;/* public, unauthenticated */
+  --prov-local-derived: #a78bfa;         /* derived locally */
+  --prov-local-computed: #8b5cf6;        /* computed locally (deterministic) */
+  --prov-math-derived: #60a5fa;          /* math-derived metric */
+  --prov-local-model: #c084fc;           /* local model output */
+  --prov-model-inferred: #e879f9;        /* inferred — uncertain */
+  --prov-simulated: #f87171;             /* not real data */
+
+  /* ===== Severity / risk ===== */
+  --sev-critical: #ef4444;
+  --sev-high: #fb923c;
+  --sev-elevated: #facc15;
+  --sev-moderate: #5eead4;
+  --sev-low: #67e8f9;
+
+  /* ===== Chart series (institutional, restrained) ===== */
+  --chart-1: #2dd4bf;
+  --chart-2: #38bdf8;
+  --chart-3: #818cf8;
+  --chart-4: #facc15;
+  --chart-grid: rgba(148, 163, 184, 0.1);
+
+  /* ===== Type scale ===== */
+  --fs-2xs: 9px;
+  --fs-xs: 10px;
+  --fs-sm: 12px;
+  --fs-md: 13px;
+  --fs-base: 15px;
+  --fs-lg: 18px;
+  --fs-xl: 24px;
+
+  /* ===== Spacing scale ===== */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 22px;
+
+  /* ===== Motion ===== */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 360ms;
+
+  /* ===== Elevation ===== */
+  --elev-1: 0 1px 0 rgba(255, 255, 255, 0.02), 0 8px 24px rgba(0, 0, 0, 0.32);
+  --elev-2: 0 1px 0 rgba(255, 255, 255, 0.03), 0 18px 60px rgba(0, 0, 0, 0.4);
+}

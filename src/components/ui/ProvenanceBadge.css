@@ -1,0 +1,93 @@
+/*
+ * ProvenanceBadge — provenance/trust label as a distinct, glanceable badge.
+ * --prov is the per-class accent (set below); tier classes layer the treatment
+ * (border style + dot fill) so trust level is unmistakable at a glance.
+ */
+
+.prov-badge {
+  --prov: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  border: 1px solid color-mix(in srgb, var(--prov) 42%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--prov) 12%, #0a0f0e);
+  color: color-mix(in srgb, var(--prov) 80%, #ffffff);
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  font-style: normal;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  white-space: nowrap;
+  padding: 4px 8px 4px 7px;
+}
+
+.prov-badge-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--prov);
+}
+
+.prov-size-sm {
+  font-size: var(--fs-2xs);
+  gap: 5px;
+  padding: 3px 7px 3px 6px;
+}
+
+.prov-size-sm .prov-badge-dot {
+  width: 5px;
+  height: 5px;
+}
+
+/* ===== Per-class accent ===== */
+.prov-verified { --prov: var(--prov-verified); }
+.prov-official-api { --prov: var(--prov-official-api); }
+.prov-auth-gated { --prov: var(--prov-auth-gated); }
+.prov-public-disclosure { --prov: var(--prov-public-disclosure); }
+.prov-rss-public { --prov: var(--prov-rss-public); }
+.prov-public-unauthenticated { --prov: var(--prov-public-unauthenticated); }
+.prov-local-derived { --prov: var(--prov-local-derived); }
+.prov-local-computed { --prov: var(--prov-local-computed); }
+.prov-math-derived { --prov: var(--prov-math-derived); }
+.prov-local-model { --prov: var(--prov-local-model); }
+.prov-model-inferred { --prov: var(--prov-model-inferred); }
+.prov-simulated { --prov: var(--prov-simulated); }
+
+/* ===== Tier treatment ===== (declared after base so border-style wins) */
+
+/* Verified is the ONLY tier that reads as confident: solid, filled, glowing. */
+.prov-tier-verified {
+  border-style: solid;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--prov) 28%, transparent);
+}
+.prov-tier-verified .prov-badge-dot {
+  animation: fx-pulse 2.4s var(--ease-out) infinite;
+}
+
+.prov-tier-trusted {
+  border-style: solid;
+}
+
+/* Public sources: dotted border signals "external but unverified". */
+.prov-tier-public {
+  border-style: dotted;
+}
+
+/* Derived / inferred / simulated: dashed border + hollow dot — clearly NOT
+ * confirmed. A hollow ring dot visually separates these from trusted (filled). */
+.prov-tier-derived,
+.prov-tier-inferred,
+.prov-tier-simulated {
+  border-style: dashed;
+}
+
+.prov-tier-derived .prov-badge-dot,
+.prov-tier-inferred .prov-badge-dot,
+.prov-tier-simulated .prov-badge-dot {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--prov);
+}

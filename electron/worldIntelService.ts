@@ -1,36 +1,24 @@
-import { classifyHeadlineText, deriveWorldIntelSnapshot, type PublicWorldHeadline, type WorldIntelSnapshot } from '../src/worldIntel'
+import { AssetIdentityService } from './assetIdentityService'
 import type { IntelPersistence, WorldHeadlineRecord } from './persistence'
-
-type GdeltArticle = {
-  url?: unknown
-  title?: unknown
-  seendate?: unknown
-  domain?: unknown
-  sourceCommonName?: unknown
-  sourceCountry?: unknown
-  language?: unknown
-}
-
-type GdeltResponse = {
-  articles?: GdeltArticle[]
-}
-
-const gdeltEndpoint = 'https://api.gdeltproject.org/api/v2/doc/doc'
-const gdeltQuery = [
-  '"Red Sea"',
-  'semiconductor',
-  'Taiwan',
-  'tariffs',
-  'sanctions',
-  '"rare earth"',
-  '"central bank"',
-  'inflation',
-  '"natural gas"',
-  'oil',
-].join(' OR ')
+import { OsintSourceRegistry } from './osint/sourceRegistry'
+import {
+  buildWorldIntelEventFromHeadline,
+  deriveAssetIdentitiesFromEvents,
+  deriveCountryIntelState,
+  deriveWorldIntelSnapshot,
+  type AssetIdentity,
+  type CountryIntelState,
+  type OsintSourceSnapshot,
+  type PublicWorldHeadline,
+  type UserFavorite,
+  type WorldIntelEvent,
+  type WorldIntelSnapshot,
+} from '../src/worldIntel'
 
 export class WorldIntelService {
   private readonly persistence: IntelPersistence
+  private readonly registry = new OsintSourceRegistry()
+  private readonly assetIdentity: AssetIdentityService
   private readonly enabled = process.env.ATLASZ_ENABLE_PUBLIC_WORLD !== '0'
   private status: WorldIntelSnapshot['status'] = this.enabled ? 'stale' : 'disabled'
   private lastError: string | undefined
@@ -39,6 +27,8 @@ export class WorldIntelService {
 
   constructor(persistence: IntelPersistence) {
     this.persistence = persistence
+    this.assetIdentity = new AssetIdentityService(persistence)
+    this.persistSources(this.registry.snapshots())
   }
 
   snapshot(): WorldIntelSnapshot {
@@ -54,23 +44,28 @@ export class WorldIntelService {
       return this.inFlight
     }
     this.status = 'fetching'
-    this.inFlight = this.fetchGdelt()
-      .then((headlines) => {
-        for (const headline of headlines) {
-          this.persistence.saveHeadline(toHeadlineRecord(headline))
+    this.inFlight = this.registry
+      .pollEnabledSources()
+      .then(({ events, sources }) => {
+        this.persistSources(sources)
+        for (const event of events) {
+          this.persistWorldEvent(event)
         }
-        this.status = headlines.length > 0 ? 'ready' : 'stale'
-        this.lastError = undefined
+        const allEvents = this.persistence.listWorldIntelEvents(300)
+        this.persistCountryState(deriveCountryIntelState(allEvents))
+        this.assetIdentity.ensureForEvents(allEvents)
+        this.status = events.length > 0 || allEvents.length > 0 ? 'ready' : 'stale'
+        this.lastError = sources.find((source) => source.status === 'failed')?.lastError
         this.updatedAt = Date.now()
         const snapshot = this.buildSnapshot()
-        if (snapshot.rawSourceItems.some((source) => source.connector === 'gdelt-doc-public')) {
+        if (snapshot.worldEvents.length > 0) {
           persistDailyBrief(this.persistence, snapshot)
         }
         return snapshot
       })
       .catch((error) => {
         this.lastError = error instanceof Error ? error.message : String(error)
-        this.status = this.persistence.listHeadlines(1).length > 0 ? 'stale' : 'failed'
+        this.status = this.persistence.listWorldIntelEvents(1).length > 0 || this.persistence.listHeadlines(1).length > 0 ? 'stale' : 'failed'
         return this.buildSnapshot()
       })
       .finally(() => {
@@ -79,44 +74,109 @@ export class WorldIntelService {
     return this.inFlight
   }
 
-  private async fetchGdelt(): Promise<PublicWorldHeadline[]> {
-    const url = new URL(gdeltEndpoint)
-    url.searchParams.set('query', gdeltQuery)
-    url.searchParams.set('mode', 'ArtList')
-    url.searchParams.set('format', 'json')
-    url.searchParams.set('maxrecords', '35')
-    url.searchParams.set('sort', 'DateDesc')
-
-    const response = await fetch(url, {
-      headers: {
-        accept: 'application/json',
-        'user-agent': 'AtlaszIntel/0.2 local-first world-intel connector',
-      },
-    })
-    if (!response.ok) {
-      throw new Error(`GDELT HTTP ${response.status}`)
-    }
-    const text = await response.text()
-    if (!text.trim().startsWith('{')) {
-      throw new Error(text.trim().slice(0, 160) || 'GDELT returned a non-JSON response')
-    }
-    const payload = JSON.parse(text) as GdeltResponse
-    const articles = Array.isArray(payload.articles) ? payload.articles : []
-    return articles.map(articleToHeadline).filter((headline): headline is PublicWorldHeadline => headline !== null)
+  toggleFavorite(kind: UserFavorite['kind'], targetId: string, label: string): WorldIntelSnapshot {
+    this.assetIdentity.toggleFavorite(kind, targetId, label)
+    return this.buildSnapshot()
   }
 
   private buildSnapshot(): WorldIntelSnapshot {
-    const headlines = this.persistence.listHeadlines(80).map(fromHeadlineRecord)
+    const headlines = this.persistence.listHeadlines(120).map(fromHeadlineRecord)
+    const persistedEvents = this.persistence.listWorldIntelEvents(300)
+    const persistedIds = new Set(persistedEvents.map((event) => event.id))
+    const legacyEvents = headlines
+      .filter((headline) => !persistedIds.has(headline.id))
+      .map((headline) =>
+        buildWorldIntelEventFromHeadline(headline, {
+          sourceId: headline.source || 'legacy_world_headlines',
+          provenance: this.status === 'stale' ? 'local-derived' : 'public-unauthenticated',
+        }),
+      )
+    const worldEvents = [...persistedEvents, ...legacyEvents].sort((left, right) => right.timestamp - left.timestamp)
+    const countries = this.mergeCountries(this.persistence.listCountryIntelState(), deriveCountryIntelState(worldEvents))
+    const assets = this.mergeAssetIdentities(this.assetIdentity.list(), deriveAssetIdentitiesFromEvents(worldEvents))
+    const sources = this.mergeSources(this.registry.snapshots(), this.persistence.listOsintSources())
+
     return deriveWorldIntelSnapshot({
       enabled: this.enabled,
       status: this.status,
-      sourceTrust: this.status === 'failed' ? 'failed' : this.status === 'stale' ? 'stale' : 'public unauthenticated',
+      sourceTrust: this.status === 'failed' ? 'failed' : this.status === 'stale' ? 'stale' : 'public-unauthenticated',
       connectorId: this.enabled ? 'gdelt_doc_public' : 'seeded',
-      connectorLabel: this.enabled ? 'GDELT DOC public news' : 'Seeded local world layer',
+      connectorLabel: this.enabled ? 'Atlasz OSINT source registry' : 'Seeded local world layer',
       updatedAt: this.updatedAt,
       lastError: this.lastError,
       headlines,
+      worldEvents,
+      countries,
+      assetIdentities: assets,
+      favorites: this.persistence.listFavorites(),
+      sources,
     })
+  }
+
+  private persistSources(sources: OsintSourceSnapshot[]): void {
+    for (const source of sources) {
+      this.safePersist(() => this.persistence.saveOsintSource(source))
+    }
+  }
+
+  private persistWorldEvent(event: WorldIntelEvent): void {
+    this.safePersist(() => this.persistence.saveWorldIntelEvent(event))
+    this.safePersist(() => this.persistence.saveHeadline(toHeadlineRecord(event)))
+    for (const asset of event.affectedAssets) {
+      this.safePersist(() =>
+        this.persistence.saveEventAssetLink({
+          id: `world-event:${event.id}:${asset}`,
+          eventId: event.id,
+          assetSymbol: asset,
+          relation: event.narrativeTags[0] ?? event.category,
+          confidence: event.confidence / 100,
+          createdAt: event.timestamp,
+        }),
+      )
+    }
+  }
+
+  private persistCountryState(countries: CountryIntelState[]): void {
+    for (const country of countries) {
+      this.safePersist(() => this.persistence.saveCountryIntelState(country))
+    }
+  }
+
+  private mergeSources(primary: OsintSourceSnapshot[], persisted: OsintSourceSnapshot[]): OsintSourceSnapshot[] {
+    return [...new Map([...persisted, ...primary].map((source) => [source.sourceId, source])).values()]
+  }
+
+  private mergeCountries(primary: CountryIntelState[], derived: CountryIntelState[]): CountryIntelState[] {
+    return [...new Map([...derived, ...primary].map((country) => [country.countryCode, country])).values()].sort(
+      (left, right) => right.riskScore - left.riskScore,
+    )
+  }
+
+  private mergeAssetIdentities(primary: AssetIdentity[], derived: AssetIdentity[]): AssetIdentity[] {
+    const favorites = new Set(this.persistence.listFavorites().map((favorite) => favorite.targetId))
+    return [...new Map([...derived, ...primary].map((asset) => [asset.symbol, asset])).values()]
+      .map((asset) => ({ ...asset, favorite: favorites.has(asset.symbol) || asset.favorite }))
+      .sort((left, right) => left.symbol.localeCompare(right.symbol))
+  }
+
+  private safePersist(operation: () => void): void {
+    try {
+      operation()
+    } catch (error) {
+      try {
+        this.persistence.audit({
+          id: `audit-world-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+          eventType: 'persistence_failed',
+          connectorId: 'world_intel_service',
+          severity: 'error',
+          message: error instanceof Error ? error.message : String(error),
+          createdAt: Date.now(),
+          metadata: {},
+        })
+      } catch {
+        // Persistence failures must not crash the local intelligence layer.
+      }
+    }
   }
 }
 
@@ -141,35 +201,15 @@ function persistDailyBrief(persistence: IntelPersistence, snapshot: WorldIntelSn
   }
 }
 
-function articleToHeadline(article: GdeltArticle): PublicWorldHeadline | null {
-  const title = stringValue(article.title)
-  const url = stringValue(article.url)
-  if (!title || !url) {
-    return null
-  }
-  const source = stringValue(article.sourceCommonName) || stringValue(article.domain) || 'GDELT public source'
-  const observedAt = parseGdeltDate(stringValue(article.seendate)) ?? Date.now()
-  const classification = classifyHeadlineText(title)
+function toHeadlineRecord(event: WorldIntelEvent): WorldHeadlineRecord {
   return {
-    id: stableId(url),
-    title,
-    source,
-    url,
-    sector: classification.sector,
-    impact: classification.impact,
-    observedAt,
-  }
-}
-
-function toHeadlineRecord(headline: PublicWorldHeadline): WorldHeadlineRecord {
-  return {
-    id: headline.id,
-    title: headline.title,
-    source: headline.source,
-    url: headline.url,
-    sector: headline.sector,
-    impact: headline.impact,
-    observedAt: headline.observedAt,
+    id: event.id,
+    title: event.title,
+    source: event.sourceId,
+    url: event.sourceUrl ?? '',
+    sector: String(event.category),
+    impact: `${event.summary} Provenance: ${event.provenance}.`,
+    observedAt: event.timestamp,
   }
 }
 
@@ -183,25 +223,4 @@ function fromHeadlineRecord(record: WorldHeadlineRecord): PublicWorldHeadline {
     impact: record.impact,
     observedAt: record.observedAt,
   }
-}
-
-function stringValue(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : ''
-}
-
-function parseGdeltDate(value: string): number | null {
-  if (!/^\d{14}$/.test(value)) {
-    return null
-  }
-  const iso = `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}T${value.slice(8, 10)}:${value.slice(10, 12)}:${value.slice(12, 14)}Z`
-  const timestamp = Date.parse(iso)
-  return Number.isFinite(timestamp) ? timestamp : null
-}
-
-function stableId(input: string): string {
-  let hash = 0
-  for (let index = 0; index < input.length; index += 1) {
-    hash = (hash * 31 + input.charCodeAt(index)) >>> 0
-  }
-  return `gdelt-${hash.toString(36)}`
 }
