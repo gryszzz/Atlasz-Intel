@@ -6,7 +6,7 @@ description: >-
   Encodes the lawful verify-then-wire discipline, the provider/adapter model,
   honest provenance, and the validation gates so new sources land fast, real,
   and fail-closed. Triggers: "add a source/feed/provider", "wire <feed> into
-  Atlasz", "plug in <API/RSS>", "source health", "make a connector".
+  Atlasz", "plug in an API or RSS feed", "source health", "make a connector".
 ---
 
 # Atlasz source wiring
