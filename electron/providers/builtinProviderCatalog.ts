@@ -37,6 +37,10 @@ export const PROVIDER_CAPABILITY_META: Record<string, ProviderCapabilityMeta> = 
   sec_press_rss: { feedTypes: ['RSS'], envKeysRequired: [], supportedEventTypes: ['filing', 'news'], supportedRegions: ['US'] },
   ecb_press_rss: { feedTypes: ['RSS'], envKeysRequired: [], supportedEventTypes: ['macro-event', 'news'], supportedRegions: ['EU'] },
   wsj_markets_rss: { feedTypes: ['RSS'], envKeysRequired: [], supportedEventTypes: ['news'], supportedRegions: ['global'] },
+  arxiv_cs_ai: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['research', 'ai'], supportedRegions: ['global'] },
+  nasa_news: { feedTypes: ['RSS'], envKeysRequired: [], supportedEventTypes: ['space', 'science'], supportedRegions: ['global'] },
+  space_launch_library: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['space', 'launch'], supportedRegions: ['global'] },
+  github_trending_repos: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['tech', 'ai'], supportedRegions: ['global'] },
 }
 
 export type LocalServiceKind = 'sqlite' | 'ollama' | 'vector-memory'

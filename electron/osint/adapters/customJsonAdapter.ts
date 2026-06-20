@@ -37,13 +37,15 @@ export function normalizeCustomJson(payload: unknown, options: CustomJsonOptions
   const records = extractRecords(payload)
   const events: WorldIntelEvent[] = []
   for (const record of records) {
-    const title = firstString(record, ['title', 'headline', 'name', 'summary'])
-    const link = firstString(record, ['url', 'link', 'source_url', 'sourceUrl', 'permalink'])
+    const title = firstString(record, ['title', 'headline', 'name', 'full_name', 'summary'])
+    const link = firstString(record, ['url', 'link', 'html_url', 'source_url', 'sourceUrl', 'permalink', 'webcast_live'])
     if (!title || !link) {
       continue
     }
-    const description = firstString(record, ['summary', 'description', 'body', 'content', 'abstract'])
-    const observedAt = asEpochMs(firstRaw(record, ['timestamp', 'date', 'published', 'publishedAt', 'time', 'created_at'])) ?? Date.now()
+    const description = firstString(record, ['summary', 'description', 'body', 'content', 'abstract', 'mission'])
+    const observedAt =
+      asEpochMs(firstRaw(record, ['timestamp', 'date', 'published', 'publishedAt', 'time', 'net', 'created_at', 'updated_at', 'pushed_at'])) ??
+      Date.now()
     const classification = classifyHeadlineText(`${title} ${description}`)
     events.push(
       buildWorldIntelEventFromHeadline(

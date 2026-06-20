@@ -4154,6 +4154,49 @@ var Xt = class {
 	tn("ecb_press_rss", "ECB press releases", "macro", "https://www.ecb.europa.eu/rss/press.xml", "Official ECB public press RSS (global rates). Public headlines only; no scraping."),
 	tn("wsj_markets_rss", "WSJ Markets headlines", "world-news", "https://feeds.a.dj.com/rss/RSSMarketsMain.xml", "Public market-news RSS headlines only; full articles may be paywalled and are not fetched."),
 	{
+		providerId: "arxiv_cs_ai",
+		providerName: "arXiv AI research (cs.AI)",
+		category: "world-news",
+		adapter: "rss",
+		enabled: !0,
+		endpoint: "https://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=submittedDate&sortOrder=descending&max_results=20",
+		authType: "none",
+		pollIntervalMs: 30 * 6e4,
+		rateLimitGuardMs: 12e4,
+		timeoutMs: 15e3,
+		provenance: "official-api",
+		legalSafetyNote: "Official arXiv public API (Atom). Research metadata; public."
+	},
+	tn("nasa_news", "NASA news releases", "world-news", "https://www.nasa.gov/news-release/feed/", "Official NASA public news RSS. Public headlines only."),
+	{
+		providerId: "space_launch_library",
+		providerName: "Upcoming space launches (Launch Library 2)",
+		category: "world-news",
+		adapter: "custom-json",
+		enabled: !0,
+		endpoint: "https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=15",
+		authType: "none",
+		pollIntervalMs: 60 * 6e4,
+		rateLimitGuardMs: 3e5,
+		timeoutMs: 15e3,
+		provenance: "public-unauthenticated",
+		legalSafetyNote: "Public Launch Library 2 API. Public launch schedule; rate-limited."
+	},
+	{
+		providerId: "github_trending_repos",
+		providerName: "GitHub high-signal repositories",
+		category: "world-news",
+		adapter: "custom-json",
+		enabled: !0,
+		endpoint: "https://api.github.com/search/repositories?q=stars:%3E5000&sort=stars&order=desc&per_page=15",
+		authType: "none",
+		pollIntervalMs: 60 * 6e4,
+		rateLimitGuardMs: 3e5,
+		timeoutMs: 15e3,
+		provenance: "official-api",
+		legalSafetyNote: "Official GitHub public Search API (unauthenticated, rate-limited). Public repo metadata."
+	},
+	{
 		providerId: "x_explore_placeholder",
 		providerName: "X/Twitter Explore placeholder",
 		category: "osint",
@@ -4360,6 +4403,30 @@ var cn = {
 		feedTypes: ["RSS"],
 		envKeysRequired: [],
 		supportedEventTypes: ["news"],
+		supportedRegions: ["global"]
+	},
+	arxiv_cs_ai: {
+		feedTypes: ["REST"],
+		envKeysRequired: [],
+		supportedEventTypes: ["research", "ai"],
+		supportedRegions: ["global"]
+	},
+	nasa_news: {
+		feedTypes: ["RSS"],
+		envKeysRequired: [],
+		supportedEventTypes: ["space", "science"],
+		supportedRegions: ["global"]
+	},
+	space_launch_library: {
+		feedTypes: ["REST"],
+		envKeysRequired: [],
+		supportedEventTypes: ["space", "launch"],
+		supportedRegions: ["global"]
+	},
+	github_trending_repos: {
+		feedTypes: ["REST"],
+		envKeysRequired: [],
+		supportedEventTypes: ["tech", "ai"],
 		supportedRegions: ["global"]
 	}
 }, ln = [
@@ -4994,13 +5061,16 @@ function ur(e, t) {
 			"title",
 			"headline",
 			"name",
+			"full_name",
 			"summary"
 		]), i = mr(e, [
 			"url",
 			"link",
+			"html_url",
 			"source_url",
 			"sourceUrl",
-			"permalink"
+			"permalink",
+			"webcast_live"
 		]);
 		if (!n || !i) continue;
 		let a = mr(e, [
@@ -5008,14 +5078,18 @@ function ur(e, t) {
 			"description",
 			"body",
 			"content",
-			"abstract"
+			"abstract",
+			"mission"
 		]), o = yn(pr(e, [
 			"timestamp",
 			"date",
 			"published",
 			"publishedAt",
 			"time",
-			"created_at"
+			"net",
+			"created_at",
+			"updated_at",
+			"pushed_at"
 		])) ?? Date.now(), s = _t(`${n} ${a}`);
 		r.push(vt({
 			id: Cn(t.sourceId, i),
