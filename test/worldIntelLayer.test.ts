@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { OsintSourceRegistry } from '../electron/osint/sourceRegistry'
-import { buildAssetIdentity, buildWorldIntelEventFromHeadline } from '../src/worldIntel'
+import { buildAssetIdentity, buildSeedWorldIntelSnapshot, buildWorldIntelEventFromHeadline } from '../src/worldIntel'
 
 afterEach(() => {
   vi.unstubAllEnvs()
@@ -50,6 +50,18 @@ describe('world intelligence terminal layer', () => {
     expect(identity.symbol).toBe('KAS')
     expect(identity.type).toBe('crypto')
     expect(identity.fallbackIcon).toBe('KAS')
-    expect(identity.dataAvailabilityStatus).toContain('simulator')
+    expect(identity.dataAvailabilityStatus).toContain('PRICE_UNAVAILABLE')
+    expect(identity.provenanceCoverage).toEqual(['public-unauthenticated'])
+  })
+
+  it('fails closed to an empty unavailable world snapshot instead of seeded events', () => {
+    const snapshot = buildSeedWorldIntelSnapshot()
+
+    expect(snapshot.status).toBe('disabled')
+    expect(snapshot.sourceTrust).toBe('unavailable')
+    expect(snapshot.connectorId).toBe('unavailable')
+    expect(snapshot.events).toHaveLength(0)
+    expect(snapshot.signals).toHaveLength(0)
+    expect(snapshot.dailyBrief).toHaveLength(0)
   })
 })

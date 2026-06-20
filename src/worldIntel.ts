@@ -1,8 +1,4 @@
 import {
-  dailyBrief,
-  radarEvents,
-  rawSourceItems,
-  topSignals,
   type BriefItem,
   type EvidenceNote,
   type RadarEvent,
@@ -21,6 +17,7 @@ export type WorldSourceTrust =
   | 'verified'
   | 'stale'
   | 'failed'
+  | 'unavailable'
 
 export type WorldIntelStatus = 'disabled' | 'fetching' | 'ready' | 'stale' | 'failed'
 
@@ -140,13 +137,18 @@ export type OsintSourceSnapshot = {
   sourceReliabilityScore: number
   legalSafetyNote: string
   parserAdapter: string
+  // Provider-config metadata (optional; populated by the provider-driven registry).
+  category?: string
+  authType?: 'none' | 'api-key' | 'bearer-token' | 'env'
+  configured?: boolean
+  configHint?: string
 }
 
 export type WorldIntelConnectorSnapshot = {
   enabled: boolean
   status: WorldIntelStatus
   sourceTrust: WorldSourceTrust
-  connectorId: 'gdelt_doc_public' | 'seeded'
+  connectorId: 'gdelt_doc_public' | 'unavailable'
   connectorLabel: string
   updatedAt?: number
   lastError?: string
@@ -275,43 +277,24 @@ const topicRules: TopicRule[] = [
 ]
 
 export function buildSeedWorldIntelSnapshot(): WorldIntelSnapshot {
-  const worldEvents = radarEvents.map((event) => radarEventToWorldIntelEvent(event))
   return {
     enabled: false,
     status: 'disabled',
-    sourceTrust: 'simulated',
-    connectorId: 'seeded',
-    connectorLabel: 'Seeded local world layer',
+    sourceTrust: 'unavailable',
+    connectorId: 'unavailable',
+    connectorLabel: 'Public world connector unavailable',
     updatedAt: undefined,
     lastError: undefined,
     headlines: [],
-    worldEvents,
-    countries: deriveCountryIntelState(worldEvents),
-    assetIdentities: deriveAssetIdentitiesFromEvents(worldEvents),
+    worldEvents: [],
+    countries: [],
+    assetIdentities: [],
     favorites: [],
-    sources: [
-      {
-        sourceId: 'seeded_local_world_layer',
-        sourceName: 'Seeded local world layer',
-        sourceType: 'local-seed',
-        endpointType: 'local',
-        endpoint: 'src/data/intel.ts',
-        pollIntervalMs: 0,
-        rateLimitMs: 0,
-        timeoutMs: 0,
-        enabled: true,
-        status: 'online',
-        provenance: 'simulated',
-        itemCount: worldEvents.length,
-        sourceReliabilityScore: 1,
-        legalSafetyNote: 'Local seeded context only; not live or verified.',
-        parserAdapter: 'seeded-radar-event-adapter',
-      },
-    ],
-    events: radarEvents,
-    signals: topSignals,
-    dailyBrief,
-    rawSourceItems,
+    sources: [],
+    events: [],
+    signals: [],
+    dailyBrief: [],
+    rawSourceItems: [],
   }
 }
 
@@ -345,12 +328,7 @@ export function deriveWorldIntel(
     .filter((item): item is ClassifiedHeadline => item !== null)
 
   if (classified.length === 0) {
-    return {
-      events: radarEvents,
-      signals: topSignals,
-      dailyBrief,
-      rawSourceItems,
-    }
+    return emptyDerivedWorldIntel()
   }
 
   const groups = groupBy(classified, (item) => item.topic.id)
@@ -360,10 +338,19 @@ export function deriveWorldIntel(
   const dynamicRaw = classified.slice(0, 25).map((item) => buildRawSourceItem(item))
 
   return {
-    events: mergeById(dynamicEvents, radarEvents),
-    signals: mergeById(dynamicSignals, topSignals),
-    dailyBrief: [...dynamicBrief, ...dailyBrief].slice(0, 7),
-    rawSourceItems: [...dynamicRaw, ...rawSourceItems],
+    events: dynamicEvents,
+    signals: dynamicSignals,
+    dailyBrief: dynamicBrief,
+    rawSourceItems: dynamicRaw,
+  }
+}
+
+function emptyDerivedWorldIntel(): DerivedWorldIntel {
+  return {
+    events: [],
+    signals: [],
+    dailyBrief: [],
+    rawSourceItems: [],
   }
 }
 
@@ -538,7 +525,7 @@ export function buildAssetIdentity(
     symbol: normalized,
     name: catalog?.name ?? `${normalized} watchlist asset`,
     type,
-    exchangeOrSource: catalog?.exchangeOrSource ?? (type === 'crypto' ? 'public crypto mapping' : 'local universe'),
+    exchangeOrSource: catalog?.exchangeOrSource ?? (type === 'crypto' ? 'public crypto mapping' : 'configured universe identity'),
     iconUrl: catalog?.iconUrl,
     fallbackIcon: catalog?.fallbackIcon ?? fallbackIconFor(normalized, type),
     favorite: options.favorite ?? false,
@@ -546,30 +533,15 @@ export function buildAssetIdentity(
     aliases: unique([normalized, ...(catalog?.aliases ?? [])]),
     relatedCountries: options.relatedCountries ?? catalog?.relatedCountries ?? [],
     relatedSectors: options.relatedSectors ?? catalog?.relatedSectors ?? [],
-    dataAvailabilityStatus: catalog?.dataAvailabilityStatus ?? 'not available from current public sources; simulator/local derived only',
+    dataAvailabilityStatus: catalog?.dataAvailabilityStatus ?? 'not available from current public sources; DATA_UNAVAILABLE until a real provider is configured',
     provenanceCoverage: options.provenanceCoverage ?? catalog?.provenanceCoverage ?? ['local-derived'],
   }
-}
-
-function radarEventToWorldIntelEvent(event: RadarEvent): WorldIntelEvent {
-  return buildWorldIntelEventFromHeadline(
-    {
-      id: event.id,
-      title: event.title,
-      source: 'Seeded local world layer',
-      url: '',
-      sector: event.category,
-      impact: `${event.summary} ${event.relationshipReason}`,
-      observedAt: Date.now(),
-    },
-    { sourceId: 'seeded_local_world_layer', provenance: 'simulated' },
-  )
 }
 
 function sourceTrustToProvenance(sourceTrust: WorldSourceTrust): ProvenanceId {
   if (sourceTrust === 'public unauthenticated') return 'public-unauthenticated'
   if (sourceTrust === 'local derived') return 'local-derived'
-  if (sourceTrust === 'stale' || sourceTrust === 'failed') return 'local-derived'
+  if (sourceTrust === 'stale' || sourceTrust === 'failed' || sourceTrust === 'unavailable') return 'local-derived'
   return sourceTrust
 }
 
@@ -715,10 +687,6 @@ function confidenceFor(sourceCount: number, sourceTrust: WorldSourceTrust): numb
 
 function formatEventTime(observedAt: number): string {
   return new Date(observedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-}
-
-function mergeById<T extends { id: string }>(primary: T[], fallback: T[]): T[] {
-  return [...new Map([...primary, ...fallback].map((item) => [item.id, item])).values()]
 }
 
 function groupBy<T>(items: T[], keyFor: (item: T) => string): Map<string, T[]> {
@@ -937,32 +905,32 @@ const assetCatalog: Record<string, Partial<AssetIdentity> & Pick<AssetIdentity, 
   BTC: {
     name: 'Bitcoin',
     type: 'crypto',
-    exchangeOrSource: 'Coinbase/CoinCap public capable',
+    exchangeOrSource: 'CoinGecko/CoinCap/Coinbase public capable',
     fallbackIcon: 'BTC',
     watchlistTags: ['crypto', 'liquidity'],
     aliases: ['Bitcoin', 'XBT'],
-    dataAvailabilityStatus: 'public unauthenticated crypto feeds when enabled; simulator default',
-    provenanceCoverage: ['public-unauthenticated', 'simulated'],
+    dataAvailabilityStatus: 'public unauthenticated crypto feeds when a real connector returns data; no fallback price',
+    provenanceCoverage: ['public-unauthenticated'],
   },
   ETH: {
     name: 'Ethereum',
     type: 'crypto',
-    exchangeOrSource: 'Coinbase/CoinCap public capable',
+    exchangeOrSource: 'CoinGecko/CoinCap/Coinbase public capable',
     fallbackIcon: 'ETH',
     watchlistTags: ['crypto'],
     aliases: ['Ethereum'],
-    dataAvailabilityStatus: 'public unauthenticated crypto feeds when enabled; simulator default',
-    provenanceCoverage: ['public-unauthenticated', 'simulated'],
+    dataAvailabilityStatus: 'public unauthenticated crypto feeds when a real connector returns data; no fallback price',
+    provenanceCoverage: ['public-unauthenticated'],
   },
   KAS: {
     name: 'Kaspa',
     type: 'crypto',
-    exchangeOrSource: 'public crypto mapping / simulator fallback',
+    exchangeOrSource: 'CoinGecko public REST mapping; CoinCap/Coinbase product-dependent',
     fallbackIcon: 'KAS',
     watchlistTags: ['crypto', 'watchlist'],
-    aliases: ['Kaspa'],
-    dataAvailabilityStatus: 'simulator default; public availability depends on connector product support',
-    provenanceCoverage: ['simulated'],
+    aliases: ['Kaspa', 'KASUSDT', 'KAS-USD', 'KAS/USD', 'KAS/USDT'],
+    dataAvailabilityStatus: 'public unauthenticated crypto mapping; PRICE_UNAVAILABLE until a configured provider returns KAS data',
+    provenanceCoverage: ['public-unauthenticated'],
   },
   SPY: { name: 'SPDR S&P 500 ETF', type: 'ETF', exchangeOrSource: 'NYSE Arca', fallbackIcon: 'SPY' },
   QQQ: { name: 'Invesco QQQ Trust', type: 'ETF', exchangeOrSource: 'Nasdaq', fallbackIcon: 'QQQ' },
@@ -1114,7 +1082,11 @@ function severityWeight(severity: Severity): number {
 
 function emptyProvenanceBreakdown(): Record<ProvenanceId, number> {
   return {
-    simulated: 0,
+    live: 0,
+    delayed: 0,
+    'stale-cache': 0,
+    'offline-cache': 0,
+    unavailable: 0,
     'public-unauthenticated': 0,
     'public-disclosure': 0,
     'official-api': 0,
@@ -1126,5 +1098,6 @@ function emptyProvenanceBreakdown(): Record<ProvenanceId, number> {
     'model-inferred': 0,
     'auth-gated': 0,
     verified: 0,
+    simulated: 0,
   }
 }

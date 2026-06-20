@@ -99,9 +99,9 @@ export class WorldIntelService {
     return deriveWorldIntelSnapshot({
       enabled: this.enabled,
       status: this.status,
-      sourceTrust: this.status === 'failed' ? 'failed' : this.status === 'stale' ? 'stale' : 'public-unauthenticated',
-      connectorId: this.enabled ? 'gdelt_doc_public' : 'seeded',
-      connectorLabel: this.enabled ? 'Atlasz OSINT source registry' : 'Seeded local world layer',
+      sourceTrust: this.status === 'failed' ? 'failed' : this.status === 'stale' ? 'stale' : this.enabled ? 'public-unauthenticated' : 'unavailable',
+      connectorId: this.enabled ? 'gdelt_doc_public' : 'unavailable',
+      connectorLabel: this.enabled ? 'Atlasz OSINT source registry' : 'Public world connector unavailable',
       updatedAt: this.updatedAt,
       lastError: this.lastError,
       headlines,

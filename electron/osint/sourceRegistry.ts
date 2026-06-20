@@ -1,14 +1,18 @@
+/*
+ * OSINT source registry — now provider-driven. Source definitions are derived
+ * from the provider config (built-ins + atlasz.providers.json) and wired to the
+ * adapter registry. Behavior is unchanged for built-in sources; custom public
+ * providers are registered automatically. Everything is fail-closed.
+ */
+import { join } from 'node:path'
+import type { OsintSourceSnapshot, WorldIntelEvent } from '../../src/worldIntel'
 import {
-  buildWorldIntelEventFromHeadline,
-  classifyHeadlineText,
-  type OsintSourceSnapshot,
-  type PublicWorldHeadline,
-  type WorldIntelEvent,
-} from '../../src/worldIntel'
-import type { ProvenanceId } from '../../src/provenance'
-import { POLITICIAN_SOURCE_ID, fetchPoliticianDisclosures, readPoliticianConfig } from './adapters/politicianTradeAdapter'
-import { SEC_SOURCE_ID, fetchSecFilings, readSecConfig } from './adapters/secEdgarAdapter'
-import { MACRO_SOURCE_ID, fetchMacroCalendar, readMacroConfig } from './adapters/macroCalendarAdapter'
+  loadProviderConfig,
+  providerConfigHint,
+  type ProviderDefinition,
+} from '../providers/providerConfig'
+import { capabilityMeta } from '../providers/builtinProviderCatalog'
+import { resolveAdapter, type SourceFetcher } from './adapterRegistry'
 
 type SourceStatus = OsintSourceSnapshot['status']
 
@@ -16,16 +20,20 @@ type SourceDefinition = {
   sourceId: string
   sourceName: string
   sourceType: string
+  category: string
   endpointType: OsintSourceSnapshot['endpointType']
   endpoint: string
   pollIntervalMs: number
   rateLimitMs: number
   timeoutMs: number
   enabled: boolean
-  provenance: ProvenanceId
+  authType: OsintSourceSnapshot['authType']
+  configured: boolean
+  configHint?: string
+  provenance: ProviderDefinition['provenance']
   legalSafetyNote: string
   parserAdapter: string
-  fetcher?: (signal: AbortSignal) => Promise<WorldIntelEvent[]>
+  fetcher?: SourceFetcher
 }
 
 type SourceRuntimeState = {
@@ -39,42 +47,12 @@ type SourceRuntimeState = {
   consecutiveFailures: number
 }
 
-type GdeltArticle = {
-  url?: unknown
-  title?: unknown
-  seendate?: unknown
-  domain?: unknown
-  sourceCommonName?: unknown
-  sourceCountry?: unknown
-}
-
-type GdeltResponse = {
-  articles?: GdeltArticle[]
-}
-
-const gdeltEndpoint = 'https://api.gdeltproject.org/api/v2/doc/doc'
-const gdeltQuery = [
-  '"Red Sea"',
-  'semiconductor',
-  'Taiwan',
-  'tariffs',
-  'sanctions',
-  '"rare earth"',
-  '"central bank"',
-  'inflation',
-  '"natural gas"',
-  'oil',
-  '"data center"',
-  'copper',
-  'uranium',
-].join(' OR ')
-
 export class OsintSourceRegistry {
   private readonly definitions: SourceDefinition[]
   private readonly states = new Map<string, SourceRuntimeState>()
 
-  constructor() {
-    this.definitions = buildSourceDefinitions()
+  constructor(options: { configPath?: string; env?: NodeJS.ProcessEnv } = {}) {
+    this.definitions = buildSourceDefinitions(options)
     for (const definition of this.definitions) {
       this.states.set(definition.sourceId, {
         status: definition.enabled ? 'idle' : 'disabled',
@@ -146,6 +124,10 @@ export class OsintSourceRegistry {
       sourceReliabilityScore: state.sourceReliabilityScore,
       legalSafetyNote: definition.legalSafetyNote,
       parserAdapter: definition.parserAdapter,
+      category: definition.category,
+      authType: definition.authType,
+      configured: definition.configured,
+      configHint: definition.configHint,
     }
   }
 
@@ -158,212 +140,59 @@ export class OsintSourceRegistry {
   }
 }
 
-function buildSourceDefinitions(): SourceDefinition[] {
-  return [
-    {
-      sourceId: 'gdelt_doc_public',
-      sourceName: 'GDELT DOC public news/events',
-      sourceType: 'global-news-events',
-      endpointType: 'rest',
-      endpoint: gdeltEndpoint,
-      pollIntervalMs: integerEnv('ATLASZ_GDELT_POLL_MS', 5 * 60_000),
-      rateLimitMs: integerEnv('ATLASZ_GDELT_RATE_LIMIT_MS', 20_000),
-      timeoutMs: integerEnv('ATLASZ_GDELT_TIMEOUT_MS', 12_000),
-      enabled: process.env.ATLASZ_ENABLE_PUBLIC_WORLD !== '0',
-      provenance: 'public-unauthenticated',
-      legalSafetyNote: 'Documented public GDELT API; public unauthenticated article metadata, not verification.',
-      parserAdapter: 'gdelt-doc-artlist-v2',
-      fetcher: fetchGdeltEvents,
-    },
-    secEdgarSource(),
-    politicianDisclosureSource(),
-    macroCalendarSource(),
-    registryOnlySource('rss_public_radar', 'RSS public finance/geopolitics feeds', 'global-news-events', 'rss', 'rss-public'),
-    registryOnlySource('yahoo_finance_1m_public', 'Yahoo public market bars', 'markets', 'rest', 'public-unauthenticated'),
-    registryOnlySource('stocktwits_public_stream', 'Stocktwits public symbol streams', 'social-attention', 'rest', 'public-unauthenticated'),
-    registryOnlySource('polymarket_gamma_public', 'Polymarket Gamma public markets', 'markets-probability', 'rest', 'public-unauthenticated'),
-    registryOnlySource('coinbase_public_ws', 'Coinbase public crypto websocket', 'markets-crypto', 'websocket', 'public-unauthenticated'),
-    {
-      sourceId: 'x_explore_placeholder',
-      sourceName: 'X/Twitter Explore placeholder',
-      sourceType: 'social-attention',
-      endpointType: 'placeholder',
-      endpoint: 'disabled',
-      pollIntervalMs: 0,
-      rateLimitMs: 0,
-      timeoutMs: 0,
-      enabled: false,
-      provenance: 'auth-gated',
-      legalSafetyNote: 'Disabled scaffold only. No login, CAPTCHA, paywall, or anti-bot bypass behavior is implemented.',
-      parserAdapter: 'disabled-placeholder',
-    },
-  ]
+function buildSourceDefinitions(options: { configPath?: string; env?: NodeJS.ProcessEnv }): SourceDefinition[] {
+  const env = options.env ?? process.env
+  const { providers } = loadProviderConfig({ configPath: options.configPath ?? providerConfigPath(env) })
+  return providers.map((provider) => providerToDefinition(provider, env))
 }
 
-function registryOnlySource(
-  sourceId: string,
-  sourceName: string,
-  sourceType: string,
-  endpointType: OsintSourceSnapshot['endpointType'],
-  provenance: ProvenanceId,
-): SourceDefinition {
+function providerToDefinition(provider: ProviderDefinition, env: NodeJS.ProcessEnv): SourceDefinition {
+  const resolved = resolveAdapter(provider, env)
+  const worldEnabled = env.ATLASZ_ENABLE_PUBLIC_WORLD !== '0'
+  const configured = resolved.managed ? true : resolved.configured
+  const enabled = provider.enabled && (resolved.managed ? true : worldEnabled && configured)
   return {
-    sourceId,
-    sourceName,
-    sourceType,
-    endpointType,
-    endpoint: 'managed by existing Atlasz ingestion service',
-    pollIntervalMs: 0,
-    rateLimitMs: 0,
-    timeoutMs: 0,
-    enabled: true,
-    provenance,
-    legalSafetyNote: 'Registered source boundary only; ingestion is handled by the existing fail-closed connector.',
-    parserAdapter: 'existing-normalizer',
+    sourceId: provider.providerId,
+    sourceName: provider.providerName,
+    sourceType: provider.category,
+    category: provider.category,
+    endpointType: endpointTypeFor(provider),
+    endpoint: provider.endpoint ?? 'managed by existing Atlasz ingestion service',
+    pollIntervalMs: provider.pollIntervalMs ?? 0,
+    rateLimitMs: provider.rateLimitGuardMs ?? 0,
+    timeoutMs: provider.timeoutMs ?? 0,
+    enabled,
+    authType: provider.authType,
+    configured,
+    configHint: configured ? undefined : providerConfigHint(provider),
+    provenance: provider.provenance,
+    legalSafetyNote: provider.legalSafetyNote,
+    parserAdapter: provider.adapter,
+    fetcher: resolved.fetcher,
   }
 }
 
-function secEdgarSource(): SourceDefinition {
-  const config = readSecConfig()
-  return {
-    sourceId: SEC_SOURCE_ID,
-    sourceName: 'SEC EDGAR public filings (8-K/10-Q/10-K)',
-    sourceType: 'regulatory-filings',
-    endpointType: 'rss',
-    endpoint: 'https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent (Atom)',
-    pollIntervalMs: integerEnv('ATLASZ_SEC_POLL_MS', 10 * 60_000),
-    rateLimitMs: integerEnv('ATLASZ_SEC_RATE_LIMIT_MS', 60_000),
-    timeoutMs: integerEnv('ATLASZ_SEC_TIMEOUT_MS', 15_000),
-    enabled: config !== null && process.env.ATLASZ_ENABLE_PUBLIC_WORLD !== '0',
-    provenance: 'official-api',
-    legalSafetyNote:
-      'Official SEC EDGAR public Atom feed. Requires contactable User-Agent (ATLASZ_SEC_USER_AGENT); fail-closed without one. No login or scraping.',
-    parserAdapter: 'sec-edgar-atom-v1',
-    fetcher: config ? (signal) => fetchSecFilings(signal, config) : undefined,
+function endpointTypeFor(provider: ProviderDefinition): OsintSourceSnapshot['endpointType'] {
+  if (provider.adapter === 'disabled') {
+    return 'placeholder'
   }
+  const feed = capabilityMeta(provider.providerId).feedTypes[0]
+  if (feed === 'RSS') return 'rss'
+  if (feed === 'WebSocket') return 'websocket'
+  if (feed === 'local' || feed === 'SQLite') return 'local'
+  if (feed === 'REST') return 'rest'
+  // Custom providers without catalog meta: derive from adapter/category.
+  if (provider.adapter === 'rss' || provider.adapter === 'sec-edgar') return 'rss'
+  if (provider.category === 'crypto-realtime') return 'websocket'
+  return 'rest'
 }
 
-function politicianDisclosureSource(): SourceDefinition {
-  const config = readPoliticianConfig()
-  return {
-    sourceId: POLITICIAN_SOURCE_ID,
-    sourceName: 'Public official financial disclosures (delayed)',
-    sourceType: 'public-disclosure',
-    endpointType: 'rest',
-    endpoint: config?.url ?? 'unconfigured (ATLASZ_POLITICIAN_DISCLOSURE_URL)',
-    pollIntervalMs: integerEnv('ATLASZ_POLITICIAN_POLL_MS', 30 * 60_000),
-    rateLimitMs: integerEnv('ATLASZ_POLITICIAN_RATE_LIMIT_MS', 60_000),
-    timeoutMs: integerEnv('ATLASZ_POLITICIAN_TIMEOUT_MS', 15_000),
-    enabled: config !== null && process.env.ATLASZ_ENABLE_PUBLIC_WORLD !== '0',
-    provenance: 'public-disclosure',
-    legalSafetyNote:
-      'Configured public/open-civic disclosure provider only. Delayed public financial disclosures, not real-time market data. Fail-closed without a configured provider.',
-    parserAdapter: 'politician-disclosure-json-v1',
-    fetcher: config ? (signal) => fetchPoliticianDisclosures(signal, config) : undefined,
-  }
-}
-
-function macroCalendarSource(): SourceDefinition {
-  const config = readMacroConfig()
-  return {
-    sourceId: MACRO_SOURCE_ID,
-    sourceName: 'Macro calendar (FRED official API)',
-    sourceType: 'macro-economic',
-    endpointType: 'rest',
-    endpoint: 'https://api.stlouisfed.org/fred/series/observations',
-    pollIntervalMs: integerEnv('ATLASZ_FRED_POLL_MS', 60 * 60_000),
-    rateLimitMs: integerEnv('ATLASZ_FRED_RATE_LIMIT_MS', 120_000),
-    timeoutMs: integerEnv('ATLASZ_FRED_TIMEOUT_MS', 20_000),
-    enabled: config !== null && process.env.ATLASZ_ENABLE_PUBLIC_WORLD !== '0',
-    provenance: 'official-api',
-    legalSafetyNote:
-      'Official FRED public API. API key from env only (ATLASZ_FRED_API_KEY); fail-closed without it. Missing observations are skipped, never fabricated.',
-    parserAdapter: 'macro-fred-observations-v1',
-    fetcher: config ? (signal) => fetchMacroCalendar(signal, config) : undefined,
-  }
-}
-
-async function fetchGdeltEvents(signal: AbortSignal): Promise<WorldIntelEvent[]> {
-  const url = new URL(gdeltEndpoint)
-  url.searchParams.set('query', gdeltQuery)
-  url.searchParams.set('mode', 'ArtList')
-  url.searchParams.set('format', 'json')
-  url.searchParams.set('maxrecords', '50')
-  url.searchParams.set('sort', 'DateDesc')
-
-  const response = await fetch(url, {
-    signal,
-    headers: {
-      accept: 'application/json',
-      'user-agent': 'AtlaszIntel/0.4 local-first world-intel connector',
-    },
-  })
-  if (!response.ok) {
-    throw new Error(`GDELT HTTP ${response.status}`)
-  }
-  const text = await response.text()
-  if (!text.trim().startsWith('{')) {
-    throw new Error(text.trim().slice(0, 160) || 'GDELT returned a non-JSON response')
-  }
-  const payload = JSON.parse(text) as GdeltResponse
-  const articles = Array.isArray(payload.articles) ? payload.articles : []
-  return articles
-    .map(articleToHeadline)
-    .filter((headline): headline is PublicWorldHeadline => headline !== null)
-    .map((headline) =>
-      buildWorldIntelEventFromHeadline(headline, {
-        sourceId: 'gdelt_doc_public',
-        provenance: 'public-unauthenticated',
-      }),
-    )
-}
-
-function articleToHeadline(article: GdeltArticle): PublicWorldHeadline | null {
-  const title = stringValue(article.title)
-  const url = stringValue(article.url)
-  if (!title || !url) {
-    return null
-  }
-  const source = stringValue(article.sourceCommonName) || stringValue(article.domain) || 'GDELT public source'
-  const observedAt = parseGdeltDate(stringValue(article.seendate)) ?? Date.now()
-  const classification = classifyHeadlineText(title)
-  return {
-    id: stableId(url),
-    title,
-    source,
-    url,
-    sector: classification.sector,
-    impact: classification.impact,
-    observedAt,
-  }
+function providerConfigPath(env: NodeJS.ProcessEnv): string {
+  // Matches ProviderDiscoveryService (ATLASZ_PROVIDER_CONFIG); plural kept as an alias.
+  const configured = env.ATLASZ_PROVIDER_CONFIG ?? env.ATLASZ_PROVIDERS_CONFIG
+  return configured && configured.trim() !== '' ? configured : join(process.cwd(), 'atlasz.providers.json')
 }
 
 function dedupeEvents(events: WorldIntelEvent[]): WorldIntelEvent[] {
   return [...new Map(events.map((event) => [event.dedupeHash, event])).values()]
-}
-
-function stringValue(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : ''
-}
-
-function parseGdeltDate(value: string): number | null {
-  if (!/^\d{14}$/.test(value)) {
-    return null
-  }
-  const iso = `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}T${value.slice(8, 10)}:${value.slice(10, 12)}:${value.slice(12, 14)}Z`
-  const timestamp = Date.parse(iso)
-  return Number.isFinite(timestamp) ? timestamp : null
-}
-
-function stableId(input: string): string {
-  let hash = 0
-  for (let index = 0; index < input.length; index += 1) {
-    hash = (hash * 31 + input.charCodeAt(index)) >>> 0
-  }
-  return `osint-${hash.toString(36)}`
-}
-
-function integerEnv(key: string, fallback: number): number {
-  const value = Number(process.env[key])
-  return Number.isInteger(value) && value >= 0 ? value : fallback
 }
