@@ -221,7 +221,14 @@ ipcMain.handle('atlasz:providers:open-config', () => {
 
 app.whenReady().then(() => {
   requirePersistence()
-  requireRealtime()
+  // Start the real public market worker at launch so market_ticks_daily fuel
+  // flows regardless of the renderer's persisted pulse toggle. Fail-soft: a
+  // worker init error must not block app startup.
+  try {
+    requireRealtime().start()
+  } catch (error) {
+    console.error('[atlasz] realtime start failed at launch:', error)
+  }
   void requireWorldIntel().refresh()
   void requireProviderDiscovery().discover()
   requireDataIngest().start()

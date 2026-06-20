@@ -15527,7 +15527,13 @@ Z.handle("atlasz:app-meta", () => ({
 	let e = Ad().ensureConfigTemplate();
 	return hd.showItemInFolder(e.path), e;
 }), X.whenReady().then(() => {
-	Q(), $(), Td().refresh(), Ad().discover(), kd().start(), jd(), X.on("activate", () => {
+	Q();
+	try {
+		$().start();
+	} catch (e) {
+		console.error("[atlasz] realtime start failed at launch:", e);
+	}
+	Td().refresh(), Ad().discover(), kd().start(), jd(), X.on("activate", () => {
 		md.getAllWindows().length === 0 && jd();
 	});
 }), X.on("window-all-closed", () => {
