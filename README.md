@@ -1,7 +1,8 @@
 # Atlasz Intel
+<img width="1536" height="624" alt="3A445231-D4F1-4AC3-88DA-837BD1FCF774" src="https://github.com/user-attachments/assets/0532fee0-f103-4ed2-88e1-2cf1924c06a8" />
 
 <p align="center">
-  <img src="docs/atlasz-intel-preview.png" alt="Atlasz Intel transparent banner" width="900" />
+
 </p>
 
 <p align="center">
