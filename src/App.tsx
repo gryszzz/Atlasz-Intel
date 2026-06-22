@@ -6,10 +6,13 @@ import {
   ArrowUpRight,
   BookOpen,
   BrainCircuit,
+  CheckCircle2,
   CircleDotDashed,
   Crosshair,
   Database,
   FileText,
+  Fingerprint,
+  GitBranch,
   Globe2,
   Layers3,
   LineChart,
@@ -30,6 +33,7 @@ import { decisionJournal } from './intelClient'
 import { riskChainFor } from './intelGraphData'
 import { DataCorePanel, LiveMarketReadout, PulseIndicator, RealtimePulsePanel } from './RealtimeWidgets'
 import { ChartSkeleton, GraphSkeleton, GlobeSkeleton, PanelSkeleton } from './components/ui/Skeletons'
+import { ProvenanceBadge } from './components/ui/ProvenanceBadge'
 
 // Heavy visual libraries (recharts, @xyflow/react) and the World Intelligence
 // view are loaded lazily so they stay out of the app startup chunk.
@@ -60,7 +64,7 @@ const ResearchNotePanel = lazy(() =>
 import { addUniverseAsset, setPulseEnabled as setEnginePulse, useEngineSnapshot } from './realtimeStore'
 import { resolveAssetQuery, type AssetUniverseItem } from './assetUniverse'
 import { CANDLE_HISTORY_UNAVAILABLE, PRICE_UNAVAILABLE, priceTruthFromAsset } from './marketDataTruth'
-import type { LiveAssetSnapshot } from './realtime'
+import type { LiveAssetSnapshot, SourceTrust } from './realtime'
 import { useWorldIntelSnapshot } from './worldIntelStore'
 import type { WorldIntelSnapshot } from './worldIntel'
 import {
@@ -79,7 +83,19 @@ import {
   type SourceTrailItem,
 } from './data/intel'
 
-type ViewId = 'command' | 'world' | 'terminal' | 'quant' | 'radar' | 'social' | 'graph' | 'analyst' | 'brief' | 'decision' | 'sources'
+type ViewId =
+  | 'command'
+  | 'world'
+  | 'terminal'
+  | 'quant'
+  | 'radar'
+  | 'social'
+  | 'graph'
+  | 'cyber'
+  | 'analyst'
+  | 'brief'
+  | 'decision'
+  | 'sources'
 type LayerId =
   | 'market'
   | 'news'
@@ -148,19 +164,140 @@ type AnalystMessage = {
   answer?: AnalystAnswer
 }
 
+type DefensiveRuntimePolicy =
+  | 'study-only'
+  | 'allowed-library'
+  | 'manual-review'
+  | 'auth-required'
+  | 'authorized-lab-only'
+  | 'blocked'
+
+type DefensiveReferenceEntry = {
+  id: string
+  label: string
+  domain: string
+  runtimePolicy: DefensiveRuntimePolicy
+  riskTags: string[]
+  capabilities: string[]
+  engineeringLesson: string
+}
+
 const views: Array<{ id: ViewId; label: string; icon: typeof MonitorDot }> = [
-  { id: 'command', label: 'Command Center', icon: MonitorDot },
+  { id: 'command', label: 'Global Overview', icon: MonitorDot },
   { id: 'world', label: 'World Intel', icon: Globe2 },
-  { id: 'terminal', label: 'Market Terminal', icon: LineChart },
-  { id: 'quant', label: 'Quant Desk', icon: Crosshair },
-  { id: 'radar', label: 'World Radar', icon: RadioTower },
-  { id: 'social', label: 'Social Pulse', icon: Activity },
-  { id: 'graph', label: 'Entity Graph', icon: Network },
-  { id: 'sources', label: 'Source Health', icon: Database },
-  { id: 'analyst', label: 'AI Analyst', icon: BrainCircuit },
+  { id: 'graph', label: 'Intelligence Graph', icon: Network },
+  { id: 'radar', label: 'Event Timelines', icon: RadioTower },
+  { id: 'terminal', label: 'Market / Infra', icon: LineChart },
+  { id: 'cyber', label: 'Cyber / OPSEC', icon: ShieldAlert },
+  { id: 'sources', label: 'Source Trails', icon: Database },
+  { id: 'quant', label: 'Quant Context', icon: Crosshair },
+  { id: 'social', label: 'Attention Pulse', icon: Activity },
+  { id: 'analyst', label: 'Analysis Desk', icon: BrainCircuit },
   { id: 'brief', label: 'Daily Brief', icon: FileText },
-  { id: 'decision', label: 'Research Notes', icon: BookOpen },
+  { id: 'decision', label: 'Decision Journal', icon: BookOpen },
 ]
+
+const defensiveReferenceEntries: DefensiveReferenceEntry[] = [
+  {
+    id: 'sigma-style-detections',
+    label: 'Sigma-style detection references',
+    domain: 'detection-engineering',
+    runtimePolicy: 'allowed-library',
+    riskTags: ['detection-rule', 'source-validation'],
+    capabilities: ['portable rule shape', 'ATT&CK mapping', 'test data requirement'],
+    engineeringLesson: 'Detection rules are versioned references until the required telemetry source is present.',
+  },
+  {
+    id: 'elastic-splunk-detection-content',
+    label: 'Elastic / Splunk detection content',
+    domain: 'detection-engineering',
+    runtimePolicy: 'study-only',
+    riskTags: ['detection-rule', 'observability'],
+    capabilities: ['rule metadata', 'false-positive notes', 'data-source requirements'],
+    engineeringLesson: 'Every alert should declare data requirements, blind spots, confidence, and validation evidence.',
+  },
+  {
+    id: 'yara-signature-references',
+    label: 'YARA signature references',
+    domain: 'malware-reverse-engineering',
+    runtimePolicy: 'authorized-lab-only',
+    riskTags: ['malware-handling', 'detection-rule'],
+    capabilities: ['pattern matching', 'metadata discipline', 'sample triage boundary'],
+    engineeringLesson: 'Malware signatures are useful references, but sample handling stays inside an authorized lab.',
+  },
+  {
+    id: 'opencti-misp-style-cti',
+    label: 'OpenCTI / MISP style CTI',
+    domain: 'cti-platform',
+    runtimePolicy: 'auth-required',
+    riskTags: ['cti-data', 'source-trust'],
+    capabilities: ['typed objects', 'confidence scores', 'TLP and sharing scope'],
+    engineeringLesson: 'Threat intelligence imports need credentials, sharing rules, confidence, and provenance before use.',
+  },
+  {
+    id: 'zeek-suricata-security-onion',
+    label: 'Zeek / Suricata / Security Onion telemetry',
+    domain: 'soc-siem',
+    runtimePolicy: 'manual-review',
+    riskTags: ['defensive-sensor', 'telemetry'],
+    capabilities: ['network metadata', 'IDS events', 'SOC correlation'],
+    engineeringLesson: 'Network telemetry is powerful only when deployed with authorization, retention, and source context.',
+  },
+  {
+    id: 'projectdiscovery-recon-suite',
+    label: 'ProjectDiscovery / Amass recon tools',
+    domain: 'internet-mapping',
+    runtimePolicy: 'authorized-lab-only',
+    riskTags: ['active-scan', 'infrastructure-exposure'],
+    capabilities: ['asset discovery', 'DNS and HTTP observation', 'template checks'],
+    engineeringLesson: 'Active recon is never background behavior; it requires explicit scope and operator authorization.',
+  },
+  {
+    id: 'sbom-signing-provenance',
+    label: 'SBOM, signing, and provenance controls',
+    domain: 'supply-chain-integrity',
+    runtimePolicy: 'allowed-library',
+    riskTags: ['supply-chain', 'provenance'],
+    capabilities: ['SBOM inventory', 'artifact signing', 'attestation chains'],
+    engineeringLesson: 'Verified labels should be earned through auditable provenance, signatures, or first-party proof.',
+  },
+  {
+    id: 'person-enrichment-tools',
+    label: 'Person-enrichment OSINT tooling',
+    domain: 'privacy-opsec',
+    runtimePolicy: 'blocked',
+    riskTags: ['person-enrichment', 'privacy'],
+    capabilities: ['boundary awareness', 'privacy risk modeling'],
+    engineeringLesson: 'Person enrichment and account enumeration are blocked from Atlasz runtime by default.',
+  },
+]
+
+function summarizeDefensiveReferences(entries: DefensiveReferenceEntry[]) {
+  const byPolicy = entries.reduce<Record<string, number>>((counts, entry) => {
+    counts[entry.runtimePolicy] = (counts[entry.runtimePolicy] ?? 0) + 1
+    return counts
+  }, {})
+  const byDomain = entries.reduce<Record<string, number>>((counts, entry) => {
+    counts[entry.domain] = (counts[entry.domain] ?? 0) + 1
+    return counts
+  }, {})
+  const defaultSafeCount = entries.filter((entry) => ['allowed-library', 'study-only'].includes(entry.runtimePolicy)).length
+
+  return {
+    entryCount: entries.length,
+    defaultSafeCount,
+    byPolicy,
+    byDomain,
+  }
+}
+
+function defensiveEntriesByRiskTag(tag: string) {
+  return defensiveReferenceEntries.filter((entry) => entry.riskTags.includes(tag))
+}
+
+function defensiveReferenceIsDefaultSafe(entry: DefensiveReferenceEntry) {
+  return entry.runtimePolicy === 'allowed-library' || entry.runtimePolicy === 'study-only'
+}
 
 const promptChips = [
   'Why is oil moving?',
@@ -344,7 +481,7 @@ const socialPulsePosts: SocialPulsePost[] = [
     tier: 'facts',
     handle: '@filing-watch-local',
     accountType: 'filing',
-    text: 'Local seed item: AIXR contract language is being referenced, but no production revenue impact is confirmed in this mock source layer.',
+    text: 'Local structural sample: AIXR contract language is being referenced, but no production revenue impact is confirmed.',
     observedAt: '09:11 ET',
     minutesAgo: 4,
     reachScore: 72,
@@ -360,7 +497,7 @@ const socialPulsePosts: SocialPulsePost[] = [
     tier: 'movement',
     handle: '@market-tape-local',
     accountType: 'market tape',
-    text: 'AIXR prints 4.2x relative volume while the AI infrastructure basket is mixed; price is up 9.8% in the seed tape.',
+    text: 'Local structural sample: AIXR relative volume, basket movement, and price context would be separated from source-backed facts.',
     observedAt: '09:13 ET',
     minutesAgo: 2,
     reachScore: 66,
@@ -424,7 +561,7 @@ const socialPulsePosts: SocialPulsePost[] = [
     tier: 'attention',
     handle: '@crypto-flow-local',
     accountType: 'operator',
-    text: 'BTC attention rises with liquidity keywords while ETF-flow claims remain unverified in the local seed layer.',
+    text: 'Local structural sample: BTC attention rises with liquidity keywords while ETF-flow claims remain unverified.',
     observedAt: '09:12 ET',
     minutesAgo: 3,
     reachScore: 81,
@@ -438,7 +575,7 @@ const socialPulsePosts: SocialPulsePost[] = [
     id: 'social-btc-movement',
     topicId: 'btc-liquidity',
     tier: 'movement',
-    handle: '@mock-crypto-tape',
+    handle: '@local-crypto-tape',
     accountType: 'market tape',
     text: 'BTC is firmer while QQQ is soft; this creates a price/social divergence watch rather than a confirmed causal signal.',
     observedAt: '09:09 ET',
@@ -739,6 +876,59 @@ function collectSignals(events: RadarEvent[]) {
   return [] as Signal[]
 }
 
+function canonicalSourceTrust(value: string | SourceTrust | undefined) {
+  if (!value) {
+    return 'unavailable'
+  }
+  return value === 'public unauthenticated' ? 'public-unauthenticated' : value
+}
+
+function sourceTrustIsReal(value: string | SourceTrust | undefined) {
+  const trust = canonicalSourceTrust(value)
+  return trust !== 'unavailable' && trust !== 'simulated'
+}
+
+function externalSocialConnectorIsEnabled() {
+  // The top-level Attention Pulse has no real external social connector today.
+  // Keep the surface unavailable instead of promoting local structural samples.
+  return false
+}
+
+function formatFreshness(value: number | string | undefined) {
+  if (!value) {
+    return 'not observed'
+  }
+  const timestamp = typeof value === 'number' ? value : Date.parse(value)
+  if (!Number.isFinite(timestamp)) {
+    return 'unknown'
+  }
+  const minutes = Math.max(0, Math.round((Date.now() - timestamp) / 60_000))
+  if (minutes < 1) {
+    return 'just now'
+  }
+  if (minutes < 60) {
+    return `${minutes}m ago`
+  }
+  const hours = Math.round(minutes / 60)
+  if (hours < 48) {
+    return `${hours}h ago`
+  }
+  return `${Math.round(hours / 24)}d ago`
+}
+
+function countSourceStatuses(snapshot: WorldIntelSnapshot) {
+  const stale = snapshot.sources.filter((source) => source.status === 'offline' || source.status === 'rate-limited').length
+  const failed = snapshot.sources.filter((source) => source.status === 'failed').length
+  const disabled = snapshot.sources.filter((source) => source.status === 'disabled').length
+  const online = snapshot.sources.filter((source) => source.status === 'online').length
+
+  return { stale, failed, disabled, online, total: snapshot.sources.length }
+}
+
+function confidenceWeightedAlertCount(signals: Signal[]) {
+  return signals.filter((signal) => signal.confidence >= 50 && signal.sourceCount > 0).length
+}
+
 function buildAnalystAnswer({
   summary,
   relatedEvents,
@@ -818,7 +1008,7 @@ function App() {
     {
       id: 'welcome',
       role: 'analyst',
-      text: 'Ask about a market move, event, ticker, country, commodity, or exposure chain. Atlasz answers only when real local evidence is available.',
+      text: 'Ask about a market move, event, ticker, country, commodity, or exposure chain. The Analysis Desk answers only when local evidence is available.',
       answer: pickAnalystContext('oil'),
     },
   ])
@@ -885,6 +1075,14 @@ function App() {
   const selectedSocialPosts = socialPulsePosts.filter((post) => post.topicId === selectedSocialTopic.id)
   const socialPressure = calculateAttentionPressure(selectedSocialTopic, selectedSocialPosts)
   const socialVelocity = calculateSocialVelocity(selectedSocialTopic)
+  const sourceStatusCounts = useMemo(() => countSourceStatuses(worldSnapshot), [worldSnapshot])
+  const realtimeTrust = canonicalSourceTrust(engineSnapshot.status.health?.sourceTrust)
+  const worldTrust = canonicalSourceTrust(worldSnapshot.sourceTrust)
+  const externalSocialConnectorEnabled = externalSocialConnectorIsEnabled()
+  const hasRealtimeAttentionSource =
+    externalSocialConnectorEnabled &&
+    (engineSnapshot.frame?.attention.length ?? 0) > 0 && sourceTrustIsReal(engineSnapshot.status.health?.sourceTrust)
+  const defensiveSummary = useMemo(() => summarizeDefensiveReferences(defensiveReferenceEntries), [])
 
   const filteredEvents = useMemo(() => {
     if (radarFilter === 'All') {
@@ -1043,7 +1241,7 @@ function App() {
     setMessages((currentMessages) => [
       ...currentMessages,
       { id: `${Date.now()}-user`, role: 'user', text: trimmed },
-      { id: `${Date.now()}-analyst`, role: 'analyst', text: 'Local analyst response', answer },
+      { id: `${Date.now()}-analyst`, role: 'analyst', text: 'Evidence-constrained response', answer },
     ])
     setQuestion('')
     setActiveView('analyst')
@@ -1098,7 +1296,7 @@ function App() {
     },
     {
       id: 'act:search-entity',
-      label: 'Search Entity',
+      label: 'Inspect Entity Relationships',
       group: 'Intelligence',
       hint: 'Entity graph',
       icon: Network,
@@ -1106,11 +1304,35 @@ function App() {
     },
     {
       id: 'act:search-market',
-      label: 'Search Market',
+      label: 'Open Market / Infrastructure View',
       group: 'Intelligence',
       hint: 'Market terminal',
       icon: LineChart,
       perform: () => setActiveView('terminal'),
+    },
+    {
+      id: 'act:inspect-sources',
+      label: 'Inspect Source Trails',
+      group: 'Intelligence',
+      hint: 'Freshness and lineage',
+      icon: Database,
+      perform: () => setActiveView('sources'),
+    },
+    {
+      id: 'act:cyber-opsec',
+      label: 'Open Cyber / OPSEC Panel',
+      group: 'Defensive Security',
+      hint: 'Reference controls',
+      icon: ShieldAlert,
+      perform: () => setActiveView('cyber'),
+    },
+    {
+      id: 'act:stale-sources',
+      label: 'View Stale or Failed Sources',
+      group: 'Source Control',
+      hint: `${sourceStatusCounts.stale + sourceStatusCounts.failed} attention needed`,
+      icon: AlertTriangle,
+      perform: () => setActiveView('sources'),
     },
     {
       id: 'act:toggle-pulse',
@@ -1121,7 +1343,7 @@ function App() {
     },
     {
       id: 'act:reset-workspace',
-      label: 'Reset Demo Workspace',
+      label: 'Reset Local Workspace',
       group: 'Workspace',
       hint: 'Clear local data',
       icon: Database,
@@ -1157,7 +1379,7 @@ function App() {
 
         <div className="sidebar-module">
           <span className="module-label">Workspace</span>
-          <p>Private seed intelligence, watchlists, notes, and analyst thread are stored locally in this app.</p>
+          <p>Local evidence ledger, watchlists, decision notes, source status, and replay state stay on this machine.</p>
           <div className="storage-pill">
             <Database size={14} />
             <span>
@@ -1174,7 +1396,7 @@ function App() {
         </div>
 
         <div className="sidebar-module status-module">
-          <span className="module-label">Signal Health</span>
+          <span className="module-label">Evidence Health</span>
           <div className="status-row">
             <span>Entity map</span>
             <strong>{graphNodes.length} nodes</strong>
@@ -1188,12 +1410,12 @@ function App() {
             <strong>{worldRawSourceItems.length}</strong>
           </div>
           <div className="status-row">
-            <span>Social posts</span>
-            <strong>{socialPulsePosts.length}</strong>
+            <span>Stale/failed</span>
+            <strong>{sourceStatusCounts.stale + sourceStatusCounts.failed}</strong>
           </div>
           <div className="status-row">
             <span>World source</span>
-            <strong>{worldSnapshot.sourceTrust}</strong>
+            <strong>{worldTrust}</strong>
           </div>
         </div>
       </aside>
@@ -1201,19 +1423,21 @@ function App() {
       <section className="workspace">
         <header className="topbar">
           <div>
-            <span className="eyebrow">The world behind the chart</span>
-            <h2>A local-first quant intelligence terminal where events become one signal map.</h2>
+            <span className="eyebrow">Evidence-first local intelligence terminal</span>
+            <h2>Understand what changed, why it matters, what proves it, and which entities connect.</h2>
           </div>
           <div className="topbar-actions">
             <CommandMenuButton />
             <span className="source-badge">
               <CircleDotDashed size={14} />
-              Evidence layer v0.2
+              No source, no signal
             </span>
+            <ProvenanceBadge value={worldTrust} />
+            <ProvenanceBadge value={realtimeTrust} />
             <PulseIndicator />
             <button className="ghost-button" type="button" onClick={() => setActiveView('brief')}>
               <NotebookPen size={16} />
-              Morning brief
+              Daily brief
             </button>
           </div>
         </header>
@@ -1240,21 +1464,26 @@ function App() {
         {activeView === 'command' && (
           <section className="dashboard-grid command-grid">
             <article className="panel command-status-panel">
-              <CommandStatus
+              <GlobalOverview
                 activeLayerCount={activeLayerIds.length}
                 briefItems={worldBrief}
+                defensiveSummary={defensiveSummary}
+                engineSnapshot={engineSnapshot}
+                hasRealtimeAttentionSource={hasRealtimeAttentionSource}
                 pinnedSignals={pinnedSignals}
                 selectedEvent={selectedEvent}
                 selectedMarket={selectedMarket}
                 selectedSignal={selectedSignal}
+                sourceStatusCounts={sourceStatusCounts}
                 sourceItemCount={worldRawSourceItems.length}
                 socialPressure={socialPressure}
                 socialVelocity={socialVelocity.velocity}
+                worldSnapshot={worldSnapshot}
               />
             </article>
 
             <article className="panel pulse-panel">
-              <PanelHeader icon={Globe2} label="Global Pulse" title="World events, exposures, and source trails" />
+              <PanelHeader icon={Globe2} label="Event Matrix" title="World events, exposures, and source trails" />
               <GlobalPulseScene
                 activeLayerIds={activeLayerIds}
                 events={filteredPulseEvents}
@@ -1312,7 +1541,11 @@ function App() {
             </article>
 
             <article className="panel">
-              <PanelHeader icon={ShieldAlert} label="Risk Map" title="Global pressure" />
+              <PanelHeader icon={ShieldAlert} label="Local Risk Reference" title="Risk appears only when source-backed" />
+              <div className="panel-source-row">
+                <ProvenanceBadge value="local-derived" />
+                <span>Reference map; not a live verified alert feed.</span>
+              </div>
               <div className="risk-map">
                 {riskMap.map((risk) => (
                   <div className="risk-row" key={risk.region}>
@@ -1361,7 +1594,7 @@ function App() {
             </article>
 
             <article className="panel wide-panel social-preview-panel">
-              <PanelHeader icon={Activity} label="Social Pulse" title="Attention pressure and narrative velocity" />
+              <PanelHeader icon={Activity} label="Attention Pulse" title="Social pressure requires a real source" />
               <SocialPulseModule
                 compact
                 onSelectTier={setSelectedSocialTier}
@@ -1369,22 +1602,14 @@ function App() {
                 onSelectTopic={setSelectedSocialTopicId}
                 selectedTier={selectedSocialTier}
                 selectedTopicId={selectedSocialTopic.id}
+                sourceAvailable={hasRealtimeAttentionSource}
                 velocity={socialVelocity}
               />
             </article>
 
             <article className="panel">
-              <PanelHeader icon={BrainCircuit} label="AI Analyst" title="Ask the local analyst" />
-              <div className="analyst-prompt-mini">
-                <p>Get source-trail reasoning across events, entities, tickers, confidence, uncertainty, and what to watch next.</p>
-                <div className="prompt-chip-stack">
-                  {promptChips.slice(0, 3).map((prompt) => (
-                    <button key={prompt} type="button" onClick={() => submitQuestion(prompt)}>
-                      {prompt}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <PanelHeader icon={ShieldAlert} label="Cyber / OPSEC" title="Defensive intelligence control plane" />
+              <CyberOpsecPreview defensiveSummary={defensiveSummary} onOpen={() => setActiveView('cyber')} />
             </article>
 
             <article className="panel">
@@ -1429,7 +1654,7 @@ function App() {
         {activeView === 'terminal' && (
           <section className="dashboard-grid terminal-grid">
             <article className="panel terminal-chart-panel">
-              <PanelHeader icon={LineChart} label="Market Terminal" title={`${selectedMarket.ticker} connected chart`} />
+              <PanelHeader icon={LineChart} label="Market / Infrastructure" title={`${selectedMarket.ticker} source-backed movement context`} />
               <div className="chart-stat-row">
                 <div>
                   <span>{selectedMarket.name}</span>
@@ -1451,7 +1676,7 @@ function App() {
             </article>
 
             <article className="panel">
-              <PanelHeader icon={Crosshair} label="Evidence" title="Market explanation" />
+              <PanelHeader icon={Crosshair} label="Evidence" title="No trading advice, only source context" />
               <MarketExplanationPanel explanation={selectedMarketExplanation} />
             </article>
 
@@ -1470,7 +1695,7 @@ function App() {
             </article>
 
             <article className="panel wide-panel">
-              <PanelHeader icon={Activity} label="Volume" title="Intraday participation" />
+              <PanelHeader icon={Activity} label="Participation" title="Volume is unavailable unless real ticks exist" />
               <div className="bar-frame">
                 {chartData.length > 0 ? (
                   <Suspense fallback={<ChartSkeleton />}>
@@ -1566,13 +1791,14 @@ function App() {
         {activeView === 'social' && (
           <section className="dashboard-grid social-grid">
             <article className="panel social-main-panel">
-              <PanelHeader icon={Activity} label="Social Pulse" title="Attention pressure radar" />
+              <PanelHeader icon={Activity} label="Attention Pulse" title="Social pressure requires source-backed attention data" />
               <SocialPulseModule
                 onSelectTier={setSelectedSocialTier}
                 onSelectTicker={(ticker) => selectTicker(ticker, 'social')}
                 onSelectTopic={setSelectedSocialTopicId}
                 selectedTier={selectedSocialTier}
                 selectedTopicId={selectedSocialTopic.id}
+                sourceAvailable={hasRealtimeAttentionSource}
                 velocity={socialVelocity}
               />
             </article>
@@ -1592,7 +1818,7 @@ function App() {
         {activeView === 'graph' && (
           <section className="dashboard-grid graph-grid">
             <article className="panel graph-panel">
-              <PanelHeader icon={Network} label="Entity Graph" title="Relationships between events, markets, and exposures" />
+              <PanelHeader icon={Network} label="Intelligence Graph" title="Entities, dependencies, provenance, and exposed paths" />
               <div className="graph-frame">
                 <Suspense fallback={<GraphSkeleton />}>
                   <RelationshipGraph
@@ -1609,13 +1835,13 @@ function App() {
               </div>
             </article>
             <article className="panel">
-              <PanelHeader icon={AlertTriangle} label="Chains" title="Highest-value paths" />
+              <PanelHeader icon={Fingerprint} label="Entity Profile" title="Node metadata, evidence, and downstream exposure" />
               <EntityTypeFilters
                 activeGraphKinds={activeGraphKinds}
                 graphKinds={graphKindOptions}
                 onToggleGraphKind={toggleGraphKind}
               />
-              <GraphInspector graphNode={selectedGraphNode} />
+              <GraphInspector graphNode={selectedGraphNode} worldSnapshot={worldSnapshot} />
               <div className="signal-stack">
                 {worldSignals.slice(0, 3).map((signal) => (
                   <SignalCard key={signal.id} signal={signal} compact />
@@ -1625,10 +1851,27 @@ function App() {
           </section>
         )}
 
+        {activeView === 'cyber' && (
+          <section className="dashboard-grid cyber-grid">
+            <article className="panel wide-panel">
+              <PanelHeader icon={ShieldAlert} label="Cyber / OPSEC" title="Defensive intelligence, source trust, and gated capabilities" />
+              <CyberOpsecPanel defensiveSummary={defensiveSummary} sourceStatusCounts={sourceStatusCounts} />
+            </article>
+            <article className="panel">
+              <PanelHeader icon={GitBranch} label="Detection References" title="Rules are references until telemetry exists" />
+              <DefensiveReferenceList entries={defensiveEntriesByRiskTag('detection-rule').slice(0, 6)} />
+            </article>
+            <article className="panel">
+              <PanelHeader icon={Database} label="Supply Chain" title="SBOM and provenance controls" />
+              <DefensiveReferenceList entries={defensiveEntriesByRiskTag('supply-chain').slice(0, 6)} />
+            </article>
+          </section>
+        )}
+
         {activeView === 'analyst' && (
           <section className="dashboard-grid analyst-grid">
             <article className="panel analyst-panel">
-              <PanelHeader icon={BrainCircuit} label="AI Analyst" title="Private local analyst interface" />
+              <PanelHeader icon={BrainCircuit} label="Analysis Desk" title="Evidence-constrained local reasoning surface" />
               <AnalystContextBanner
                 graphNode={selectedGraphNode}
                 market={selectedMarket}
@@ -1639,7 +1882,7 @@ function App() {
               <div className="analyst-thread">
                 {messages.map((message) => (
                   <div className={`message message-${message.role}`} key={message.id}>
-                    <span>{message.role === 'user' ? 'You' : 'Atlasz Analyst'}</span>
+                    <span>{message.role === 'user' ? 'You' : 'Atlasz Analysis Desk'}</span>
                     <p>{message.text}</p>
                     {message.answer && <AnalystAnswerView answer={message.answer} />}
                   </div>
@@ -1654,12 +1897,12 @@ function App() {
               >
                 <Search size={17} />
                 <input
-                  aria-label="Ask the Atlasz analyst"
-                  placeholder="Ask about oil, Taiwan, Bitcoin, rare earths, QQQ, exposed companies..."
+                  aria-label="Ask the Atlasz analysis desk"
+                  placeholder="Ask only against available evidence: source, entity, ticker, event, or dependency..."
                   value={question}
                   onChange={(event) => setQuestion(event.target.value)}
                 />
-                <button type="submit">Analyze</button>
+                <button type="submit">Inspect</button>
               </form>
               <div className="prompt-chip-stack inline-chips">
                 {promptChips.map((prompt) => (
@@ -1758,59 +2001,120 @@ function PanelHeader({
   )
 }
 
-function CommandStatus({
+function GlobalOverview({
   activeLayerCount,
   briefItems,
+  defensiveSummary,
+  engineSnapshot,
+  hasRealtimeAttentionSource,
   pinnedSignals,
   selectedEvent,
   selectedMarket,
   selectedSignal,
+  sourceStatusCounts,
   sourceItemCount,
   socialPressure,
   socialVelocity,
+  worldSnapshot,
 }: {
   activeLayerCount: number
   briefItems: BriefItem[]
+  defensiveSummary: ReturnType<typeof summarizeDefensiveReferences>
+  engineSnapshot: ReturnType<typeof useEngineSnapshot>
+  hasRealtimeAttentionSource: boolean
   pinnedSignals: Signal[]
   selectedEvent: RadarEvent
   selectedMarket: MarketMover
   selectedSignal: Signal
+  sourceStatusCounts: ReturnType<typeof countSourceStatuses>
   sourceItemCount: number
   socialPressure: number
   socialVelocity: number
+  worldSnapshot: WorldIntelSnapshot
 }) {
   const dominantTheme = briefItems[0] ?? unavailableBriefItem
+  const confidenceAlerts = confidenceWeightedAlertCount(worldSnapshot.signals)
+  const latestEvent = worldSnapshot.events[0]
+  const lastFrame = engineSnapshot.status.health?.lastFrameTimestamp ?? engineSnapshot.frame?.emittedAt
+  const sourceDebt = sourceStatusCounts.stale + sourceStatusCounts.failed + sourceStatusCounts.disabled
+  const verifiedEventCount = worldSnapshot.sourceTrust === 'verified' ? worldSnapshot.events.length : 0
 
   return (
-    <div className="command-status-grid">
+    <div className="global-overview">
+      <div className="overview-lead">
+        <div>
+          <span>Global overview</span>
+          <strong>{dominantTheme.headline}</strong>
+          <p>{dominantTheme.whyItMatters}</p>
+        </div>
+        <div className="overview-trust-stack">
+          <ProvenanceBadge value={worldSnapshot.sourceTrust} />
+          <ProvenanceBadge value={engineSnapshot.status.health?.sourceTrust ?? 'unavailable'} />
+          <span>{formatFreshness(worldSnapshot.updatedAt)} world freshness</span>
+        </div>
+      </div>
       <div className="status-kicker">
-        <span>Global regime</span>
-        <strong>{dominantTheme.headline}</strong>
+        <span>Verified events</span>
+        <strong>{verifiedEventCount > 0 ? `${verifiedEventCount} verified` : 'DATA_UNAVAILABLE'}</strong>
+        <em>
+          {verifiedEventCount > 0
+            ? 'Verified provenance is present in this snapshot.'
+            : 'Public or local-derived data is not displayed as verified.'}
+        </em>
       </div>
       <div className="status-tile">
-        <span>Current risk</span>
-        <strong>{severityLabels[selectedEvent.severity]}</strong>
-        <em>{selectedEvent.region}</em>
+        <span>Latest source-backed event</span>
+        <strong>{latestEvent ? severityLabels[latestEvent.severity] : 'Unavailable'}</strong>
+        <em>{latestEvent ? `${latestEvent.region} · ${latestEvent.sourceCount} sources` : 'No event batch ingested'}</em>
       </div>
       <div className="status-tile">
-        <span>Dominant chain</span>
-        <strong>{selectedSignal.relationshipStrength}%</strong>
-        <em>{selectedSignal.chain}</em>
+        <span>Confidence-weighted alerts</span>
+        <strong>{confidenceAlerts}</strong>
+        <em>{confidenceAlerts > 0 ? `${pinnedSignals.length} pinned for follow-up` : 'No sourced alerts active'}</em>
       </div>
       <div className="status-tile">
-        <span>Market focus</span>
+        <span>Watchlist movement</span>
         <strong>{selectedMarket.ticker}</strong>
         <em>{selectedMarket.catalyst}</em>
       </div>
       <div className="status-tile">
-        <span>Attention pressure</span>
-        <strong>{socialPressure}/100</strong>
-        <em>dV/dt {socialVelocity.toFixed(2)} mentions/min</em>
+        <span>Entity graph</span>
+        <strong>{graphNodes.length} nodes / {graphEdges.length} edges</strong>
+        <em>{selectedSignal.relationshipStrength}% selected relationship strength</em>
       </div>
       <div className="status-tile">
-        <span>System status</span>
+        <span>Realtime core</span>
+        <strong>{engineSnapshot.status.mode.toUpperCase()}</strong>
+        <em>{formatFreshness(lastFrame)} last frame · {engineSnapshot.frame?.assets.length ?? 0} assets</em>
+      </div>
+      <div className="status-tile">
+        <span>Attention pulse</span>
+        <strong>{hasRealtimeAttentionSource ? `${socialPressure}/100` : 'DATA_UNAVAILABLE'}</strong>
+        <em>
+          {hasRealtimeAttentionSource
+            ? `dV/dt ${socialVelocity.toFixed(2)} mentions/min`
+            : 'No real social source connected'}
+        </em>
+      </div>
+      <div className="status-tile">
+        <span>Cyber / OPSEC corpus</span>
+        <strong>{defensiveSummary.entryCount} references</strong>
+        <em>{defensiveSummary.byPolicy.blocked ?? 0} blocked · {defensiveSummary.byPolicy['auth-required'] ?? 0} auth-gated</em>
+      </div>
+      <div className="status-tile">
+        <span>Stale/offline sources</span>
+        <strong>{sourceDebt}</strong>
+        <em>{sourceStatusCounts.online}/{sourceStatusCounts.total} online · {sourceItemCount} raw source items</em>
+      </div>
+      <div className="status-tile">
+        <span>Selected risk object</span>
+        <strong>{severityLabels[selectedEvent.severity]}</strong>
+        <em>{selectedEvent.title}</em>
+      </div>
+      <div className="status-tile">
+        <span>Active controls</span>
         <strong>{activeLayerCount} layers</strong>
-        <em>{pinnedSignals.length} pinned signals, {sourceItemCount} source items, {socialPulsePosts.length} social posts</em>
+        <em>{selectedSignal.chain}</em>
       </div>
     </div>
   )
@@ -1845,7 +2149,9 @@ function WorldIntelStatusStrip({
       </div>
       <div>
         <span>Trust</span>
-        <strong>{snapshot.sourceTrust}</strong>
+        <strong>
+          <ProvenanceBadge value={snapshot.sourceTrust} size="sm" />
+        </strong>
       </div>
       <div>
         <span>Status</span>
@@ -1863,6 +2169,10 @@ function WorldIntelStatusStrip({
         {loading ? 'Refreshing' : 'Refresh'}
       </button>
       {snapshot.lastError && <p>{snapshot.lastError}</p>}
+      <p className="world-intel-lineage">
+        Source chain: {snapshot.connectorLabel} {'>'} {snapshot.headlines.length} headlines {'>'}{' '}
+        {snapshot.events.length} normalized events {'>'} {snapshot.signals.length} signals
+      </p>
     </div>
   )
 }
@@ -1996,6 +2306,7 @@ function SocialPulseModule({
   onSelectTopic,
   selectedTier,
   selectedTopicId,
+  sourceAvailable,
   velocity,
 }: {
   compact?: boolean
@@ -2004,6 +2315,7 @@ function SocialPulseModule({
   onSelectTopic: (topicId: string) => void
   selectedTier: SocialTier | 'all'
   selectedTopicId: string
+  sourceAvailable: boolean
   velocity: ReturnType<typeof calculateSocialVelocity>
 }) {
   const topic = socialPulseTopics.find((item) => item.id === selectedTopicId) ?? socialPulseTopics[0]
@@ -2029,6 +2341,32 @@ function SocialPulseModule({
       velocity: previous ? Number(((point.volume - previous.volume) / 15).toFixed(2)) : 0,
     }
   })
+
+  if (!sourceAvailable) {
+    return (
+      <div className={compact ? 'social-pulse-module compact-social' : 'social-pulse-module'}>
+        <div className="source-unavailable-panel">
+          <ProvenanceBadge value="unavailable" />
+          <h3>Attention data unavailable</h3>
+          <p>
+            No real source-backed social or attention connector is active. Atlasz is not rendering local samples,
+            unverified sentiment, or synthetic narrative velocity as intelligence.
+          </p>
+          <div className="social-tier-board">
+            {socialTierDefinitions.map((tier) => (
+              <article className={`tier-summary tier-${tier.id}`} key={tier.id}>
+                <header>
+                  <strong>{tier.label}</strong>
+                  <span>0</span>
+                </header>
+                <p>{tier.description}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={compact ? 'social-pulse-module compact-social' : 'social-pulse-module'}>
@@ -2388,27 +2726,232 @@ function EntityTypeFilters({
   )
 }
 
-function GraphInspector({ graphNode }: { graphNode: GraphNodeSeed | null }) {
+function CyberOpsecPreview({
+  defensiveSummary,
+  onOpen,
+}: {
+  defensiveSummary: ReturnType<typeof summarizeDefensiveReferences>
+  onOpen: () => void
+}) {
+  return (
+    <div className="cyber-preview">
+      <div className="panel-source-row">
+        <ProvenanceBadge value="local-derived" />
+        <span>Defensive reference corpus only. No scanning or person enrichment runs by default.</span>
+      </div>
+      <div className="cyber-mini-grid">
+        <div>
+          <span>References</span>
+          <strong>{defensiveSummary.entryCount}</strong>
+        </div>
+        <div>
+          <span>Default-safe</span>
+          <strong>{defensiveSummary.defaultSafeCount}</strong>
+        </div>
+        <div>
+          <span>Auth-gated</span>
+          <strong>{defensiveSummary.byPolicy['auth-required'] ?? 0}</strong>
+        </div>
+        <div>
+          <span>Blocked</span>
+          <strong>{defensiveSummary.byPolicy.blocked ?? 0}</strong>
+        </div>
+      </div>
+      <button className="inspect-button" type="button" onClick={onOpen}>
+        Open defensive panel
+      </button>
+    </div>
+  )
+}
+
+function CyberOpsecPanel({
+  defensiveSummary,
+  sourceStatusCounts,
+}: {
+  defensiveSummary: ReturnType<typeof summarizeDefensiveReferences>
+  sourceStatusCounts: ReturnType<typeof countSourceStatuses>
+}) {
+  const policyRows = Object.entries(defensiveSummary.byPolicy).sort(([left], [right]) => left.localeCompare(right))
+  const domainRows = Object.entries(defensiveSummary.byDomain)
+    .sort(([, left], [, right]) => right - left)
+    .slice(0, 8)
+  const gated = defensiveReferenceEntries.filter((entry) => !defensiveReferenceIsDefaultSafe(entry)).slice(0, 8)
+
+  return (
+    <div className="cyber-panel">
+      <div className="cyber-doctrine">
+        <div>
+          <span>Defensive boundary</span>
+          <h3>Lawful, source-aware security intelligence only.</h3>
+          <p>
+            CVEs, CTI platforms, Sigma/YARA-style rules, endpoint agents, internet mapping, malware analysis, and
+            cloud posture tooling are modeled as gated capabilities unless Atlasz has an explicit authorized connector.
+          </p>
+        </div>
+        <div className="cyber-source-stack">
+          <ProvenanceBadge value="local-derived" />
+          <ProvenanceBadge value="auth-gated" />
+          <ProvenanceBadge value="unavailable" />
+        </div>
+      </div>
+
+      <div className="cyber-state-grid">
+        <div>
+          <span>Live CVE feed</span>
+          <strong>DATA_UNAVAILABLE</strong>
+          <em>No NVD/CVE connector is active.</em>
+        </div>
+        <div>
+          <span>Threat intel feeds</span>
+          <strong>AUTH-GATED</strong>
+          <em>OpenCTI/MISP style feeds require configured credentials and TLP rules.</em>
+        </div>
+        <div>
+          <span>Infrastructure exposure</span>
+          <strong>MANUAL REVIEW</strong>
+          <em>Active scanning is never a default Atlasz runtime behavior.</em>
+        </div>
+        <div>
+          <span>Source debt</span>
+          <strong>{sourceStatusCounts.stale + sourceStatusCounts.failed}</strong>
+          <em>Stale or failed sources must remain visible.</em>
+        </div>
+      </div>
+
+      <div className="cyber-columns">
+        <section>
+          <h3>Policy posture</h3>
+          <div className="cyber-policy-list">
+            {policyRows.map(([policy, count]) => (
+              <div key={policy}>
+                <span>{policy}</span>
+                <strong>{count}</strong>
+              </div>
+            ))}
+          </div>
+        </section>
+        <section>
+          <h3>Highest-density domains</h3>
+          <div className="cyber-policy-list">
+            {domainRows.map(([domain, count]) => (
+              <div key={domain}>
+                <span>{domain}</span>
+                <strong>{count}</strong>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <section className="cyber-gated-list">
+        <h3>Gated or blocked capabilities</h3>
+        {gated.map((entry) => (
+          <article key={entry.id}>
+            <header>
+              <strong>{entry.label}</strong>
+              <span>{entry.runtimePolicy}</span>
+            </header>
+            <p>{entry.engineeringLesson}</p>
+            <footer>
+              {entry.riskTags.slice(0, 4).map((tag) => (
+                <em key={tag}>{tag}</em>
+              ))}
+            </footer>
+          </article>
+        ))}
+      </section>
+    </div>
+  )
+}
+
+function DefensiveReferenceList({ entries }: { entries: DefensiveReferenceEntry[] }) {
+  if (entries.length === 0) {
+    return <div className="empty-state">No defensive references are loaded for this category.</div>
+  }
+
+  return (
+    <div className="defensive-reference-list">
+      <div className="panel-source-row">
+        <ProvenanceBadge value="local-derived" />
+        <span>Reference material, not active alerts.</span>
+      </div>
+      {entries.map((entry) => (
+        <article key={entry.id}>
+          <header>
+            <CheckCircle2 size={14} />
+            <strong>{entry.label}</strong>
+            <span>{entry.runtimePolicy}</span>
+          </header>
+          <p>{entry.engineeringLesson}</p>
+          <footer>
+            {entry.capabilities.slice(0, 3).map((capability) => (
+              <em key={capability}>{capability}</em>
+            ))}
+          </footer>
+        </article>
+      ))}
+    </div>
+  )
+}
+
+function GraphInspector({
+  graphNode,
+  worldSnapshot,
+}: {
+  graphNode: GraphNodeSeed | null
+  worldSnapshot: WorldIntelSnapshot
+}) {
   if (!graphNode) {
     return (
       <div className="graph-inspector empty-state">
         <span>Selected entity</span>
-        <p>Select a node to inspect direct relationships, relationship strength, and adjacent market exposure.</p>
+        <p>Select a node to inspect type, source coverage, confidence, relationship strength, and adjacent exposure.</p>
       </div>
     )
   }
 
-  const directEdges: typeof graphEdges = []
+  const directEdges = graphEdges.filter((edge) => edge.source === graphNode.id || edge.target === graphNode.id)
   const adjacentNodeIds = directEdges.map((edge) => (edge.source === graphNode.id ? edge.target : edge.source))
   const adjacentNodes = graphNodes.filter((node) => adjacentNodeIds.includes(node.id))
-  const relatedEvents: RadarEvent[] = []
-  const chain: ReturnType<typeof riskChainFor> = []
+  const relatedEvents = worldSnapshot.events.filter((event) =>
+    [event.id, ...event.detectedEntities.map((entity) => entity.toLowerCase())].some((value) =>
+      value.includes(graphNode.id.toLowerCase()) || graphNode.label.toLowerCase().includes(value),
+    ),
+  )
+  const chain = riskChainFor(graphNode.id)
+  const matchingEvent = worldSnapshot.events.find((event) => event.id === graphNode.id)
+  const sourceCount = matchingEvent?.sourceCount ?? relatedEvents.reduce((total, event) => total + event.sourceCount, 0)
+  const confidence = matchingEvent?.confidence ?? (relatedEvents.length > 0 ? Math.round(relatedEvents.reduce((total, event) => total + event.confidence, 0) / relatedEvents.length) : 0)
+  const lastUpdated = matchingEvent?.sourceTrail[0]?.observedAt ?? worldSnapshot.updatedAt
 
   return (
     <div className="graph-inspector">
-      <span>Selected entity</span>
-      <strong>{graphNode.label}</strong>
-      <em>{graphNode.kind}</em>
+      <div className="entity-profile-head">
+        <div>
+          <span>Selected entity</span>
+          <strong>{graphNode.label}</strong>
+          <em>{graphNode.kind}</em>
+        </div>
+        <ProvenanceBadge value={sourceCount > 0 ? worldSnapshot.sourceTrust : 'local-derived'} />
+      </div>
+      <div className="entity-profile-grid">
+        <div>
+          <span>Type</span>
+          <strong>{graphNode.kind}</strong>
+        </div>
+        <div>
+          <span>Sources</span>
+          <strong>{sourceCount}</strong>
+        </div>
+        <div>
+          <span>Confidence</span>
+          <strong>{confidence}%</strong>
+        </div>
+        <div>
+          <span>Updated</span>
+          <strong>{formatFreshness(lastUpdated)}</strong>
+        </div>
+      </div>
       <div className="relationship-block">
         <span>Direct connections</span>
         <p>{directEdges.map((edge) => `${edge.label} (${edge.strength}%)`).join(' / ') || 'No direct edge in filtered view'}</p>
@@ -2431,6 +2974,12 @@ function GraphInspector({ graphNode }: { graphNode: GraphNodeSeed | null }) {
       </div>
       <LinkedTags title="Adjacent nodes" values={adjacentNodes.map((node) => node.label)} />
       <LinkedTags title="Related events" values={relatedEvents.map((event) => event.title)} />
+      {sourceCount === 0 && (
+        <div className="source-unavailable-panel compact-source-unavailable">
+          <ProvenanceBadge value="local-derived" />
+          <p>This node is part of the local reference graph. It has no live source trail attached in the current snapshot.</p>
+        </div>
+      )}
     </div>
   )
 }

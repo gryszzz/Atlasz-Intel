@@ -2297,6 +2297,270 @@ textarea {
   accent-color: var(--green);
 }
 
+.global-overview {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.overview-lead {
+  display: grid;
+  grid-column: span 5;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid var(--green);
+  border-radius: 7px;
+  background: #090d0c;
+  padding: 12px;
+}
+
+.overview-lead span,
+.overview-trust-stack span,
+.panel-source-row span,
+.cyber-mini-grid span,
+.cyber-doctrine span,
+.cyber-state-grid span,
+.cyber-policy-list span,
+.entity-profile-head span,
+.entity-profile-grid span {
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.overview-lead strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--white);
+  font-size: 17px;
+}
+
+.overview-lead p,
+.panel-source-row,
+.cyber-doctrine p,
+.cyber-state-grid em,
+.cyber-gated-list p,
+.defensive-reference-list p,
+.source-unavailable-panel p,
+.entity-profile-head em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.overview-trust-stack {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+  min-width: 260px;
+}
+
+.panel-source-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.world-intel-lineage {
+  color: var(--muted) !important;
+}
+
+.source-unavailable-panel {
+  display: grid;
+  gap: 10px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: #090d0c;
+  padding: 14px;
+}
+
+.source-unavailable-panel h3 {
+  margin: 0;
+  color: var(--white);
+  font-size: 16px;
+}
+
+.compact-source-unavailable {
+  margin-top: 12px;
+  padding: 10px;
+}
+
+.entity-profile-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.entity-profile-head > div {
+  display: grid;
+  gap: 5px;
+}
+
+.entity-profile-head strong {
+  color: var(--white);
+  font-size: 16px;
+}
+
+.entity-profile-grid,
+.cyber-mini-grid,
+.cyber-state-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.entity-profile-grid div,
+.cyber-mini-grid div,
+.cyber-state-grid div {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: #050807;
+  padding: 10px;
+}
+
+.entity-profile-grid strong,
+.cyber-mini-grid strong,
+.cyber-state-grid strong,
+.cyber-policy-list strong {
+  color: var(--white);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.cyber-grid .wide-panel {
+  grid-column: span 8;
+}
+
+.cyber-grid .panel {
+  grid-column: span 4;
+}
+
+.cyber-panel,
+.cyber-preview,
+.defensive-reference-list {
+  display: grid;
+  gap: 12px;
+}
+
+.cyber-doctrine {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid var(--red);
+  border-radius: 8px;
+  background: #090d0c;
+  padding: 14px;
+}
+
+.cyber-doctrine h3,
+.cyber-columns h3,
+.cyber-gated-list h3 {
+  margin: 0;
+  color: var(--white);
+  font-size: 16px;
+}
+
+.cyber-source-stack {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+  min-width: 220px;
+}
+
+.cyber-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.cyber-columns section,
+.cyber-gated-list {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: #090d0c;
+  padding: 12px;
+}
+
+.cyber-policy-list {
+  display: grid;
+  gap: 7px;
+}
+
+.cyber-policy-list div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: 7px;
+}
+
+.cyber-policy-list div:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.cyber-gated-list article,
+.defensive-reference-list article {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: var(--panel-2);
+  padding: 10px;
+}
+
+.cyber-gated-list header,
+.defensive-reference-list header,
+.cyber-gated-list footer,
+.defensive-reference-list footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.cyber-gated-list header,
+.defensive-reference-list header {
+  justify-content: space-between;
+}
+
+.defensive-reference-list header svg {
+  color: var(--green);
+}
+
+.cyber-gated-list strong,
+.defensive-reference-list strong {
+  color: var(--white);
+}
+
+.cyber-gated-list header span,
+.defensive-reference-list header span,
+.cyber-gated-list footer em,
+.defensive-reference-list footer em {
+  border: 1px solid rgba(94, 234, 212, 0.18);
+  border-radius: 999px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-style: normal;
+  padding: 4px 7px;
+}
+
 .react-flow__attribution {
   display: none;
 }
@@ -2342,13 +2606,24 @@ textarea {
     grid-template-columns: 1fr;
   }
 
-  .command-status-grid,
+  .global-overview,
   .pulse-toolbar,
   .pulse-stage,
   .sidecar-metrics,
   .dossier-metric-grid,
-  .social-pressure-grid {
+  .social-pressure-grid,
+  .entity-profile-grid,
+  .cyber-mini-grid,
+  .cyber-state-grid,
+  .cyber-columns {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .overview-lead,
+  .cyber-doctrine,
+  .cyber-grid .wide-panel,
+  .cyber-grid .panel {
+    grid-column: span 12;
   }
 }
 
@@ -2401,18 +2676,31 @@ textarea {
     height: 520px;
   }
 
-  .command-status-grid,
+  .global-overview,
   .pulse-toolbar,
   .pulse-stage,
   .sidecar-metrics,
   .dossier-metric-grid,
   .social-pressure-grid,
-  .analyst-context-banner {
+  .analyst-context-banner,
+  .overview-lead,
+  .entity-profile-grid,
+  .cyber-mini-grid,
+  .cyber-state-grid,
+  .cyber-columns,
+  .cyber-doctrine {
     grid-template-columns: 1fr;
   }
 
-  .status-kicker {
+  .status-kicker,
+  .overview-lead {
     grid-column: span 1;
+  }
+
+  .overview-trust-stack,
+  .cyber-source-stack {
+    justify-content: flex-start;
+    min-width: 0;
   }
 }
 
