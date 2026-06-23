@@ -29,6 +29,9 @@ const WorldQuantStrip = lazy(() =>
 const HistoricalPlaybookPanel = lazy(() =>
   import('./components/intel/HistoricalPlaybookPanel').then((m) => ({ default: m.HistoricalPlaybookPanel })),
 )
+const WeatherAlertSourceTrail = lazy(() =>
+  import('./components/intel/WeatherAlertSourceTrail').then((m) => ({ default: m.WeatherAlertSourceTrail })),
+)
 
 type WorldWindowId = 'now' | '1h' | '6h' | '24h' | '7d'
 
@@ -153,6 +156,10 @@ export function WorldIntelligenceView({
             onSelectEvent={onSelectEvent}
             onSelectTicker={onSelectTicker}
           />
+        </Suspense>
+
+        <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading weather source trail" /></div>}>
+          <WeatherAlertSourceTrail events={visibleEvents} />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading entity detail" /></div>}>

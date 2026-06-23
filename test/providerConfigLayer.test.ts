@@ -30,6 +30,7 @@ describe('provider config layer', () => {
     expect(isProviderConfigured(find(providers, 'gdelt_doc_public'), {})).toBe(true)
     expect(isProviderConfigured(find(providers, 'macro_calendar_fred'), {})).toBe(false)
     expect(isProviderConfigured(find(providers, 'macro_calendar_fred'), { ATLASZ_FRED_API_KEY: 'x' })).toBe(true)
+    expect(isProviderConfigured(find(providers, 'noaa_alerts_public'), {})).toBe(true)
     expect(isProviderConfigured(find(providers, 'x_explore_placeholder'), { ATLASZ_X_AUTH_TOKEN: 'x' })).toBe(false)
   })
 
@@ -62,6 +63,7 @@ describe('adapter registry', () => {
     expect(resolveAdapter(find(providers, 'gdelt_doc_public'), {}).fetcher).toBeTypeOf('function')
     expect(resolveAdapter(find(providers, 'sec_edgar_public'), {}).fetcher).toBeUndefined()
     expect(resolveAdapter(find(providers, 'sec_edgar_public'), { ATLASZ_SEC_USER_AGENT: 'a@b.com' }).fetcher).toBeTypeOf('function')
+    expect(resolveAdapter(find(providers, 'noaa_alerts_public'), {}).fetcher).toBeTypeOf('function')
     expect(resolveAdapter(find(providers, 'rss_public_radar'), {}).managed).toBe(true)
     expect(resolveAdapter(find(providers, 'x_explore_placeholder'), {}).configured).toBe(false)
   })

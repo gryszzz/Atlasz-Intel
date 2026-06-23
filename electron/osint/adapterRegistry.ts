@@ -9,6 +9,7 @@ import type { WorldIntelEvent } from '../../src/worldIntel'
 import { fetchGdeltEvents } from './adapters/gdeltAdapter'
 import { fetchSecFilings, readSecConfig } from './adapters/secEdgarAdapter'
 import { fetchMacroCalendar, readMacroConfig } from './adapters/macroCalendarAdapter'
+import { fetchNoaaAlerts, readNoaaAlertConfig } from './adapters/noaaAlertAdapter'
 import { fetchPoliticianDisclosures, readPoliticianConfig } from './adapters/politicianTradeAdapter'
 import { fetchRssFeed } from './adapters/rssAdapter'
 import { fetchCustomJson } from './adapters/customJsonAdapter'
@@ -27,6 +28,7 @@ export const KNOWN_ADAPTERS = [
   'gdelt',
   'sec-edgar',
   'fred-macro',
+  'noaa-alerts',
   'public-disclosure-json',
   'rss',
   'custom-json',
@@ -45,6 +47,10 @@ export function resolveAdapter(provider: ProviderDefinition, env: NodeJS.Process
     case 'fred-macro': {
       const config = readMacroConfig(env)
       return { fetcher: config ? (signal) => fetchMacroCalendar(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'noaa-alerts': {
+      const config = readNoaaAlertConfig(env)
+      return { fetcher: config ? (signal) => fetchNoaaAlerts(signal, config) : undefined, configured: config !== null, managed: false }
     }
     case 'public-disclosure-json': {
       const config = readPoliticianConfig(env)

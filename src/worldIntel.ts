@@ -64,6 +64,37 @@ export type WorldIntelEvent = {
   narrativeTags: string[]
   rawPayloadHash: string
   dedupeHash: string
+  weatherAlert?: WeatherAlert
+}
+
+export type WeatherAlert = {
+  id: string
+  alertId: string
+  event: string
+  headline: string
+  description: string
+  severity: string
+  urgency: string
+  certainty: string
+  areaDesc: string
+  sameCodes: string[]
+  ugcCodes: string[]
+  effective: string
+  effectiveTimestamp?: number
+  onset: string
+  onsetTimestamp?: number
+  expires: string
+  expiresTimestamp?: number
+  observedTimestamp: number
+  senderName: string
+  sourceUrl: string
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
 }
 
 export type MacroSnapshot = {

@@ -42,6 +42,7 @@ export const PROVIDER_CAPABILITY_META: Record<string, ProviderCapabilityMeta> = 
   space_launch_library: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['space', 'launch'], supportedRegions: ['global'] },
   github_trending_repos: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['tech', 'ai'], supportedRegions: ['global'] },
   usgs_significant_quakes: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['natural-disaster', 'seismic'], supportedRegions: ['global'] },
+  noaa_alerts_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['weather-alert'], supportedRegions: ['US'] },
 }
 
 export type LocalServiceKind = 'sqlite' | 'ollama' | 'vector-memory'

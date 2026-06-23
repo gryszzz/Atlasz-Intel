@@ -323,7 +323,8 @@ CREATE TABLE IF NOT EXISTS world_intel_events (
   extracted_entities TEXT NOT NULL,
   narrative_tags TEXT NOT NULL,
   raw_payload_hash TEXT NOT NULL,
-  dedupe_hash TEXT NOT NULL
+  dedupe_hash TEXT NOT NULL,
+  sub_records_json TEXT
 );
 CREATE TABLE IF NOT EXISTS user_theses (
   id TEXT PRIMARY KEY,
@@ -454,6 +455,15 @@ function configureSqlite(db: SqliteDatabase): void {
     PRAGMA foreign_keys = ON;
     ${SCHEMA}
   `)
+  ensureColumn(db, 'world_intel_events', 'sub_records_json', 'TEXT')
+}
+
+/** Add a column if it is not already present. Safe to run on every boot. */
+function ensureColumn(db: SqliteDatabase, table: string, column: string, ddlType: string): void {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name?: unknown }>
+  if (!columns.some((entry) => String(entry.name) === column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${ddlType}`)
+  }
 }
 
 // --- SQLite (WAL) implementation -------------------------------------------
@@ -663,11 +673,11 @@ class SqliteStore implements IntelPersistence {
         `INSERT INTO world_intel_events
            (id, timestamp, title, summary, country_codes, region, lat, lon, category, severity, confidence,
             source_id, source_url, provenance, affected_assets, affected_sectors, affected_commodities,
-            affected_currencies, extracted_entities, narrative_tags, raw_payload_hash, dedupe_hash)
+            affected_currencies, extracted_entities, narrative_tags, raw_payload_hash, dedupe_hash, sub_records_json)
          VALUES
            (@id, @timestamp, @title, @summary, @countryCodes, @region, @lat, @lon, @category, @severity, @confidence,
             @sourceId, @sourceUrl, @provenance, @affectedAssets, @affectedSectors, @affectedCommodities,
-            @affectedCurrencies, @extractedEntities, @narrativeTags, @rawPayloadHash, @dedupeHash)
+            @affectedCurrencies, @extractedEntities, @narrativeTags, @rawPayloadHash, @dedupeHash, @subRecordsJson)
          ON CONFLICT(id) DO UPDATE SET
            timestamp=excluded.timestamp, title=excluded.title, summary=excluded.summary, country_codes=excluded.country_codes,
            region=excluded.region, lat=excluded.lat, lon=excluded.lon, category=excluded.category, severity=excluded.severity,
@@ -675,7 +685,8 @@ class SqliteStore implements IntelPersistence {
            provenance=excluded.provenance, affected_assets=excluded.affected_assets, affected_sectors=excluded.affected_sectors,
            affected_commodities=excluded.affected_commodities, affected_currencies=excluded.affected_currencies,
            extracted_entities=excluded.extracted_entities, narrative_tags=excluded.narrative_tags,
-           raw_payload_hash=excluded.raw_payload_hash, dedupe_hash=excluded.dedupe_hash`,
+           raw_payload_hash=excluded.raw_payload_hash, dedupe_hash=excluded.dedupe_hash,
+           sub_records_json=excluded.sub_records_json`,
       )
       .run({
         ...record,
@@ -689,6 +700,7 @@ class SqliteStore implements IntelPersistence {
         affectedCurrencies: JSON.stringify(record.affectedCurrencies),
         extractedEntities: JSON.stringify(record.extractedEntities),
         narrativeTags: JSON.stringify(record.narrativeTags),
+        subRecordsJson: serializeSubRecords(record),
       })
   }
 
@@ -1003,6 +1015,7 @@ function rowToWorldIntelEvent(row: Record<string, unknown>): WorldIntelEvent {
     narrativeTags: parseJsonArray(row.narrative_tags),
     rawPayloadHash: String(row.raw_payload_hash),
     dedupeHash: String(row.dedupe_hash),
+    ...parseSubRecords(row.sub_records_json),
   }
 }
 
@@ -1320,6 +1333,44 @@ function upsert<T extends { id: string }>(list: T[], record: T): T[] {
   const next = [...list]
   next[index] = record
   return next
+}
+
+type WorldIntelSubRecords = Pick<WorldIntelEvent, 'weatherAlert'>
+
+/** Serialize typed event sub-records; null when there are none. */
+export function serializeSubRecords(record: WorldIntelEvent): string | null {
+  const sub: WorldIntelSubRecords = {}
+  if (record.weatherAlert) sub.weatherAlert = record.weatherAlert
+  return Object.keys(sub).length > 0 ? JSON.stringify(sub) : null
+}
+
+/** Parse persisted sub-records fail-closed; malformed JSON or missing proof is dropped. */
+export function parseSubRecords(value: unknown): WorldIntelSubRecords {
+  const out: WorldIntelSubRecords = {}
+  if (value === null || value === undefined || value === '') return out
+  let parsed: unknown
+  try {
+    parsed = typeof value === 'string' ? JSON.parse(value) : value
+  } catch {
+    return out
+  }
+  if (!parsed || typeof parsed !== 'object') return out
+  const record = parsed as Record<string, unknown>
+  if (isValidWeatherAlert(record.weatherAlert)) out.weatherAlert = record.weatherAlert as WorldIntelEvent['weatherAlert']
+  return out
+}
+
+function hasHash(value: Record<string, unknown>): boolean {
+  return typeof value.rawPayloadHash === 'string' && value.rawPayloadHash.length > 0
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' ? (value as Record<string, unknown>) : null
+}
+
+function isValidWeatherAlert(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(v && typeof v.alertId === 'string' && v.alertId.length > 0 && hasHash(v))
 }
 
 function upsertBy<T, K extends keyof T>(list: T[], record: T, key: K): T[] {
