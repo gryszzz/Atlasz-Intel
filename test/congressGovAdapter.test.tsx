@@ -16,6 +16,7 @@ import { createPersistence } from '../electron/persistence'
 import { CongressSourceTrail } from '../src/components/intel/CongressSourceTrail'
 import { buildEntityGraph, neighborsOf } from '../src/engine/entityModel'
 import { assessWhatChangedToday } from '../src/engine/materialityEngine'
+import { eventStructuralExposure, isEventResolvable } from '../src/engine/entityResolver'
 import type { WorldIntelEvent } from '../src/worldIntel'
 
 const NOW = Date.parse('2026-06-23T12:00:00Z')
@@ -205,5 +206,12 @@ describe('Congress.gov adapter', () => {
         backoffMs: 0,
       }),
     ).rejects.toMatchObject({ status: 429, retryAfterMs: 5_000 })
+  })
+
+  it('never resolves a bill into curated company/sector exposure (no political/exposure inference)', () => {
+    const event = applyCongressBillChangeStatus(normalizeCongressGovBills(parseCongressGovBills(FIXTURE, { retrievedAt: NOW, sourceApiUrl: API_URL }))[0])
+    expect(event.affectedAssets).toEqual([])
+    expect(isEventResolvable(event)).toBe(false)
+    expect(eventStructuralExposure(event)).toEqual([])
   })
 })

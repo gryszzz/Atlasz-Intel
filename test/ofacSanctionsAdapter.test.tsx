@@ -15,6 +15,7 @@ import {
 import { createPersistence } from '../electron/persistence'
 import { OfacSourceTrail } from '../src/components/intel/OfacSourceTrail'
 import { buildEntityGraph, neighborsOf } from '../src/engine/entityModel'
+import { eventStructuralExposure, isEventResolvable } from '../src/engine/entityResolver'
 import type { WorldIntelEvent } from '../src/worldIntel'
 
 const NOW = Date.parse('2026-06-23T12:00:00Z')
@@ -189,5 +190,14 @@ describe('OFAC sanctions adapter', () => {
         maxRecords: 5,
       }),
     ).rejects.toMatchObject({ status: 429, retryAfterMs: 5_000 })
+  })
+
+  it('never resolves a sanctions record into curated company exposure (no inferred guilt/exposure)', () => {
+    const event = applyOfacChangeStatus(normalizeOfacSanctions(parseOfacSdnXml(XML_FIXTURE, { retrievedAt: NOW, sourceDataUrl: SOURCE_DATA_URL }).records)[0])
+    // A listed name must stay sanctions-list evidence — never a resolver-driven
+    // exposure edge to a curated company/sector (which would imply inferred risk).
+    expect(event.affectedAssets).toEqual([])
+    expect(isEventResolvable(event)).toBe(false)
+    expect(eventStructuralExposure(event)).toEqual([])
   })
 })
