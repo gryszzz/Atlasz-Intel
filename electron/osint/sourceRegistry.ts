@@ -13,6 +13,10 @@ import {
 } from '../providers/providerConfig'
 import { capabilityMeta } from '../providers/builtinProviderCatalog'
 import { resolveAdapter, type SourceFetcher } from './adapterRegistry'
+import { HttpError, fetchWithRetry } from './fetchPolicy'
+
+const DEFAULT_MAX_RETRIES = 2
+const DEFAULT_BACKOFF_MS = 1_000
 
 type SourceStatus = OsintSourceSnapshot['status']
 
@@ -26,6 +30,8 @@ type SourceDefinition = {
   pollIntervalMs: number
   rateLimitMs: number
   timeoutMs: number
+  backoffMs: number
+  maxRetries: number
   enabled: boolean
   authType: OsintSourceSnapshot['authType']
   configured: boolean
@@ -79,10 +85,13 @@ export class OsintSourceRegistry {
         continue
       }
       state.lastAttemptAt = now
-      const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), definition.timeoutMs)
       try {
-        const result = await definition.fetcher(controller.signal)
+        // Per-attempt timeout + bounded retry/backoff, honoring Retry-After.
+        const result = await fetchWithRetry(definition.fetcher, {
+          maxRetries: definition.maxRetries,
+          backoffMs: definition.backoffMs,
+          timeoutMs: definition.timeoutMs,
+        })
         state.status = 'online'
         state.lastSuccessAt = Date.now()
         state.lastError = undefined
@@ -91,13 +100,12 @@ export class OsintSourceRegistry {
         state.sourceReliabilityScore = Math.min(1, state.sourceReliabilityScore + 0.05)
         events.push(...result)
       } catch (error) {
-        state.status = 'failed'
+        // A rate-limit that survives retries is reported honestly as rate-limited.
+        state.status = error instanceof HttpError && error.status === 429 ? 'rate-limited' : 'failed'
         state.lastErrorAt = Date.now()
         state.lastError = error instanceof Error ? error.message : String(error)
         state.consecutiveFailures += 1
         state.sourceReliabilityScore = Math.max(0.15, Number((state.sourceReliabilityScore * 0.82).toFixed(3)))
-      } finally {
-        clearTimeout(timeout)
       }
     }
     return { events: dedupeEvents(events), sources: this.snapshots() }
@@ -161,6 +169,8 @@ function providerToDefinition(provider: ProviderDefinition, env: NodeJS.ProcessE
     pollIntervalMs: provider.pollIntervalMs ?? 0,
     rateLimitMs: provider.rateLimitGuardMs ?? 0,
     timeoutMs: provider.timeoutMs ?? 0,
+    backoffMs: provider.backoffMs ?? DEFAULT_BACKOFF_MS,
+    maxRetries: provider.maxRetries ?? DEFAULT_MAX_RETRIES,
     enabled,
     authType: provider.authType,
     configured,

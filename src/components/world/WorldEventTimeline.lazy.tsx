@@ -1,8 +1,11 @@
 /*
  * Event stream / timeline (lazy). Provenance badges preserved per event.
  */
+import { useMemo, useState } from 'react'
 import { Link2, Radar, Star } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
+import { EventResolutionPanel } from '../intel/EventResolutionPanel'
+import { filterEventsByResolution, isEventResolvable, type ResolutionFilterMode } from '../../engine/entityResolver'
 import type { UserFavorite, WorldIntelEvent } from '../../worldIntel'
 import { WorldPanelHeader } from './WorldPanelHeader'
 
@@ -23,11 +26,26 @@ export function WorldEventTimeline({
   onSelectEvent: (eventId: string) => void
   onSelectTicker: (ticker: string) => void
 }) {
+  const [resolutionFilter, setResolutionFilter] = useState<ResolutionFilterMode>('all')
+  const visibleEvents = useMemo(() => filterEventsByResolution(events, resolutionFilter), [events, resolutionFilter])
+
   return (
     <article className="world-panel world-events-panel">
       <WorldPanelHeader icon={Radar} label="Event Stream" value={sourceTrust} />
+      <div className="event-resolution-filter">
+        {(['all', 'linked', 'unlinked'] as const).map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            className={resolutionFilter === mode ? 'event-filter-btn active' : 'event-filter-btn'}
+            onClick={() => setResolutionFilter(mode)}
+          >
+            {mode}
+          </button>
+        ))}
+      </div>
       <div className="world-event-stack">
-        {events.map((event) => (
+        {visibleEvents.map((event) => (
           <WorldEventCard
             event={event}
             favorite={favoriteIds.has(event.id)}
@@ -38,9 +56,13 @@ export function WorldEventTimeline({
             onSelectTicker={onSelectTicker}
           />
         ))}
-        {events.length === 0 && (
+        {visibleEvents.length === 0 && (
           <div className="world-empty inline-empty">
-            <p>Not available from current public sources. Atlasz is not substituting seeded world events.</p>
+            <p>
+              {events.length === 0
+                ? 'Not available from current public sources. Atlasz is not substituting seeded world events.'
+                : 'No events match this resolution filter.'}
+            </p>
           </div>
         )}
       </div>
@@ -69,6 +91,11 @@ function WorldEventCard({
         <span>{event.severity}</span>
         <time>{formatAge(event.timestamp, now)}</time>
         <ProvenanceBadge value={event.provenance} size="sm" />
+        {isEventResolvable(event) && (
+          <span className="event-linked-chip" title="Resolves to a curated seed entity (structural exposure available)">
+            linked
+          </span>
+        )}
         <button className={favorite ? 'favorite-button active' : 'favorite-button'} type="button" onClick={() => void onFavorite()}>
           <Star size={13} />
         </button>
@@ -98,6 +125,9 @@ function WorldEventCard({
           source trail
         </a>
       )}
+      {/* Live provenance (badge above) vs. curated structural exposure (below),
+          with the resolver explaining the bridge. Only shows when it resolves. */}
+      <EventResolutionPanel event={event} hideWhenUnresolved />
     </article>
   )
 }

@@ -34,6 +34,12 @@ describe('provider auto-discovery', () => {
       autoWired: true,
       provenance: 'public-unauthenticated',
     })
+    expect(snapshot.providers.find((provider) => provider.providerId === 'treasury_fiscal_public')).toMatchObject({
+      status: 'available',
+      autoWired: true,
+      provenance: 'official-api',
+      envKeysRequired: [],
+    })
     expect(snapshot.providers.find((provider) => provider.providerId === 'coinbase_public_ws')?.supportedSymbols).toContain('KAS-USD')
     expect(snapshot.providers.find((provider) => provider.providerId === 'binance_public_ws')?.supportedSymbols).toContain('KASUSDT')
     expect(snapshot.assetAvailability).toEqual(
@@ -58,11 +64,74 @@ describe('provider auto-discovery', () => {
       envKeysRequired: ['ATLASZ_FRED_API_KEY'],
       envKeysPresent: [],
     })
+    expect(snapshot.providers.find((provider) => provider.providerId === 'bea_public')).toMatchObject({
+      status: 'missing-config',
+      autoWired: false,
+      envKeysRequired: ['ATLASZ_BEA_API_KEY'],
+      envKeysPresent: [],
+    })
+    expect(snapshot.providers.find((provider) => provider.providerId === 'eia_energy_public')).toMatchObject({
+      status: 'missing-config',
+      autoWired: false,
+      envKeysRequired: ['ATLASZ_EIA_API_KEY'],
+      envKeysPresent: [],
+    })
     expect(snapshot.providers.find((provider) => provider.providerId === 'x_explore_placeholder')).toMatchObject({
       status: 'auth-gated',
       autoWired: false,
       provenance: 'auth-gated',
     })
+  })
+
+  it('health-checks configured FRED with the API key without storing the key in endpoint trails', async () => {
+    const fetchImpl = successfulDiscoveryFetch()
+    const { service } = makeService(fetchImpl, { ATLASZ_FRED_API_KEY: 'secret-fred-key' })
+
+    const snapshot = await service.discover()
+    const fred = snapshot.providers.find((provider) => provider.providerId === 'macro_calendar_fred')
+
+    expect(fred).toMatchObject({
+      status: 'available',
+      autoWired: true,
+      provenance: 'official-api',
+    })
+    expect(fred?.endpointsChecked[0]).toContain('/fred/series?series_id=CPIAUCSL')
+    expect(fred?.endpointsChecked[0]).not.toContain('secret-fred-key')
+    expect(fetchImpl.mock.calls.some(([url]) => String(url).includes('api_key=secret-fred-key'))).toBe(true)
+  })
+
+  it('health-checks configured BEA with UserID without storing the key in endpoint trails', async () => {
+    const fetchImpl = successfulDiscoveryFetch()
+    const { service } = makeService(fetchImpl, { ATLASZ_BEA_API_KEY: 'secret-bea-key' })
+
+    const snapshot = await service.discover()
+    const bea = snapshot.providers.find((provider) => provider.providerId === 'bea_public')
+
+    expect(bea).toMatchObject({
+      status: 'available',
+      autoWired: true,
+      provenance: 'official-api',
+    })
+    expect(bea?.endpointsChecked[0]).toContain('apps.bea.gov/api/data')
+    expect(bea?.endpointsChecked[0]).not.toContain('secret-bea-key')
+    expect(fetchImpl.mock.calls.some(([url]) => String(url).includes('UserID=secret-bea-key'))).toBe(true)
+  })
+
+  it('health-checks configured EIA with api_key without storing the key in endpoint trails', async () => {
+    const fetchImpl = successfulDiscoveryFetch()
+    const { service } = makeService(fetchImpl, { ATLASZ_EIA_API_KEY: 'secret-eia-key' })
+
+    const snapshot = await service.discover()
+    const eia = snapshot.providers.find((provider) => provider.providerId === 'eia_energy_public')
+
+    expect(eia).toMatchObject({
+      status: 'available',
+      autoWired: true,
+      provenance: 'official-api',
+    })
+    expect(eia?.endpointsChecked[0]).toContain('api.eia.gov/v2/seriesid/PET.RWTC.D')
+    expect(eia?.endpointsChecked[0]).not.toContain('secret-eia-key')
+    expect(fetchImpl.mock.calls.some(([url]) => String(url).includes('api_key=secret-eia-key'))).toBe(true)
   })
 
   it('fails closed and does not report KAS availability when public discovery endpoints fail', async () => {
@@ -101,7 +170,7 @@ describe('provider auto-discovery', () => {
   })
 })
 
-function makeService(fetchImpl: (url: string, init?: { signal?: AbortSignal }) => Promise<FetchResponse>) {
+function makeService(fetchImpl: (url: string, init?: { signal?: AbortSignal }) => Promise<FetchResponse>, env: NodeJS.ProcessEnv = {}) {
   const userDataPath = mkdtempSync(join(tmpdir(), 'atlasz-provider-discovery-'))
   tempDirs.push(userDataPath)
   const { persistence, savedSources, auditEvents } = makePersistence()
@@ -114,7 +183,7 @@ function makeService(fetchImpl: (url: string, init?: { signal?: AbortSignal }) =
       persistence,
       fetchImpl,
       now: () => now,
-      env: {},
+      env,
     }),
   }
 }

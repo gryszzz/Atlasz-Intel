@@ -26,6 +26,9 @@ release-artifacts
 .env.*
 !.env.example
 
+# Private local agent skills
+.claude/skills/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

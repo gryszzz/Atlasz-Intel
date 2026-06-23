@@ -2,24 +2,27 @@
  * Country + asset entity detail surfaces (lazy). Provenance badges preserved
  * on asset coverage. Presentational only.
  */
-import { Globe2, Star, Zap } from 'lucide-react'
+import { Globe2, Link2, Star, Zap } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
-import type { AssetIdentity, CountryIntelState, UserFavorite } from '../../worldIntel'
+import type { AssetIdentity, CountryIntelState, SecCompanyFiling, UserFavorite } from '../../worldIntel'
 import { WorldPanelHeader } from './WorldPanelHeader'
 
 export function WorldEntityDetailPanel({
   countries,
   assets,
+  secFilings,
   favoriteIds,
   onToggleFavorite,
   onSelectTicker,
 }: {
   countries: CountryIntelState[]
   assets: AssetIdentity[]
+  secFilings?: SecCompanyFiling[]
   favoriteIds: Set<string>
   onToggleFavorite: (kind: UserFavorite['kind'], targetId: string, label: string) => Promise<void>
   onSelectTicker: (ticker: string) => void
 }) {
+  const filingsByTicker = groupFilingsByTicker(secFilings ?? [])
   return (
     <>
       <article className="world-panel">
@@ -43,6 +46,7 @@ export function WorldEntityDetailPanel({
           {assets.map((asset) => (
             <AssetIdentityCard
               asset={asset}
+              latestFilings={filingsByTicker.get(asset.symbol) ?? []}
               favorite={favoriteIds.has(asset.symbol)}
               key={asset.symbol}
               onFavorite={() => onToggleFavorite('asset', asset.symbol, asset.symbol)}
@@ -109,11 +113,13 @@ function CountryIntelCard({
 
 function AssetIdentityCard({
   asset,
+  latestFilings,
   favorite,
   onFavorite,
   onSelectTicker,
 }: {
   asset: AssetIdentity
+  latestFilings: SecCompanyFiling[]
   favorite: boolean
   onFavorite: () => Promise<void>
   onSelectTicker: (ticker: string) => void
@@ -139,6 +145,73 @@ function AssetIdentityCard({
           <ProvenanceBadge key={item} value={item} size="sm" />
         ))}
       </div>
+      <SecFilingSourceTrail filings={latestFilings} />
     </article>
   )
+}
+
+function SecFilingSourceTrail({ filings }: { filings: SecCompanyFiling[] }) {
+  return (
+    <section className="sec-filing-trail">
+      <header>
+        <span>Latest SEC Filings</span>
+        <strong>{filings.length > 0 ? `${filings.length} official` : 'DATA_UNAVAILABLE'}</strong>
+      </header>
+      {filings.length > 0 ? (
+        <div className="sec-filing-stack">
+          {filings.slice(0, 3).map((filing) => (
+            <article key={filing.id} className="sec-filing-row">
+              <div>
+                <strong>{filing.formType}</strong>
+                <span>{filing.filingDate}</span>
+                <em>{formatFilingAge(filing.acceptedAt ?? filing.observedAt)} fresh</em>
+              </div>
+              <div className="sec-filing-meta">
+                <ProvenanceBadge value={filing.provenance} size="sm" />
+                <span>{filing.confidence}% confidence</span>
+              </div>
+              <a href={filing.sourceUrl} target="_blank" rel="noreferrer">
+                <Link2 size={12} />
+                SEC source trail
+              </a>
+              <small>
+                {filing.sourceName} · accession {filing.accessionNumber}
+              </small>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="sec-filing-empty">
+          <p>SEC filings unavailable for this entity until the EDGAR connector returns official records.</p>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function groupFilingsByTicker(filings: SecCompanyFiling[]): Map<string, SecCompanyFiling[]> {
+  const groups = new Map<string, SecCompanyFiling[]>()
+  for (const filing of filings) {
+    if (!filing.ticker) {
+      continue
+    }
+    const ticker = filing.ticker.toUpperCase()
+    groups.set(ticker, [...(groups.get(ticker) ?? []), filing])
+  }
+  for (const [ticker, items] of groups.entries()) {
+    groups.set(ticker, [...items].sort((left, right) => right.observedAt - left.observedAt))
+  }
+  return groups
+}
+
+function formatFilingAge(timestamp: number): string {
+  const minutes = Math.max(0, Math.round((Date.now() - timestamp) / 60_000))
+  if (minutes < 60) {
+    return `${minutes}m`
+  }
+  const hours = Math.round(minutes / 60)
+  if (hours < 48) {
+    return `${hours}h`
+  }
+  return `${Math.round(hours / 24)}d`
 }

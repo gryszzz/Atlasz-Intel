@@ -76,6 +76,23 @@ Additional compatibility labels such as `rss-public`, `official-api`,
 `public-disclosure`, `local-computed`, and `math-derived` are normalized into
 the same trust model. Verified is never used as a fallback.
 
+## Real Data Contract
+
+Atlasz is allowed to be incomplete. It is not allowed to fake intelligence.
+
+- No fake events.
+- No fake alerts.
+- No fake macro, fiscal, filing, GDP, labor, vulnerability, or OSS release data.
+- No token/API-key leakage into persisted source trails, UI endpoint lists, or
+  raw payload records.
+- Missing config, rate limits, malformed payloads, stale sources, and failed
+  requests fail closed as `DATA_UNAVAILABLE`, `missing-config`, `stale`,
+  `rate-limited`, `failed`, `auth-gated`, or `PRICE_UNAVAILABLE`.
+- Every rendered data card must show source identity, freshness/timestamp,
+  confidence, provenance, and a source trail when a URL exists.
+- Local computation can explain or rank evidence, but it cannot upgrade source
+  truth to verified.
+
 ## Architecture
 
 ```text
@@ -105,24 +122,136 @@ Core local systems:
 - **Adaptive parser/orchestrator** uses rolling latency clamps, narrative
   velocity modes, and source reliability penalties to fail closed under load.
 
-## Data Sources
+## Desktop UI Doctrine
 
-Default desktop mode is real-source-capable and fail-closed:
+Atlasz studies serious desktop shells, dashboards, graph tools, maps, command
+palettes, and design systems without blindly copying them. The UI reference
+catalog tracks Electron, Tauri, shadcn/ui, Radix, Tailwind, TanStack, ECharts,
+Xyflow, Cytoscape, deck.gl, Grafana, Superset, Lucide, cmdk, resizable panel
+systems, and related sources with full upstream URLs and adoption posture.
 
-- Broad market lookup: Yahoo public chart endpoint for stocks, ETFs, indices,
-  FX pairs, sectors, and commodity futures proxies.
-- Crypto lookup: CoinGecko public REST for mapped assets such as BTC, ETH, SOL,
-  LINK, AVAX, and KAS.
+Every major screen is judged against five analyst questions: what is happening,
+why it matters, what changed, what evidence supports it, and what to inspect
+next. See `docs/desktop-intelligence-ui-doctrine.md` and
+`src/desktopUiCorpus.ts`.
 
-- Public crypto websockets: CoinCap, Binance, Coinbase style feeds where wired.
-- Public world/event layer: GDELT/RSS/official-source normalization where enabled.
-- Public macro/OSINT adapters: no-auth sources only where configured.
-- Auth-gated equities placeholders: intentionally fail closed unless credentials
-  and connector support are added later.
+## Runtime Source Status
 
-Public data is useful, but it is not presented as verified. The UI marks it as
-`public-unauthenticated`, `delayed`, `stale-cache`, or `unavailable` and keeps
-source trails visible.
+The runtime stack is intentionally split from the broader research corpus.
+Runtime-wired means an adapter/provider path exists and is covered by validation;
+it does not mean every provider is enabled or reachable on every machine.
+
+Atlasz now exposes this contract in-product through the **Connector Dashboard**
+and **Exposure Dashboard**. Connector Dashboard lists configured/missing-key,
+unavailable, stale, rate-limited, failed, disabled, and not-wired states across
+the runtime stack. Exposure Dashboard answers which real events resolved today,
+which entities they activated, and which exposure paths are only
+`curated-reference` rather than live evidence.
+
+### Runtime-Wired Connectors
+
+| Domain | Connector | Source identity | Default boundary |
+| --- | --- | --- | --- |
+| Markets | Yahoo public chart, CoinGecko, public crypto websocket paths | Public no-auth market endpoints | Public unauthenticated/delayed/stale/unavailable; not a price oracle. |
+| World/news events | GDELT, RSS/official public-feed normalization | Public metadata/news feeds | Public unauthenticated or RSS-public; article metadata is not verification. |
+| Government fiscal | Treasury Fiscal Data | Official Treasury Fiscal Data API | No key; official-api; no simulated fiscal values. |
+| Labor/economic | BLS Public Data API | Official BLS API | No key required; optional key is never persisted. |
+| Weather/natural events | NOAA/NWS active alerts, USGS earthquakes | Official NOAA/NWS and USGS APIs | No key; official-api; no fake weather, no severity inflation, unresolved exposure stays explicit. |
+| Cyber/vulnerability | CISA KEV, NVD, GHSA, OSV, CISA advisories | Official/public defensive feeds | Defensive context only; no scanning, exploitation, or private target collection. |
+| OSS technology | GitHub Releases | Official GitHub REST API for configured public repos | Public release metadata; optional token only raises limits and is not persisted. |
+
+### Config-Required Runtime Connectors
+
+| Domain | Connector | Required config | Behavior without config |
+| --- | --- | --- | --- |
+| Company disclosure | SEC EDGAR company submissions | `ATLASZ_SEC_USER_AGENT` | `missing-config`; no simulated filings. |
+| Macro time series | FRED | `ATLASZ_FRED_API_KEY` | `missing-config`; no synthetic macro charts. |
+| National accounts/GDP | BEA NIPA GDP | `ATLASZ_BEA_API_KEY` | `missing-config`; no simulated GDP data. |
+| Energy/commodities | EIA official energy series | `ATLASZ_EIA_API_KEY` | `missing-config`; no synthetic energy data or commodity alerts. |
+| Patent intelligence | USPTO PatentsView | `ATLASZ_PATENTSVIEW_API_KEY` | `missing-config`; no fake patents or person enrichment. |
+| Public disclosures | Operator-provided disclosure JSON | `ATLASZ_POLITICIAN_DISCLOSURE_URL` | `missing-config`; no guessed disclosure feed. |
+| Local model parsing | Ollama | explicit local enable/config flags | Disabled/missing-config; output remains local-model/model-inferred. |
+
+### Corpus And Reference Material
+
+The OSINT, security, agent, UI, data-engineering, and systems-design corpora are
+study/reference material unless a source is promoted through the provider
+registry, adapter tests, source health, persistence, and UI evidence path.
+Catalog membership is not runtime capability.
+
+### Private Agent Skills
+
+Codex/Claude skills are operator-private agent instructions, not Atlasz app
+runtime. They should live in the user/agent skill system, not be required for a
+public GitHub checkout. Repo docs may describe engineering doctrine; private
+skills should not be treated as product code or installed source connectors.
+
+### Not-Yet-Implemented Future Sources
+
+EIA expansions beyond the first energy allowlist, BEA expansions beyond the
+first NIPA slice, BLS expansions, BEA regional data, BEA industry tables, BEA
+trade tables, BLS/BEA release calendars, OpenCTI, MISP, Yeti, UN Comtrade
+runtime ingestion, World Bank, IMF, patent-family expansion, aviation, shipping,
+geospatial, and premium news providers remain candidate/auth-gated/reference
+sources until an evidence-bearing vertical slice is implemented and validated.
+
+## Intelligence Source Atlas
+
+Atlasz is being trained as a cross-domain intelligence terminal, not only an
+OSINT shell. The source atlas now maps the major intelligence backbones:
+
+- financial markets and SEC filings
+- corporate intelligence and registry/source trails
+- economic data and central banks
+- semiconductor manufacturing and equipment
+- global trade, shipping, ports, and aviation
+- space, satellites, geospatial data, and Earth observation
+- energy, grid, and nuclear context
+- government/geopolitical releases
+- patent intelligence
+- AI research, academic research, models, and local model services
+- GitHub/developer attention and cryptocurrency intelligence
+- internet infrastructure, real-time news wires, weather, and natural events
+- OSINT governance, threat-intel platforms, and agent-framework references
+
+Each source is classified as runtime-wired, candidate public adapter,
+auth-gated, commercial-gated, local-service, reference-only, or blocked. See
+`docs/intelligence-source-atlas.md`, `docs/opsec-intelligence-doctrine.md`,
+`src/intelligenceSourceCatalog.ts`, and `src/intelligenceOpsec.ts`.
+
+## OSINT Engineering Posture
+
+Atlasz studies the broader OSINT ecosystem, but it does not auto-run broad recon
+tooling. Catalogs and frameworks such as Awesome OSINT, OSINT Framework,
+OpenOSINT, LangGraph, CrewAI, AG2, SpiderFoot, theHarvester, Maryam, Photon, and
+OpenCTI are mapped through an explicit governance layer before they can influence
+runtime behavior.
+
+- Broad catalogs are reference-only.
+- Agent frameworks are reference-only until there are typed tool policies and
+  human-visible audit points.
+- Recon, harvesting, crawler, and identity-enrichment tools are not default
+  Atlasz sources.
+- Threat-intel platforms such as OpenCTI are future auth-gated adapters only.
+- Public/official/local feeds remain the default path.
+
+See `docs/osint-engineering-manual.md` and `electron/osint/osintGovernance.ts`.
+
+## Agent Mastery Corpus
+
+Atlasz now carries a broader engineering corpus for lawful data acquisition,
+defensive security, OPSEC, systems design, parsing, indexing, knowledge graphs,
+reliability, decision analysis, intelligence tradecraft, history, economics,
+and engineering judgment. This includes the practical stack around Crawl4AI,
+Playwright, Trafilatura, Unstructured, Airbyte, Qdrant, Neo4j, OpenBB, CCXT,
+GeoPandas, and changedetection.io.
+
+The corpus is policy-labeled: study-only, allowed-library, manual-review,
+auth-required, commercial-terms, authorized-lab-only, or blocked. Active recon,
+malware handling, person enrichment, browser automation, and credentialed APIs
+are not silently promoted into runtime behavior. See
+`docs/agent-mastery-corpus.md`, `docs/analyst-mental-models-doctrine.md`,
+`docs/lawful-data-acquisition-doctrine.md`, and `src/agentMasteryCorpus.ts`.
 
 ## Microstructure Boundary
 
@@ -196,7 +325,9 @@ ATLASZ_ENABLE_PUBLIC_WORLD=1
 ATLASZ_ENABLE_COGNITIVE_PARSER=0
 ```
 
-With no `.env`, Atlasz uses local simulation/fallback paths and labels them.
+With no `.env`, Atlasz starts with safe defaults: no-auth public paths may run,
+key-gated providers show `missing-config`, unavailable data stays unavailable,
+and simulator/dev data must remain explicitly labeled.
 
 ## Validate
 

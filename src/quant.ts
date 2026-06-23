@@ -5,6 +5,7 @@
  * series/links are `local-computed`. Nothing here is ever `verified`.
  */
 import type { ProvenanceId } from './provenance'
+import type { BeaObservation, EiaEnergyRecord, FredMacroObservation, TreasuryFiscalRecord } from './worldIntel'
 
 export type QuantMetricStatus = 'normal' | 'elevated' | 'anomaly' | 'unavailable'
 
@@ -77,6 +78,10 @@ export type MacroQuantSnapshot = {
   regimeProvenance: ProvenanceId
   regimeExplanation: string
   metrics: MacroQuantMetric[]
+  fredObservations: FredMacroObservation[]
+  treasuryFiscalRecords: TreasuryFiscalRecord[]
+  beaObservations: BeaObservation[]
+  eiaEnergyRecords: EiaEnergyRecord[]
 }
 
 export type QuantTerminalSnapshot = {
@@ -94,6 +99,10 @@ export function emptyMacroSnapshot(reason: string, now = Date.now()): MacroQuant
     regimeProvenance: 'math-derived',
     regimeExplanation: reason,
     metrics: [],
+    fredObservations: [],
+    treasuryFiscalRecords: [],
+    beaObservations: [],
+    eiaEnergyRecords: [],
   }
 }
 

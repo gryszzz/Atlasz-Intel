@@ -43,14 +43,29 @@ export class QuantService {
     try {
       const inputs = await fetchMacroSeriesInputs(controller.signal)
       if (!inputs) {
-        return emptyMacroSnapshot('Macro series unavailable: configure ATLASZ_FRED_API_KEY (fail-closed).', now)
+        return {
+          ...emptyMacroSnapshot('Macro series unavailable: configure ATLASZ_FRED_API_KEY (fail-closed).', now),
+          fredObservations: this.persistence.listFredMacroObservations(undefined, 12),
+          treasuryFiscalRecords: this.persistence.listTreasuryFiscalRecords(undefined, 12),
+          beaObservations: this.persistence.listBeaObservations(undefined, 12),
+          eiaEnergyRecords: this.persistence.listEiaEnergyRecords(undefined, 12),
+        }
       }
-      return computeMacroSnapshot(inputs, now)
+      return {
+        ...computeMacroSnapshot(inputs, now),
+        fredObservations: this.persistence.listFredMacroObservations(undefined, 12),
+        treasuryFiscalRecords: this.persistence.listTreasuryFiscalRecords(undefined, 12),
+        beaObservations: this.persistence.listBeaObservations(undefined, 12),
+        eiaEnergyRecords: this.persistence.listEiaEnergyRecords(undefined, 12),
+      }
     } catch (error) {
-      return emptyMacroSnapshot(
-        `Macro series fetch failed: ${error instanceof Error ? error.message : String(error)}`,
-        now,
-      )
+      return {
+        ...emptyMacroSnapshot(`Macro series fetch failed: ${error instanceof Error ? error.message : String(error)}`, now),
+        fredObservations: this.persistence.listFredMacroObservations(undefined, 12),
+        treasuryFiscalRecords: this.persistence.listTreasuryFiscalRecords(undefined, 12),
+        beaObservations: this.persistence.listBeaObservations(undefined, 12),
+        eiaEnergyRecords: this.persistence.listEiaEnergyRecords(undefined, 12),
+      }
     } finally {
       clearTimeout(timer)
     }

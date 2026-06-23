@@ -95,6 +95,11 @@ export class WorldIntelService {
     const countries = this.mergeCountries(this.persistence.listCountryIntelState(), deriveCountryIntelState(worldEvents))
     const assets = this.mergeAssetIdentities(this.assetIdentity.list(), deriveAssetIdentitiesFromEvents(worldEvents))
     const sources = this.mergeSources(this.registry.snapshots(), this.persistence.listOsintSources())
+    const secFilings = this.persistence.listSecCompanyFilings(undefined, 120)
+    const fredObservations = this.persistence.listFredMacroObservations(undefined, 120)
+    const treasuryFiscalRecords = this.persistence.listTreasuryFiscalRecords(undefined, 120)
+    const beaObservations = this.persistence.listBeaObservations(undefined, 120)
+    const eiaEnergyRecords = this.persistence.listEiaEnergyRecords(undefined, 120)
 
     return deriveWorldIntelSnapshot({
       enabled: this.enabled,
@@ -108,6 +113,11 @@ export class WorldIntelService {
       worldEvents,
       countries,
       assetIdentities: assets,
+      secFilings,
+      fredObservations,
+      treasuryFiscalRecords,
+      beaObservations,
+      eiaEnergyRecords,
       favorites: this.persistence.listFavorites(),
       sources,
     })
@@ -120,6 +130,23 @@ export class WorldIntelService {
   }
 
   private persistWorldEvent(event: WorldIntelEvent): void {
+    if (event.secFiling) {
+      this.safePersist(() => this.persistence.saveSecCompanyFiling(event.secFiling as NonNullable<WorldIntelEvent['secFiling']>))
+    }
+    if (event.fredObservation) {
+      this.safePersist(() => this.persistence.saveFredMacroObservation(event.fredObservation as NonNullable<WorldIntelEvent['fredObservation']>))
+    }
+    if (event.treasuryFiscalRecord) {
+      this.safePersist(() =>
+        this.persistence.saveTreasuryFiscalRecord(event.treasuryFiscalRecord as NonNullable<WorldIntelEvent['treasuryFiscalRecord']>),
+      )
+    }
+    if (event.beaObservation) {
+      this.safePersist(() => this.persistence.saveBeaObservation(event.beaObservation as NonNullable<WorldIntelEvent['beaObservation']>))
+    }
+    if (event.eiaEnergyRecord) {
+      this.safePersist(() => this.persistence.saveEiaEnergyRecord(event.eiaEnergyRecord as NonNullable<WorldIntelEvent['eiaEnergyRecord']>))
+    }
     this.safePersist(() => this.persistence.saveWorldIntelEvent(event))
     this.safePersist(() => this.persistence.saveHeadline(toHeadlineRecord(event)))
     for (const asset of event.affectedAssets) {

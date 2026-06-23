@@ -166,10 +166,10 @@ export class ProviderDiscoveryService {
       status = authRequired ? 'missing-config' : 'unavailable'
     } else {
       try {
-        const endpoint = endpointFor(provider)
+        const endpoint = endpointFor(provider, this.env)
         if (endpoint) {
           endpointsChecked.push(endpoint)
-          await this.checkEndpoint(endpoint)
+          await this.checkEndpoint(endpoint, provider)
         }
         if (meta.symbolDiscovery === 'coinbase') {
           const endpoint = 'https://api.exchange.coinbase.com/products'
@@ -285,10 +285,22 @@ export class ProviderDiscoveryService {
     return async (url, init) => this.fetchImpl(url, init)
   }
 
-  private async checkEndpoint(url: string): Promise<void> {
-    const response = await this.fetchImpl(url, {
+  private async checkEndpoint(url: string, provider?: ProviderDefinition): Promise<void> {
+    const headers: Record<string, string> = { accept: 'application/json, application/xml, text/xml, */*' }
+    if (provider?.providerId === 'sec_edgar_public' && this.env.ATLASZ_SEC_USER_AGENT) {
+      headers['user-agent'] = this.env.ATLASZ_SEC_USER_AGENT
+    }
+    const checkedUrl =
+      provider?.providerId === 'macro_calendar_fred' && this.env.ATLASZ_FRED_API_KEY
+        ? withQueryParam(url, 'api_key', this.env.ATLASZ_FRED_API_KEY)
+        : provider?.providerId === 'bea_public' && this.env.ATLASZ_BEA_API_KEY
+          ? withQueryParam(url, 'UserID', this.env.ATLASZ_BEA_API_KEY)
+        : provider?.providerId === 'eia_energy_public' && this.env.ATLASZ_EIA_API_KEY
+          ? withQueryParam(url, 'api_key', this.env.ATLASZ_EIA_API_KEY)
+        : url
+    const response = await this.fetchImpl(checkedUrl, {
       signal: abortSignal(discoveryTimeoutMs),
-      headers: { accept: 'application/json, application/xml, text/xml, */*' },
+      headers,
     })
     if (!response.ok) {
       throw new Error(`${url} HTTP ${response.status}`)
@@ -346,6 +358,12 @@ export class ProviderDiscoveryService {
   }
 }
 
+function withQueryParam(url: string, key: string, value: string): string {
+  const parsed = new URL(url)
+  parsed.searchParams.set(key, value)
+  return parsed.toString()
+}
+
 function providerToSourceSnapshot(provider: ProviderCapability): OsintSourceSnapshot {
   return {
     sourceId: `provider:${provider.providerId}`,
@@ -383,9 +401,20 @@ function feedTypeToEndpoint(feedType: ProviderFeedType | undefined): OsintSource
   return 'rest'
 }
 
-function endpointFor(provider: ProviderDefinition): string | null {
+function endpointFor(provider: ProviderDefinition, env: NodeJS.ProcessEnv): string | null {
   if (provider.providerId === 'gdelt_doc_public') {
     return 'https://api.gdeltproject.org/api/v2/doc/doc?query=markets&mode=ArtList&format=json&maxrecords=1'
+  }
+  if (provider.providerId === 'macro_calendar_fred') {
+    const base = env.ATLASZ_FRED_BASE_URL || 'https://api.stlouisfed.org/fred'
+    return `${base.replace(/\/$/, '')}/series?series_id=CPIAUCSL&file_type=json`
+  }
+  if (provider.providerId === 'treasury_fiscal_public') {
+    return 'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/debt_to_penny?sort=-record_date&page[size]=1&fields=record_date,tot_pub_debt_out_amt'
+  }
+  if (provider.providerId === 'eia_energy_public') {
+    const base = env.ATLASZ_EIA_API_BASE || 'https://api.eia.gov/v2'
+    return `${base.replace(/\/$/, '')}/seriesid/PET.RWTC.D?length=1`
   }
   if (provider.providerId === 'public_market_rest' || provider.providerId === 'yahoo_finance_1m_public') {
     return 'https://query1.finance.yahoo.com/v8/finance/chart/SPY?range=1d&interval=1m'

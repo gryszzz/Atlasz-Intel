@@ -21,8 +21,12 @@ export type ProviderCapabilityMeta = {
 
 export const PROVIDER_CAPABILITY_META: Record<string, ProviderCapabilityMeta> = {
   gdelt_doc_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['news', 'geopolitics'], supportedRegions: ['global'] },
-  sec_edgar_public: { feedTypes: ['RSS'], envKeysRequired: ['ATLASZ_SEC_USER_AGENT'], supportedEventTypes: ['filing'], supportedRegions: ['US'] },
+  sec_edgar_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_SEC_USER_AGENT'], supportedEventTypes: ['filing'], supportedRegions: ['US'] },
   macro_calendar_fred: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_FRED_API_KEY'], supportedEventTypes: ['macro-event'], supportedRegions: ['US'] },
+  treasury_fiscal_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['fiscal-event'], supportedRegions: ['US'] },
+  bls_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['macro-event'], supportedRegions: ['US'] },
+  bea_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_BEA_API_KEY'], supportedEventTypes: ['macro-event'], supportedRegions: ['US'] },
+  eia_energy_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_EIA_API_KEY'], supportedEventTypes: ['energy-event'], supportedRegions: ['US'] },
   politician_disclosure_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_POLITICIAN_DISCLOSURE_URL'], supportedEventTypes: ['public-disclosure'], supportedRegions: ['US'] },
   rss_public_radar: { feedTypes: ['RSS'], envKeysRequired: [], supportedEventTypes: ['news'] },
   public_market_rest: { feedTypes: ['REST'], envKeysRequired: [], realtimeFeedType: 'REST' },
@@ -43,6 +47,13 @@ export const PROVIDER_CAPABILITY_META: Record<string, ProviderCapabilityMeta> = 
   github_trending_repos: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['tech', 'ai'], supportedRegions: ['global'] },
   usgs_significant_quakes: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['natural-disaster', 'seismic'], supportedRegions: ['global'] },
   noaa_alerts_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['weather-alert'], supportedRegions: ['US'] },
+  uspto_patentsview_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_PATENTSVIEW_API_KEY'], supportedEventTypes: ['patent'], supportedRegions: ['US'] },
+  cisa_kev_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['cyber-advisory'], supportedRegions: ['global'] },
+  nvd_cve_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['cyber-advisory'], supportedRegions: ['global'] },
+  github_ghsa_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['cyber-advisory'], supportedRegions: ['global'] },
+  osv_dev_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['cyber-advisory'], supportedRegions: ['global'] },
+  cisa_advisories_public: { feedTypes: ['RSS'], envKeysRequired: [], supportedEventTypes: ['cyber-advisory'], supportedRegions: ['global'] },
+  github_releases_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['open-source-release'], supportedRegions: ['global'] },
 }
 
 export type LocalServiceKind = 'sqlite' | 'ollama' | 'vector-memory'

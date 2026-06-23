@@ -166,6 +166,7 @@ export function WorldIntelligenceView({
           <WorldEntityDetailPanel
             countries={visibleCountries}
             assets={visibleAssets}
+            secFilings={snapshot.secFilings}
             favoriteIds={favoriteIds}
             onToggleFavorite={onToggleFavorite}
             onSelectTicker={onSelectTicker}

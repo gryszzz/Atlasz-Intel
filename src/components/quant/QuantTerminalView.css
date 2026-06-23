@@ -8,7 +8,13 @@
 .quant-macro-strip {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  grid-template-areas: "regime metrics refresh" "note metrics refresh";
+  grid-template-areas:
+    "regime metrics refresh"
+    "note metrics refresh"
+    "fred fred fred"
+    "treasury treasury treasury"
+    "bea bea bea"
+    "energy energy energy";
   gap: 10px 16px;
   align-items: center;
   border: 1px solid var(--line);
@@ -88,6 +94,516 @@
   color: var(--text);
   font-size: var(--fs-sm);
   padding: 9px 12px;
+}
+
+.fred-context-cards {
+  grid-area: fred;
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--line-soft);
+  padding-top: 10px;
+}
+
+.fred-context-cards > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fred-context-cards > header span,
+.fred-context-cards > header strong,
+.fred-context-card dt,
+.fred-context-card dd,
+.fred-context-card a,
+.fred-context-unavailable strong {
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+}
+
+.fred-context-cards > header span,
+.fred-context-card dt {
+  color: var(--muted);
+}
+
+.fred-context-cards > header strong {
+  color: var(--green);
+}
+
+.fred-context-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 8px;
+}
+
+.fred-context-card {
+  display: grid;
+  gap: 7px;
+  border: 1px solid rgba(94, 234, 212, 0.13);
+  border-radius: 7px;
+  background: #070b0a;
+  padding: 9px;
+}
+
+.fred-context-card header,
+.fred-value-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.fred-context-card header strong,
+.fred-value-row strong {
+  color: var(--white);
+  font-family: var(--mono);
+}
+
+.fred-context-card p {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--fs-sm);
+  line-height: 1.35;
+}
+
+.fred-value-row {
+  border: 1px solid rgba(148, 163, 184, 0.13);
+  border-radius: 6px;
+  background: #0b1110;
+  padding: 7px;
+}
+
+.fred-value-row span,
+.fred-context-card dd {
+  color: var(--faint);
+}
+
+.fred-context-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+}
+
+.fred-context-card dl div {
+  min-width: 0;
+}
+
+.fred-context-card dd {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.fred-context-card a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--green);
+  font-weight: 800;
+}
+
+.fred-context-unavailable {
+  border: 1px dashed rgba(148, 163, 184, 0.22);
+  border-radius: 7px;
+  padding: 12px;
+}
+
+.fred-context-unavailable strong {
+  color: var(--faint);
+}
+
+.fred-context-unavailable p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+.treasury-context-cards {
+  grid-area: treasury;
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--line-soft);
+  padding-top: 10px;
+}
+
+.treasury-context-cards > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.treasury-context-cards > header span,
+.treasury-context-cards > header strong,
+.treasury-context-card dt,
+.treasury-context-card dd,
+.treasury-context-card a,
+.treasury-context-unavailable strong {
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+}
+
+.treasury-context-cards > header span,
+.treasury-context-card dt {
+  color: var(--muted);
+}
+
+.treasury-context-cards > header strong {
+  color: var(--yellow);
+}
+
+.treasury-context-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 8px;
+}
+
+.treasury-context-card {
+  display: grid;
+  gap: 7px;
+  border: 1px solid rgba(245, 158, 11, 0.16);
+  border-radius: 7px;
+  background: #0b0c08;
+  padding: 9px;
+}
+
+.treasury-context-card header,
+.treasury-value-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.treasury-context-card header strong,
+.treasury-value-row strong {
+  color: var(--white);
+  font-family: var(--mono);
+}
+
+.treasury-context-card p {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--fs-sm);
+  line-height: 1.35;
+}
+
+.treasury-value-row {
+  border: 1px solid rgba(148, 163, 184, 0.13);
+  border-radius: 6px;
+  background: #11110b;
+  padding: 7px;
+}
+
+.treasury-value-row span,
+.treasury-context-card dd {
+  color: var(--faint);
+}
+
+.treasury-context-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+}
+
+.treasury-context-card dl div {
+  min-width: 0;
+}
+
+.treasury-context-card dd {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.treasury-source-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.treasury-context-card a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--yellow);
+  font-weight: 800;
+}
+
+.treasury-context-unavailable {
+  border: 1px dashed rgba(148, 163, 184, 0.22);
+  border-radius: 7px;
+  padding: 12px;
+}
+
+.treasury-context-unavailable strong {
+  color: var(--faint);
+}
+
+.treasury-context-unavailable p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+.bea-context-cards {
+  grid-area: bea;
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--line-soft);
+  padding-top: 10px;
+}
+
+.bea-context-cards > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.bea-context-cards > header span,
+.bea-context-cards > header strong,
+.bea-context-card dt,
+.bea-context-card dd,
+.bea-context-card a,
+.bea-context-unavailable strong {
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+}
+
+.bea-context-cards > header span,
+.bea-context-card dt {
+  color: var(--muted);
+}
+
+.bea-context-cards > header strong {
+  color: var(--green);
+}
+
+.bea-context-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 8px;
+}
+
+.bea-context-card {
+  display: grid;
+  gap: 7px;
+  border: 1px solid rgba(74, 222, 128, 0.16);
+  border-radius: 7px;
+  background: #08110b;
+  padding: 9px;
+}
+
+.bea-context-card header,
+.bea-value-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.bea-context-card header strong,
+.bea-value-row strong {
+  color: var(--white);
+  font-family: var(--mono);
+}
+
+.bea-context-card p {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--fs-sm);
+  line-height: 1.35;
+}
+
+.bea-value-row {
+  border: 1px solid rgba(148, 163, 184, 0.13);
+  border-radius: 6px;
+  background: #0b120d;
+  padding: 7px;
+}
+
+.bea-value-row span,
+.bea-context-card dd {
+  color: var(--faint);
+}
+
+.bea-context-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+}
+
+.bea-context-card dl div {
+  min-width: 0;
+}
+
+.bea-context-card dd {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.bea-source-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bea-context-card a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--green);
+  font-weight: 800;
+}
+
+.bea-context-unavailable {
+  border: 1px dashed rgba(148, 163, 184, 0.22);
+  border-radius: 7px;
+  padding: 12px;
+}
+
+.bea-context-unavailable strong {
+  color: var(--faint);
+}
+
+.bea-context-unavailable p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+.eia-context-cards {
+  grid-area: energy;
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--line-soft);
+  padding-top: 10px;
+}
+
+.eia-context-cards > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.eia-context-cards > header span,
+.eia-context-cards > header strong,
+.eia-context-card dt,
+.eia-context-card dd,
+.eia-context-card a,
+.eia-context-unavailable strong {
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+}
+
+.eia-context-cards > header span,
+.eia-context-card dt {
+  color: var(--muted);
+}
+
+.eia-context-cards > header strong {
+  color: #fbbf24;
+}
+
+.eia-context-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 8px;
+}
+
+.eia-context-card {
+  display: grid;
+  gap: 7px;
+  border: 1px solid rgba(251, 191, 36, 0.16);
+  border-radius: 7px;
+  background: #120f08;
+  padding: 9px;
+}
+
+.eia-context-card header,
+.eia-value-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.eia-context-card header strong,
+.eia-value-row strong {
+  color: var(--white);
+  font-family: var(--mono);
+}
+
+.eia-context-card p {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--fs-sm);
+  line-height: 1.35;
+}
+
+.eia-value-row {
+  border: 1px solid rgba(148, 163, 184, 0.13);
+  border-radius: 6px;
+  background: #141006;
+  padding: 7px;
+}
+
+.eia-value-row span,
+.eia-context-card dd {
+  color: var(--faint);
+}
+
+.eia-context-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+}
+
+.eia-context-card dl div {
+  min-width: 0;
+}
+
+.eia-context-card dd {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.eia-source-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.eia-context-card a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #fbbf24;
+  font-weight: 800;
+}
+
+.eia-context-unavailable {
+  border: 1px dashed rgba(148, 163, 184, 0.22);
+  border-radius: 7px;
+  padding: 12px;
+}
+
+.eia-context-unavailable strong {
+  color: var(--faint);
+}
+
+.eia-context-unavailable p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: var(--fs-sm);
 }
 
 /* ===== Body: asset rail + detail ===== */
@@ -247,5 +763,5 @@
 
 @media (max-width: 1100px) {
   .quant-body { grid-template-columns: 1fr; }
-  .quant-macro-strip { grid-template-columns: 1fr; grid-template-areas: "regime" "note" "metrics" "refresh"; }
+  .quant-macro-strip { grid-template-columns: 1fr; grid-template-areas: "regime" "note" "metrics" "fred" "refresh"; }
 }

@@ -65,6 +65,39 @@ export type WorldIntelEvent = {
   rawPayloadHash: string
   dedupeHash: string
   weatherAlert?: WeatherAlert
+  secFiling?: SecCompanyFiling
+  fredObservation?: FredMacroObservation
+  treasuryFiscalRecord?: TreasuryFiscalRecord
+  beaObservation?: BeaObservation
+  blsObservation?: BlsObservation
+  eiaEnergyRecord?: EiaEnergyRecord
+  kevVulnerability?: KevVulnerability
+  nvdCve?: NvdCve
+  ghsaAdvisory?: GhsaAdvisory
+  osvVulnerability?: OsvVulnerability
+  cisaAdvisory?: CisaAdvisory
+  githubRelease?: GithubRelease
+  earthquakeEvent?: EarthquakeEvent
+  patentRecord?: PatentRecord
+}
+
+export type PatentRecord = {
+  id: string
+  patentId: string
+  title: string
+  abstract: string
+  patentDate: string
+  grantTimestamp: number
+  assignees: string[]
+  cpcCodes: string[]
+  sourceUrl: string
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
 }
 
 export type WeatherAlert = {
@@ -89,6 +122,342 @@ export type WeatherAlert = {
   senderName: string
   sourceUrl: string
   sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+export type SecCompanyFiling = {
+  id: string
+  cik: string
+  companyName: string
+  ticker?: string
+  formType: string
+  accessionNumber: string
+  filingDate: string
+  reportDate?: string
+  acceptedAt?: number
+  observedAt: number
+  primaryDocument?: string
+  sourceUrl: string
+  sourceJsonUrl: string
+  sourceName: string
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+export type FredMacroObservation = {
+  id: string
+  seriesId: string
+  title: string
+  units: string
+  frequency: string
+  seasonalAdjustment: string
+  observationDate: string
+  observationTimestamp: number
+  value: number
+  rawValue: string
+  sourceUrl: string
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+export type TreasuryFiscalRecord = {
+  id: string
+  datasetId: string
+  datasetName: string
+  tableId: string
+  tableName: string
+  recordDate: string
+  recordTimestamp: number
+  metricName: string
+  metricValue: number
+  rawValue: string
+  units: string
+  sourceUrl: string
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+export type BeaObservation = {
+  id: string
+  datasetName: string
+  tableName: string
+  lineNumber: string
+  lineDescription: string
+  seriesCode?: string
+  timePeriod: string
+  observationDate: string
+  observationTimestamp: number
+  metricName: string
+  metricValue: number
+  rawValue: string
+  units: string
+  unitMultiplier?: string
+  sourceUrl: string
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+export type KevVulnerability = {
+  id: string
+  cveId: string
+  vendorProject: string
+  product: string
+  vulnerabilityName: string
+  dateAdded: string
+  dateAddedTimestamp: number
+  shortDescription: string
+  requiredAction: string
+  dueDate?: string
+  knownRansomwareCampaignUse: boolean
+  cwes: string[]
+  catalogVersion: string
+  sourceUrl: string
+  sourceCatalogUrl: string
+  sourceName: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+export type NvdCvssMetric = {
+  version: string
+  vectorString?: string
+  baseScore: number
+  baseSeverity: string
+  source?: string
+  type?: string
+}
+
+export type NvdReference = {
+  url: string
+  source?: string
+  tags: string[]
+}
+
+export type NvdCve = {
+  id: string
+  cveId: string
+  sourceIdentifier: string
+  published: string
+  publishedTimestamp: number
+  lastModified: string
+  lastModifiedTimestamp: number
+  vulnStatus: string
+  description: string
+  cvss?: NvdCvssMetric
+  cweIds: string[]
+  vendorProducts: string[]
+  references: NvdReference[]
+  sourceUrl: string
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  inKnownExploitedCatalog: boolean
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+export type GhsaPackageRef = {
+  ecosystem: string
+  name: string
+  vulnerableRange?: string
+  firstPatched?: string
+}
+
+export type GhsaAdvisory = {
+  id: string
+  ghsaId: string
+  cveId?: string
+  type: string
+  summary: string
+  severity: string
+  packages: GhsaPackageRef[]
+  cweIds: string[]
+  references: string[]
+  publishedAt: string
+  publishedTimestamp: number
+  updatedAt: string
+  updatedTimestamp: number
+  withdrawnAt?: string
+  sourceUrl: string
+  sourceApiUrl: string
+  sourceIdentifier: string
+  sourceName: string
+  retrievedAt: number
+  inKnownExploitedCatalog: boolean
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+export type OsvAffectedPackage = {
+  ecosystem: string
+  name: string
+  fixed?: string
+}
+
+export type OsvVulnerability = {
+  id: string
+  osvId: string
+  aliases: string[]
+  relatedCveIds: string[]
+  relatedGhsaIds: string[]
+  summary: string
+  details: string
+  published: string
+  publishedTimestamp?: number
+  modified: string
+  modifiedTimestamp?: number
+  observedTimestamp: number
+  severity: string
+  ecosystem?: string
+  affectedPackages: OsvAffectedPackage[]
+  references: string[]
+  sourceUrl: string
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+export type CisaAdvisory = {
+  id: string
+  advisoryId: string
+  title: string
+  summary: string
+  relatedCveIds: string[]
+  vendors: string[]
+  products: string[]
+  references: string[]
+  published: string
+  publishedTimestamp?: number
+  updated: string
+  updatedTimestamp?: number
+  observedTimestamp: number
+  sourceUrl: string
+  sourceName: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+export type GithubRelease = {
+  id: string
+  repoFullName: string
+  releaseId: string
+  tagName: string
+  name: string
+  isPrerelease: boolean
+  publishedAt: string
+  publishedTimestamp?: number
+  createdAt: string
+  createdTimestamp?: number
+  observedTimestamp: number
+  sourceUrl: string
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+export type BlsObservation = {
+  id: string
+  seriesId: string
+  title: string
+  period: string
+  periodName: string
+  year: string
+  observationDate: string
+  observationTimestamp: number
+  value: number
+  rawValue: string
+  sourceUrl: string
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+export type EiaEnergyRecord = {
+  id: string
+  seriesId: string
+  title: string
+  energyCategory: string
+  commodity: string
+  region?: string
+  countryCode?: string
+  period: string
+  observationDate: string
+  observationTimestamp: number
+  value: number
+  rawValue: string
+  units: string
+  sourceUrl: string
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+export type EarthquakeEvent = {
+  id: string
+  eventId: string
+  magnitude: number
+  place: string
+  title: string
+  time: number
+  depthKm?: number
+  lat: number
+  lon: number
+  region?: string
+  countryCode?: string
+  alert?: string
+  tsunami: boolean
+  significance?: number
+  status: string
+  sourceUrl: string
+  sourceFeedUrl: string
   sourceName: string
   retrievedAt: number
   provenance: ProvenanceId
@@ -187,6 +556,11 @@ export type WorldIntelConnectorSnapshot = {
   worldEvents: WorldIntelEvent[]
   countries: CountryIntelState[]
   assetIdentities: AssetIdentity[]
+  secFilings: SecCompanyFiling[]
+  fredObservations: FredMacroObservation[]
+  treasuryFiscalRecords: TreasuryFiscalRecord[]
+  beaObservations: BeaObservation[]
+  eiaEnergyRecords: EiaEnergyRecord[]
   favorites: UserFavorite[]
   sources: OsintSourceSnapshot[]
 }
@@ -320,6 +694,11 @@ export function buildSeedWorldIntelSnapshot(): WorldIntelSnapshot {
     worldEvents: [],
     countries: [],
     assetIdentities: [],
+    secFilings: [],
+    fredObservations: [],
+    treasuryFiscalRecords: [],
+    beaObservations: [],
+    eiaEnergyRecords: [],
     favorites: [],
     sources: [],
     events: [],

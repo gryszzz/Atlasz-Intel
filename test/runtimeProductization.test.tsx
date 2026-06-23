@@ -1,0 +1,155 @@
+import { describe, expect, it } from 'vitest'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { ConnectorDashboardPanel } from '../src/components/intel/ConnectorDashboardPanel'
+import { ExposureDashboardPanel } from '../src/components/intel/ExposureDashboardPanel'
+import { buildConnectorAudit, summarizeExposure } from '../src/engine/runtimeAudit'
+import type { Severity } from '../src/data/intel'
+import type { OsintSourceSnapshot, WorldIntelEvent } from '../src/worldIntel'
+
+const NOW = Date.parse('2026-06-23T12:00:00Z')
+
+function source(partial: Partial<OsintSourceSnapshot> & { sourceId: string }): OsintSourceSnapshot {
+  return {
+    sourceId: partial.sourceId,
+    sourceName: partial.sourceName ?? partial.sourceId,
+    sourceType: partial.sourceType ?? 'official-api',
+    endpointType: partial.endpointType ?? 'rest',
+    endpoint: partial.endpoint ?? `https://example.com/${partial.sourceId}`,
+    pollIntervalMs: partial.pollIntervalMs ?? 60_000,
+    rateLimitMs: partial.rateLimitMs ?? 0,
+    timeoutMs: partial.timeoutMs ?? 5_000,
+    enabled: partial.enabled ?? true,
+    status: partial.status ?? 'online',
+    provenance: partial.provenance ?? 'official-api',
+    lastSuccessAt: partial.lastSuccessAt ?? NOW - 10 * 60_000,
+    lastErrorAt: partial.lastErrorAt,
+    lastError: partial.lastError,
+    itemCount: partial.itemCount ?? 0,
+    sourceReliabilityScore: partial.sourceReliabilityScore ?? 1,
+    legalSafetyNote: partial.legalSafetyNote ?? 'test source',
+    parserAdapter: partial.parserAdapter ?? 'test',
+    category: partial.category,
+    authType: partial.authType,
+    configured: partial.configured,
+    configHint: partial.configHint,
+  }
+}
+
+function event(partial: Partial<WorldIntelEvent> & { sourceId: string }): WorldIntelEvent {
+  return {
+    id: partial.id ?? `evt-${partial.sourceId}`,
+    timestamp: partial.timestamp ?? NOW - 30 * 60_000,
+    title: partial.title ?? 'Source-backed event',
+    summary: '',
+    countryCodes: partial.countryCodes ?? [],
+    region: partial.region ?? 'global',
+    category: partial.category ?? 'other',
+    severity: (partial.severity ?? 'elevated') as Severity,
+    confidence: partial.confidence ?? 96,
+    sourceId: partial.sourceId,
+    sourceUrl: partial.sourceUrl ?? `https://example.com/source/${partial.sourceId}`,
+    provenance: partial.provenance ?? 'official-api',
+    affectedAssets: partial.affectedAssets ?? [],
+    affectedSectors: partial.affectedSectors ?? [],
+    affectedCommodities: partial.affectedCommodities ?? [],
+    affectedCurrencies: [],
+    extractedEntities: [],
+    narrativeTags: [],
+    rawPayloadHash: partial.rawPayloadHash ?? 'a'.repeat(64),
+    dedupeHash: partial.dedupeHash ?? `dedupe-${partial.sourceId}`,
+    secFiling: partial.secFiling,
+    eiaEnergyRecord: partial.eiaEnergyRecord,
+    githubRelease: partial.githubRelease,
+  } as WorldIntelEvent
+}
+
+describe('runtime productization audit', () => {
+  it('separates configured sources, missing keys, stale/fail states, and not-wired Comtrade', () => {
+    const rows = buildConnectorAudit({
+      now: NOW,
+      sources: [
+        source({ sourceId: 'sec_edgar_public', itemCount: 2, provenance: 'public-disclosure' }),
+        source({
+          sourceId: 'eia_energy_public',
+          status: 'idle',
+          configured: false,
+          authType: 'api-key',
+          configHint: 'Missing ATLASZ_EIA_API_KEY',
+        }),
+        source({
+          sourceId: 'nvd_cve_public',
+          status: 'online',
+          lastSuccessAt: NOW - 4 * 24 * 60 * 60 * 1000,
+          pollIntervalMs: 60_000,
+        }),
+        source({ sourceId: 'cisa_kev_public', status: 'rate-limited', lastError: '429 Too Many Requests' }),
+      ],
+      events: [event({ sourceId: 'sec_edgar_public' })],
+    })
+
+    expect(rows.find((row) => row.id === 'sec-edgar')?.status).toBe('online')
+    expect(rows.find((row) => row.id === 'sec-edgar')?.recordCount).toBe(2)
+    expect(rows.find((row) => row.id === 'eia')?.status).toBe('missing-key')
+    expect(rows.find((row) => row.id === 'nvd')?.status).toBe('stale')
+    expect(rows.find((row) => row.id === 'cisa-kev')?.status).toBe('rate-limited')
+    expect(rows.find((row) => row.id === 'un-comtrade')?.status).toBe('not-wired')
+  })
+
+  it('summarizes today resolved exposure without upgrading curated-reference links to evidence', () => {
+    const resolved = event({
+      sourceId: 'sec_edgar_public',
+      title: 'NVIDIA 8-K',
+      affectedAssets: ['NVDA'],
+      secFiling: {
+        cik: '1045810',
+        companyName: 'NVIDIA Corporation',
+        accessionNumber: '0001045810-26-000001',
+        formType: '8-K',
+        ticker: 'NVDA',
+      } as WorldIntelEvent['secFiling'],
+    })
+    const unresolved = event({ sourceId: 'noaa_alerts_public', title: 'Weather alert', countryCodes: ['US'] })
+
+    const summary = summarizeExposure({ events: [resolved, unresolved], now: NOW })
+    expect(summary.consideredEventCount).toBe(2)
+    expect(summary.resolvedEventCount).toBe(1)
+    expect(summary.unresolvedEventCount).toBe(1)
+    expect(summary.curatedReferenceOnlyCount).toBe(1)
+    expect(summary.recentResolvedEvents[0]?.exposureTrust).toBe('curated-reference')
+    expect(summary.recentResolvedEvents[0]?.resolvedEntityIds).toContain('company:nvidia')
+  })
+
+  it('renders the connector dashboard with official source links and explicit not-wired state', () => {
+    const markup = renderToStaticMarkup(
+      createElement(ConnectorDashboardPanel, {
+        sources: [source({ sourceId: 'sec_edgar_public', itemCount: 1, provenance: 'public-disclosure' })],
+        events: [event({ sourceId: 'sec_edgar_public' })],
+        now: NOW,
+      }),
+    )
+    expect(markup).toContain('Connector Dashboard')
+    expect(markup).toContain('SEC EDGAR')
+    expect(markup).toContain('official source')
+    expect(markup).toContain('UN Comtrade')
+    expect(markup).toContain('not wired')
+    expect(markup).not.toContain('verified live')
+  })
+
+  it('renders the exposure dashboard with resolved/unresolved counts and honesty labels', () => {
+    const markup = renderToStaticMarkup(
+      createElement(ExposureDashboardPanel, {
+        events: [
+          event({ sourceId: 'sec_edgar_public', affectedAssets: ['NVDA'] }),
+          event({ sourceId: 'noaa_alerts_public', countryCodes: ['US'] }),
+        ],
+        now: NOW,
+      }),
+    )
+    expect(markup).toContain('Resolved Today')
+    expect(markup).toContain('resolver-rule')
+    expect(markup).toContain('curated-reference')
+    expect(markup).toContain('events considered')
+    expect(markup).toContain('unresolved')
+  })
+})

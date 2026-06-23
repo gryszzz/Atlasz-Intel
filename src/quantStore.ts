@@ -20,6 +20,10 @@ function unavailableTerminalSnapshot(reason: string): QuantTerminalSnapshot {
       regimeProvenance: 'math-derived',
       regimeExplanation: reason,
       metrics: [],
+      fredObservations: [],
+      treasuryFiscalRecords: [],
+      beaObservations: [],
+      eiaEnergyRecords: [],
     },
   }
 }

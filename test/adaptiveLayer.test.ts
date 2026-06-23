@@ -41,7 +41,7 @@ describe('adaptive cognitive parser', () => {
       requestTimeoutMs: 100,
       minTimeoutMs: 50,
       maxTimeoutMs: 200,
-      timeoutScale: 1.5,
+      timeoutScale: 0.1,
     })
     stubOllamaSequence([{ extraction: baseExtraction, delayMs: 5 }])
 

@@ -255,8 +255,20 @@
   grid-column: span 8;
 }
 
+.command-grid .wct-panel {
+  grid-column: span 12;
+}
+
 .command-grid .command-status-panel {
   grid-column: span 12;
+}
+
+.command-grid .connector-dashboard-panel {
+  grid-column: span 12;
+}
+
+.command-grid .exposure-dashboard-panel {
+  grid-column: span 8;
 }
 
 .command-grid .pulse-panel {
@@ -2072,6 +2084,10 @@
 
 .graph-grid {
   grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+.graph-grid .evidence-graph-panel {
+  grid-column: span 12;
 }
 
 .graph-panel {

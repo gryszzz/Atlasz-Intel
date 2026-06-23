@@ -10,6 +10,18 @@ import { fetchGdeltEvents } from './adapters/gdeltAdapter'
 import { fetchSecFilings, readSecConfig } from './adapters/secEdgarAdapter'
 import { fetchMacroCalendar, readMacroConfig } from './adapters/macroCalendarAdapter'
 import { fetchNoaaAlerts, readNoaaAlertConfig } from './adapters/noaaAlertAdapter'
+import { fetchUsptoPatents, readUsptoPatentConfig } from './adapters/usptoPatentAdapter'
+import { fetchTreasuryFiscalData, readTreasuryFiscalConfig } from './adapters/treasuryFiscalAdapter'
+import { fetchBlsObservations, readBlsConfig } from './adapters/blsAdapter'
+import { fetchBeaObservations, readBeaConfig } from './adapters/beaAdapter'
+import { fetchEiaEnergyRecords, readEiaEnergyConfig } from './adapters/eiaEnergyAdapter'
+import { fetchUsgsEarthquakes, readUsgsQuakeConfig } from './adapters/usgsQuakeAdapter'
+import { fetchKevVulnerabilities, readKevConfig } from './adapters/cisaKevAdapter'
+import { fetchNvdCves, readNvdConfig } from './adapters/nvdCveAdapter'
+import { fetchGithubAdvisories, readGithubAdvisoryConfig } from './adapters/githubAdvisoryAdapter'
+import { fetchOsvVulnerabilities, readOsvConfig } from './adapters/osvAdapter'
+import { fetchCisaAdvisories, readCisaAdvisoryConfig } from './adapters/cisaAdvisoryAdapter'
+import { fetchGithubReleases, readGithubReleaseConfig } from './adapters/githubReleaseAdapter'
 import { fetchPoliticianDisclosures, readPoliticianConfig } from './adapters/politicianTradeAdapter'
 import { fetchRssFeed } from './adapters/rssAdapter'
 import { fetchCustomJson } from './adapters/customJsonAdapter'
@@ -29,6 +41,18 @@ export const KNOWN_ADAPTERS = [
   'sec-edgar',
   'fred-macro',
   'noaa-alerts',
+  'treasury-fiscal',
+  'bls',
+  'bea',
+  'eia-energy',
+  'usgs-quakes',
+  'uspto-patents',
+  'cisa-kev',
+  'nvd-cve',
+  'github-ghsa',
+  'osv-dev',
+  'cisa-advisories',
+  'github-releases',
   'public-disclosure-json',
   'rss',
   'custom-json',
@@ -51,6 +75,54 @@ export function resolveAdapter(provider: ProviderDefinition, env: NodeJS.Process
     case 'noaa-alerts': {
       const config = readNoaaAlertConfig(env)
       return { fetcher: config ? (signal) => fetchNoaaAlerts(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'treasury-fiscal': {
+      const config = readTreasuryFiscalConfig(env)
+      return { fetcher: (signal) => fetchTreasuryFiscalData(signal, config), configured: true, managed: false }
+    }
+    case 'bls': {
+      const config = readBlsConfig(env)
+      return { fetcher: config ? (signal) => fetchBlsObservations(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'bea': {
+      const config = readBeaConfig(env)
+      return { fetcher: config ? (signal) => fetchBeaObservations(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'eia-energy': {
+      const config = readEiaEnergyConfig(env)
+      return { fetcher: config ? (signal) => fetchEiaEnergyRecords(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'usgs-quakes': {
+      const config = readUsgsQuakeConfig(env)
+      return { fetcher: config ? (signal) => fetchUsgsEarthquakes(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'uspto-patents': {
+      const config = readUsptoPatentConfig(env)
+      return { fetcher: config ? (signal) => fetchUsptoPatents(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'cisa-kev': {
+      const config = readKevConfig(env)
+      return { fetcher: config ? (signal) => fetchKevVulnerabilities(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'nvd-cve': {
+      const config = readNvdConfig(env)
+      return { fetcher: config ? (signal) => fetchNvdCves(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'github-ghsa': {
+      const config = readGithubAdvisoryConfig(env)
+      return { fetcher: config ? (signal) => fetchGithubAdvisories(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'osv-dev': {
+      const config = readOsvConfig(env)
+      return { fetcher: config ? (signal) => fetchOsvVulnerabilities(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'cisa-advisories': {
+      const config = readCisaAdvisoryConfig(env)
+      return { fetcher: config ? (signal) => fetchCisaAdvisories(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'github-releases': {
+      const config = readGithubReleaseConfig(env)
+      return { fetcher: config ? (signal) => fetchGithubReleases(signal, config) : undefined, configured: config !== null, managed: false }
     }
     case 'public-disclosure-json': {
       const config = readPoliticianConfig(env)

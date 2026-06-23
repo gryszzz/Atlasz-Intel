@@ -17,8 +17,13 @@ import { join } from 'node:path'
 import type { LiveDataFrame, LiveSignalEvent, PersistenceMode } from '../src/realtime'
 import type {
   AssetIdentity,
+  BeaObservation,
   CountryIntelState,
+  EiaEnergyRecord,
+  FredMacroObservation,
   OsintSourceSnapshot,
+  SecCompanyFiling,
+  TreasuryFiscalRecord,
   UserFavorite,
   WorldIntelEvent,
 } from '../src/worldIntel'
@@ -157,6 +162,16 @@ export interface IntelPersistence {
   saveOsintSource(record: OsintSourceSnapshot): void
   listWorldIntelEvents(limit?: number): WorldIntelEvent[]
   saveWorldIntelEvent(record: WorldIntelEvent): void
+  listSecCompanyFilings(symbol?: string, limit?: number): SecCompanyFiling[]
+  saveSecCompanyFiling(record: SecCompanyFiling): void
+  listFredMacroObservations(seriesId?: string, limit?: number): FredMacroObservation[]
+  saveFredMacroObservation(record: FredMacroObservation): void
+  listTreasuryFiscalRecords(datasetId?: string, limit?: number): TreasuryFiscalRecord[]
+  saveTreasuryFiscalRecord(record: TreasuryFiscalRecord): void
+  listBeaObservations(seriesKey?: string, limit?: number): BeaObservation[]
+  saveBeaObservation(record: BeaObservation): void
+  listEiaEnergyRecords(seriesId?: string, limit?: number): EiaEnergyRecord[]
+  saveEiaEnergyRecord(record: EiaEnergyRecord): void
   listWorldIntelEmbeddings(limit?: number): WorldIntelEmbeddingRecord[]
   saveWorldIntelEmbedding(record: WorldIntelEmbeddingRecord): void
   listUserTheses(limit?: number): UserThesis[]
@@ -326,6 +341,114 @@ CREATE TABLE IF NOT EXISTS world_intel_events (
   dedupe_hash TEXT NOT NULL,
   sub_records_json TEXT
 );
+CREATE TABLE IF NOT EXISTS sec_company_filings (
+  id TEXT PRIMARY KEY,
+  cik TEXT NOT NULL,
+  company_name TEXT NOT NULL,
+  ticker TEXT,
+  form_type TEXT NOT NULL,
+  accession_number TEXT NOT NULL,
+  filing_date TEXT NOT NULL,
+  report_date TEXT,
+  accepted_at INTEGER,
+  observed_at INTEGER NOT NULL,
+  primary_document TEXT,
+  source_url TEXT NOT NULL,
+  source_json_url TEXT NOT NULL,
+  source_name TEXT NOT NULL,
+  provenance TEXT NOT NULL,
+  confidence INTEGER NOT NULL,
+  raw_payload_hash TEXT NOT NULL,
+  raw_payload_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS fred_macro_observations (
+  id TEXT PRIMARY KEY,
+  series_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  units TEXT NOT NULL,
+  frequency TEXT NOT NULL,
+  seasonal_adjustment TEXT NOT NULL,
+  observation_date TEXT NOT NULL,
+  observation_timestamp INTEGER NOT NULL,
+  value REAL NOT NULL,
+  raw_value TEXT NOT NULL,
+  source_url TEXT NOT NULL,
+  source_api_url TEXT NOT NULL,
+  source_name TEXT NOT NULL,
+  retrieved_at INTEGER NOT NULL,
+  provenance TEXT NOT NULL,
+  confidence INTEGER NOT NULL,
+  raw_payload_hash TEXT NOT NULL,
+  raw_payload_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS treasury_fiscal_records (
+  id TEXT PRIMARY KEY,
+  dataset_id TEXT NOT NULL,
+  dataset_name TEXT NOT NULL,
+  table_id TEXT NOT NULL,
+  table_name TEXT NOT NULL,
+  record_date TEXT NOT NULL,
+  record_timestamp INTEGER NOT NULL,
+  metric_name TEXT NOT NULL,
+  metric_value REAL NOT NULL,
+  raw_value TEXT NOT NULL,
+  units TEXT NOT NULL,
+  source_url TEXT NOT NULL,
+  source_api_url TEXT NOT NULL,
+  source_name TEXT NOT NULL,
+  retrieved_at INTEGER NOT NULL,
+  provenance TEXT NOT NULL,
+  confidence INTEGER NOT NULL,
+  raw_payload_hash TEXT NOT NULL,
+  raw_payload_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS bea_observations (
+  id TEXT PRIMARY KEY,
+  dataset_name TEXT NOT NULL,
+  table_name TEXT NOT NULL,
+  line_number TEXT NOT NULL,
+  line_description TEXT NOT NULL,
+  series_code TEXT,
+  time_period TEXT NOT NULL,
+  observation_date TEXT NOT NULL,
+  observation_timestamp INTEGER NOT NULL,
+  metric_name TEXT NOT NULL,
+  metric_value REAL NOT NULL,
+  raw_value TEXT NOT NULL,
+  units TEXT NOT NULL,
+  unit_multiplier TEXT,
+  source_url TEXT NOT NULL,
+  source_api_url TEXT NOT NULL,
+  source_name TEXT NOT NULL,
+  retrieved_at INTEGER NOT NULL,
+  provenance TEXT NOT NULL,
+  confidence INTEGER NOT NULL,
+  raw_payload_hash TEXT NOT NULL,
+  raw_payload_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS eia_energy_records (
+  id TEXT PRIMARY KEY,
+  series_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  energy_category TEXT NOT NULL,
+  commodity TEXT NOT NULL,
+  region TEXT,
+  country_code TEXT,
+  period TEXT NOT NULL,
+  observation_date TEXT NOT NULL,
+  observation_timestamp INTEGER NOT NULL,
+  value REAL NOT NULL,
+  raw_value TEXT NOT NULL,
+  units TEXT NOT NULL,
+  source_url TEXT NOT NULL,
+  source_api_url TEXT NOT NULL,
+  source_name TEXT NOT NULL,
+  retrieved_at INTEGER NOT NULL,
+  provenance TEXT NOT NULL,
+  confidence INTEGER NOT NULL,
+  raw_payload_hash TEXT NOT NULL,
+  raw_payload_json TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS user_theses (
   id TEXT PRIMARY KEY,
   timestamp INTEGER NOT NULL,
@@ -405,6 +528,18 @@ CREATE INDEX IF NOT EXISTS idx_audit_created ON source_audit_log(created_at);
 CREATE INDEX IF NOT EXISTS idx_realtime_frames_window ON realtime_frames(emitted_at);
 CREATE INDEX IF NOT EXISTS idx_world_events_time ON world_intel_events(timestamp);
 CREATE INDEX IF NOT EXISTS idx_world_events_source ON world_intel_events(source_id, timestamp);
+CREATE INDEX IF NOT EXISTS idx_sec_filings_ticker_time ON sec_company_filings(ticker, observed_at);
+CREATE INDEX IF NOT EXISTS idx_sec_filings_cik_time ON sec_company_filings(cik, observed_at);
+CREATE INDEX IF NOT EXISTS idx_sec_filings_form_time ON sec_company_filings(form_type, observed_at);
+CREATE INDEX IF NOT EXISTS idx_fred_observations_series_time ON fred_macro_observations(series_id, observation_timestamp);
+CREATE INDEX IF NOT EXISTS idx_fred_observations_retrieved ON fred_macro_observations(retrieved_at);
+CREATE INDEX IF NOT EXISTS idx_treasury_fiscal_dataset_time ON treasury_fiscal_records(dataset_id, record_timestamp);
+CREATE INDEX IF NOT EXISTS idx_treasury_fiscal_retrieved ON treasury_fiscal_records(retrieved_at);
+CREATE INDEX IF NOT EXISTS idx_bea_observations_series_time ON bea_observations(dataset_name, table_name, line_number, observation_timestamp);
+CREATE INDEX IF NOT EXISTS idx_bea_observations_retrieved ON bea_observations(retrieved_at);
+CREATE INDEX IF NOT EXISTS idx_eia_energy_series_time ON eia_energy_records(series_id, observation_timestamp);
+CREATE INDEX IF NOT EXISTS idx_eia_energy_retrieved ON eia_energy_records(retrieved_at);
+CREATE INDEX IF NOT EXISTS idx_eia_energy_commodity_time ON eia_energy_records(commodity, observation_timestamp);
 CREATE INDEX IF NOT EXISTS idx_event_asset_links_asset ON event_asset_links(asset_symbol, created_at);
 CREATE INDEX IF NOT EXISTS idx_embeddings_event ON world_intel_embeddings(event_id);
 CREATE INDEX IF NOT EXISTS idx_user_theses_symbol ON user_theses(asset_symbol, timestamp);
@@ -455,6 +590,7 @@ function configureSqlite(db: SqliteDatabase): void {
     PRAGMA foreign_keys = ON;
     ${SCHEMA}
   `)
+  // Idempotent migrations for databases created before a column existed.
   ensureColumn(db, 'world_intel_events', 'sub_records_json', 'TEXT')
 }
 
@@ -689,7 +825,18 @@ class SqliteStore implements IntelPersistence {
            sub_records_json=excluded.sub_records_json`,
       )
       .run({
-        ...record,
+        id: record.id,
+        timestamp: record.timestamp,
+        title: record.title,
+        summary: record.summary,
+        region: record.region,
+        category: record.category,
+        severity: record.severity,
+        confidence: record.confidence,
+        sourceId: record.sourceId,
+        provenance: record.provenance,
+        rawPayloadHash: record.rawPayloadHash,
+        dedupeHash: record.dedupeHash,
         countryCodes: JSON.stringify(record.countryCodes),
         lat: record.lat ?? null,
         lon: record.lon ?? null,
@@ -701,6 +848,209 @@ class SqliteStore implements IntelPersistence {
         extractedEntities: JSON.stringify(record.extractedEntities),
         narrativeTags: JSON.stringify(record.narrativeTags),
         subRecordsJson: serializeSubRecords(record),
+      })
+  }
+
+  listSecCompanyFilings(symbol?: string, limit = 120): SecCompanyFiling[] {
+    const normalized = symbol?.trim().toUpperCase()
+    const rows = normalized
+      ? (this.db
+          .prepare('SELECT * FROM sec_company_filings WHERE ticker = ? ORDER BY observed_at DESC LIMIT ?')
+          .all(normalized, limit) as Array<Record<string, unknown>>)
+      : (this.db
+          .prepare('SELECT * FROM sec_company_filings ORDER BY observed_at DESC LIMIT ?')
+          .all(limit) as Array<Record<string, unknown>>)
+    return rows.map(rowToSecCompanyFiling)
+  }
+
+  saveSecCompanyFiling(record: SecCompanyFiling): void {
+    this.db
+      .prepare(
+        `INSERT INTO sec_company_filings
+           (id, cik, company_name, ticker, form_type, accession_number, filing_date, report_date,
+            accepted_at, observed_at, primary_document, source_url, source_json_url, source_name,
+            provenance, confidence, raw_payload_hash, raw_payload_json)
+         VALUES
+           (@id, @cik, @companyName, @ticker, @formType, @accessionNumber, @filingDate, @reportDate,
+            @acceptedAt, @observedAt, @primaryDocument, @sourceUrl, @sourceJsonUrl, @sourceName,
+            @provenance, @confidence, @rawPayloadHash, @rawPayloadJson)
+         ON CONFLICT(id) DO UPDATE SET
+           cik=excluded.cik, company_name=excluded.company_name, ticker=excluded.ticker,
+           form_type=excluded.form_type, accession_number=excluded.accession_number,
+           filing_date=excluded.filing_date, report_date=excluded.report_date,
+           accepted_at=excluded.accepted_at, observed_at=excluded.observed_at,
+           primary_document=excluded.primary_document, source_url=excluded.source_url,
+           source_json_url=excluded.source_json_url, source_name=excluded.source_name,
+           provenance=excluded.provenance, confidence=excluded.confidence,
+           raw_payload_hash=excluded.raw_payload_hash, raw_payload_json=excluded.raw_payload_json`,
+      )
+      .run({
+        ...record,
+        ticker: record.ticker ?? null,
+        reportDate: record.reportDate ?? null,
+        acceptedAt: record.acceptedAt ?? null,
+        primaryDocument: record.primaryDocument ?? null,
+        rawPayloadJson: record.rawPayloadJson ?? '{}',
+      })
+  }
+
+  listFredMacroObservations(seriesId?: string, limit = 120): FredMacroObservation[] {
+    const normalized = seriesId?.trim().toUpperCase()
+    const rows = normalized
+      ? (this.db
+          .prepare('SELECT * FROM fred_macro_observations WHERE series_id = ? ORDER BY observation_timestamp DESC LIMIT ?')
+          .all(normalized, limit) as Array<Record<string, unknown>>)
+      : (this.db
+          .prepare('SELECT * FROM fred_macro_observations ORDER BY observation_timestamp DESC LIMIT ?')
+          .all(limit) as Array<Record<string, unknown>>)
+    return rows.map(rowToFredMacroObservation)
+  }
+
+  saveFredMacroObservation(record: FredMacroObservation): void {
+    this.db
+      .prepare(
+        `INSERT INTO fred_macro_observations
+           (id, series_id, title, units, frequency, seasonal_adjustment, observation_date,
+            observation_timestamp, value, raw_value, source_url, source_api_url, source_name,
+            retrieved_at, provenance, confidence, raw_payload_hash, raw_payload_json)
+         VALUES
+           (@id, @seriesId, @title, @units, @frequency, @seasonalAdjustment, @observationDate,
+            @observationTimestamp, @value, @rawValue, @sourceUrl, @sourceApiUrl, @sourceName,
+            @retrievedAt, @provenance, @confidence, @rawPayloadHash, @rawPayloadJson)
+         ON CONFLICT(id) DO UPDATE SET
+           title=excluded.title, units=excluded.units, frequency=excluded.frequency,
+           seasonal_adjustment=excluded.seasonal_adjustment, observation_date=excluded.observation_date,
+           observation_timestamp=excluded.observation_timestamp, value=excluded.value, raw_value=excluded.raw_value,
+           source_url=excluded.source_url, source_api_url=excluded.source_api_url, source_name=excluded.source_name,
+           retrieved_at=excluded.retrieved_at, provenance=excluded.provenance, confidence=excluded.confidence,
+           raw_payload_hash=excluded.raw_payload_hash, raw_payload_json=excluded.raw_payload_json`,
+      )
+      .run({ ...record, rawPayloadJson: record.rawPayloadJson ?? '{}' })
+  }
+
+  listTreasuryFiscalRecords(datasetId?: string, limit = 120): TreasuryFiscalRecord[] {
+    const normalized = datasetId?.trim().toLowerCase()
+    const rows = normalized
+      ? (this.db
+          .prepare('SELECT * FROM treasury_fiscal_records WHERE dataset_id = ? ORDER BY record_timestamp DESC LIMIT ?')
+          .all(normalized, limit) as Array<Record<string, unknown>>)
+      : (this.db
+          .prepare('SELECT * FROM treasury_fiscal_records ORDER BY record_timestamp DESC LIMIT ?')
+          .all(limit) as Array<Record<string, unknown>>)
+    return rows.map(rowToTreasuryFiscalRecord)
+  }
+
+  saveTreasuryFiscalRecord(record: TreasuryFiscalRecord): void {
+    this.db
+      .prepare(
+        `INSERT INTO treasury_fiscal_records
+           (id, dataset_id, dataset_name, table_id, table_name, record_date, record_timestamp,
+            metric_name, metric_value, raw_value, units, source_url, source_api_url, source_name,
+            retrieved_at, provenance, confidence, raw_payload_hash, raw_payload_json)
+         VALUES
+           (@id, @datasetId, @datasetName, @tableId, @tableName, @recordDate, @recordTimestamp,
+            @metricName, @metricValue, @rawValue, @units, @sourceUrl, @sourceApiUrl, @sourceName,
+            @retrievedAt, @provenance, @confidence, @rawPayloadHash, @rawPayloadJson)
+         ON CONFLICT(id) DO UPDATE SET
+           dataset_name=excluded.dataset_name, table_id=excluded.table_id, table_name=excluded.table_name,
+           record_date=excluded.record_date, record_timestamp=excluded.record_timestamp,
+           metric_name=excluded.metric_name, metric_value=excluded.metric_value, raw_value=excluded.raw_value,
+           units=excluded.units, source_url=excluded.source_url, source_api_url=excluded.source_api_url,
+           source_name=excluded.source_name, retrieved_at=excluded.retrieved_at, provenance=excluded.provenance,
+           confidence=excluded.confidence, raw_payload_hash=excluded.raw_payload_hash,
+           raw_payload_json=excluded.raw_payload_json`,
+      )
+      .run({ ...record, rawPayloadJson: record.rawPayloadJson ?? '{}' })
+  }
+
+  listBeaObservations(seriesKey?: string, limit = 120): BeaObservation[] {
+    const normalized = seriesKey?.trim().toUpperCase()
+    const rows = normalized
+      ? (this.db
+          .prepare(
+            `SELECT * FROM bea_observations
+             WHERE dataset_name || ':' || table_name || ':' || line_number = ?
+             ORDER BY observation_timestamp DESC LIMIT ?`,
+          )
+          .all(normalized, limit) as Array<Record<string, unknown>>)
+      : (this.db
+          .prepare('SELECT * FROM bea_observations ORDER BY observation_timestamp DESC LIMIT ?')
+          .all(limit) as Array<Record<string, unknown>>)
+    return rows.map(rowToBeaObservation)
+  }
+
+  saveBeaObservation(record: BeaObservation): void {
+    this.db
+      .prepare(
+        `INSERT INTO bea_observations
+           (id, dataset_name, table_name, line_number, line_description, series_code, time_period,
+            observation_date, observation_timestamp, metric_name, metric_value, raw_value, units,
+            unit_multiplier, source_url, source_api_url, source_name, retrieved_at, provenance,
+            confidence, raw_payload_hash, raw_payload_json)
+         VALUES
+           (@id, @datasetName, @tableName, @lineNumber, @lineDescription, @seriesCode, @timePeriod,
+            @observationDate, @observationTimestamp, @metricName, @metricValue, @rawValue, @units,
+            @unitMultiplier, @sourceUrl, @sourceApiUrl, @sourceName, @retrievedAt, @provenance,
+            @confidence, @rawPayloadHash, @rawPayloadJson)
+         ON CONFLICT(id) DO UPDATE SET
+           line_description=excluded.line_description, series_code=excluded.series_code,
+           time_period=excluded.time_period, observation_date=excluded.observation_date,
+           observation_timestamp=excluded.observation_timestamp, metric_name=excluded.metric_name,
+           metric_value=excluded.metric_value, raw_value=excluded.raw_value, units=excluded.units,
+           unit_multiplier=excluded.unit_multiplier, source_url=excluded.source_url,
+           source_api_url=excluded.source_api_url, source_name=excluded.source_name,
+           retrieved_at=excluded.retrieved_at, provenance=excluded.provenance,
+           confidence=excluded.confidence, raw_payload_hash=excluded.raw_payload_hash,
+           raw_payload_json=excluded.raw_payload_json`,
+      )
+      .run({
+        ...record,
+        seriesCode: record.seriesCode ?? null,
+        unitMultiplier: record.unitMultiplier ?? null,
+        rawPayloadJson: record.rawPayloadJson ?? '{}',
+      })
+  }
+
+  listEiaEnergyRecords(seriesId?: string, limit = 120): EiaEnergyRecord[] {
+    const normalized = seriesId?.trim().toUpperCase()
+    const rows = normalized
+      ? (this.db
+          .prepare('SELECT * FROM eia_energy_records WHERE series_id = ? ORDER BY observation_timestamp DESC LIMIT ?')
+          .all(normalized, limit) as Array<Record<string, unknown>>)
+      : (this.db
+          .prepare('SELECT * FROM eia_energy_records ORDER BY observation_timestamp DESC LIMIT ?')
+          .all(limit) as Array<Record<string, unknown>>)
+    return rows.map(rowToEiaEnergyRecord)
+  }
+
+  saveEiaEnergyRecord(record: EiaEnergyRecord): void {
+    this.db
+      .prepare(
+        `INSERT INTO eia_energy_records
+           (id, series_id, title, energy_category, commodity, region, country_code,
+            period, observation_date, observation_timestamp, value, raw_value, units,
+            source_url, source_api_url, source_name, retrieved_at, provenance,
+            confidence, raw_payload_hash, raw_payload_json)
+         VALUES
+           (@id, @seriesId, @title, @energyCategory, @commodity, @region, @countryCode,
+            @period, @observationDate, @observationTimestamp, @value, @rawValue, @units,
+            @sourceUrl, @sourceApiUrl, @sourceName, @retrievedAt, @provenance,
+            @confidence, @rawPayloadHash, @rawPayloadJson)
+         ON CONFLICT(id) DO UPDATE SET
+           title=excluded.title, energy_category=excluded.energy_category, commodity=excluded.commodity,
+           region=excluded.region, country_code=excluded.country_code, period=excluded.period,
+           observation_date=excluded.observation_date, observation_timestamp=excluded.observation_timestamp,
+           value=excluded.value, raw_value=excluded.raw_value, units=excluded.units,
+           source_url=excluded.source_url, source_api_url=excluded.source_api_url,
+           source_name=excluded.source_name, retrieved_at=excluded.retrieved_at,
+           provenance=excluded.provenance, confidence=excluded.confidence,
+           raw_payload_hash=excluded.raw_payload_hash, raw_payload_json=excluded.raw_payload_json`,
+      )
+      .run({
+        ...record,
+        region: record.region ?? null,
+        countryCode: record.countryCode ?? null,
+        rawPayloadJson: record.rawPayloadJson ?? '{}',
       })
   }
 
@@ -991,6 +1341,164 @@ function rowToOsintSource(row: Record<string, unknown>): OsintSourceSnapshot {
   }
 }
 
+type WorldIntelSubRecords = Pick<
+  WorldIntelEvent,
+  | 'secFiling'
+  | 'fredObservation'
+  | 'treasuryFiscalRecord'
+  | 'beaObservation'
+  | 'blsObservation'
+  | 'eiaEnergyRecord'
+  | 'kevVulnerability'
+  | 'nvdCve'
+  | 'ghsaAdvisory'
+  | 'osvVulnerability'
+  | 'cisaAdvisory'
+  | 'githubRelease'
+  | 'earthquakeEvent'
+  | 'weatherAlert'
+  | 'patentRecord'
+>
+
+/** Serialize the typed sub-records present on an event; null when there are none. */
+export function serializeSubRecords(record: WorldIntelEvent): string | null {
+  const sub: WorldIntelSubRecords = {}
+  if (record.secFiling) sub.secFiling = record.secFiling
+  if (record.fredObservation) sub.fredObservation = record.fredObservation
+  if (record.treasuryFiscalRecord) sub.treasuryFiscalRecord = record.treasuryFiscalRecord
+  if (record.beaObservation) sub.beaObservation = record.beaObservation
+  if (record.blsObservation) sub.blsObservation = record.blsObservation
+  if (record.eiaEnergyRecord) sub.eiaEnergyRecord = record.eiaEnergyRecord
+  if (record.kevVulnerability) sub.kevVulnerability = record.kevVulnerability
+  if (record.nvdCve) sub.nvdCve = record.nvdCve
+  if (record.ghsaAdvisory) sub.ghsaAdvisory = record.ghsaAdvisory
+  if (record.osvVulnerability) sub.osvVulnerability = record.osvVulnerability
+  if (record.cisaAdvisory) sub.cisaAdvisory = record.cisaAdvisory
+  if (record.githubRelease) sub.githubRelease = record.githubRelease
+  if (record.earthquakeEvent) sub.earthquakeEvent = record.earthquakeEvent
+  if (record.weatherAlert) sub.weatherAlert = record.weatherAlert
+  if (record.patentRecord) sub.patentRecord = record.patentRecord
+  return Object.keys(sub).length > 0 ? JSON.stringify(sub) : null
+}
+
+/**
+ * Parse persisted sub-records, validating each one. Fail-closed: a missing column,
+ * unparseable JSON, or a sub-record missing its identity/hash is dropped — never
+ * fabricated. Valid sub-records rehydrate fully (source URL, provenance, confidence,
+ * rawPayloadJson/Hash all preserved), so there is no silent downgrade.
+ */
+export function parseSubRecords(value: unknown): WorldIntelSubRecords {
+  const out: WorldIntelSubRecords = {}
+  if (value === null || value === undefined || value === '') return out
+  let parsed: unknown
+  try {
+    parsed = typeof value === 'string' ? JSON.parse(value) : value
+  } catch {
+    return out // malformed JSON -> fail closed
+  }
+  if (!parsed || typeof parsed !== 'object') return out
+  const record = parsed as Record<string, unknown>
+  if (isValidSecFiling(record.secFiling)) out.secFiling = record.secFiling as WorldIntelEvent['secFiling']
+  if (isValidFred(record.fredObservation)) out.fredObservation = record.fredObservation as WorldIntelEvent['fredObservation']
+  if (isValidTreasuryFiscal(record.treasuryFiscalRecord)) out.treasuryFiscalRecord = record.treasuryFiscalRecord as WorldIntelEvent['treasuryFiscalRecord']
+  if (isValidBea(record.beaObservation)) out.beaObservation = record.beaObservation as WorldIntelEvent['beaObservation']
+  if (isValidBls(record.blsObservation)) out.blsObservation = record.blsObservation as WorldIntelEvent['blsObservation']
+  if (isValidEiaEnergy(record.eiaEnergyRecord)) out.eiaEnergyRecord = record.eiaEnergyRecord as WorldIntelEvent['eiaEnergyRecord']
+  if (isValidKev(record.kevVulnerability)) out.kevVulnerability = record.kevVulnerability as WorldIntelEvent['kevVulnerability']
+  if (isValidNvd(record.nvdCve)) out.nvdCve = record.nvdCve as WorldIntelEvent['nvdCve']
+  if (isValidGhsa(record.ghsaAdvisory)) out.ghsaAdvisory = record.ghsaAdvisory as WorldIntelEvent['ghsaAdvisory']
+  if (isValidOsv(record.osvVulnerability)) out.osvVulnerability = record.osvVulnerability as WorldIntelEvent['osvVulnerability']
+  if (isValidCisa(record.cisaAdvisory)) out.cisaAdvisory = record.cisaAdvisory as WorldIntelEvent['cisaAdvisory']
+  if (isValidGithubRelease(record.githubRelease)) out.githubRelease = record.githubRelease as WorldIntelEvent['githubRelease']
+  if (isValidEarthquake(record.earthquakeEvent)) out.earthquakeEvent = record.earthquakeEvent as WorldIntelEvent['earthquakeEvent']
+  if (isValidWeatherAlert(record.weatherAlert)) out.weatherAlert = record.weatherAlert as WorldIntelEvent['weatherAlert']
+  if (isValidPatent(record.patentRecord)) out.patentRecord = record.patentRecord as WorldIntelEvent['patentRecord']
+  return out
+}
+
+function hasHash(value: Record<string, unknown>): boolean {
+  return typeof value.rawPayloadHash === 'string' && value.rawPayloadHash.length > 0
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' ? (value as Record<string, unknown>) : null
+}
+
+function isValidKev(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(v && typeof v.cveId === 'string' && /^CVE-\d{4}-\d{4,}$/i.test(v.cveId) && hasHash(v))
+}
+
+function isValidNvd(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(v && typeof v.cveId === 'string' && /^CVE-\d{4}-\d{4,}$/i.test(v.cveId) && hasHash(v))
+}
+
+function isValidGhsa(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(v && typeof v.ghsaId === 'string' && /^GHSA-/i.test(v.ghsaId) && hasHash(v))
+}
+
+function isValidOsv(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(v && typeof v.osvId === 'string' && v.osvId.length > 0 && hasHash(v))
+}
+
+function isValidCisa(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(v && typeof v.advisoryId === 'string' && v.advisoryId.length > 0 && hasHash(v))
+}
+
+function isValidGithubRelease(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(v && typeof v.repoFullName === 'string' && v.repoFullName.length > 0 && hasHash(v))
+}
+
+function isValidEarthquake(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(v && typeof v.eventId === 'string' && v.eventId.length > 0 && hasHash(v))
+}
+
+function isValidPatent(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(v && typeof v.patentId === 'string' && v.patentId.length > 0 && hasHash(v))
+}
+
+function isValidWeatherAlert(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(v && typeof v.alertId === 'string' && v.alertId.length > 0 && hasHash(v))
+}
+
+function isValidSecFiling(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(v && typeof v.accessionNumber === 'string' && v.accessionNumber.length > 0 && hasHash(v))
+}
+
+function isValidFred(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(v && typeof v.seriesId === 'string' && v.seriesId.length > 0 && hasHash(v))
+}
+
+function isValidBls(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(v && typeof v.seriesId === 'string' && v.seriesId.length > 0 && hasHash(v))
+}
+
+function isValidTreasuryFiscal(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(v && typeof v.datasetId === 'string' && typeof v.metricName === 'string' && v.datasetId.length > 0 && v.metricName.length > 0 && hasHash(v))
+}
+
+function isValidBea(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(v && typeof v.datasetName === 'string' && typeof v.tableName === 'string' && v.datasetName.length > 0 && v.tableName.length > 0 && hasHash(v))
+}
+
+function isValidEiaEnergy(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(v && typeof v.seriesId === 'string' && typeof v.commodity === 'string' && v.seriesId.length > 0 && v.commodity.length > 0 && hasHash(v))
+}
+
 function rowToWorldIntelEvent(row: Record<string, unknown>): WorldIntelEvent {
   return {
     id: String(row.id),
@@ -1015,7 +1523,132 @@ function rowToWorldIntelEvent(row: Record<string, unknown>): WorldIntelEvent {
     narrativeTags: parseJsonArray(row.narrative_tags),
     rawPayloadHash: String(row.raw_payload_hash),
     dedupeHash: String(row.dedupe_hash),
+    // Rehydrate typed sub-records (KEV/NVD/GHSA/SEC/FRED). Validated + fail-closed:
+    // malformed persisted sub-records are dropped, never reconstructed.
     ...parseSubRecords(row.sub_records_json),
+  }
+}
+
+function rowToSecCompanyFiling(row: Record<string, unknown>): SecCompanyFiling {
+  return {
+    id: String(row.id),
+    cik: String(row.cik),
+    companyName: String(row.company_name),
+    ticker: row.ticker === null || row.ticker === undefined ? undefined : String(row.ticker),
+    formType: String(row.form_type),
+    accessionNumber: String(row.accession_number),
+    filingDate: String(row.filing_date),
+    reportDate: row.report_date === null || row.report_date === undefined ? undefined : String(row.report_date),
+    acceptedAt: row.accepted_at === null || row.accepted_at === undefined ? undefined : Number(row.accepted_at),
+    observedAt: Number(row.observed_at),
+    primaryDocument: row.primary_document === null || row.primary_document === undefined ? undefined : String(row.primary_document),
+    sourceUrl: String(row.source_url),
+    sourceJsonUrl: String(row.source_json_url),
+    sourceName: String(row.source_name),
+    provenance: String(row.provenance) as SecCompanyFiling['provenance'],
+    confidence: Number(row.confidence),
+    rawPayloadHash: String(row.raw_payload_hash),
+    rawPayloadJson: String(row.raw_payload_json),
+  }
+}
+
+function rowToFredMacroObservation(row: Record<string, unknown>): FredMacroObservation {
+  return {
+    id: String(row.id),
+    seriesId: String(row.series_id),
+    title: String(row.title),
+    units: String(row.units),
+    frequency: String(row.frequency),
+    seasonalAdjustment: String(row.seasonal_adjustment),
+    observationDate: String(row.observation_date),
+    observationTimestamp: Number(row.observation_timestamp),
+    value: Number(row.value),
+    rawValue: String(row.raw_value),
+    sourceUrl: String(row.source_url),
+    sourceApiUrl: String(row.source_api_url),
+    sourceName: String(row.source_name),
+    retrievedAt: Number(row.retrieved_at),
+    provenance: String(row.provenance) as FredMacroObservation['provenance'],
+    confidence: Number(row.confidence),
+    rawPayloadHash: String(row.raw_payload_hash),
+    rawPayloadJson: String(row.raw_payload_json),
+  }
+}
+
+function rowToTreasuryFiscalRecord(row: Record<string, unknown>): TreasuryFiscalRecord {
+  return {
+    id: String(row.id),
+    datasetId: String(row.dataset_id),
+    datasetName: String(row.dataset_name),
+    tableId: String(row.table_id),
+    tableName: String(row.table_name),
+    recordDate: String(row.record_date),
+    recordTimestamp: Number(row.record_timestamp),
+    metricName: String(row.metric_name),
+    metricValue: Number(row.metric_value),
+    rawValue: String(row.raw_value),
+    units: String(row.units),
+    sourceUrl: String(row.source_url),
+    sourceApiUrl: String(row.source_api_url),
+    sourceName: String(row.source_name),
+    retrievedAt: Number(row.retrieved_at),
+    provenance: String(row.provenance) as TreasuryFiscalRecord['provenance'],
+    confidence: Number(row.confidence),
+    rawPayloadHash: String(row.raw_payload_hash),
+    rawPayloadJson: String(row.raw_payload_json),
+  }
+}
+
+function rowToBeaObservation(row: Record<string, unknown>): BeaObservation {
+  return {
+    id: String(row.id),
+    datasetName: String(row.dataset_name),
+    tableName: String(row.table_name),
+    lineNumber: String(row.line_number),
+    lineDescription: String(row.line_description),
+    seriesCode: row.series_code === null || row.series_code === undefined ? undefined : String(row.series_code),
+    timePeriod: String(row.time_period),
+    observationDate: String(row.observation_date),
+    observationTimestamp: Number(row.observation_timestamp),
+    metricName: String(row.metric_name),
+    metricValue: Number(row.metric_value),
+    rawValue: String(row.raw_value),
+    units: String(row.units),
+    unitMultiplier: row.unit_multiplier === null || row.unit_multiplier === undefined ? undefined : String(row.unit_multiplier),
+    sourceUrl: String(row.source_url),
+    sourceApiUrl: String(row.source_api_url),
+    sourceName: String(row.source_name),
+    retrievedAt: Number(row.retrieved_at),
+    provenance: String(row.provenance) as BeaObservation['provenance'],
+    confidence: Number(row.confidence),
+    rawPayloadHash: String(row.raw_payload_hash),
+    rawPayloadJson: String(row.raw_payload_json),
+  }
+}
+
+function rowToEiaEnergyRecord(row: Record<string, unknown>): EiaEnergyRecord {
+  return {
+    id: String(row.id),
+    seriesId: String(row.series_id),
+    title: String(row.title),
+    energyCategory: String(row.energy_category),
+    commodity: String(row.commodity),
+    region: row.region === null || row.region === undefined ? undefined : String(row.region),
+    countryCode: row.country_code === null || row.country_code === undefined ? undefined : String(row.country_code),
+    period: String(row.period),
+    observationDate: String(row.observation_date),
+    observationTimestamp: Number(row.observation_timestamp),
+    value: Number(row.value),
+    rawValue: String(row.raw_value),
+    units: String(row.units),
+    sourceUrl: String(row.source_url),
+    sourceApiUrl: String(row.source_api_url),
+    sourceName: String(row.source_name),
+    retrievedAt: Number(row.retrieved_at),
+    provenance: String(row.provenance) as EiaEnergyRecord['provenance'],
+    confidence: Number(row.confidence),
+    rawPayloadHash: String(row.raw_payload_hash),
+    rawPayloadJson: String(row.raw_payload_json),
   }
 }
 
@@ -1100,6 +1733,11 @@ type JsonShape = {
   signalEvents: SignalEventRecord[]
   osintSources: OsintSourceSnapshot[]
   worldIntelEvents: WorldIntelEvent[]
+  secCompanyFilings: SecCompanyFiling[]
+  fredMacroObservations: FredMacroObservation[]
+  treasuryFiscalRecords: TreasuryFiscalRecord[]
+  beaObservations: BeaObservation[]
+  eiaEnergyRecords: EiaEnergyRecord[]
   worldIntelEmbeddings: WorldIntelEmbeddingRecord[]
   userTheses: UserThesis[]
   countryIntelState: CountryIntelState[]
@@ -1207,6 +1845,71 @@ class JsonStore implements IntelPersistence {
     this.flush()
   }
 
+  listSecCompanyFilings(symbol?: string, limit = 120): SecCompanyFiling[] {
+    const normalized = symbol?.trim().toUpperCase()
+    return [...this.data.secCompanyFilings]
+      .filter((record) => !normalized || record.ticker === normalized)
+      .sort((a, b) => b.observedAt - a.observedAt)
+      .slice(0, limit)
+  }
+
+  saveSecCompanyFiling(record: SecCompanyFiling): void {
+    this.data.secCompanyFilings = capByTime(upsert(this.data.secCompanyFilings, record), 'observedAt', 10_000)
+    this.flush()
+  }
+
+  listFredMacroObservations(seriesId?: string, limit = 120): FredMacroObservation[] {
+    const normalized = seriesId?.trim().toUpperCase()
+    return [...this.data.fredMacroObservations]
+      .filter((record) => !normalized || record.seriesId === normalized)
+      .sort((a, b) => b.observationTimestamp - a.observationTimestamp)
+      .slice(0, limit)
+  }
+
+  saveFredMacroObservation(record: FredMacroObservation): void {
+    this.data.fredMacroObservations = capByTime(upsert(this.data.fredMacroObservations, record), 'observationTimestamp', 10_000)
+    this.flush()
+  }
+
+  listTreasuryFiscalRecords(datasetId?: string, limit = 120): TreasuryFiscalRecord[] {
+    const normalized = datasetId?.trim().toLowerCase()
+    return [...this.data.treasuryFiscalRecords]
+      .filter((record) => !normalized || record.datasetId === normalized)
+      .sort((a, b) => b.recordTimestamp - a.recordTimestamp)
+      .slice(0, limit)
+  }
+
+  saveTreasuryFiscalRecord(record: TreasuryFiscalRecord): void {
+    this.data.treasuryFiscalRecords = capByTime(upsert(this.data.treasuryFiscalRecords, record), 'recordTimestamp', 10_000)
+    this.flush()
+  }
+
+  listBeaObservations(seriesKey?: string, limit = 120): BeaObservation[] {
+    const normalized = seriesKey?.trim().toUpperCase()
+    return [...this.data.beaObservations]
+      .filter((record) => !normalized || `${record.datasetName}:${record.tableName}:${record.lineNumber}`.toUpperCase() === normalized)
+      .sort((a, b) => b.observationTimestamp - a.observationTimestamp)
+      .slice(0, limit)
+  }
+
+  saveBeaObservation(record: BeaObservation): void {
+    this.data.beaObservations = capByTime(upsert(this.data.beaObservations, record), 'observationTimestamp', 10_000)
+    this.flush()
+  }
+
+  listEiaEnergyRecords(seriesId?: string, limit = 120): EiaEnergyRecord[] {
+    const normalized = seriesId?.trim().toUpperCase()
+    return [...this.data.eiaEnergyRecords]
+      .filter((record) => !normalized || record.seriesId === normalized)
+      .sort((a, b) => b.observationTimestamp - a.observationTimestamp)
+      .slice(0, limit)
+  }
+
+  saveEiaEnergyRecord(record: EiaEnergyRecord): void {
+    this.data.eiaEnergyRecords = capByTime(upsert(this.data.eiaEnergyRecords, record), 'observationTimestamp', 10_000)
+    this.flush()
+  }
+
   listWorldIntelEmbeddings(limit = 500): WorldIntelEmbeddingRecord[] {
     return [...this.data.worldIntelEmbeddings].sort((a, b) => b.timestamp - a.timestamp).slice(0, limit)
   }
@@ -1306,6 +2009,11 @@ class JsonStore implements IntelPersistence {
         signalEvents: parsed.signalEvents ?? [],
         osintSources: parsed.osintSources ?? [],
         worldIntelEvents: parsed.worldIntelEvents ?? [],
+        secCompanyFilings: parsed.secCompanyFilings ?? [],
+        fredMacroObservations: parsed.fredMacroObservations ?? [],
+        treasuryFiscalRecords: parsed.treasuryFiscalRecords ?? [],
+        beaObservations: parsed.beaObservations ?? [],
+        eiaEnergyRecords: parsed.eiaEnergyRecords ?? [],
         worldIntelEmbeddings: parsed.worldIntelEmbeddings ?? [],
         userTheses: parsed.userTheses ?? [],
         countryIntelState: parsed.countryIntelState ?? [],
@@ -1335,44 +2043,6 @@ function upsert<T extends { id: string }>(list: T[], record: T): T[] {
   return next
 }
 
-type WorldIntelSubRecords = Pick<WorldIntelEvent, 'weatherAlert'>
-
-/** Serialize typed event sub-records; null when there are none. */
-export function serializeSubRecords(record: WorldIntelEvent): string | null {
-  const sub: WorldIntelSubRecords = {}
-  if (record.weatherAlert) sub.weatherAlert = record.weatherAlert
-  return Object.keys(sub).length > 0 ? JSON.stringify(sub) : null
-}
-
-/** Parse persisted sub-records fail-closed; malformed JSON or missing proof is dropped. */
-export function parseSubRecords(value: unknown): WorldIntelSubRecords {
-  const out: WorldIntelSubRecords = {}
-  if (value === null || value === undefined || value === '') return out
-  let parsed: unknown
-  try {
-    parsed = typeof value === 'string' ? JSON.parse(value) : value
-  } catch {
-    return out
-  }
-  if (!parsed || typeof parsed !== 'object') return out
-  const record = parsed as Record<string, unknown>
-  if (isValidWeatherAlert(record.weatherAlert)) out.weatherAlert = record.weatherAlert as WorldIntelEvent['weatherAlert']
-  return out
-}
-
-function hasHash(value: Record<string, unknown>): boolean {
-  return typeof value.rawPayloadHash === 'string' && value.rawPayloadHash.length > 0
-}
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === 'object' ? (value as Record<string, unknown>) : null
-}
-
-function isValidWeatherAlert(value: unknown): boolean {
-  const v = asRecord(value)
-  return Boolean(v && typeof v.alertId === 'string' && v.alertId.length > 0 && hasHash(v))
-}
-
 function upsertBy<T, K extends keyof T>(list: T[], record: T, key: K): T[] {
   const index = list.findIndex((item) => item[key] === record[key])
   if (index === -1) {
@@ -1394,6 +2064,11 @@ function emptyJsonShape(): JsonShape {
     signalEvents: [],
     osintSources: [],
     worldIntelEvents: [],
+    secCompanyFilings: [],
+    fredMacroObservations: [],
+    treasuryFiscalRecords: [],
+    beaObservations: [],
+    eiaEnergyRecords: [],
     worldIntelEmbeddings: [],
     userTheses: [],
     countryIntelState: [],

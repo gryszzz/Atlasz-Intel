@@ -90,6 +90,10 @@ export function computeMacroSnapshot(inputs: MacroSeriesInputs, now = Date.now()
     regimeProvenance: 'math-derived',
     regimeExplanation: explanation,
     metrics,
+    fredObservations: [],
+    treasuryFiscalRecords: [],
+    beaObservations: [],
+    eiaEnergyRecords: [],
   }
 }
 

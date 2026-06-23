@@ -66,6 +66,12 @@ import { resolveAssetQuery, type AssetUniverseItem } from './assetUniverse'
 import { CANDLE_HISTORY_UNAVAILABLE, PRICE_UNAVAILABLE, priceTruthFromAsset } from './marketDataTruth'
 import type { LiveAssetSnapshot, SourceTrust } from './realtime'
 import { useWorldIntelSnapshot } from './worldIntelStore'
+import { WhatChangedTodayPanel } from './components/intel/WhatChangedTodayPanel'
+import { EntityEvidenceGraphPanel } from './components/intel/EntityEvidenceGraphPanel'
+import { EventResolutionPanel } from './components/intel/EventResolutionPanel'
+import { ConnectorDashboardPanel } from './components/intel/ConnectorDashboardPanel'
+import { ExposureDashboardPanel } from './components/intel/ExposureDashboardPanel'
+import { findWorldIntelEvent } from './engine/entityResolver'
 import type { WorldIntelSnapshot } from './worldIntel'
 import {
   graphEdges,
@@ -1066,6 +1072,9 @@ function App() {
       .slice(0, 24)
   }, [liveAssetBySymbol, universeSymbols])
   const selectedEvent = worldEvents.find((event) => event.id === selectedEventId) ?? worldEvents[0] ?? unavailableEvent
+  // Resolver bridge: only when the selection maps back to a real WorldIntelEvent
+  // (exact id). Derived RadarEvents don't map, so this stays undefined (no inferred exposure).
+  const selectedWorldEvent = findWorldIntelEvent(selectedEventId, worldSnapshot.worldEvents)
   const selectedSignal =
     worldSignals.find((signal) => signal.linkedEventIds.includes(selectedEvent.id)) ?? worldSignals[0] ?? unavailableSignal
   const selectedGraphNode = getGraphNodeById(selectedGraphNodeId)
@@ -1463,6 +1472,11 @@ function App() {
         <ViewErrorBoundary key={activeView}>
         {activeView === 'command' && (
           <section className="dashboard-grid command-grid">
+            {/* First impression: what matters, above raw feeds and evidence cards. */}
+            <article className="wct-panel">
+              <WhatChangedTodayPanel events={worldSnapshot.worldEvents} />
+            </article>
+
             <article className="panel command-status-panel">
               <GlobalOverview
                 activeLayerCount={activeLayerIds.length}
@@ -1480,6 +1494,14 @@ function App() {
                 socialVelocity={socialVelocity.velocity}
                 worldSnapshot={worldSnapshot}
               />
+            </article>
+
+            <article className="panel connector-dashboard-panel">
+              <ConnectorDashboardPanel sources={worldSnapshot.sources} events={worldSnapshot.worldEvents} />
+            </article>
+
+            <article className="panel exposure-dashboard-panel wide-panel">
+              <ExposureDashboardPanel events={worldSnapshot.worldEvents} />
             </article>
 
             <article className="panel pulse-panel">
@@ -1512,6 +1534,7 @@ function App() {
                 selectedEvent={selectedEvent}
                 signal={selectedSignal}
               />
+              {selectedWorldEvent && <EventResolutionPanel event={selectedWorldEvent} />}
             </article>
 
             <article className="panel">
@@ -1817,6 +1840,13 @@ function App() {
 
         {activeView === 'graph' && (
           <section className="dashboard-grid graph-grid">
+            {/* Evidence graph: clickable entity nodes with proving events, separate
+                from the risk-BFS RelationshipGraph below. */}
+            <article className="panel wide-panel evidence-graph-panel">
+              <PanelHeader icon={Fingerprint} label="Evidence Graph" title="Entities proven by connector evidence" />
+              <EntityEvidenceGraphPanel events={worldSnapshot.worldEvents} />
+            </article>
+
             <article className="panel graph-panel">
               <PanelHeader icon={Network} label="Intelligence Graph" title="Entities, dependencies, provenance, and exposed paths" />
               <div className="graph-frame">
