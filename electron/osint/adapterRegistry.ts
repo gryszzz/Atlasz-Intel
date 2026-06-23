@@ -15,6 +15,7 @@ import { fetchFederalRegisterDocuments, readFederalRegisterConfig } from './adap
 import { fetchOfacSanctions, readOfacSanctionsConfig } from './adapters/ofacSanctionsAdapter'
 import { fetchCongressGovBills, readCongressGovConfig } from './adapters/congressGovAdapter'
 import { fetchComtradeEvents, readComtradeConfig } from './adapters/comtradeAdapter'
+import { fetchOpenAlexWorks, readOpenAlexConfig } from './adapters/openAlexAdapter'
 import { fetchTreasuryFiscalData, readTreasuryFiscalConfig } from './adapters/treasuryFiscalAdapter'
 import { fetchBlsObservations, readBlsConfig } from './adapters/blsAdapter'
 import { fetchBeaObservations, readBeaConfig } from './adapters/beaAdapter'
@@ -49,6 +50,7 @@ export const KNOWN_ADAPTERS = [
   'ofac-sdn',
   'congress-gov',
   'un-comtrade',
+  'openalex-works',
   'treasury-fiscal',
   'bls',
   'bea',
@@ -99,6 +101,10 @@ export function resolveAdapter(provider: ProviderDefinition, env: NodeJS.Process
     case 'un-comtrade': {
       const config = readComtradeConfig(env)
       return { fetcher: config ? (signal) => fetchComtradeEvents(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'openalex-works': {
+      const config = readOpenAlexConfig(env)
+      return { fetcher: config ? (signal) => fetchOpenAlexWorks(signal, config) : undefined, configured: config !== null, managed: false }
     }
     case 'treasury-fiscal': {
       const config = readTreasuryFiscalConfig(env)

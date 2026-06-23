@@ -40,6 +40,7 @@ because it is listed here.
 | Weather/natural events | NOAA/NWS active alerts, USGS earthquakes | Official APIs -> weather/quake event -> source trail -> timeline/evidence graph; unresolved exposure remains explicit. |
 | Cyber/vulnerability | CISA KEV, NVD, GHSA, OSV, CISA advisories | Defensive advisory/vulnerability records -> evidence graph/dossier/source trails. |
 | OSS technology | GitHub Releases | Official GitHub release metadata -> OSS technology timeline/source trail. |
+| Research metadata | OpenAlex Works API | Official API -> research work -> institution/topic/venue graph nodes -> source trail; metadata only. |
 
 ### Config-Required Runtime
 
@@ -49,6 +50,7 @@ because it is listed here.
 | Macro time series | FRED | `ATLASZ_FRED_API_KEY` | `missing-config`; no synthetic macro observations. |
 | National accounts/GDP | BEA NIPA GDP | `ATLASZ_BEA_API_KEY` | `missing-config`; no synthetic GDP observations. |
 | Energy/commodities | EIA official energy series | `ATLASZ_EIA_API_KEY` | `missing-config`; no synthetic energy observations. |
+| Research metadata | OpenAlex Works API | `ATLASZ_OPENALEX_API_KEY` | `missing-config`; no fake papers, no breakthrough or market inference. |
 | Public disclosures | Operator-owned public disclosure JSON | `ATLASZ_POLITICIAN_DISCLOSURE_URL` | `missing-config`; no guessed provider. |
 | Local model parsing | Ollama | explicit local enable/config flags | disabled/missing-config; model output stays local/model-inferred. |
 

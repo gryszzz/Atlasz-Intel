@@ -84,6 +84,45 @@ export type WorldIntelEvent = {
   congressBillAction?: CongressBillAction
   gdeltArticle?: GdeltArticle
   comtradeRecord?: ComtradeTradeRecord
+  openAlexWork?: OpenAlexWork
+}
+
+export type OpenAlexChangeType = 'first_seen' | 'new_today' | 'updated' | 'unchanged'
+
+/**
+ * A single OpenAlex research work (metadata only). NOT a validation of any
+ * technical claim, breakthrough, or market signal. Authors are kept minimal and
+ * source-bounded - no person enrichment. citedByCount is metadata, not a quality
+ * score.
+ */
+export type OpenAlexWork = {
+  id: string
+  openAlexWorkId: string
+  doi?: string
+  title: string
+  publicationYear?: number
+  publicationDate?: string
+  type: string
+  venue?: string
+  institutions: string[]
+  institutionCountries: string[]
+  topics: string[]
+  authors: string[]
+  citedByCount?: number
+  isRetracted: boolean
+  landingPageUrl?: string
+  doiUrl?: string
+  openAlexUrl: string
+  queryBucket: string
+  /** API URL with the api_key stripped - safe to persist/display. */
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  changeType: OpenAlexChangeType
+  rawPayloadHash: string
+  rawPayloadJson?: string
 }
 
 export type ComtradeChangeType = 'first_seen' | 'new_today' | 'updated' | 'unchanged'

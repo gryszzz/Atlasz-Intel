@@ -299,6 +299,8 @@ export class ProviderDiscoveryService {
           ? withQueryParam(url, 'api_key', this.env.ATLASZ_EIA_API_KEY)
         : provider?.providerId === 'congress_gov_public' && this.env.ATLASZ_CONGRESS_API_KEY
           ? withQueryParam(url, 'api_key', this.env.ATLASZ_CONGRESS_API_KEY)
+        : provider?.providerId === 'openalex_works_public' && this.env.ATLASZ_OPENALEX_API_KEY
+          ? withQueryParam(url, 'api_key', this.env.ATLASZ_OPENALEX_API_KEY)
         : url
     const response = await this.fetchImpl(checkedUrl, {
       signal: abortSignal(discoveryTimeoutMs),
@@ -420,6 +422,9 @@ function endpointFor(provider: ProviderDefinition, env: NodeJS.ProcessEnv): stri
   }
   if (provider.providerId === 'congress_gov_public') {
     return 'https://api.congress.gov/v3/bill?format=json&limit=1'
+  }
+  if (provider.providerId === 'openalex_works_public') {
+    return 'https://api.openalex.org/works?search=semiconductors&filter=from_publication_date:2026-01-01&per-page=1&select=id,title,publication_date'
   }
   if (provider.providerId === 'public_market_rest' || provider.providerId === 'yahoo_finance_1m_public') {
     return 'https://query1.finance.yahoo.com/v8/finance/chart/SPY?range=1d&interval=1m'

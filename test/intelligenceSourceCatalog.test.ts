@@ -134,6 +134,12 @@ describe('intelligence source catalog', () => {
       integrationMode: 'candidate-public-adapter',
       accessModel: 'public-no-auth',
     })
+    expect(lookupIntelligenceSource('openalex-api')).toMatchObject({
+      accessModel: 'public-requires-key',
+      integrationMode: 'runtime-wired',
+      provenance: 'official-api',
+      envKeysRequired: ['ATLASZ_OPENALEX_API_KEY'],
+    })
     expect(lookupIntelligenceSource('weather-gov')).toMatchObject({
       integrationMode: 'runtime-wired',
       provenance: 'official-api',

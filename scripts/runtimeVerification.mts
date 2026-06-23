@@ -50,7 +50,8 @@ function timeoutSignal(ms: number): AbortSignal {
 function subRetrievedAt(e: WorldIntelEvent): number | undefined {
   const sub =
     e.earthquakeEvent ?? e.kevVulnerability ?? e.patentRecord ?? e.nvdCve ?? e.weatherAlert ??
-    e.regulatoryDocument ?? e.ofacSanctionsRecord ?? e.congressBillAction ?? e.gdeltArticle ?? e.comtradeRecord
+    e.regulatoryDocument ?? e.ofacSanctionsRecord ?? e.congressBillAction ?? e.gdeltArticle ?? e.comtradeRecord ??
+    e.openAlexWork
   return (sub as { retrievedAt?: number } | undefined)?.retrievedAt
 }
 
@@ -232,6 +233,10 @@ async function main() {
   // OFAC / Congress unresolved by design.
   const ofacLive = liveEvents.find((e) => e.sourceId === 'ofac_sdn_public')
   check('OFAC unresolved by design', !ofacLive || (!isEventResolvable(ofacLive) && eventStructuralExposure(ofacLive).length === 0), ofacLive ? 'live OFAC event unresolved' : 'no live OFAC event (resolver has no rule)')
+
+  // OpenAlex research metadata unresolved by design.
+  const openAlexLive = liveEvents.find((e) => e.sourceId === 'openalex_works_public')
+  check('OpenAlex metadata unresolved by design', !openAlexLive || (!isEventResolvable(openAlexLive) && eventStructuralExposure(openAlexLive).length === 0), openAlexLive ? 'live OpenAlex event unresolved' : 'no live OpenAlex event (resolver has no rule)')
 
   // Curated-reference never shown as verified.
   const exposureJson = JSON.stringify(exposureSummary)

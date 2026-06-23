@@ -48,6 +48,9 @@ export type EntityKind =
   | 'policy-area'
   | 'committee'
   | 'trade-flow'
+  | 'research-work'
+  | 'topic'
+  | 'venue'
   | 'filing'
   | 'macro-series'
   | 'fiscal-series'
@@ -389,6 +392,26 @@ export function deriveEventEntities(event: WorldIntelEvent): { entities: EntityR
     link(tradeFlow, { id: entityId('country', record.partnerIso3 || record.partnerCode), kind: 'country', label: record.partnerDesc }, 'touches')
     link(tradeFlow, { id: entityId('commodity', record.commodityCode), kind: 'commodity', label: record.commodityDescription }, 'references')
     link(tradeFlow, { id: entityId('source', 'un-comtrade'), kind: 'source', label: 'UN Comtrade' }, 'reported_by')
+  }
+
+  // OpenAlex: event -> research work -> venue / institution / topic / country /
+  // OpenAlex source. Research metadata only — country comes solely from institution
+  // metadata; no company exposure or breakthrough claim is inferred.
+  if (event.openAlexWork) {
+    const work = event.openAlexWork
+    const workEntity: EntityRef = { id: entityId('research-work', work.openAlexWorkId), kind: 'research-work', label: work.title.slice(0, 80) }
+    link(eventEntity, workEntity, 'about')
+    if (work.venue) link(workEntity, { id: entityId('venue', work.venue), kind: 'venue', label: work.venue }, 'references')
+    for (const institution of work.institutions) {
+      link(workEntity, { id: entityId('institution', institution), kind: 'institution', label: institution }, 'touches')
+    }
+    for (const topic of work.topics) {
+      link(workEntity, { id: entityId('topic', topic), kind: 'topic', label: topic }, 'references')
+    }
+    for (const country of work.institutionCountries) {
+      link(workEntity, { id: entityId('country', country), kind: 'country', label: country }, 'in_country')
+    }
+    link(workEntity, { id: entityId('source', 'openalex'), kind: 'source', label: 'OpenAlex' }, 'reported_by')
   }
 
   // Generic normalized fields (apply to every connector).

@@ -4,6 +4,7 @@ import { OsintSourceRegistry } from './osint/sourceRegistry'
 import { applyOfacChangeStatus } from './osint/adapters/ofacSanctionsAdapter'
 import { applyCongressBillChangeStatus } from './osint/adapters/congressGovAdapter'
 import { applyComtradeChangeStatus } from './osint/adapters/comtradeAdapter'
+import { applyOpenAlexChangeStatus } from './osint/adapters/openAlexAdapter'
 import {
   buildWorldIntelEventFromHeadline,
   deriveAssetIdentitiesFromEvents,
@@ -54,7 +55,7 @@ export class WorldIntelService {
         const priorEventsById = new Map(this.persistence.listWorldIntelEvents(1_000).map((event) => [event.id, event]))
         for (const event of events) {
           const prior = priorEventsById.get(event.id)
-          this.persistWorldEvent(applyComtradeChangeStatus(applyCongressBillChangeStatus(applyOfacChangeStatus(event, prior), prior), prior))
+          this.persistWorldEvent(applyOpenAlexChangeStatus(applyComtradeChangeStatus(applyCongressBillChangeStatus(applyOfacChangeStatus(event, prior), prior), prior), prior))
         }
         const allEvents = this.persistence.listWorldIntelEvents(300)
         this.persistCountryState(deriveCountryIntelState(allEvents))

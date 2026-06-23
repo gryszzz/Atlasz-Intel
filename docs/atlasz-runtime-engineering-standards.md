@@ -202,7 +202,7 @@ Confirmed strengths in the current codebase:
 - Provider-driven source registry with fail-closed configuration.
 - Canonical provenance values and UI badges.
 - SQLite/WAL persistence with JSON fallback and visible mode.
-- SEC, FRED, Treasury Fiscal Data, BLS, BEA, EIA, NOAA/NWS, and USGS
+- SEC, FRED, Treasury Fiscal Data, BLS, BEA, EIA, NOAA/NWS, USGS, and OpenAlex
   evidence-bearing vertical slices with source trails, confidence, freshness,
   and unavailable states.
 - Defensive/security connector slices for CISA KEV, NVD, GHSA, OSV, and CISA
@@ -218,10 +218,10 @@ Runtime status rules:
 - Runtime-wired means a provider/adapter path exists and is validated; it does
   not mean a local machine has credentials or that the upstream source is
   currently reachable.
-- Config-required providers such as SEC, FRED, BEA, and EIA show
+- Config-required providers such as SEC, FRED, BEA, EIA, and OpenAlex show
   `missing-config` until the operator supplies the required key/User-Agent.
 - Corpus/reference material and private agent skills are not app runtime.
-- Future sources such as UN Comtrade, patents, shipping, aviation, OpenCTI,
+- Future sources such as shipping, aviation, OpenCTI,
   MISP, and premium news stay candidate/auth-gated/reference-only until they
   receive their own evidence-bearing vertical slice.
 

@@ -47,6 +47,9 @@ const GdeltSourceTrail = lazy(() =>
 const ComtradeSourceTrail = lazy(() =>
   import('./components/intel/ComtradeSourceTrail').then((m) => ({ default: m.ComtradeSourceTrail })),
 )
+const OpenAlexSourceTrail = lazy(() =>
+  import('./components/intel/OpenAlexSourceTrail').then((m) => ({ default: m.OpenAlexSourceTrail })),
+)
 
 type WorldWindowId = 'now' | '1h' | '6h' | '24h' | '7d'
 
@@ -195,6 +198,10 @@ export function WorldIntelligenceView({
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading UN Comtrade source trail" /></div>}>
           <ComtradeSourceTrail events={visibleEvents} />
+        </Suspense>
+
+        <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading OpenAlex source trail" /></div>}>
+          <OpenAlexSourceTrail events={visibleEvents} />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading entity detail" /></div>}>

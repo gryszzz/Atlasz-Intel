@@ -157,8 +157,10 @@ which entities they activated, and which exposure paths are only
 | Government fiscal | Treasury Fiscal Data | Official Treasury Fiscal Data API | No key; official-api; no simulated fiscal values. |
 | Labor/economic | BLS Public Data API | Official BLS API | No key required; optional key is never persisted. |
 | Weather/natural events | NOAA/NWS active alerts, USGS earthquakes | Official NOAA/NWS and USGS APIs | No key; official-api; no fake weather, no severity inflation, unresolved exposure stays explicit. |
+| Policy/regulatory | Federal Register, OFAC SDN | Official FederalRegister.gov and Treasury/OFAC sources | No key; official-api; no legal interpretation, sanctions screening, or inferred guilt/risk labels. |
 | Cyber/vulnerability | CISA KEV, NVD, GHSA, OSV, CISA advisories | Official/public defensive feeds | Defensive context only; no scanning, exploitation, or private target collection. |
 | OSS technology | GitHub Releases | Official GitHub REST API for configured public repos | Public release metadata; optional token only raises limits and is not persisted. |
+| Research metadata | OpenAlex Works | Official OpenAlex API | Key-gated official-api metadata; not validation of technical claims, breakthroughs, citations, or market impact. |
 
 ### Config-Required Runtime Connectors
 
@@ -168,7 +170,10 @@ which entities they activated, and which exposure paths are only
 | Macro time series | FRED | `ATLASZ_FRED_API_KEY` | `missing-config`; no synthetic macro charts. |
 | National accounts/GDP | BEA NIPA GDP | `ATLASZ_BEA_API_KEY` | `missing-config`; no simulated GDP data. |
 | Energy/commodities | EIA official energy series | `ATLASZ_EIA_API_KEY` | `missing-config`; no synthetic energy data or commodity alerts. |
+| Legislation | Congress.gov bill actions | `ATLASZ_CONGRESS_API_KEY` | `missing-config`; no fake bills or political interpretation. |
+| Trade flows | UN Comtrade | `ATLASZ_UN_COMTRADE_API_KEY` | `missing-config`; country/commodity evidence only, no company-level supply-chain claims. |
 | Patent intelligence | USPTO PatentsView | `ATLASZ_PATENTSVIEW_API_KEY` | `missing-config`; no fake patents or person enrichment. |
+| Research metadata | OpenAlex Works | `ATLASZ_OPENALEX_API_KEY` | `missing-config`; no fake papers, no breakthrough/market inference. |
 | Public disclosures | Operator-provided disclosure JSON | `ATLASZ_POLITICIAN_DISCLOSURE_URL` | `missing-config`; no guessed disclosure feed. |
 | Local model parsing | Ollama | explicit local enable/config flags | Disabled/missing-config; output remains local-model/model-inferred. |
 

@@ -1363,6 +1363,7 @@ type WorldIntelSubRecords = Pick<
   | 'congressBillAction'
   | 'gdeltArticle'
   | 'comtradeRecord'
+  | 'openAlexWork'
 >
 
 /** Serialize the typed sub-records present on an event; null when there are none. */
@@ -1388,6 +1389,7 @@ export function serializeSubRecords(record: WorldIntelEvent): string | null {
   if (record.congressBillAction) sub.congressBillAction = record.congressBillAction
   if (record.gdeltArticle) sub.gdeltArticle = record.gdeltArticle
   if (record.comtradeRecord) sub.comtradeRecord = record.comtradeRecord
+  if (record.openAlexWork) sub.openAlexWork = record.openAlexWork
   return Object.keys(sub).length > 0 ? JSON.stringify(sub) : null
 }
 
@@ -1428,6 +1430,7 @@ export function parseSubRecords(value: unknown): WorldIntelSubRecords {
   if (isValidCongressBillAction(record.congressBillAction)) out.congressBillAction = record.congressBillAction as WorldIntelEvent['congressBillAction']
   if (isValidGdeltArticle(record.gdeltArticle)) out.gdeltArticle = record.gdeltArticle as WorldIntelEvent['gdeltArticle']
   if (isValidComtradeRecord(record.comtradeRecord)) out.comtradeRecord = record.comtradeRecord as WorldIntelEvent['comtradeRecord']
+  if (isValidOpenAlexWork(record.openAlexWork)) out.openAlexWork = record.openAlexWork as WorldIntelEvent['openAlexWork']
   return out
 }
 
@@ -1505,6 +1508,11 @@ function isValidCongressBillAction(value: unknown): boolean {
 function isValidGdeltArticle(value: unknown): boolean {
   const v = asRecord(value)
   return Boolean(v && typeof v.url === 'string' && v.url.length > 0 && typeof v.title === 'string' && v.title.length > 0 && hasHash(v))
+}
+
+function isValidOpenAlexWork(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(v && typeof v.openAlexWorkId === 'string' && v.openAlexWorkId.length > 0 && typeof v.title === 'string' && v.title.length > 0 && hasHash(v))
 }
 
 function isValidComtradeRecord(value: unknown): boolean {

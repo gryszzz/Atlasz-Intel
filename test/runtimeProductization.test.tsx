@@ -93,8 +93,9 @@ describe('runtime productization audit', () => {
     expect(rows.find((row) => row.id === 'eia')?.status).toBe('missing-key')
     expect(rows.find((row) => row.id === 'nvd')?.status).toBe('stale')
     expect(rows.find((row) => row.id === 'cisa-kev')?.status).toBe('rate-limited')
-    // UN Comtrade is now implemented + key-gated -> missing-key without a key.
+    // UN Comtrade + OpenAlex are implemented + key-gated -> missing-key without keys.
     expect(rows.find((row) => row.id === 'un-comtrade')?.status).toBe('missing-key')
+    expect(rows.find((row) => row.id === 'openalex-works')?.status).toBe('missing-key')
   })
 
   it('distinguishes pending-first-fetch (public, implemented, no snapshot yet) from missing-key', () => {
@@ -108,8 +109,8 @@ describe('runtime productization audit', () => {
       expect(row?.missingReason, id).toMatch(/waiting for first poll/i)
     }
 
-    // Key-gated with no env key -> missing-key (incl. now-implemented UN Comtrade).
-    for (const id of ['eia', 'bea', 'uspto', 'fred', 'congress-gov', 'un-comtrade']) {
+    // Key-gated with no env key -> missing-key (incl. UN Comtrade + OpenAlex).
+    for (const id of ['eia', 'bea', 'uspto', 'fred', 'congress-gov', 'un-comtrade', 'openalex-works']) {
       expect(rows.find((r) => r.id === id)?.status, id).toBe('missing-key')
     }
   })
@@ -167,6 +168,7 @@ describe('runtime productization audit', () => {
     expect(markup).toContain('official source')
     expect(markup).toContain('UN Comtrade')
     expect(markup).toContain('missing key') // UN Comtrade is now key-gated, no key here
+    expect(markup).toContain('OpenAlex')
     expect(markup).not.toContain('verified live')
   })
 
