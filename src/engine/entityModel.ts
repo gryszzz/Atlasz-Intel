@@ -47,6 +47,7 @@ export type EntityKind =
   | 'legislation'
   | 'policy-area'
   | 'committee'
+  | 'trade-flow'
   | 'filing'
   | 'macro-series'
   | 'fiscal-series'
@@ -371,6 +372,23 @@ export function deriveEventEntities(event: WorldIntelEvent): { entities: EntityR
     for (const committee of bill.committees) {
       link(billEntity, { id: entityId('committee', committee), kind: 'committee', label: committee }, 'references')
     }
+  }
+
+  // UN Comtrade: event -> trade-flow record -> reporter country / partner country /
+  // commodity / UN Comtrade source. Country/commodity trade evidence only — no
+  // company-level claim is inferred from a trade flow.
+  if (event.comtradeRecord) {
+    const record = event.comtradeRecord
+    const tradeFlow: EntityRef = {
+      id: entityId('trade-flow', record.id),
+      kind: 'trade-flow',
+      label: `${record.flowDesc} ${record.commodityCode} (${record.period})`,
+    }
+    link(eventEntity, tradeFlow, 'about')
+    link(tradeFlow, { id: entityId('country', record.reporterIso3 || record.reporterCode), kind: 'country', label: record.reporterDesc }, 'touches')
+    link(tradeFlow, { id: entityId('country', record.partnerIso3 || record.partnerCode), kind: 'country', label: record.partnerDesc }, 'touches')
+    link(tradeFlow, { id: entityId('commodity', record.commodityCode), kind: 'commodity', label: record.commodityDescription }, 'references')
+    link(tradeFlow, { id: entityId('source', 'un-comtrade'), kind: 'source', label: 'UN Comtrade' }, 'reported_by')
   }
 
   // Generic normalized fields (apply to every connector).

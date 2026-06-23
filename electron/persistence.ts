@@ -1362,6 +1362,7 @@ type WorldIntelSubRecords = Pick<
   | 'ofacSanctionsRecord'
   | 'congressBillAction'
   | 'gdeltArticle'
+  | 'comtradeRecord'
 >
 
 /** Serialize the typed sub-records present on an event; null when there are none. */
@@ -1386,6 +1387,7 @@ export function serializeSubRecords(record: WorldIntelEvent): string | null {
   if (record.ofacSanctionsRecord) sub.ofacSanctionsRecord = record.ofacSanctionsRecord
   if (record.congressBillAction) sub.congressBillAction = record.congressBillAction
   if (record.gdeltArticle) sub.gdeltArticle = record.gdeltArticle
+  if (record.comtradeRecord) sub.comtradeRecord = record.comtradeRecord
   return Object.keys(sub).length > 0 ? JSON.stringify(sub) : null
 }
 
@@ -1425,6 +1427,7 @@ export function parseSubRecords(value: unknown): WorldIntelSubRecords {
   if (isValidOfacSanctionsRecord(record.ofacSanctionsRecord)) out.ofacSanctionsRecord = record.ofacSanctionsRecord as WorldIntelEvent['ofacSanctionsRecord']
   if (isValidCongressBillAction(record.congressBillAction)) out.congressBillAction = record.congressBillAction as WorldIntelEvent['congressBillAction']
   if (isValidGdeltArticle(record.gdeltArticle)) out.gdeltArticle = record.gdeltArticle as WorldIntelEvent['gdeltArticle']
+  if (isValidComtradeRecord(record.comtradeRecord)) out.comtradeRecord = record.comtradeRecord as WorldIntelEvent['comtradeRecord']
   return out
 }
 
@@ -1502,6 +1505,19 @@ function isValidCongressBillAction(value: unknown): boolean {
 function isValidGdeltArticle(value: unknown): boolean {
   const v = asRecord(value)
   return Boolean(v && typeof v.url === 'string' && v.url.length > 0 && typeof v.title === 'string' && v.title.length > 0 && hasHash(v))
+}
+
+function isValidComtradeRecord(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(
+    v &&
+      typeof v.reporterCode === 'string' &&
+      typeof v.partnerCode === 'string' &&
+      typeof v.commodityCode === 'string' &&
+      v.commodityCode.length > 0 &&
+      typeof v.tradeValue === 'number' &&
+      hasHash(v),
+  )
 }
 
 function isValidWeatherAlert(value: unknown): boolean {

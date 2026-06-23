@@ -156,6 +156,7 @@ const SOURCE_LABELS: Record<string, string> = {
   congress_gov_public: 'Congress.gov',
   uspto_patentsview_public: 'USPTO',
   gdelt_doc_public: 'GDELT (media)',
+  un_comtrade_public: 'UN Comtrade',
   politician_disclosure_public: 'Public disclosure',
 }
 
@@ -449,6 +450,7 @@ export function classifyChangeType(event: WorldIntelEvent): MaterialityChangeTyp
   if (event.patentRecord) return 'patent'
   if (event.githubRelease) return 'oss-release'
   if (event.gdeltArticle) return 'media-observation'
+  if (event.comtradeRecord) return 'trade-flow'
   if (/trade|comtrade|shipping/i.test(`${event.category} ${event.sourceId}`)) return 'trade-flow'
   return 'world-event'
 }

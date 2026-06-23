@@ -65,7 +65,7 @@ function event(partial: Partial<WorldIntelEvent> & { sourceId: string }): WorldI
 }
 
 describe('runtime productization audit', () => {
-  it('separates configured sources, missing keys, stale/fail states, and not-wired Comtrade', () => {
+  it('separates configured sources, missing keys, and stale/fail states', () => {
     const rows = buildConnectorAudit({
       now: NOW,
       sources: [
@@ -93,25 +93,23 @@ describe('runtime productization audit', () => {
     expect(rows.find((row) => row.id === 'eia')?.status).toBe('missing-key')
     expect(rows.find((row) => row.id === 'nvd')?.status).toBe('stale')
     expect(rows.find((row) => row.id === 'cisa-kev')?.status).toBe('rate-limited')
-    expect(rows.find((row) => row.id === 'un-comtrade')?.status).toBe('not-wired')
+    // UN Comtrade is now implemented + key-gated -> missing-key without a key.
+    expect(rows.find((row) => row.id === 'un-comtrade')?.status).toBe('missing-key')
   })
 
-  it('distinguishes pending-first-fetch (public, implemented, no snapshot yet) from not-wired and missing-key', () => {
+  it('distinguishes pending-first-fetch (public, implemented, no snapshot yet) from missing-key', () => {
     // Cold start: no source snapshots, no env keys.
     const rows = buildConnectorAudit({ now: NOW, sources: [], events: [] })
 
     // Public implemented connectors that simply have not polled yet -> pending-first-fetch.
-    for (const id of ['usgs-earthquakes', 'cisa-kev', 'nvd', 'treasury-fiscal', 'noaa-alerts', 'federal-register', 'ofac-sdn']) {
+    for (const id of ['usgs-earthquakes', 'cisa-kev', 'nvd', 'treasury-fiscal', 'noaa-alerts', 'federal-register', 'ofac-sdn', 'gdelt-doc']) {
       const row = rows.find((r) => r.id === id)
       expect(row?.status, id).toBe('pending-first-fetch')
       expect(row?.missingReason, id).toMatch(/waiting for first poll/i)
     }
 
-    // Genuinely no runtime adapter -> still not-wired.
-    expect(rows.find((r) => r.id === 'un-comtrade')?.status).toBe('not-wired')
-
-    // Key-gated with no env key -> still missing-key (unchanged).
-    for (const id of ['eia', 'bea', 'uspto', 'fred', 'congress-gov']) {
+    // Key-gated with no env key -> missing-key (incl. now-implemented UN Comtrade).
+    for (const id of ['eia', 'bea', 'uspto', 'fred', 'congress-gov', 'un-comtrade']) {
       expect(rows.find((r) => r.id === id)?.status, id).toBe('missing-key')
     }
   })
@@ -168,7 +166,7 @@ describe('runtime productization audit', () => {
     expect(markup).toContain('SEC EDGAR')
     expect(markup).toContain('official source')
     expect(markup).toContain('UN Comtrade')
-    expect(markup).toContain('not wired')
+    expect(markup).toContain('missing key') // UN Comtrade is now key-gated, no key here
     expect(markup).not.toContain('verified live')
   })
 

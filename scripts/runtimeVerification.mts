@@ -85,7 +85,7 @@ async function main() {
   const usptoCold = coldRows.find((r) => r.id === 'uspto')
   check('USPTO cold state is missing-key (no key present)', usptoCold?.status === 'missing-key', `status=${usptoCold?.status}`)
   const comtrade = coldRows.find((r) => r.id === 'un-comtrade')
-  check('UN Comtrade reported not-wired (catalog only, honest)', comtrade?.status === 'not-wired', `status=${comtrade?.status}`)
+  check('UN Comtrade implemented + key-gated -> missing-key without a key', comtrade?.status === 'missing-key', `status=${comtrade?.status}`)
   const publicCold = ['usgs-earthquakes', 'cisa-kev', 'nvd'].map((id) => coldRows.find((r) => r.id === id)?.status)
   check('public implemented connectors cold-start as pending-first-fetch (not not-wired)', publicCold.every((s) => s === 'pending-first-fetch'), `usgs/kev/nvd=${publicCold.join('/')}`)
   console.log()

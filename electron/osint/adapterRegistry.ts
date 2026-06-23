@@ -14,6 +14,7 @@ import { fetchUsptoPatents, readUsptoPatentConfig } from './adapters/usptoPatent
 import { fetchFederalRegisterDocuments, readFederalRegisterConfig } from './adapters/federalRegisterAdapter'
 import { fetchOfacSanctions, readOfacSanctionsConfig } from './adapters/ofacSanctionsAdapter'
 import { fetchCongressGovBills, readCongressGovConfig } from './adapters/congressGovAdapter'
+import { fetchComtradeEvents, readComtradeConfig } from './adapters/comtradeAdapter'
 import { fetchTreasuryFiscalData, readTreasuryFiscalConfig } from './adapters/treasuryFiscalAdapter'
 import { fetchBlsObservations, readBlsConfig } from './adapters/blsAdapter'
 import { fetchBeaObservations, readBeaConfig } from './adapters/beaAdapter'
@@ -47,6 +48,7 @@ export const KNOWN_ADAPTERS = [
   'federal-register',
   'ofac-sdn',
   'congress-gov',
+  'un-comtrade',
   'treasury-fiscal',
   'bls',
   'bea',
@@ -93,6 +95,10 @@ export function resolveAdapter(provider: ProviderDefinition, env: NodeJS.Process
     case 'congress-gov': {
       const config = readCongressGovConfig(env)
       return { fetcher: config ? (signal) => fetchCongressGovBills(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'un-comtrade': {
+      const config = readComtradeConfig(env)
+      return { fetcher: config ? (signal) => fetchComtradeEvents(signal, config) : undefined, configured: config !== null, managed: false }
     }
     case 'treasury-fiscal': {
       const config = readTreasuryFiscalConfig(env)

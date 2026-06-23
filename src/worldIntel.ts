@@ -83,6 +83,49 @@ export type WorldIntelEvent = {
   ofacSanctionsRecord?: OfacSanctionsRecord
   congressBillAction?: CongressBillAction
   gdeltArticle?: GdeltArticle
+  comtradeRecord?: ComtradeTradeRecord
+}
+
+export type ComtradeChangeType = 'first_seen' | 'new_today' | 'updated' | 'unchanged'
+
+/**
+ * A single normalized UN Comtrade trade-flow observation: official country/partner/
+ * commodity trade value for a period. Hard trade-flow evidence only — NEVER a
+ * company-level claim or an inferred supply chain.
+ */
+export type ComtradeTradeRecord = {
+  id: string
+  /** Dataset identity, e.g. "C-A-HS" (type · frequency · classification). */
+  datasetCode: string
+  typeCode: string
+  freqCode: string
+  classification: string
+  commodityCode: string
+  commodityDescription: string
+  reporterCode: string
+  reporterDesc: string
+  reporterIso3?: string
+  partnerCode: string
+  partnerDesc: string
+  partnerIso3?: string
+  flowCode: string
+  flowDesc: string
+  period: string
+  refYear: number
+  tradeValue: number
+  quantity?: number
+  quantityUnit?: string
+  netWeight?: number
+  sourceUrl: string
+  /** API URL with the subscription key stripped — safe to persist/display. */
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  changeType: ComtradeChangeType
+  rawPayloadHash: string
+  rawPayloadJson?: string
 }
 
 /**
