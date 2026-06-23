@@ -32,6 +32,9 @@ const HistoricalPlaybookPanel = lazy(() =>
 const WeatherAlertSourceTrail = lazy(() =>
   import('./components/intel/WeatherAlertSourceTrail').then((m) => ({ default: m.WeatherAlertSourceTrail })),
 )
+const RegulatorySourceTrail = lazy(() =>
+  import('./components/intel/RegulatorySourceTrail').then((m) => ({ default: m.RegulatorySourceTrail })),
+)
 
 type WorldWindowId = 'now' | '1h' | '6h' | '24h' | '7d'
 
@@ -160,6 +163,10 @@ export function WorldIntelligenceView({
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading weather source trail" /></div>}>
           <WeatherAlertSourceTrail events={visibleEvents} />
+        </Suspense>
+
+        <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading regulatory source trail" /></div>}>
+          <RegulatorySourceTrail events={visibleEvents} />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading entity detail" /></div>}>

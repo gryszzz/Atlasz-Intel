@@ -53,6 +53,7 @@ export type MaterialityChangeType =
   | 'energy'
   | 'weather'
   | 'earthquake'
+  | 'regulatory'
   | 'cyber'
   | 'patent'
   | 'oss-release'
@@ -144,6 +145,7 @@ const SOURCE_LABELS: Record<string, string> = {
   github_releases_public: 'GitHub Releases',
   usgs_significant_quakes: 'USGS',
   noaa_alerts_public: 'NOAA/NWS',
+  federal_register_public: 'Federal Register',
   uspto_patentsview_public: 'USPTO',
   gdelt_doc_public: 'GDELT',
   politician_disclosure_public: 'Public disclosure',
@@ -426,6 +428,7 @@ export function classifyChangeType(event: WorldIntelEvent): MaterialityChangeTyp
   if (event.eiaEnergyRecord) return 'energy'
   if (event.weatherAlert) return 'weather'
   if (event.earthquakeEvent) return 'earthquake'
+  if (event.regulatoryDocument) return 'regulatory'
   if (event.kevVulnerability || event.nvdCve || event.ghsaAdvisory || event.osvVulnerability || event.cisaAdvisory) {
     return 'cyber'
   }

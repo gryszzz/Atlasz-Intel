@@ -47,6 +47,7 @@ export const PROVIDER_CAPABILITY_META: Record<string, ProviderCapabilityMeta> = 
   github_trending_repos: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['tech', 'ai'], supportedRegions: ['global'] },
   usgs_significant_quakes: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['natural-disaster', 'seismic'], supportedRegions: ['global'] },
   noaa_alerts_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['weather-alert'], supportedRegions: ['US'] },
+  federal_register_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['regulatory-document', 'rule', 'notice', 'proposed-rule'], supportedRegions: ['US'] },
   uspto_patentsview_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_PATENTSVIEW_API_KEY'], supportedEventTypes: ['patent'], supportedRegions: ['US'] },
   cisa_kev_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['cyber-advisory'], supportedRegions: ['global'] },
   nvd_cve_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['cyber-advisory'], supportedRegions: ['global'] },

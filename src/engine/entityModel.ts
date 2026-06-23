@@ -41,6 +41,7 @@ export type EntityKind =
   | 'vulnerability'
   | 'repository'
   | 'patent'
+  | 'regulatory-document'
   | 'filing'
   | 'macro-series'
   | 'fiscal-series'
@@ -307,6 +308,22 @@ export function deriveEventEntities(event: WorldIntelEvent): { entities: EntityR
     link(eventEntity, patentEntity, 'about')
     for (const assignee of patent.assignees) {
       link(patentEntity, { id: entityId('company', assignee), kind: 'company', label: assignee }, 'filed_by')
+    }
+  }
+
+  // Federal Register: event -> regulatory document -> issuing agency -> United States.
+  if (event.regulatoryDocument) {
+    const document = event.regulatoryDocument
+    const documentEntity: EntityRef = {
+      id: entityId('regulatory-document', document.documentNumber),
+      kind: 'regulatory-document',
+      label: `${document.documentType} ${document.documentNumber}`,
+    }
+    link(eventEntity, documentEntity, 'about')
+    for (const agency of document.agencies) {
+      const agencyEntity: EntityRef = { id: entityId('institution', agency), kind: 'institution', label: agency }
+      link(documentEntity, agencyEntity, 'issued_by')
+      link(agencyEntity, { id: entityId('country', 'US'), kind: 'country', label: 'United States' }, 'in_country')
     }
   }
 

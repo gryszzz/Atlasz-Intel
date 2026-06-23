@@ -79,6 +79,30 @@ export type WorldIntelEvent = {
   githubRelease?: GithubRelease
   earthquakeEvent?: EarthquakeEvent
   patentRecord?: PatentRecord
+  regulatoryDocument?: RegulatoryDocument
+}
+
+export type RegulatoryDocument = {
+  id: string
+  documentNumber: string
+  title: string
+  documentType: string
+  agencies: string[]
+  publicationDate: string
+  publicationTimestamp: number
+  effectiveDate?: string
+  commentEndDate?: string
+  abstract: string
+  htmlUrl: string
+  /** Official PDF rendition (govinfo / FR print) when present — legal edition. */
+  pdfUrl?: string
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
 }
 
 export type PatentRecord = {

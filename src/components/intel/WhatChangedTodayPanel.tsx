@@ -128,6 +128,7 @@ function changeTypeLabel(changeType: MaterialityChangeType): string {
     energy: 'energy',
     weather: 'weather',
     earthquake: 'earthquake',
+    regulatory: 'regulatory',
     cyber: 'cyber',
     patent: 'patent',
     'oss-release': 'OSS release',

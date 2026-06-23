@@ -11,6 +11,7 @@ import { fetchSecFilings, readSecConfig } from './adapters/secEdgarAdapter'
 import { fetchMacroCalendar, readMacroConfig } from './adapters/macroCalendarAdapter'
 import { fetchNoaaAlerts, readNoaaAlertConfig } from './adapters/noaaAlertAdapter'
 import { fetchUsptoPatents, readUsptoPatentConfig } from './adapters/usptoPatentAdapter'
+import { fetchFederalRegisterDocuments, readFederalRegisterConfig } from './adapters/federalRegisterAdapter'
 import { fetchTreasuryFiscalData, readTreasuryFiscalConfig } from './adapters/treasuryFiscalAdapter'
 import { fetchBlsObservations, readBlsConfig } from './adapters/blsAdapter'
 import { fetchBeaObservations, readBeaConfig } from './adapters/beaAdapter'
@@ -41,6 +42,7 @@ export const KNOWN_ADAPTERS = [
   'sec-edgar',
   'fred-macro',
   'noaa-alerts',
+  'federal-register',
   'treasury-fiscal',
   'bls',
   'bea',
@@ -75,6 +77,10 @@ export function resolveAdapter(provider: ProviderDefinition, env: NodeJS.Process
     case 'noaa-alerts': {
       const config = readNoaaAlertConfig(env)
       return { fetcher: config ? (signal) => fetchNoaaAlerts(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'federal-register': {
+      const config = readFederalRegisterConfig(env)
+      return { fetcher: config ? (signal) => fetchFederalRegisterDocuments(signal, config) : undefined, configured: config !== null, managed: false }
     }
     case 'treasury-fiscal': {
       const config = readTreasuryFiscalConfig(env)
