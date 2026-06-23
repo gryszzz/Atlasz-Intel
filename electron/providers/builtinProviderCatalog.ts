@@ -49,6 +49,7 @@ export const PROVIDER_CAPABILITY_META: Record<string, ProviderCapabilityMeta> = 
   noaa_alerts_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['weather-alert'], supportedRegions: ['US'] },
   federal_register_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['regulatory-document', 'rule', 'notice', 'proposed-rule'], supportedRegions: ['US'] },
   ofac_sdn_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['sanctions-record', 'sdn-list'], supportedRegions: ['global'] },
+  congress_gov_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_CONGRESS_API_KEY'], supportedEventTypes: ['legislation', 'bill-action'], supportedRegions: ['US'] },
   uspto_patentsview_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_PATENTSVIEW_API_KEY'], supportedEventTypes: ['patent'], supportedRegions: ['US'] },
   cisa_kev_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['cyber-advisory'], supportedRegions: ['global'] },
   nvd_cve_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['cyber-advisory'], supportedRegions: ['global'] },

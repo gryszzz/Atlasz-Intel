@@ -55,6 +55,7 @@ export type MaterialityChangeType =
   | 'earthquake'
   | 'regulatory'
   | 'sanctions'
+  | 'legislation'
   | 'cyber'
   | 'patent'
   | 'oss-release'
@@ -148,6 +149,7 @@ const SOURCE_LABELS: Record<string, string> = {
   noaa_alerts_public: 'NOAA/NWS',
   federal_register_public: 'Federal Register',
   ofac_sdn_public: 'OFAC SDN',
+  congress_gov_public: 'Congress.gov',
   uspto_patentsview_public: 'USPTO',
   gdelt_doc_public: 'GDELT',
   politician_disclosure_public: 'Public disclosure',
@@ -182,6 +184,7 @@ function corroborationKeys(event: WorldIntelEvent): string[] {
   for (const commodity of event.affectedCommodities ?? []) keys.push(`commodity:${commodity.toLowerCase()}`)
   for (const currency of event.affectedCurrencies ?? []) keys.push(`currency:${currency.toLowerCase()}`)
   if (event.ofacSanctionsRecord) keys.push(`ofac:${event.ofacSanctionsRecord.uid}`)
+  if (event.congressBillAction) keys.push(`bill:${event.congressBillAction.congress}:${event.congressBillAction.billType}:${event.congressBillAction.billNumber}`.toLowerCase())
   for (const key of cyberKeys(event)) keys.push(key)
   return unique(keys)
 }
@@ -191,6 +194,7 @@ function clusterKeys(event: WorldIntelEvent): string[] {
   const keys: string[] = []
   for (const asset of event.affectedAssets ?? []) keys.push(`asset:${asset.toLowerCase()}`)
   if (event.ofacSanctionsRecord) keys.push(`ofac:${event.ofacSanctionsRecord.uid}`)
+  if (event.congressBillAction) keys.push(`bill:${event.congressBillAction.congress}:${event.congressBillAction.billType}:${event.congressBillAction.billNumber}`.toLowerCase())
   for (const key of cyberKeys(event)) keys.push(key)
   return unique(keys)
 }
@@ -434,6 +438,7 @@ export function classifyChangeType(event: WorldIntelEvent): MaterialityChangeTyp
   if (event.earthquakeEvent) return 'earthquake'
   if (event.regulatoryDocument) return 'regulatory'
   if (event.ofacSanctionsRecord) return 'sanctions'
+  if (event.congressBillAction) return 'legislation'
   if (event.kevVulnerability || event.nvdCve || event.ghsaAdvisory || event.osvVulnerability || event.cisaAdvisory) {
     return 'cyber'
   }

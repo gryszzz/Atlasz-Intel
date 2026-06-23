@@ -130,6 +130,7 @@ function changeTypeLabel(changeType: MaterialityChangeType): string {
     earthquake: 'earthquake',
     regulatory: 'regulatory',
     sanctions: 'sanctions',
+    legislation: 'legislation',
     cyber: 'cyber',
     patent: 'patent',
     'oss-release': 'OSS release',

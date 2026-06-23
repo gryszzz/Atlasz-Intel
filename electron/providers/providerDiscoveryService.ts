@@ -297,6 +297,8 @@ export class ProviderDiscoveryService {
           ? withQueryParam(url, 'UserID', this.env.ATLASZ_BEA_API_KEY)
         : provider?.providerId === 'eia_energy_public' && this.env.ATLASZ_EIA_API_KEY
           ? withQueryParam(url, 'api_key', this.env.ATLASZ_EIA_API_KEY)
+        : provider?.providerId === 'congress_gov_public' && this.env.ATLASZ_CONGRESS_API_KEY
+          ? withQueryParam(url, 'api_key', this.env.ATLASZ_CONGRESS_API_KEY)
         : url
     const response = await this.fetchImpl(checkedUrl, {
       signal: abortSignal(discoveryTimeoutMs),
@@ -415,6 +417,9 @@ function endpointFor(provider: ProviderDefinition, env: NodeJS.ProcessEnv): stri
   if (provider.providerId === 'eia_energy_public') {
     const base = env.ATLASZ_EIA_API_BASE || 'https://api.eia.gov/v2'
     return `${base.replace(/\/$/, '')}/seriesid/PET.RWTC.D?length=1`
+  }
+  if (provider.providerId === 'congress_gov_public') {
+    return 'https://api.congress.gov/v3/bill?format=json&limit=1'
   }
   if (provider.providerId === 'public_market_rest' || provider.providerId === 'yahoo_finance_1m_public') {
     return 'https://query1.finance.yahoo.com/v8/finance/chart/SPY?range=1d&interval=1m'

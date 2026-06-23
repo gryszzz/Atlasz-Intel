@@ -44,6 +44,9 @@ export type EntityKind =
   | 'regulatory-document'
   | 'sanctions-record'
   | 'sanctions-program'
+  | 'legislation'
+  | 'policy-area'
+  | 'committee'
   | 'filing'
   | 'macro-series'
   | 'fiscal-series'
@@ -348,6 +351,25 @@ export function deriveEventEntities(event: WorldIntelEvent): { entities: EntityR
     }
     for (const country of record.countries) {
       link(sanctionsRecord, { id: entityId('country', country), kind: 'country', label: country }, 'touches')
+    }
+  }
+
+  // Congress.gov: event -> bill/action -> United States / policy area /
+  // committees. No company exposure is inferred from policy text.
+  if (event.congressBillAction) {
+    const bill = event.congressBillAction
+    const billEntity: EntityRef = {
+      id: entityId('legislation', `${bill.congress}-${bill.billType}-${bill.billNumber}`),
+      kind: 'legislation',
+      label: `${bill.billType} ${bill.billNumber}`,
+    }
+    link(eventEntity, billEntity, 'about')
+    link(billEntity, { id: entityId('country', 'US'), kind: 'country', label: 'United States' }, 'in_country')
+    if (bill.policyArea) {
+      link(billEntity, { id: entityId('policy-area', bill.policyArea), kind: 'policy-area', label: bill.policyArea }, 'references')
+    }
+    for (const committee of bill.committees) {
+      link(billEntity, { id: entityId('committee', committee), kind: 'committee', label: committee }, 'references')
     }
   }
 

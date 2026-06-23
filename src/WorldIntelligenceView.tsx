@@ -38,6 +38,9 @@ const RegulatorySourceTrail = lazy(() =>
 const OfacSourceTrail = lazy(() =>
   import('./components/intel/OfacSourceTrail').then((m) => ({ default: m.OfacSourceTrail })),
 )
+const CongressSourceTrail = lazy(() =>
+  import('./components/intel/CongressSourceTrail').then((m) => ({ default: m.CongressSourceTrail })),
+)
 
 type WorldWindowId = 'now' | '1h' | '6h' | '24h' | '7d'
 
@@ -174,6 +177,10 @@ export function WorldIntelligenceView({
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading OFAC source trail" /></div>}>
           <OfacSourceTrail events={visibleEvents} />
+        </Suspense>
+
+        <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading Congress source trail" /></div>}>
+          <CongressSourceTrail events={visibleEvents} />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading entity detail" /></div>}>

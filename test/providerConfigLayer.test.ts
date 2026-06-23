@@ -38,6 +38,8 @@ describe('provider config layer', () => {
     expect(isProviderConfigured(find(providers, 'noaa_alerts_public'), {})).toBe(true)
     expect(isProviderConfigured(find(providers, 'federal_register_public'), {})).toBe(true)
     expect(isProviderConfigured(find(providers, 'ofac_sdn_public'), {})).toBe(true)
+    expect(isProviderConfigured(find(providers, 'congress_gov_public'), {})).toBe(false)
+    expect(isProviderConfigured(find(providers, 'congress_gov_public'), { ATLASZ_CONGRESS_API_KEY: 'x' })).toBe(true)
     expect(isProviderConfigured(find(providers, 'x_explore_placeholder'), { ATLASZ_X_AUTH_TOKEN: 'x' })).toBe(false)
   })
 
@@ -78,6 +80,8 @@ describe('adapter registry', () => {
     expect(resolveAdapter(find(providers, 'noaa_alerts_public'), {}).fetcher).toBeTypeOf('function')
     expect(resolveAdapter(find(providers, 'federal_register_public'), {}).fetcher).toBeTypeOf('function')
     expect(resolveAdapter(find(providers, 'ofac_sdn_public'), {}).fetcher).toBeTypeOf('function')
+    expect(resolveAdapter(find(providers, 'congress_gov_public'), {}).fetcher).toBeUndefined()
+    expect(resolveAdapter(find(providers, 'congress_gov_public'), { ATLASZ_CONGRESS_API_KEY: 'secret' }).fetcher).toBeTypeOf('function')
     expect(resolveAdapter(find(providers, 'rss_public_radar'), {}).managed).toBe(true)
     expect(resolveAdapter(find(providers, 'x_explore_placeholder'), {}).configured).toBe(false)
   })

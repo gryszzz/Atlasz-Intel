@@ -13,6 +13,7 @@ import { fetchNoaaAlerts, readNoaaAlertConfig } from './adapters/noaaAlertAdapte
 import { fetchUsptoPatents, readUsptoPatentConfig } from './adapters/usptoPatentAdapter'
 import { fetchFederalRegisterDocuments, readFederalRegisterConfig } from './adapters/federalRegisterAdapter'
 import { fetchOfacSanctions, readOfacSanctionsConfig } from './adapters/ofacSanctionsAdapter'
+import { fetchCongressGovBills, readCongressGovConfig } from './adapters/congressGovAdapter'
 import { fetchTreasuryFiscalData, readTreasuryFiscalConfig } from './adapters/treasuryFiscalAdapter'
 import { fetchBlsObservations, readBlsConfig } from './adapters/blsAdapter'
 import { fetchBeaObservations, readBeaConfig } from './adapters/beaAdapter'
@@ -45,6 +46,7 @@ export const KNOWN_ADAPTERS = [
   'noaa-alerts',
   'federal-register',
   'ofac-sdn',
+  'congress-gov',
   'treasury-fiscal',
   'bls',
   'bea',
@@ -87,6 +89,10 @@ export function resolveAdapter(provider: ProviderDefinition, env: NodeJS.Process
     case 'ofac-sdn': {
       const config = readOfacSanctionsConfig(env)
       return { fetcher: config ? (signal) => fetchOfacSanctions(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'congress-gov': {
+      const config = readCongressGovConfig(env)
+      return { fetcher: config ? (signal) => fetchCongressGovBills(signal, config) : undefined, configured: config !== null, managed: false }
     }
     case 'treasury-fiscal': {
       const config = readTreasuryFiscalConfig(env)

@@ -116,6 +116,12 @@ describe('intelligence source catalog', () => {
       integrationMode: 'candidate-public-adapter',
       provenance: 'official-api',
     })
+    expect(lookupIntelligenceSource('congress-gov')).toMatchObject({
+      accessModel: 'public-requires-key',
+      integrationMode: 'runtime-wired',
+      provenance: 'official-api',
+      envKeysRequired: ['ATLASZ_CONGRESS_API_KEY'],
+    })
     expect(lookupIntelligenceSource('arxiv-api')).toMatchObject({
       integrationMode: 'candidate-public-adapter',
       accessModel: 'public-no-auth',

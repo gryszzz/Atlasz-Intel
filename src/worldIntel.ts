@@ -81,9 +81,37 @@ export type WorldIntelEvent = {
   patentRecord?: PatentRecord
   regulatoryDocument?: RegulatoryDocument
   ofacSanctionsRecord?: OfacSanctionsRecord
+  congressBillAction?: CongressBillAction
 }
 
 export type OfacSanctionsChangeStatus = 'new' | 'updated' | 'unchanged' | 'observed'
+
+export type CongressBillChangeType = 'new' | 'updated' | 'unchanged' | 'observed'
+
+export type CongressBillAction = {
+  id: string
+  congress: number
+  billType: string
+  billNumber: string
+  title: string
+  introducedDate?: string
+  introducedTimestamp?: number
+  latestActionDate: string
+  latestActionTimestamp: number
+  latestActionText: string
+  policyArea?: string
+  sponsors: string[]
+  committees: string[]
+  officialUrl: string
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  changeType: CongressBillChangeType
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
 
 export type OfacSanctionsRecord = {
   id: string

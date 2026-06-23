@@ -76,6 +76,12 @@ describe('provider auto-discovery', () => {
       envKeysRequired: ['ATLASZ_EIA_API_KEY'],
       envKeysPresent: [],
     })
+    expect(snapshot.providers.find((provider) => provider.providerId === 'congress_gov_public')).toMatchObject({
+      status: 'missing-config',
+      autoWired: false,
+      envKeysRequired: ['ATLASZ_CONGRESS_API_KEY'],
+      envKeysPresent: [],
+    })
     expect(snapshot.providers.find((provider) => provider.providerId === 'x_explore_placeholder')).toMatchObject({
       status: 'auth-gated',
       autoWired: false,
@@ -132,6 +138,23 @@ describe('provider auto-discovery', () => {
     expect(eia?.endpointsChecked[0]).toContain('api.eia.gov/v2/seriesid/PET.RWTC.D')
     expect(eia?.endpointsChecked[0]).not.toContain('secret-eia-key')
     expect(fetchImpl.mock.calls.some(([url]) => String(url).includes('api_key=secret-eia-key'))).toBe(true)
+  })
+
+  it('health-checks configured Congress.gov with api_key without storing the key in endpoint trails', async () => {
+    const fetchImpl = successfulDiscoveryFetch()
+    const { service } = makeService(fetchImpl, { ATLASZ_CONGRESS_API_KEY: 'secret-congress-key' })
+
+    const snapshot = await service.discover()
+    const congress = snapshot.providers.find((provider) => provider.providerId === 'congress_gov_public')
+
+    expect(congress).toMatchObject({
+      status: 'available',
+      autoWired: true,
+      provenance: 'official-api',
+    })
+    expect(congress?.endpointsChecked[0]).toContain('api.congress.gov/v3/bill')
+    expect(congress?.endpointsChecked[0]).not.toContain('secret-congress-key')
+    expect(fetchImpl.mock.calls.some(([url]) => String(url).includes('api_key=secret-congress-key'))).toBe(true)
   })
 
   it('fails closed and does not report KAS availability when public discovery endpoints fail', async () => {

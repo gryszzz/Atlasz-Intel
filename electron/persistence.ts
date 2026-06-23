@@ -1360,6 +1360,7 @@ type WorldIntelSubRecords = Pick<
   | 'patentRecord'
   | 'regulatoryDocument'
   | 'ofacSanctionsRecord'
+  | 'congressBillAction'
 >
 
 /** Serialize the typed sub-records present on an event; null when there are none. */
@@ -1382,6 +1383,7 @@ export function serializeSubRecords(record: WorldIntelEvent): string | null {
   if (record.patentRecord) sub.patentRecord = record.patentRecord
   if (record.regulatoryDocument) sub.regulatoryDocument = record.regulatoryDocument
   if (record.ofacSanctionsRecord) sub.ofacSanctionsRecord = record.ofacSanctionsRecord
+  if (record.congressBillAction) sub.congressBillAction = record.congressBillAction
   return Object.keys(sub).length > 0 ? JSON.stringify(sub) : null
 }
 
@@ -1419,6 +1421,7 @@ export function parseSubRecords(value: unknown): WorldIntelSubRecords {
   if (isValidPatent(record.patentRecord)) out.patentRecord = record.patentRecord as WorldIntelEvent['patentRecord']
   if (isValidRegulatoryDocument(record.regulatoryDocument)) out.regulatoryDocument = record.regulatoryDocument as WorldIntelEvent['regulatoryDocument']
   if (isValidOfacSanctionsRecord(record.ofacSanctionsRecord)) out.ofacSanctionsRecord = record.ofacSanctionsRecord as WorldIntelEvent['ofacSanctionsRecord']
+  if (isValidCongressBillAction(record.congressBillAction)) out.congressBillAction = record.congressBillAction as WorldIntelEvent['congressBillAction']
   return out
 }
 
@@ -1478,6 +1481,19 @@ function isValidRegulatoryDocument(value: unknown): boolean {
 function isValidOfacSanctionsRecord(value: unknown): boolean {
   const v = asRecord(value)
   return Boolean(v && typeof v.uid === 'string' && v.uid.length > 0 && hasHash(v))
+}
+
+function isValidCongressBillAction(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(
+    v &&
+      typeof v.congress === 'number' &&
+      typeof v.billType === 'string' &&
+      typeof v.billNumber === 'string' &&
+      v.billType.length > 0 &&
+      v.billNumber.length > 0 &&
+      hasHash(v),
+  )
 }
 
 function isValidWeatherAlert(value: unknown): boolean {

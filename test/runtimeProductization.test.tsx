@@ -111,7 +111,7 @@ describe('runtime productization audit', () => {
     expect(rows.find((r) => r.id === 'un-comtrade')?.status).toBe('not-wired')
 
     // Key-gated with no env key -> still missing-key (unchanged).
-    for (const id of ['eia', 'bea', 'uspto', 'fred']) {
+    for (const id of ['eia', 'bea', 'uspto', 'fred', 'congress-gov']) {
       expect(rows.find((r) => r.id === id)?.status, id).toBe('missing-key')
     }
   })
