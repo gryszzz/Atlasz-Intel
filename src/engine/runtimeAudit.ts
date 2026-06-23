@@ -14,6 +14,7 @@ export type ConnectorCadence = 'realtime' | 'periodic' | 'manual'
 export type ConnectorRuntimeStatus =
   | 'online'
   | 'configured'
+  | 'pending-first-fetch'
   | 'missing-key'
   | 'unavailable'
   | 'stale'
@@ -462,8 +463,11 @@ function connectorStatus(
   sources: OsintSourceSnapshot[],
   now: number,
 ): ConnectorRuntimeStatus {
+  // `not-wired` is reserved for connectors with no runtime adapter at all.
   if (!definition.implemented) return 'not-wired'
-  if (sources.length === 0) return definition.requiredEnv.length > 0 ? 'missing-key' : 'not-wired'
+  // Implemented but no source snapshot yet: key-gated -> missing-key; otherwise the
+  // connector is configured and simply hasn't completed its first poll -> pending-first-fetch.
+  if (sources.length === 0) return definition.requiredEnv.length > 0 ? 'missing-key' : 'pending-first-fetch'
   if (sources.every((source) => source.status === 'disabled' || !source.enabled)) return 'disabled'
   if (sources.some((source) => source.status === 'failed')) return 'failed'
   if (sources.some((source) => source.status === 'rate-limited')) return 'rate-limited'
@@ -482,7 +486,7 @@ function missingReason(definition: ConnectorAuditDefinition, sources: OsintSourc
   const unconfigured = sources.find((source) => source.configured === false)
   if (unconfigured?.configHint) return unconfigured.configHint
   if (sources.length === 0 && definition.requiredEnv.length > 0) return `Missing ${definition.requiredEnv.join(', ')}`
-  if (sources.length === 0) return 'No source snapshot has been registered yet.'
+  if (sources.length === 0) return 'Configured; waiting for first poll/manual run.'
   return undefined
 }
 

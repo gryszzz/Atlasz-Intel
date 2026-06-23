@@ -31,6 +31,7 @@ export function ConnectorDashboardPanel({
         <div className="connector-summary" aria-label="Connector status summary">
           <SummaryPill label="online" value={summary.online} tone="ok" />
           <SummaryPill label="configured" value={summary.configured} tone="neutral" />
+          <SummaryPill label="pending poll" value={summary.pending} tone="neutral" />
           <SummaryPill label="needs key" value={summary.missingKey} tone="warn" />
           <SummaryPill label="stale/fail" value={summary.staleOrFailed} tone="bad" />
           <SummaryPill label="not wired" value={summary.notWired} tone="muted" />
@@ -120,6 +121,7 @@ function summarize(rows: ConnectorAuditRow[]) {
   return {
     online: rows.filter((row) => row.status === 'online').length,
     configured: rows.filter((row) => row.status === 'configured').length,
+    pending: rows.filter((row) => row.status === 'pending-first-fetch').length,
     missingKey: rows.filter((row) => row.status === 'missing-key').length,
     staleOrFailed: rows.filter((row) => ['stale', 'failed', 'rate-limited', 'unavailable'].includes(row.status)).length,
     notWired: rows.filter((row) => row.status === 'not-wired').length,
@@ -129,6 +131,7 @@ function summarize(rows: ConnectorAuditRow[]) {
 function statusLabel(status: ConnectorRuntimeStatus): string {
   if (status === 'missing-key') return 'missing key'
   if (status === 'not-wired') return 'not wired'
+  if (status === 'pending-first-fetch') return 'pending poll'
   if (status === 'rate-limited') return 'rate limited'
   return status
 }

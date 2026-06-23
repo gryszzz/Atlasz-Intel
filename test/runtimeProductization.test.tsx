@@ -96,6 +96,42 @@ describe('runtime productization audit', () => {
     expect(rows.find((row) => row.id === 'un-comtrade')?.status).toBe('not-wired')
   })
 
+  it('distinguishes pending-first-fetch (public, implemented, no snapshot yet) from not-wired and missing-key', () => {
+    // Cold start: no source snapshots, no env keys.
+    const rows = buildConnectorAudit({ now: NOW, sources: [], events: [] })
+
+    // Public implemented connectors that simply have not polled yet -> pending-first-fetch.
+    for (const id of ['usgs-earthquakes', 'cisa-kev', 'nvd', 'treasury-fiscal', 'noaa-alerts']) {
+      const row = rows.find((r) => r.id === id)
+      expect(row?.status, id).toBe('pending-first-fetch')
+      expect(row?.missingReason, id).toMatch(/waiting for first poll/i)
+    }
+
+    // Genuinely no runtime adapter -> still not-wired.
+    expect(rows.find((r) => r.id === 'un-comtrade')?.status).toBe('not-wired')
+
+    // Key-gated with no env key -> still missing-key (unchanged).
+    for (const id of ['eia', 'bea', 'uspto', 'fred']) {
+      expect(rows.find((r) => r.id === id)?.status, id).toBe('missing-key')
+    }
+  })
+
+  it('a pending-first-fetch connector transitions to online after a successful fetch, and to failure states on error', () => {
+    const online = buildConnectorAudit({
+      now: NOW,
+      sources: [source({ sourceId: 'usgs_significant_quakes', status: 'online', lastSuccessAt: NOW - 60_000, itemCount: 3 })],
+      events: [],
+    })
+    expect(online.find((r) => r.id === 'usgs-earthquakes')?.status).toBe('online')
+
+    const failed = buildConnectorAudit({
+      now: NOW,
+      sources: [source({ sourceId: 'cisa_kev_public', status: 'failed', lastError: 'HTTP 500' })],
+      events: [],
+    })
+    expect(failed.find((r) => r.id === 'cisa-kev')?.status).toBe('failed')
+  })
+
   it('summarizes today resolved exposure without upgrading curated-reference links to evidence', () => {
     const resolved = event({
       sourceId: 'sec_edgar_public',

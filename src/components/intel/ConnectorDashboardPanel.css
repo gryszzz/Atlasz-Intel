@@ -169,8 +169,14 @@
   border-color: rgba(94, 234, 212, 0.42);
 }
 
-.connector-status-configured .connector-state-chip {
+.connector-status-configured .connector-state-chip,
+.connector-status-pending-first-fetch .connector-state-chip {
   color: var(--muted);
+}
+
+/* Configured + implemented, just hasn't polled yet — distinct from not-wired. */
+.connector-status-pending-first-fetch .connector-state-chip {
+  border-style: dotted;
 }
 
 .connector-status-missing-key .connector-state-chip,
