@@ -92,6 +92,12 @@ describe('intelligence source catalog', () => {
       provenance: 'official-api',
       envKeysRequired: ['ATLASZ_SEC_USER_AGENT'],
     })
+    expect(lookupIntelligenceSource('sec-company-tickers-json')).toMatchObject({
+      accessModel: 'public-no-auth',
+      integrationMode: 'runtime-wired',
+      provenance: 'official-api',
+      envKeysRequired: [],
+    })
     expect(lookupIntelligenceSource('fred-economic-data')).toMatchObject({
       integrationMode: 'auth-gated-adapter',
       envKeysRequired: ['ATLASZ_FRED_API_KEY'],

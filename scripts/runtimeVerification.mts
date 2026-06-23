@@ -51,7 +51,7 @@ function subRetrievedAt(e: WorldIntelEvent): number | undefined {
   const sub =
     e.earthquakeEvent ?? e.kevVulnerability ?? e.patentRecord ?? e.nvdCve ?? e.weatherAlert ??
     e.regulatoryDocument ?? e.ofacSanctionsRecord ?? e.congressBillAction ?? e.gdeltArticle ?? e.comtradeRecord ??
-    e.openAlexWork ?? e.crossrefWork
+    e.openAlexWork ?? e.crossrefWork ?? e.marketIdentity
   return (sub as { retrievedAt?: number } | undefined)?.retrievedAt
 }
 
@@ -227,7 +227,18 @@ async function main() {
   check('media observations excluded from exposure ranking', !mediaLive || eventStructuralExposure(mediaLive).length === 0, mediaLive ? 'live media event unresolved' : 'no live media event (logic holds)')
 
   // Comtrade excluded from company exposure (synthetic shape — resolver has no rule).
-  const comtradeProbe = { ...(liveEvents[0] ?? ({} as WorldIntelEvent)), id: 'probe-comtrade', affectedAssets: [], secFiling: undefined, patentRecord: undefined, eiaEnergyRecord: undefined, fredObservation: undefined, githubRelease: undefined, comtradeRecord: { commodityCode: '854231' } as WorldIntelEvent['comtradeRecord'] } as WorldIntelEvent
+  const comtradeProbe = {
+    ...(liveEvents[0] ?? ({} as WorldIntelEvent)),
+    id: 'probe-comtrade',
+    affectedAssets: [],
+    secFiling: undefined,
+    marketIdentity: undefined,
+    patentRecord: undefined,
+    eiaEnergyRecord: undefined,
+    fredObservation: undefined,
+    githubRelease: undefined,
+    comtradeRecord: { commodityCode: '854231' } as WorldIntelEvent['comtradeRecord'],
+  } as WorldIntelEvent
   check('Comtrade never resolves into company exposure', !isEventResolvable(comtradeProbe) && eventStructuralExposure(comtradeProbe).length === 0, 'comtrade probe unresolved')
 
   // OFAC / Congress unresolved by design.
@@ -285,24 +296,25 @@ async function sentinelRedactionCheck() {
 function printTruthTable(rows: ConnectorRow[]) {
   console.log('Connector truth table:')
   const header = ['connector', 'impl', 'gating', 'key?', 'status', 'recs', 'persist', 'trail', 'redact', 'resolver', 'expose']
-  const widths = [18, 5, 11, 8, 19, 6, 9, 7, 8, 17, 7]
+  const body = rows.map((r) => [
+    r.id,
+    r.implemented ? 'yes' : 'no',
+    r.gating,
+    r.keyPresent,
+    r.status,
+    String(r.records),
+    r.persistenceRoundTrip,
+    r.sourceTrailProof,
+    r.keyRedaction,
+    r.resolver,
+    r.exposureAllowed,
+  ])
+  const widths = header.map((heading, index) => Math.max(heading.length, ...body.map((cells) => cells[index].length)) + 2)
   const fmt = (cells: string[]) => cells.map((c, i) => c.padEnd(widths[i])).join('')
   console.log('  ' + fmt(header))
   console.log('  ' + '-'.repeat(widths.reduce((a, b) => a + b, 0)))
-  for (const r of rows) {
-    console.log('  ' + fmt([
-      r.id,
-      r.implemented ? 'yes' : 'no',
-      r.gating,
-      r.keyPresent,
-      r.status,
-      String(r.records),
-      r.persistenceRoundTrip,
-      r.sourceTrailProof,
-      r.keyRedaction,
-      r.resolver,
-      r.exposureAllowed,
-    ]))
+  for (const cells of body) {
+    console.log('  ' + fmt(cells))
   }
 }
 

@@ -1,6 +1,6 @@
 # Runtime Verification Log
 
-**Generated:** 2026-06-23T19:32:57.828Z
+**Generated:** 2026-06-23T20:24:37.499Z
 **Command:** `npx tsx scripts/runtimeVerification.mts`
 **Result:** 13/13 checks passed
 **Persistence:** node:sqlite (with JSON fallback)
@@ -19,8 +19,9 @@
 
 | connector | impl | gating | env required | key? | status | recs | persist | trail | redact | resolver | expose |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| gdelt-doc | impl | public | - | public | rate-limited | 0 | n/a | n/a | n/a | no | no |
+| gdelt-doc | impl | public | - | public | failed | 0 | n/a | n/a | n/a | no | no |
 | sec-edgar | impl | key-gated | ATLASZ_SEC_USER_AGENT | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
+| market-reference-master | impl | public | - | public | online | 8021 | yes | yes | n/a | yes | yes |
 | fred | impl | key-gated | ATLASZ_FRED_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
 | treasury-fiscal | impl | public | - | public | online | 3 | yes | yes | n/a | partial | yes |
 | bls | impl | public | - | public | online | 5 | yes | yes | n/a | partial | yes |
@@ -48,7 +49,7 @@
 |---|---|---|
 | media-observation | 1 | gdelt-doc |
 | public-disclosure | 1 | sec-edgar |
-| official-api | 18 | fred, treasury-fiscal, bls, bea, eia, noaa-alerts, federal-register, ofac-sdn, congress-gov, usgs-earthquakes, un-comtrade, openalex-works, crossref-works, uspto, cisa-kev, nvd, osv, cisa-advisories |
+| official-api | 19 | market-reference-master, fred, treasury-fiscal, bls, bea, eia, noaa-alerts, federal-register, ofac-sdn, congress-gov, usgs-earthquakes, un-comtrade, openalex-works, crossref-works, uspto, cisa-kev, nvd, osv, cisa-advisories |
 | public-unauthenticated | 2 | github-releases, ghsa |
 
 ## Failures

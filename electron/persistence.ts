@@ -21,6 +21,7 @@ import type {
   CountryIntelState,
   EiaEnergyRecord,
   FredMacroObservation,
+  MarketIdentity,
   OsintSourceSnapshot,
   SecCompanyFiling,
   TreasuryFiscalRecord,
@@ -164,6 +165,8 @@ export interface IntelPersistence {
   saveWorldIntelEvent(record: WorldIntelEvent): void
   listSecCompanyFilings(symbol?: string, limit?: number): SecCompanyFiling[]
   saveSecCompanyFiling(record: SecCompanyFiling): void
+  listMarketIdentities(symbol?: string, limit?: number): MarketIdentity[]
+  saveMarketIdentity(record: MarketIdentity): void
   listFredMacroObservations(seriesId?: string, limit?: number): FredMacroObservation[]
   saveFredMacroObservation(record: FredMacroObservation): void
   listTreasuryFiscalRecords(datasetId?: string, limit?: number): TreasuryFiscalRecord[]
@@ -361,6 +364,26 @@ CREATE TABLE IF NOT EXISTS sec_company_filings (
   raw_payload_hash TEXT NOT NULL,
   raw_payload_json TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS market_identity_master (
+  id TEXT PRIMARY KEY,
+  ticker TEXT NOT NULL,
+  cik TEXT NOT NULL,
+  cik_padded TEXT NOT NULL,
+  legal_name TEXT NOT NULL,
+  common_name TEXT,
+  exchange TEXT,
+  sector TEXT,
+  industry TEXT,
+  aliases TEXT NOT NULL,
+  source_url TEXT NOT NULL,
+  source_name TEXT NOT NULL,
+  retrieved_at INTEGER NOT NULL,
+  stale_at INTEGER NOT NULL,
+  provenance TEXT NOT NULL,
+  confidence INTEGER NOT NULL,
+  raw_payload_hash TEXT NOT NULL,
+  raw_payload_json TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS fred_macro_observations (
   id TEXT PRIMARY KEY,
   series_id TEXT NOT NULL,
@@ -531,6 +554,9 @@ CREATE INDEX IF NOT EXISTS idx_world_events_source ON world_intel_events(source_
 CREATE INDEX IF NOT EXISTS idx_sec_filings_ticker_time ON sec_company_filings(ticker, observed_at);
 CREATE INDEX IF NOT EXISTS idx_sec_filings_cik_time ON sec_company_filings(cik, observed_at);
 CREATE INDEX IF NOT EXISTS idx_sec_filings_form_time ON sec_company_filings(form_type, observed_at);
+CREATE INDEX IF NOT EXISTS idx_market_identity_ticker ON market_identity_master(ticker);
+CREATE INDEX IF NOT EXISTS idx_market_identity_cik ON market_identity_master(cik);
+CREATE INDEX IF NOT EXISTS idx_market_identity_retrieved ON market_identity_master(retrieved_at);
 CREATE INDEX IF NOT EXISTS idx_fred_observations_series_time ON fred_macro_observations(series_id, observation_timestamp);
 CREATE INDEX IF NOT EXISTS idx_fred_observations_retrieved ON fred_macro_observations(retrieved_at);
 CREATE INDEX IF NOT EXISTS idx_treasury_fiscal_dataset_time ON treasury_fiscal_records(dataset_id, record_timestamp);
@@ -890,6 +916,49 @@ class SqliteStore implements IntelPersistence {
         reportDate: record.reportDate ?? null,
         acceptedAt: record.acceptedAt ?? null,
         primaryDocument: record.primaryDocument ?? null,
+        rawPayloadJson: record.rawPayloadJson ?? '{}',
+      })
+  }
+
+  listMarketIdentities(symbol?: string, limit = 120): MarketIdentity[] {
+    const normalized = symbol?.trim().toUpperCase()
+    const rows = normalized
+      ? (this.db
+          .prepare('SELECT * FROM market_identity_master WHERE ticker = ? OR cik = ? OR cik_padded = ? ORDER BY retrieved_at DESC LIMIT ?')
+          .all(normalized, normalized.replace(/\D/g, '').replace(/^0+/, ''), normalized.padStart(10, '0'), limit) as Array<Record<string, unknown>>)
+      : (this.db
+          .prepare('SELECT * FROM market_identity_master ORDER BY ticker ASC LIMIT ?')
+          .all(limit) as Array<Record<string, unknown>>)
+    return rows.map(rowToMarketIdentity)
+  }
+
+  saveMarketIdentity(record: MarketIdentity): void {
+    this.db
+      .prepare(
+        `INSERT INTO market_identity_master
+           (id, ticker, cik, cik_padded, legal_name, common_name, exchange, sector, industry,
+            aliases, source_url, source_name, retrieved_at, stale_at, provenance, confidence,
+            raw_payload_hash, raw_payload_json)
+         VALUES
+           (@id, @ticker, @cik, @cikPadded, @legalName, @commonName, @exchange, @sector, @industry,
+            @aliases, @sourceUrl, @sourceName, @retrievedAt, @staleAt, @provenance, @confidence,
+            @rawPayloadHash, @rawPayloadJson)
+         ON CONFLICT(id) DO UPDATE SET
+           ticker=excluded.ticker, cik=excluded.cik, cik_padded=excluded.cik_padded,
+           legal_name=excluded.legal_name, common_name=excluded.common_name,
+           exchange=excluded.exchange, sector=excluded.sector, industry=excluded.industry,
+           aliases=excluded.aliases, source_url=excluded.source_url, source_name=excluded.source_name,
+           retrieved_at=excluded.retrieved_at, stale_at=excluded.stale_at,
+           provenance=excluded.provenance, confidence=excluded.confidence,
+           raw_payload_hash=excluded.raw_payload_hash, raw_payload_json=excluded.raw_payload_json`,
+      )
+      .run({
+        ...record,
+        commonName: record.commonName ?? null,
+        exchange: record.exchange ?? null,
+        sector: record.sector ?? null,
+        industry: record.industry ?? null,
+        aliases: JSON.stringify(record.aliases),
         rawPayloadJson: record.rawPayloadJson ?? '{}',
       })
   }
@@ -1365,6 +1434,7 @@ type WorldIntelSubRecords = Pick<
   | 'comtradeRecord'
   | 'openAlexWork'
   | 'crossrefWork'
+  | 'marketIdentity'
 >
 
 /** Serialize the typed sub-records present on an event; null when there are none. */
@@ -1392,6 +1462,7 @@ export function serializeSubRecords(record: WorldIntelEvent): string | null {
   if (record.comtradeRecord) sub.comtradeRecord = record.comtradeRecord
   if (record.openAlexWork) sub.openAlexWork = record.openAlexWork
   if (record.crossrefWork) sub.crossrefWork = record.crossrefWork
+  if (record.marketIdentity) sub.marketIdentity = record.marketIdentity
   return Object.keys(sub).length > 0 ? JSON.stringify(sub) : null
 }
 
@@ -1434,6 +1505,7 @@ export function parseSubRecords(value: unknown): WorldIntelSubRecords {
   if (isValidComtradeRecord(record.comtradeRecord)) out.comtradeRecord = record.comtradeRecord as WorldIntelEvent['comtradeRecord']
   if (isValidOpenAlexWork(record.openAlexWork)) out.openAlexWork = record.openAlexWork as WorldIntelEvent['openAlexWork']
   if (isValidCrossrefWork(record.crossrefWork)) out.crossrefWork = record.crossrefWork as WorldIntelEvent['crossrefWork']
+  if (isValidMarketIdentity(record.marketIdentity)) out.marketIdentity = record.marketIdentity as WorldIntelEvent['marketIdentity']
   return out
 }
 
@@ -1521,6 +1593,22 @@ function isValidOpenAlexWork(value: unknown): boolean {
 function isValidCrossrefWork(value: unknown): boolean {
   const v = asRecord(value)
   return Boolean(v && typeof v.doi === 'string' && /^10\.\d{4,}\//i.test(v.doi) && typeof v.title === 'string' && v.title.length > 0 && hasHash(v))
+}
+
+function isValidMarketIdentity(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(
+    v &&
+      typeof v.ticker === 'string' &&
+      v.ticker.length > 0 &&
+      typeof v.cik === 'string' &&
+      v.cik.length > 0 &&
+      typeof v.legalName === 'string' &&
+      v.legalName.length > 0 &&
+      typeof v.sourceUrl === 'string' &&
+      v.sourceUrl === 'https://www.sec.gov/files/company_tickers.json' &&
+      hasHash(v),
+  )
 }
 
 function isValidComtradeRecord(value: unknown): boolean {
@@ -1618,6 +1706,29 @@ function rowToSecCompanyFiling(row: Record<string, unknown>): SecCompanyFiling {
     sourceJsonUrl: String(row.source_json_url),
     sourceName: String(row.source_name),
     provenance: String(row.provenance) as SecCompanyFiling['provenance'],
+    confidence: Number(row.confidence),
+    rawPayloadHash: String(row.raw_payload_hash),
+    rawPayloadJson: String(row.raw_payload_json),
+  }
+}
+
+function rowToMarketIdentity(row: Record<string, unknown>): MarketIdentity {
+  return {
+    id: String(row.id),
+    ticker: String(row.ticker),
+    cik: String(row.cik),
+    cikPadded: String(row.cik_padded),
+    legalName: String(row.legal_name),
+    commonName: row.common_name === null || row.common_name === undefined ? undefined : String(row.common_name),
+    exchange: row.exchange === null || row.exchange === undefined ? undefined : String(row.exchange),
+    sector: row.sector === null || row.sector === undefined ? undefined : String(row.sector),
+    industry: row.industry === null || row.industry === undefined ? undefined : String(row.industry),
+    aliases: parseJsonArray(row.aliases),
+    sourceUrl: String(row.source_url),
+    sourceName: String(row.source_name),
+    retrievedAt: Number(row.retrieved_at),
+    staleAt: Number(row.stale_at),
+    provenance: String(row.provenance) as MarketIdentity['provenance'],
     confidence: Number(row.confidence),
     rawPayloadHash: String(row.raw_payload_hash),
     rawPayloadJson: String(row.raw_payload_json),
@@ -1806,6 +1917,7 @@ type JsonShape = {
   osintSources: OsintSourceSnapshot[]
   worldIntelEvents: WorldIntelEvent[]
   secCompanyFilings: SecCompanyFiling[]
+  marketIdentities: MarketIdentity[]
   fredMacroObservations: FredMacroObservation[]
   treasuryFiscalRecords: TreasuryFiscalRecord[]
   beaObservations: BeaObservation[]
@@ -1927,6 +2039,20 @@ class JsonStore implements IntelPersistence {
 
   saveSecCompanyFiling(record: SecCompanyFiling): void {
     this.data.secCompanyFilings = capByTime(upsert(this.data.secCompanyFilings, record), 'observedAt', 10_000)
+    this.flush()
+  }
+
+  listMarketIdentities(symbol?: string, limit = 120): MarketIdentity[] {
+    const normalized = symbol?.trim().toUpperCase()
+    const normalizedCik = normalized?.replace(/\D/g, '').replace(/^0+/, '')
+    return [...this.data.marketIdentities]
+      .filter((record) => !normalized || record.ticker === normalized || record.cik === normalizedCik || record.cikPadded === normalized)
+      .sort((a, b) => a.ticker.localeCompare(b.ticker))
+      .slice(0, limit)
+  }
+
+  saveMarketIdentity(record: MarketIdentity): void {
+    this.data.marketIdentities = capByTime(upsertBy(this.data.marketIdentities, record, 'id'), 'retrievedAt', 25_000)
     this.flush()
   }
 
@@ -2082,6 +2208,7 @@ class JsonStore implements IntelPersistence {
         osintSources: parsed.osintSources ?? [],
         worldIntelEvents: parsed.worldIntelEvents ?? [],
         secCompanyFilings: parsed.secCompanyFilings ?? [],
+        marketIdentities: parsed.marketIdentities ?? [],
         fredMacroObservations: parsed.fredMacroObservations ?? [],
         treasuryFiscalRecords: parsed.treasuryFiscalRecords ?? [],
         beaObservations: parsed.beaObservations ?? [],
@@ -2137,6 +2264,7 @@ function emptyJsonShape(): JsonShape {
     osintSources: [],
     worldIntelEvents: [],
     secCompanyFilings: [],
+    marketIdentities: [],
     fredMacroObservations: [],
     treasuryFiscalRecords: [],
     beaObservations: [],

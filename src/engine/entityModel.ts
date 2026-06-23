@@ -29,6 +29,7 @@ import { provenanceTrust, sourceLabel } from './materialityEngine'
 export type EntityKind =
   | 'company'
   | 'ticker'
+  | 'cik'
   | 'index'
   | 'sector'
   | 'country'
@@ -206,6 +207,18 @@ export function deriveEventEntities(event: WorldIntelEvent): { entities: EntityR
       const tickerEntity: EntityRef = { id: entityId('ticker', filing.ticker), kind: 'ticker', label: filing.ticker }
       link(companyEntity, tickerEntity, 'trades_as')
     }
+  }
+
+  // Market Reference Master: SEC company_tickers.json -> company/ticker/CIK.
+  if (event.marketIdentity) {
+    const identity = event.marketIdentity
+    const companyEntity: EntityRef = { id: entityId('company', identity.cik || identity.legalName), kind: 'company', label: identity.legalName }
+    const tickerEntity: EntityRef = { id: entityId('ticker', identity.ticker), kind: 'ticker', label: identity.ticker }
+    const cikEntity: EntityRef = { id: entityId('cik', identity.cik), kind: 'cik', label: `CIK ${identity.cik}` }
+    link(eventEntity, companyEntity, 'about')
+    link(companyEntity, tickerEntity, 'trades_as')
+    link(tickerEntity, companyEntity, 'represents')
+    link(cikEntity, companyEntity, 'represents')
   }
 
   // FRED macro series.

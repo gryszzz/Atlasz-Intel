@@ -138,6 +138,7 @@ function changeTypeLabel(changeType: MaterialityChangeType): string {
     'media-observation': 'media observation',
     'research': 'research metadata',
     'doi-metadata': 'DOI metadata',
+    'market-reference': 'market reference',
     'world-event': 'world event',
   }
   return labels[changeType]

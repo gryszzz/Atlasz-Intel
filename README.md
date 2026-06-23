@@ -93,6 +93,7 @@ Runtime-wired means Atlasz has an adapter/provider path, tests, source health be
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Public market REST | markets/watchlist | public | public-unauthenticated | default live-capable | Data Core | sampled market state | price context only, not advice |
 | Public crypto websockets | crypto ticks | public opt-in | public-unauthenticated | live-capable when enabled | Data Core | sampled frames/ticks | local-computed proxy pressure only |
+| Market Reference Master | ticker/CIK/legal identity | public | official-api | live-capable | Market identity trail | `market_identity_master` | exact ticker/CIK/name resolver, no fake sectors |
 | GDELT DOC | media observation | public | media-observation | live-capable, may fail closed | GDELT trail | world events/audit | no exposure ranking, no verified event claim |
 | Treasury Fiscal Data | government fiscal | public | official-api | live-capable | Treasury trail | macro/fiscal records | partial macro/fiscal context |
 | BLS | labor/economic | public | official-api | live-capable | BLS trail | macro observations | partial macro context |
@@ -120,7 +121,7 @@ Runtime-wired means Atlasz has an adapter/provider path, tests, source health be
 
 **Live public**
 
-Treasury Fiscal Data, BLS, NOAA/NWS alerts, USGS earthquakes, Federal Register, OFAC SDN, GitHub Releases, CISA KEV, NVD, GHSA, OSV, CISA advisories, Crossref DOI metadata, GDELT media observation, Yahoo/CoinGecko public market paths, and optional public crypto websocket paths.
+Market Reference Master via SEC company_tickers.json, Treasury Fiscal Data, BLS, NOAA/NWS alerts, USGS earthquakes, Federal Register, OFAC SDN, GitHub Releases, CISA KEV, NVD, GHSA, OSV, CISA advisories, Crossref DOI metadata, GDELT media observation, Yahoo/CoinGecko public market paths, and optional public crypto websocket paths.
 
 **Key-gated or config-gated**
 

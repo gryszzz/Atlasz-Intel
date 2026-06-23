@@ -86,6 +86,34 @@ export type WorldIntelEvent = {
   comtradeRecord?: ComtradeTradeRecord
   openAlexWork?: OpenAlexWork
   crossrefWork?: CrossrefWork
+  marketIdentity?: MarketIdentity
+}
+
+/**
+ * Canonical market identity record from a source-backed reference feed. The SEC
+ * company_tickers.json feed provides CIK, ticker, and legal title only: exchange,
+ * sector, and industry remain absent unless another official/public source
+ * explicitly provides them. No fuzzy merge, no inferred ETF weights.
+ */
+export type MarketIdentity = {
+  id: string
+  ticker: string
+  cik: string
+  cikPadded: string
+  legalName: string
+  commonName?: string
+  exchange?: string
+  sector?: string
+  industry?: string
+  aliases: string[]
+  sourceUrl: string
+  sourceName: string
+  retrievedAt: number
+  staleAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
 }
 
 /**
@@ -778,6 +806,7 @@ export type WorldIntelConnectorSnapshot = {
   worldEvents: WorldIntelEvent[]
   countries: CountryIntelState[]
   assetIdentities: AssetIdentity[]
+  marketIdentities: MarketIdentity[]
   secFilings: SecCompanyFiling[]
   fredObservations: FredMacroObservation[]
   treasuryFiscalRecords: TreasuryFiscalRecord[]
@@ -916,6 +945,7 @@ export function buildSeedWorldIntelSnapshot(): WorldIntelSnapshot {
     worldEvents: [],
     countries: [],
     assetIdentities: [],
+    marketIdentities: [],
     secFilings: [],
     fredObservations: [],
     treasuryFiscalRecords: [],

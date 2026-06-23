@@ -14,7 +14,7 @@
  *  - No match -> unresolved (the entity stays separate, never force-merged).
  *  - `source: 'resolver-rule'` marks the resolution as a rule, not evidence.
  */
-import type { WorldIntelEvent } from '../worldIntel'
+import type { MarketIdentity, WorldIntelEvent } from '../worldIntel'
 import { ALL_SEED, exposureFor, seedEntities, type ExposurePath } from './relationshipSeed'
 import { mapCpcCodes } from './cpcTechnologyMap'
 
@@ -35,6 +35,13 @@ export type ResolutionResult =
       sourceEntityId: string
       reason: string
     }
+
+export type MarketIdentityIndex = {
+  byTicker: Map<string, MarketIdentity>
+  byCik: Map<string, MarketIdentity>
+  byName: Map<string, MarketIdentity>
+  conflicts: Set<string>
+}
 
 type AliasRule = {
   matchType: Exclude<ResolutionMatchType, 'exact'>
@@ -126,6 +133,34 @@ const byCik = indexRules('cik', normalizeCik)
 const byName = indexRules('alias', normalizeName)
 const bySourceId = indexRules('source-id', (alias) => alias.toLowerCase().trim())
 
+export function buildMarketIdentityIndex(identities: MarketIdentity[]): MarketIdentityIndex {
+  const byTicker = new Map<string, MarketIdentity>()
+  const byCik = new Map<string, MarketIdentity>()
+  const byName = new Map<string, MarketIdentity>()
+  const conflicts = new Set<string>()
+  const insert = (map: Map<string, MarketIdentity>, key: string, identity: MarketIdentity, kind: string) => {
+    if (!key) return
+    const existing = map.get(key)
+    if (existing && existing.id !== identity.id) {
+      conflicts.add(`${kind}:${key}`)
+      return
+    }
+    map.set(key, identity)
+  }
+  for (const identity of identities) {
+    insert(byTicker, identity.ticker.toUpperCase(), identity, 'ticker')
+    insert(byCik, normalizeCik(identity.cik), identity, 'cik')
+    insert(byCik, normalizeCik(identity.cikPadded), identity, 'cik')
+    insert(byName, normalizeName(identity.legalName), identity, 'name')
+    for (const alias of identity.aliases) {
+      if (/^\d+$/.test(alias.replace(/\D/g, ''))) insert(byCik, normalizeCik(alias), identity, 'cik')
+      else if (/^[A-Z0-9.-]+$/.test(alias)) insert(byTicker, alias.toUpperCase(), identity, 'ticker')
+      else insert(byName, normalizeName(alias), identity, 'name')
+    }
+  }
+  return { byTicker, byCik, byName, conflicts }
+}
+
 function indexRules(matchType: AliasRule['matchType'], normalize: (alias: string) => string): Map<string, AliasRule> {
   const map = new Map<string, AliasRule>()
   for (const rule of ALIAS_RULES) {
@@ -161,6 +196,67 @@ function unresolved(sourceEntityId: string, reason: string): ResolutionResult {
   return { resolved: false, sourceEntityId, reason }
 }
 
+function resolveSeedFromMarketIdentity(
+  identity: MarketIdentity,
+  sourceEntityId: string,
+  matchType: Extract<ResolutionMatchType, 'ticker' | 'cik' | 'alias'>,
+): ResolutionResult {
+  const candidates = [
+    byCik.get(normalizeCik(identity.cik)),
+    byTicker.get(identity.ticker.toUpperCase()),
+    byName.get(normalizeName(identity.legalName)),
+  ].filter((rule): rule is AliasRule => Boolean(rule))
+  const seedIds = new Set(candidates.map((rule) => rule.canonicalSeedEntityId))
+  if (seedIds.size > 1) {
+    return unresolved(
+      sourceEntityId,
+      `Market Reference Master conflict: ticker ${identity.ticker}, CIK ${identity.cik}, and name "${identity.legalName}" map to multiple curated seed entities.`,
+    )
+  }
+  const rule = candidates[0]
+  if (!rule) {
+    return unresolved(
+      sourceEntityId,
+      `Market Reference Master found ${identity.ticker}/CIK ${identity.cik}, but no exact curated seed alias rule exists.`,
+    )
+  }
+  return {
+    resolved: true,
+    sourceEntityId,
+    canonicalSeedEntityId: rule.canonicalSeedEntityId,
+    matchType,
+    confidence: Math.min(rule.confidence, identity.confidence / 100),
+    reason: `Resolved through SEC company_tickers.json: ${identity.ticker} -> CIK ${identity.cik} -> ${identity.legalName}. ${rule.note}`,
+    source: 'resolver-rule',
+  }
+}
+
+export function resolveByMarketIdentity(
+  input: { ticker?: string; cik?: string; name?: string },
+  index: MarketIdentityIndex,
+): ResolutionResult {
+  if (input.cik) {
+    const key = normalizeCik(input.cik)
+    if (index.conflicts.has(`cik:${key}`)) return unresolved(input.cik, `Market Reference Master conflict for CIK "${input.cik}".`)
+    const identity = index.byCik.get(key)
+    if (identity) return resolveSeedFromMarketIdentity(identity, input.cik, 'cik')
+  }
+  if (input.ticker) {
+    const key = input.ticker.toUpperCase().trim()
+    if (index.conflicts.has(`ticker:${key}`)) return unresolved(input.ticker, `Market Reference Master conflict for ticker "${input.ticker}".`)
+    const identity = index.byTicker.get(key)
+    if (identity) return resolveSeedFromMarketIdentity(identity, input.ticker, 'ticker')
+  }
+  if (input.name) {
+    const key = normalizeName(input.name)
+    if (index.conflicts.has(`name:${key}`)) return unresolved(input.name, `Market Reference Master conflict for name "${input.name}".`)
+    const identity = index.byName.get(key)
+    if (identity) return resolveSeedFromMarketIdentity(identity, input.name, 'alias')
+  }
+  const id = input.cik ?? input.ticker ?? input.name ?? '(none)'
+  return unresolved(id, 'No source-backed market identity matched (exact ticker/CIK/name only).')
+}
+
 /** An identifier that is already a canonical seed id resolves exactly. */
 export function resolveSeedId(id: string): ResolutionResult {
   if (SEED_IDS.has(id)) {
@@ -169,17 +265,29 @@ export function resolveSeedId(id: string): ResolutionResult {
   return unresolved(id, 'Not a known seed entity id.')
 }
 
-export function resolveByTicker(ticker: string): ResolutionResult {
+export function resolveByTicker(ticker: string, marketIndex?: MarketIdentityIndex): ResolutionResult {
+  if (marketIndex) {
+    const market = resolveByMarketIdentity({ ticker }, marketIndex)
+    if (market.resolved || /conflict/i.test(market.reason)) return market
+  }
   const rule = byTicker.get(ticker.toUpperCase().trim())
   return rule ? resolvedFrom(ticker, rule) : unresolved(ticker, `No alias rule for ticker "${ticker}".`)
 }
 
-export function resolveByCik(cik: string): ResolutionResult {
+export function resolveByCik(cik: string, marketIndex?: MarketIdentityIndex): ResolutionResult {
+  if (marketIndex) {
+    const market = resolveByMarketIdentity({ cik }, marketIndex)
+    if (market.resolved || /conflict/i.test(market.reason)) return market
+  }
   const rule = byCik.get(normalizeCik(cik))
   return rule ? resolvedFrom(cik, rule) : unresolved(cik, `No alias rule for CIK "${cik}".`)
 }
 
-export function resolveByName(name: string): ResolutionResult {
+export function resolveByName(name: string, marketIndex?: MarketIdentityIndex): ResolutionResult {
+  if (marketIndex) {
+    const market = resolveByMarketIdentity({ name }, marketIndex)
+    if (market.resolved || /conflict/i.test(market.reason)) return market
+  }
   const rule = byName.get(normalizeName(name))
   return rule ? resolvedFrom(name, rule) : unresolved(name, `No exact alias rule for name "${name}" (fuzzy matching is intentionally disabled).`)
 }
@@ -190,12 +298,20 @@ export function resolveBySourceId(sourceId: string): ResolutionResult {
 }
 
 /** Try identifiers in priority order: seed id, CIK, ticker, name, source id. */
-export function resolveEntity(input: { seedId?: string; cik?: string; ticker?: string; name?: string; sourceId?: string }): ResolutionResult {
+export function resolveEntity(
+  input: { seedId?: string; cik?: string; ticker?: string; name?: string; sourceId?: string },
+  marketIndex?: MarketIdentityIndex,
+): ResolutionResult {
   const attempts: string[] = []
   if (input.seedId) {
     const r = resolveSeedId(input.seedId)
     if (r.resolved) return r
     attempts.push(`seedId=${input.seedId}`)
+  }
+  if (marketIndex && (input.cik || input.ticker || input.name)) {
+    const r = resolveByMarketIdentity(input, marketIndex)
+    if (r.resolved || /conflict/i.test(r.reason)) return r
+    attempts.push(`market-reference=${r.reason}`)
   }
   if (input.cik) {
     const r = resolveByCik(input.cik)
@@ -222,7 +338,7 @@ export function resolveEntity(input: { seedId?: string; cik?: string; ticker?: s
 }
 
 /** Resolve all identifiers an event carries; returns only resolved seed links. */
-export function resolveEvent(event: WorldIntelEvent): ResolutionResult[] {
+export function resolveEvent(event: WorldIntelEvent, marketIndex?: MarketIdentityIndex): ResolutionResult[] {
   const results = new Map<string, ResolutionResult & { resolved: true }>()
   const consider = (r: ResolutionResult) => {
     if (r.resolved) {
@@ -233,11 +349,14 @@ export function resolveEvent(event: WorldIntelEvent): ResolutionResult[] {
     }
   }
 
-  for (const ticker of event.affectedAssets ?? []) consider(resolveByTicker(ticker))
+  for (const ticker of event.affectedAssets ?? []) consider(resolveByTicker(ticker, marketIndex))
+  if (event.marketIdentity) {
+    consider(resolveByMarketIdentity({ ticker: event.marketIdentity.ticker, cik: event.marketIdentity.cik, name: event.marketIdentity.legalName }, marketIndex ?? buildMarketIdentityIndex([event.marketIdentity])))
+  }
   if (event.secFiling) {
-    consider(resolveByCik(event.secFiling.cik))
-    if (event.secFiling.ticker) consider(resolveByTicker(event.secFiling.ticker))
-    consider(resolveByName(event.secFiling.companyName))
+    consider(resolveByCik(event.secFiling.cik, marketIndex))
+    if (event.secFiling.ticker) consider(resolveByTicker(event.secFiling.ticker, marketIndex))
+    consider(resolveByName(event.secFiling.companyName, marketIndex))
   }
   if (event.eiaEnergyRecord?.commodity) consider(resolveByName(event.eiaEnergyRecord.commodity))
   if (event.eiaEnergyRecord?.seriesId) consider(resolveBySourceId(event.eiaEnergyRecord.seriesId))
@@ -273,6 +392,11 @@ export function findWorldIntelEvent(id: string, events: WorldIntelEvent[]): Worl
 export function eventCandidateIdentifiers(event: WorldIntelEvent): Array<{ type: ResolutionMatchType; value: string }> {
   const out: Array<{ type: ResolutionMatchType; value: string }> = []
   for (const ticker of event.affectedAssets ?? []) out.push({ type: 'ticker', value: ticker })
+  if (event.marketIdentity) {
+    out.push({ type: 'ticker', value: event.marketIdentity.ticker })
+    out.push({ type: 'cik', value: event.marketIdentity.cik })
+    out.push({ type: 'alias', value: event.marketIdentity.legalName })
+  }
   if (event.secFiling) {
     out.push({ type: 'cik', value: event.secFiling.cik })
     if (event.secFiling.ticker) out.push({ type: 'ticker', value: event.secFiling.ticker })

@@ -103,7 +103,7 @@ describe('runtime productization audit', () => {
     const rows = buildConnectorAudit({ now: NOW, sources: [], events: [] })
 
     // Public implemented connectors that simply have not polled yet -> pending-first-fetch.
-    for (const id of ['usgs-earthquakes', 'cisa-kev', 'nvd', 'treasury-fiscal', 'noaa-alerts', 'federal-register', 'ofac-sdn', 'gdelt-doc', 'crossref-works']) {
+    for (const id of ['usgs-earthquakes', 'cisa-kev', 'nvd', 'treasury-fiscal', 'noaa-alerts', 'federal-register', 'ofac-sdn', 'gdelt-doc', 'crossref-works', 'market-reference-master']) {
       const row = rows.find((r) => r.id === id)
       expect(row?.status, id).toBe('pending-first-fetch')
       expect(row?.missingReason, id).toMatch(/waiting for first poll/i)
@@ -170,6 +170,7 @@ describe('runtime productization audit', () => {
     expect(markup).toContain('missing key') // UN Comtrade is now key-gated, no key here
     expect(markup).toContain('OpenAlex')
     expect(markup).toContain('Crossref')
+    expect(markup).toContain('Market Reference Master')
     expect(markup).not.toContain('verified live')
   })
 

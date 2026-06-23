@@ -1,0 +1,131 @@
+.market-identity-trail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--panel-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+}
+
+.market-identity-head,
+.market-identity-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.market-identity-head span {
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--faint);
+}
+
+.market-identity-head strong {
+  font-family: var(--mono);
+  color: var(--text);
+}
+
+.market-identity-boundary,
+.market-identity-empty p {
+  margin: 0;
+  font-size: var(--fs-2xs);
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.market-identity-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.market-identity-row,
+.market-identity-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+}
+
+.market-identity-row-head strong {
+  margin-right: auto;
+  color: var(--text);
+  font-size: var(--fs-sm);
+}
+
+.identity-state {
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.identity-state.fresh {
+  color: var(--green);
+}
+
+.identity-state.stale {
+  color: var(--yellow, var(--sev-elevated));
+}
+
+.market-identity-row p {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--fs-xs);
+}
+
+.market-identity-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+}
+
+.market-identity-meta div {
+  padding: 6px;
+  background: var(--panel-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+}
+
+.market-identity-meta dt {
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  color: var(--faint);
+}
+
+.market-identity-meta dd {
+  margin: 3px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  color: var(--muted);
+}
+
+.market-identity-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  text-decoration: none;
+}
+
+.market-identity-links a:hover {
+  text-decoration: underline;
+}
+
+.market-identity-empty strong {
+  font-family: var(--mono);
+  color: var(--faint);
+}

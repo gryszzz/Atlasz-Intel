@@ -33,6 +33,7 @@ because it is listed here.
 | Layer | Provider/source | Evidence path |
 | --- | --- | --- |
 | Markets | Yahoo public chart, CoinGecko, public crypto websocket paths | Public unauthenticated/delayed/stale source labels; no broker or advice behavior. |
+| Market identity | SEC company_tickers.json | Official SEC reference -> ticker/CIK/legal title -> `market_identity_master` -> source trail -> evidence graph. No fake exchange, sector, industry, or ETF weights. |
 | World events | GDELT and configured RSS/public official feeds | `WorldIntelEvent` records, source trails, freshness, confidence, provenance. |
 | Government fiscal | Treasury Fiscal Data, Debt to the Penny | Official API -> fiscal record -> source trail -> macro/fiscal card -> graph. |
 | Labor/economic | BLS Public Data API | Official API -> BLS observation -> source trail -> macro-series graph node. |

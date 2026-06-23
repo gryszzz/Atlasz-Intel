@@ -77,6 +77,62 @@
   color: var(--yellow, var(--sev-elevated));
 }
 
+.dossier-market-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: rgba(75, 113, 126, 0.09);
+  border: 1px solid rgba(122, 210, 147, 0.24);
+  border-radius: 6px;
+}
+
+.dossier-market-identity strong {
+  font-size: var(--fs-xs);
+  color: var(--text);
+}
+
+.dossier-market-identity p {
+  margin: 0;
+  font-size: var(--fs-2xs);
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.dossier-market-identity-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.dossier-market-identity-grid span {
+  padding: 4px 6px;
+  background: var(--panel);
+  border: 1px solid var(--line-soft);
+  border-radius: 5px;
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dossier-market-identity a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: max-content;
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  color: var(--green);
+  text-decoration: none;
+}
+
+.dossier-market-identity a:hover {
+  text-decoration: underline;
+}
+
 .dossier-connections button {
   display: flex;
   align-items: center;

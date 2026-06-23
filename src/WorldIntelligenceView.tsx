@@ -53,6 +53,9 @@ const OpenAlexSourceTrail = lazy(() =>
 const CrossrefSourceTrail = lazy(() =>
   import('./components/intel/CrossrefSourceTrail').then((m) => ({ default: m.CrossrefSourceTrail })),
 )
+const MarketIdentitySourceTrail = lazy(() =>
+  import('./components/intel/MarketIdentitySourceTrail').then((m) => ({ default: m.MarketIdentitySourceTrail })),
+)
 
 type WorldWindowId = 'now' | '1h' | '6h' | '24h' | '7d'
 
@@ -209,6 +212,10 @@ export function WorldIntelligenceView({
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading Crossref source trail" /></div>}>
           <CrossrefSourceTrail events={visibleEvents} />
+        </Suspense>
+
+        <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading market identity source trail" /></div>}>
+          <MarketIdentitySourceTrail events={visibleEvents} identities={snapshot.marketIdentities} now={now} />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading entity detail" /></div>}>

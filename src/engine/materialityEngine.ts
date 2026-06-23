@@ -63,6 +63,7 @@ export type MaterialityChangeType =
   | 'media-observation'
   | 'research'
   | 'doi-metadata'
+  | 'market-reference'
   | 'world-event'
 
 export type MaterialItem = {
@@ -161,6 +162,7 @@ const SOURCE_LABELS: Record<string, string> = {
   un_comtrade_public: 'UN Comtrade',
   openalex_works_public: 'OpenAlex',
   crossref_works_public: 'Crossref',
+  sec_company_tickers_public: 'SEC Company Tickers',
   politician_disclosure_public: 'Public disclosure',
 }
 
@@ -250,6 +252,7 @@ export function assessWhatChangedToday(
   const considered = events.filter(
     (event) =>
       Number.isFinite(event.timestamp) &&
+      !event.marketIdentity &&
       event.timestamp >= now - windowMs &&
       event.timestamp <= now + 60_000 &&
       (event.confidence ?? 0) >= minConfidence,
@@ -456,6 +459,7 @@ export function classifyChangeType(event: WorldIntelEvent): MaterialityChangeTyp
   if (event.gdeltArticle) return 'media-observation'
   if (event.openAlexWork) return 'research'
   if (event.crossrefWork) return 'doi-metadata'
+  if (event.marketIdentity) return 'market-reference'
   if (event.comtradeRecord) return 'trade-flow'
   if (/trade|comtrade|shipping/i.test(`${event.category} ${event.sourceId}`)) return 'trade-flow'
   return 'world-event'

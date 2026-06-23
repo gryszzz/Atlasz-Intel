@@ -129,6 +129,23 @@ export const CONNECTOR_AUDIT_DEFINITIONS: ConnectorAuditDefinition[] = [
     notes: 'Official company filings; fail-closed without a contactable User-Agent.',
   }),
   connector({
+    id: 'market-reference-master',
+    label: 'Market Reference Master',
+    domain: 'market identity',
+    sourceIds: ['sec_company_tickers_public'],
+    access: 'public',
+    cadence: 'periodic',
+    sourceIdentity: 'SEC company_tickers.json',
+    officialUrl: 'https://www.sec.gov/files/company_tickers.json',
+    requiredEnv: [],
+    persistenceTables: ['market_identity_master', 'world_intel_events', 'source_audit_log'],
+    sourceTrailUi: 'Market identity source trail',
+    resolverSupport: 'yes',
+    exposureSupport: 'curated-reference',
+    trust: 'official-api',
+    notes: 'Official ticker/CIK/legal-title identity only. No exchange, sector, industry, ETF weights, fuzzy merge, or trading signal inferred.',
+  }),
+  connector({
     id: 'fred',
     label: 'FRED',
     domain: 'macro time series',
@@ -507,7 +524,7 @@ export function summarizeExposure(input: {
   const windowMs = input.windowMs ?? DAY_MS
   const limit = input.limit ?? 6
   const considered = input.events
-    .filter((event) => Number.isFinite(event.timestamp) && event.timestamp >= now - windowMs && event.timestamp <= now + 60_000)
+    .filter((event) => !event.marketIdentity && Number.isFinite(event.timestamp) && event.timestamp >= now - windowMs && event.timestamp <= now + 60_000)
     .sort((a, b) => b.timestamp - a.timestamp)
 
   const counts = new Map<string, ExposureCount>()

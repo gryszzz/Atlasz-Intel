@@ -15,6 +15,7 @@ import { ProvenanceBadge } from '../ui/ProvenanceBadge'
 import {
   freshnessState,
   neighborsOf,
+  type EntityNeighbor,
   type EntityGraph,
   type EntityKind,
   type EntityNode,
@@ -100,6 +101,8 @@ export function EntityDossierPanel({
         </div>
       )}
 
+      <MarketIdentityProof node={node} neighbors={neighbors} />
+
       <div className="dossier-connections">
         <span className="dossier-section-label">Connected entities ({neighbors.length})</span>
         {neighbors.length > 0 ? (
@@ -146,6 +149,36 @@ export function EntityDossierPanel({
 
       <StructuralExposure entity={node} />
     </section>
+  )
+}
+
+function MarketIdentityProof({ node, neighbors }: { node: EntityNode; neighbors: EntityNeighbor[] }) {
+  const proof = node.evidence.find((item) => item.sourceId === 'sec_company_tickers_public')
+  if (!proof || !['company', 'ticker', 'cik'].includes(node.kind)) {
+    return null
+  }
+  const tickers = neighbors.filter((item) => item.entity.kind === 'ticker').map((item) => item.entity.label)
+  const ciks = neighbors.filter((item) => item.entity.kind === 'cik').map((item) => item.entity.label)
+  return (
+    <div className="dossier-market-identity">
+      <span className="dossier-section-label">Market Identity</span>
+      <strong>Resolved by ticker/CIK from SEC company tickers</strong>
+      <p>
+        SEC company_tickers.json proves ticker, CIK, and legal title. Exchange, sector, and industry are not present
+        in this source and remain unavailable unless another source provides them.
+      </p>
+      <div className="dossier-market-identity-grid">
+        <span>{tickers.length > 0 ? tickers.join(', ') : 'ticker linked through this identity'}</span>
+        <span>{ciks.length > 0 ? ciks.join(', ') : 'CIK linked through this identity'}</span>
+        <span>{proof.confidence}% confidence</span>
+      </div>
+      {proof.sourceUrl && (
+        <a href={proof.sourceUrl} target="_blank" rel="noreferrer">
+          <Link2 size={11} />
+          SEC company_tickers.json
+        </a>
+      )}
+    </div>
   )
 }
 

@@ -102,6 +102,7 @@ export class WorldIntelService {
     const assets = this.mergeAssetIdentities(this.assetIdentity.list(), deriveAssetIdentitiesFromEvents(worldEvents))
     const sources = this.mergeSources(this.registry.snapshots(), this.persistence.listOsintSources())
     const secFilings = this.persistence.listSecCompanyFilings(undefined, 120)
+    const marketIdentities = this.persistence.listMarketIdentities(undefined, 500)
     const fredObservations = this.persistence.listFredMacroObservations(undefined, 120)
     const treasuryFiscalRecords = this.persistence.listTreasuryFiscalRecords(undefined, 120)
     const beaObservations = this.persistence.listBeaObservations(undefined, 120)
@@ -120,6 +121,7 @@ export class WorldIntelService {
       countries,
       assetIdentities: assets,
       secFilings,
+      marketIdentities,
       fredObservations,
       treasuryFiscalRecords,
       beaObservations,
@@ -138,6 +140,12 @@ export class WorldIntelService {
   private persistWorldEvent(event: WorldIntelEvent): void {
     if (event.secFiling) {
       this.safePersist(() => this.persistence.saveSecCompanyFiling(event.secFiling as NonNullable<WorldIntelEvent['secFiling']>))
+    }
+    if (event.marketIdentity) {
+      this.safePersist(() => this.persistence.saveMarketIdentity(event.marketIdentity as NonNullable<WorldIntelEvent['marketIdentity']>))
+      if (!shouldSurfaceMarketIdentityEvent(event.marketIdentity)) {
+        return
+      }
     }
     if (event.fredObservation) {
       this.safePersist(() => this.persistence.saveFredMacroObservation(event.fredObservation as NonNullable<WorldIntelEvent['fredObservation']>))
@@ -256,4 +264,27 @@ function fromHeadlineRecord(record: WorldHeadlineRecord): PublicWorldHeadline {
     impact: record.impact,
     observedAt: record.observedAt,
   }
+}
+
+const MARKET_IDENTITY_SURFACE_TICKERS = new Set([
+  'AAPL',
+  'AMD',
+  'AMZN',
+  'ASML',
+  'AVGO',
+  'GOOG',
+  'GOOGL',
+  'INTC',
+  'META',
+  'MSFT',
+  'MU',
+  'NVDA',
+  'QCOM',
+  'TSLA',
+  'TSM',
+  'XOM',
+])
+
+function shouldSurfaceMarketIdentityEvent(identity: NonNullable<WorldIntelEvent['marketIdentity']>): boolean {
+  return process.env.ATLASZ_MARKET_REFERENCE_SURFACE_ALL === '1' || MARKET_IDENTITY_SURFACE_TICKERS.has(identity.ticker)
 }
