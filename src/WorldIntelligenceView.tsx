@@ -41,6 +41,9 @@ const OfacSourceTrail = lazy(() =>
 const CongressSourceTrail = lazy(() =>
   import('./components/intel/CongressSourceTrail').then((m) => ({ default: m.CongressSourceTrail })),
 )
+const GdeltSourceTrail = lazy(() =>
+  import('./components/intel/GdeltSourceTrail').then((m) => ({ default: m.GdeltSourceTrail })),
+)
 
 type WorldWindowId = 'now' | '1h' | '6h' | '24h' | '7d'
 
@@ -181,6 +184,10 @@ export function WorldIntelligenceView({
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading Congress source trail" /></div>}>
           <CongressSourceTrail events={visibleEvents} />
+        </Suspense>
+
+        <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading GDELT media source trail" /></div>}>
+          <GdeltSourceTrail events={visibleEvents} />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading entity detail" /></div>}>

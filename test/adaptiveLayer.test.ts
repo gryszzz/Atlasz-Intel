@@ -222,6 +222,7 @@ describe('temporal graph decay and provenance', () => {
       'public-unauthenticated',
       'public-disclosure',
       'official-api',
+      'media-observation',
       'rss-public',
       'local-derived',
       'local-computed',

@@ -6,7 +6,7 @@ import './ProvenanceBadge.css'
  * derived / inferred / simulated data is visually impossible to mistake for
  * verified data (requirement: never make inferred/local data look verified).
  */
-type TrustTier = 'verified' | 'trusted' | 'public' | 'derived' | 'inferred' | 'unavailable' | 'simulated'
+type TrustTier = 'verified' | 'trusted' | 'public' | 'observed' | 'derived' | 'inferred' | 'unavailable' | 'simulated'
 
 const TRUST_TIER: Record<ProvenanceId, TrustTier> = {
   live: 'public',
@@ -20,6 +20,7 @@ const TRUST_TIER: Record<ProvenanceId, TrustTier> = {
   'public-disclosure': 'public',
   'rss-public': 'public',
   'public-unauthenticated': 'public',
+  'media-observation': 'observed',
   'local-derived': 'derived',
   'local-computed': 'derived',
   'math-derived': 'derived',
@@ -32,6 +33,7 @@ const TIER_DESCRIPTION: Record<TrustTier, string> = {
   verified: 'Verified — confirmed by a trusted source',
   trusted: 'Trusted — first-party or authenticated API',
   public: 'Public source — unverified',
+  observed: 'Observed in media — not a verified event',
   derived: 'Derived locally — computed, not externally confirmed',
   inferred: 'Model inferred — uncertain, not confirmed',
   unavailable: 'Unavailable — no source data',

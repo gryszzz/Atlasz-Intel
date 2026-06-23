@@ -55,6 +55,7 @@
 .prov-public-disclosure { --prov: var(--prov-public-disclosure); }
 .prov-rss-public { --prov: var(--prov-rss-public); }
 .prov-public-unauthenticated { --prov: var(--prov-public-unauthenticated); }
+.prov-media-observation { --prov: var(--muted); }
 .prov-local-derived { --prov: var(--prov-local-derived); }
 .prov-local-computed { --prov: var(--prov-local-computed); }
 .prov-math-derived { --prov: var(--prov-math-derived); }
@@ -86,6 +87,7 @@
  * confirmed. A hollow ring dot visually separates these from trusted (filled). */
 .prov-tier-derived,
 .prov-tier-inferred,
+.prov-tier-observed,
 .prov-tier-unavailable,
 .prov-tier-simulated {
   border-style: dashed;
@@ -93,6 +95,7 @@
 
 .prov-tier-derived .prov-badge-dot,
 .prov-tier-inferred .prov-badge-dot,
+.prov-tier-observed .prov-badge-dot,
 .prov-tier-unavailable .prov-badge-dot,
 .prov-tier-simulated .prov-badge-dot {
   background: transparent;

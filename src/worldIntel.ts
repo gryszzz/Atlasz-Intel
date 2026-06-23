@@ -82,6 +82,33 @@ export type WorldIntelEvent = {
   regulatoryDocument?: RegulatoryDocument
   ofacSanctionsRecord?: OfacSanctionsRecord
   congressBillAction?: CongressBillAction
+  gdeltArticle?: GdeltArticle
+}
+
+/**
+ * A single GDELT DOC 2.0 article observation. This is media observation, NOT a
+ * verified event: it records that an article matching a query bucket was seen,
+ * with its title/domain/url/seendate/language/source-country exactly as published.
+ * No coded events, themes, actors, tone, or inferred exposure are stored.
+ */
+export type GdeltArticle = {
+  id: string
+  title: string
+  url: string
+  domain: string
+  language?: string
+  sourceCountry?: string
+  /** The Atlasz query bucket this fetch used (not a per-article topic inference). */
+  queryBucket: string
+  seenDate: string
+  seenTimestamp: number
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
 }
 
 export type OfacSanctionsChangeStatus = 'new' | 'updated' | 'unchanged' | 'observed'
@@ -1578,6 +1605,7 @@ function emptyProvenanceBreakdown(): Record<ProvenanceId, number> {
     'public-unauthenticated': 0,
     'public-disclosure': 0,
     'official-api': 0,
+    'media-observation': 0,
     'rss-public': 0,
     'local-derived': 0,
     'local-computed': 0,

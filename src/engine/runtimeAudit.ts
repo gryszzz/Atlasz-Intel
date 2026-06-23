@@ -93,6 +93,23 @@ const DEFAULT_STALE_AFTER_MS = 30 * HOUR_MS
 
 export const CONNECTOR_AUDIT_DEFINITIONS: ConnectorAuditDefinition[] = [
   connector({
+    id: 'gdelt-doc',
+    label: 'GDELT (media)',
+    domain: 'media observation',
+    sourceIds: ['gdelt_doc_public'],
+    access: 'public',
+    cadence: 'periodic',
+    sourceIdentity: 'GDELT Project DOC 2.0 API',
+    officialUrl: 'https://api.gdeltproject.org/api/v2/doc/doc',
+    requiredEnv: [],
+    persistenceTables: ['world_intel_events', 'source_audit_log'],
+    sourceTrailUi: 'GDELT media-observation source trail',
+    resolverSupport: 'no',
+    exposureSupport: 'none',
+    trust: 'media-observation',
+    notes: 'Media observation, not verified fact. No causality, tone, or company exposure inferred from headlines.',
+  }),
+  connector({
     id: 'sec-edgar',
     label: 'SEC EDGAR',
     domain: 'company disclosure',

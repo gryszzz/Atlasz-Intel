@@ -70,8 +70,8 @@ export const BUILTIN_PROVIDERS: ProviderDefinition[] = [
     pollIntervalMs: 5 * 60_000,
     rateLimitGuardMs: 20_000,
     timeoutMs: 12_000,
-    provenance: 'public-unauthenticated',
-    legalSafetyNote: 'Documented public GDELT API; public unauthenticated article metadata, not verification.',
+    provenance: 'media-observation',
+    legalSafetyNote: 'Documented public GDELT DOC API; article metadata is a media observation, not a verified event.',
   },
   {
     providerId: 'sec_edgar_public',

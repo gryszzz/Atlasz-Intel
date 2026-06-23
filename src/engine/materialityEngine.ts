@@ -121,6 +121,9 @@ const PROVENANCE_TRUST: Record<ProvenanceId, number> = {
   delayed: 0.6,
   'rss-public': 0.55,
   'public-unauthenticated': 0.5,
+  // Media observation: a real published article exists, but its claim is unverified.
+  // Kept low so media noise can never dominate the materiality ranking.
+  'media-observation': 0.25,
   'local-computed': 0.45,
   'math-derived': 0.45,
   'local-derived': 0.4,
@@ -151,7 +154,7 @@ const SOURCE_LABELS: Record<string, string> = {
   ofac_sdn_public: 'OFAC SDN',
   congress_gov_public: 'Congress.gov',
   uspto_patentsview_public: 'USPTO',
-  gdelt_doc_public: 'GDELT',
+  gdelt_doc_public: 'GDELT (media)',
   politician_disclosure_public: 'Public disclosure',
 }
 

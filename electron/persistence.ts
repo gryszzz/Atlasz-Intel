@@ -1361,6 +1361,7 @@ type WorldIntelSubRecords = Pick<
   | 'regulatoryDocument'
   | 'ofacSanctionsRecord'
   | 'congressBillAction'
+  | 'gdeltArticle'
 >
 
 /** Serialize the typed sub-records present on an event; null when there are none. */
@@ -1384,6 +1385,7 @@ export function serializeSubRecords(record: WorldIntelEvent): string | null {
   if (record.regulatoryDocument) sub.regulatoryDocument = record.regulatoryDocument
   if (record.ofacSanctionsRecord) sub.ofacSanctionsRecord = record.ofacSanctionsRecord
   if (record.congressBillAction) sub.congressBillAction = record.congressBillAction
+  if (record.gdeltArticle) sub.gdeltArticle = record.gdeltArticle
   return Object.keys(sub).length > 0 ? JSON.stringify(sub) : null
 }
 
@@ -1422,6 +1424,7 @@ export function parseSubRecords(value: unknown): WorldIntelSubRecords {
   if (isValidRegulatoryDocument(record.regulatoryDocument)) out.regulatoryDocument = record.regulatoryDocument as WorldIntelEvent['regulatoryDocument']
   if (isValidOfacSanctionsRecord(record.ofacSanctionsRecord)) out.ofacSanctionsRecord = record.ofacSanctionsRecord as WorldIntelEvent['ofacSanctionsRecord']
   if (isValidCongressBillAction(record.congressBillAction)) out.congressBillAction = record.congressBillAction as WorldIntelEvent['congressBillAction']
+  if (isValidGdeltArticle(record.gdeltArticle)) out.gdeltArticle = record.gdeltArticle as WorldIntelEvent['gdeltArticle']
   return out
 }
 
@@ -1494,6 +1497,11 @@ function isValidCongressBillAction(value: unknown): boolean {
       v.billNumber.length > 0 &&
       hasHash(v),
   )
+}
+
+function isValidGdeltArticle(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(v && typeof v.url === 'string' && v.url.length > 0 && typeof v.title === 'string' && v.title.length > 0 && hasHash(v))
 }
 
 function isValidWeatherAlert(value: unknown): boolean {

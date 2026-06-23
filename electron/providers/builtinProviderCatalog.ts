@@ -20,7 +20,7 @@ export type ProviderCapabilityMeta = {
 }
 
 export const PROVIDER_CAPABILITY_META: Record<string, ProviderCapabilityMeta> = {
-  gdelt_doc_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['news', 'geopolitics'], supportedRegions: ['global'] },
+  gdelt_doc_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['media', 'news'], supportedRegions: ['global'] },
   sec_edgar_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_SEC_USER_AGENT'], supportedEventTypes: ['filing'], supportedRegions: ['US'] },
   macro_calendar_fred: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_FRED_API_KEY'], supportedEventTypes: ['macro-event'], supportedRegions: ['US'] },
   treasury_fiscal_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['fiscal-event'], supportedRegions: ['US'] },
