@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820" role="img" aria-labelledby="title desc">
+  <title id="title">Atlasz Intel Curated Exposure Chains</title>
+  <desc id="desc">A dark Atlasz Intel curated exposure chains preview showing structural reference paths from one entity through sectors, commodities, and infrastructure.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#47616f"/>
+    </marker>
+    <style>
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+      .sans { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .label { fill: #7e8c98; font-size: 15px; letter-spacing: .12em; text-transform: uppercase; }
+      .head { fill: #f2f7fa; font-size: 38px; font-weight: 700; }
+      .text { fill: #dbe5ed; }
+      .muted { fill: #82909b; }
+      .panel { fill: #0d141a; stroke: #263541; stroke-width: 1; }
+      .node { fill: #101a22; stroke: #3a4d59; stroke-width: 1.3; }
+      .seed { fill: #e4b65c; }
+      .ok { fill: #78d293; }
+      .info { fill: #6aa6d8; }
+    </style>
+  </defs>
+  <rect width="1400" height="820" fill="#080d12"/>
+  <rect x="34" y="32" width="1332" height="756" rx="18" fill="#091017" stroke="#263541"/>
+  <text x="72" y="82" class="label sans">Entity Dossier</text>
+  <text x="72" y="132" class="head sans">Curated Exposure Chains</text>
+  <text x="72" y="164" class="muted sans" font-size="18">Reference structure is useful, but it is never rendered as live proof.</text>
+
+  <rect x="72" y="218" width="1256" height="430" rx="18" class="panel"/>
+  <g stroke="#47616f" stroke-width="2" marker-end="url(#arrow)" fill="none">
+    <path d="M 315 430 C 430 430, 460 300, 570 300"/>
+    <path d="M 315 430 C 450 430, 470 430, 600 430"/>
+    <path d="M 315 430 C 430 520, 500 548, 620 548"/>
+    <path d="M 828 300 C 930 300, 960 250, 1080 250"/>
+    <path d="M 858 430 C 940 430, 995 430, 1088 430"/>
+    <path d="M 870 548 C 955 548, 985 592, 1090 592"/>
+  </g>
+
+  <g class="sans">
+    <rect x="130" y="374" width="230" height="112" rx="16" class="node"/>
+    <text x="158" y="416" class="seed mono" font-size="18" font-weight="800">commodity</text>
+    <text x="158" y="452" class="text" font-size="26" font-weight="800">Natural Gas</text>
+    <text x="158" y="476" class="muted" font-size="15">curated-reference</text>
+
+    <rect x="584" y="246" width="266" height="104" rx="16" class="node"/>
+    <text x="612" y="286" class="info mono" font-size="18" font-weight="800">sector</text>
+    <text x="612" y="318" class="text" font-size="24" font-weight="800">Utilities</text>
+
+    <rect x="614" y="378" width="266" height="104" rx="16" class="node"/>
+    <text x="642" y="418" class="info mono" font-size="18" font-weight="800">infrastructure</text>
+    <text x="642" y="450" class="text" font-size="24" font-weight="800">Power Grid</text>
+
+    <rect x="634" y="496" width="266" height="104" rx="16" class="node"/>
+    <text x="662" y="536" class="info mono" font-size="18" font-weight="800">market proxy</text>
+    <text x="662" y="568" class="text" font-size="24" font-weight="800">Energy ETFs</text>
+
+    <rect x="1084" y="202" width="202" height="96" rx="16" class="node"/>
+    <text x="1110" y="242" class="ok mono" font-size="17" font-weight="800">company</text>
+    <text x="1110" y="272" class="text" font-size="22" font-weight="800">Grid Operators</text>
+
+    <rect x="1084" y="382" width="202" height="96" rx="16" class="node"/>
+    <text x="1110" y="422" class="ok mono" font-size="17" font-weight="800">region</text>
+    <text x="1110" y="452" class="text" font-size="22" font-weight="800">United States</text>
+
+    <rect x="1084" y="544" width="202" height="96" rx="16" class="node"/>
+    <text x="1110" y="584" class="ok mono" font-size="17" font-weight="800">ticker set</text>
+    <text x="1110" y="614" class="text" font-size="22" font-weight="800">XLE / XLU</text>
+  </g>
+
+  <rect x="72" y="686" width="1256" height="60" rx="14" fill="#101a22" stroke="#30424f"/>
+  <text x="104" y="722" class="seed mono" font-size="17">curated-reference:</text>
+  <text x="282" y="722" class="muted sans" font-size="18">Structural exposure answers "what may be connected?" It is not source-backed causality unless live evidence links it.</text>
+</svg>

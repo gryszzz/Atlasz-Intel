@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820" role="img" aria-labelledby="title desc">
+  <title id="title">Atlasz Intel What Changed Today</title>
+  <desc id="desc">A dark Atlasz Intel What Changed Today preview ranking source-backed changes across cyber, policy, weather, research, and fiscal data.</desc>
+  <defs>
+    <style>
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+      .sans { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .label { fill: #7e8c98; font-size: 15px; letter-spacing: .12em; text-transform: uppercase; }
+      .head { fill: #f2f7fa; font-size: 38px; font-weight: 700; }
+      .text { fill: #dbe5ed; }
+      .muted { fill: #82909b; }
+      .panel { fill: #0d141a; stroke: #263541; stroke-width: 1; }
+      .row { fill: #101a22; stroke: #22313c; stroke-width: 1; }
+      .ok { fill: #78d293; }
+      .warn { fill: #e4b65c; }
+      .bad { fill: #d35e65; }
+      .info { fill: #6aa6d8; }
+    </style>
+  </defs>
+  <rect width="1400" height="820" fill="#080d12"/>
+  <rect x="34" y="32" width="1332" height="756" rx="18" fill="#091017" stroke="#263541"/>
+  <text x="72" y="82" class="label sans">Synthesis Surface</text>
+  <text x="72" y="132" class="head sans">What Changed Today</text>
+  <text x="72" y="164" class="muted sans" font-size="18">Ranked changes from source-backed records. No generic AI narrative, no fake alerts.</text>
+
+  <g transform="translate(74 210)" class="sans">
+    <rect width="1252" height="96" rx="14" class="row"/>
+    <text x="28" y="40" class="warn mono" font-size="18" font-weight="800">01  vulnerability intelligence</text>
+    <text x="28" y="70" class="text" font-size="24" font-weight="700">CISA KEV and OSV records changed with source trail proof.</text>
+    <text x="780" y="42" class="muted" font-size="17">trust: official-api/public-unauthenticated</text>
+    <text x="780" y="70" class="info mono" font-size="17">freshness + payload hash + evidence ids</text>
+  </g>
+  <g transform="translate(74 328)" class="sans">
+    <rect width="1252" height="96" rx="14" class="row"/>
+    <text x="28" y="40" class="ok mono" font-size="18" font-weight="800">02  weather disruption</text>
+    <text x="28" y="70" class="text" font-size="24" font-weight="700">NOAA active alerts ingested with severity, urgency, certainty, and area.</text>
+    <text x="780" y="42" class="muted" font-size="17">official NWS API</text>
+    <text x="780" y="70" class="info mono" font-size="17">no severity inflation</text>
+  </g>
+  <g transform="translate(74 446)" class="sans">
+    <rect width="1252" height="96" rx="14" class="row"/>
+    <text x="28" y="40" class="info mono" font-size="18" font-weight="800">03  DOI metadata</text>
+    <text x="28" y="70" class="text" font-size="24" font-weight="700">Crossref records linked to DOI, publisher, venue, and optional funder nodes.</text>
+    <text x="780" y="42" class="muted" font-size="17">metadata, not validation</text>
+    <text x="780" y="70" class="info mono" font-size="17">no market inference</text>
+  </g>
+  <g transform="translate(74 564)" class="sans">
+    <rect width="1252" height="96" rx="14" class="row"/>
+    <text x="28" y="40" class="ok mono" font-size="18" font-weight="800">04  fiscal context</text>
+    <text x="28" y="70" class="text" font-size="24" font-weight="700">Treasury Fiscal Data records persisted as official government context.</text>
+    <text x="780" y="42" class="muted" font-size="17">dataset + report date + units</text>
+    <text x="780" y="70" class="info mono" font-size="17">raw payload hash preserved</text>
+  </g>
+
+  <rect x="74" y="706" width="1252" height="48" rx="12" fill="#101a22" stroke="#30424f"/>
+  <text x="102" y="737" class="muted sans" font-size="18">Answers: what changed, where it came from, how fresh it is, what proves it, what is still unknown.</text>
+</svg>

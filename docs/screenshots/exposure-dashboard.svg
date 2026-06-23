@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820" role="img" aria-labelledby="title desc">
+  <title id="title">Atlasz Intel Exposure Dashboard</title>
+  <desc id="desc">A dark Atlasz Intel exposure dashboard preview showing resolved, unresolved, curated-reference, and media-observation boundaries.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#070a0d"/>
+      <stop offset="1" stop-color="#101820"/>
+    </linearGradient>
+    <style>
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+      .sans { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .label { fill: #7e8c98; font-size: 15px; letter-spacing: .12em; text-transform: uppercase; }
+      .head { fill: #f2f7fa; font-size: 38px; font-weight: 700; }
+      .text { fill: #dbe5ed; }
+      .muted { fill: #82909b; }
+      .panel { fill: #0d141a; stroke: #263541; stroke-width: 1; }
+      .ok { fill: #78d293; }
+      .warn { fill: #e4b65c; }
+      .bad { fill: #d35e65; }
+      .info { fill: #6aa6d8; }
+      .small { font-size: 17px; }
+    </style>
+  </defs>
+  <rect width="1400" height="820" fill="url(#bg)"/>
+  <rect x="34" y="32" width="1332" height="756" rx="18" fill="#091017" stroke="#263541"/>
+  <text x="72" y="82" class="label sans">Exposure Surface</text>
+  <text x="72" y="132" class="head sans">Resolved Today</text>
+  <text x="72" y="164" class="muted sans small">Official/resolved events, curated structural context, and media observations stay separate.</text>
+
+  <g transform="translate(74 205)" class="sans">
+    <rect width="230" height="96" rx="14" class="panel"/><text x="24" y="42" class="text mono" font-size="34" font-weight="800">6</text><text x="24" y="70" class="muted small">events considered</text>
+    <g transform="translate(250 0)"><rect width="230" height="96" rx="14" class="panel"/><text x="24" y="42" class="ok mono" font-size="34" font-weight="800">0</text><text x="24" y="70" class="muted small">official resolved</text></g>
+    <g transform="translate(500 0)"><rect width="230" height="96" rx="14" class="panel"/><text x="24" y="42" class="warn mono" font-size="34" font-weight="800">6</text><text x="24" y="70" class="muted small">unresolved</text></g>
+    <g transform="translate(750 0)"><rect width="230" height="96" rx="14" class="panel"/><text x="24" y="42" class="info mono" font-size="34" font-weight="800">0</text><text x="24" y="70" class="muted small">curated only</text></g>
+    <g transform="translate(1000 0)"><rect width="230" height="96" rx="14" class="panel"/><text x="24" y="42" class="bad mono" font-size="34" font-weight="800">0</text><text x="24" y="70" class="muted small">media ranked</text></g>
+  </g>
+
+  <g transform="translate(74 342)">
+    <rect width="292" height="286" rx="14" class="panel"/>
+    <text x="24" y="42" class="label sans">Countries</text>
+    <text x="24" y="92" class="muted sans" font-size="24">DATA_UNAVAILABLE</text>
+    <text x="24" y="130" class="muted sans small">No explicit resolver-rule matched the current window.</text>
+    <line x1="24" x2="268" y1="166" y2="166" stroke="#263541"/>
+    <text x="24" y="205" class="ok mono" font-size="18">official events only</text>
+    <text x="24" y="238" class="warn mono" font-size="18">unresolved is honest</text>
+  </g>
+  <g transform="translate(394 342)">
+    <rect width="292" height="286" rx="14" class="panel"/>
+    <text x="24" y="42" class="label sans">Companies</text>
+    <text x="24" y="92" class="muted sans" font-size="24">DATA_UNAVAILABLE</text>
+    <text x="24" y="130" class="muted sans small">No invented company exposure.</text>
+    <line x1="24" x2="268" y1="166" y2="166" stroke="#263541"/>
+    <text x="24" y="205" class="info mono" font-size="18">exact aliases later</text>
+    <text x="24" y="238" class="muted mono" font-size="18">no headline guessing</text>
+  </g>
+  <g transform="translate(714 342)">
+    <rect width="292" height="286" rx="14" class="panel"/>
+    <text x="24" y="42" class="label sans">Commodities</text>
+    <text x="24" y="92" class="muted sans" font-size="24">DATA_UNAVAILABLE</text>
+    <text x="24" y="130" class="muted sans small">Curated context cannot masquerade as live proof.</text>
+    <line x1="24" x2="268" y1="166" y2="166" stroke="#263541"/>
+    <text x="24" y="205" class="warn mono" font-size="18">curated-reference</text>
+    <text x="24" y="238" class="muted mono" font-size="18">structural, not causal</text>
+  </g>
+  <g transform="translate(1034 342)">
+    <rect width="292" height="286" rx="14" class="panel"/>
+    <text x="24" y="42" class="label sans">Sectors</text>
+    <text x="24" y="92" class="muted sans" font-size="24">DATA_UNAVAILABLE</text>
+    <text x="24" y="130" class="muted sans small">Media observations never enter exposure ranks.</text>
+    <line x1="24" x2="268" y1="166" y2="166" stroke="#263541"/>
+    <text x="24" y="205" class="bad mono" font-size="18">GDELT context only</text>
+    <text x="24" y="238" class="muted mono" font-size="18">not verified fact</text>
+  </g>
+
+  <rect x="74" y="672" width="1252" height="70" rx="14" fill="#101a22" stroke="#30424f"/>
+  <text x="102" y="704" class="text sans" font-size="22" font-weight="700">Boundary:</text>
+  <text x="222" y="704" class="muted sans small">Exposure paths are local resolver output over curated reference relationships. They are not verified live causality.</text>
+  <text x="102" y="730" class="warn mono" font-size="16">unknowns stay visible - no replacement data</text>
+</svg>
