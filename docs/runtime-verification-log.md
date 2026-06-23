@@ -1,142 +1,70 @@
 # Runtime Verification Log
 
-**Date:** 2026-06-23
-**Build:** `main` @ checkpoint (16 connectors, 323 unit tests green)
-**Method:** Headless harness `scripts/runtimeVerification.mts` (`npx tsx scripts/runtimeVerification.mts`).
-It drives the **same code** the dashboards render — `buildConnectorAudit` (Connector
-Dashboard engine), `summarizeExposure` / `eventStructuralExposure` (Exposure Dashboard
-engine), the real connector fetch/normalize paths, and the SQLite persistence layer.
+**Generated:** 2026-06-23T18:16:16.101Z
+**Command:** `npx tsx scripts/runtimeVerification.mts`
+**Result:** 11/11 checks passed
+**Persistence:** node:sqlite (with JSON fallback)
 
-> **Scope honesty.** The GUI Electron window was **not** visually driven in this run — no
-> display was available, and no screenshots are included rather than fabricated ones. The
-> harness exercises the identical logic the dashboards consume. The "real keys" portion of
-> the operator checklist could **not** be run: **no `.env` exists and zero API keys are set
-> in this environment.** No keys were invented. Keyed connectors are therefore reported in
-> their honest `missing-key` state, which is itself a valid thing to verify.
+> Operator pass. Drives the real adapter/registry/audit code: public connectors are
+> exercised live, keyed connectors without keys report `missing-key`, keyed
+> connectors with keys do a real fetch. No secrets are printed; key values are read
+> only for the redaction scan. Fail-closed on provider errors.
 
----
+## Env keys (names only)
 
-## 1. Env keys present / missing (names only, no values)
+- **present:** (none)
+- **missing:** ATLASZ_BEA_API_KEY, ATLASZ_CONGRESS_API_KEY, ATLASZ_EIA_API_KEY, ATLASZ_FRED_API_KEY, ATLASZ_PATENTSVIEW_API_KEY, ATLASZ_SEC_USER_AGENT, ATLASZ_UN_COMTRADE_API_KEY
 
-| Key | Present |
-|---|---|
-| `ATLASZ_PATENTSVIEW_API_KEY` | ❌ missing |
-| `ATLASZ_EIA_API_KEY` | ❌ missing |
-| `ATLASZ_BEA_API_KEY` | ❌ missing |
-| `ATLASZ_FRED_API_KEY` | ❌ missing |
-| `ATLASZ_SEC_USER_AGENT` | ❌ missing |
-| `GITHUB_TOKEN` / `ATLASZ_GITHUB_TOKEN` | ❌ missing |
+## Connector truth table
 
-Only `.env.example` is present. To do a full keyed run, copy it to `.env` and populate the
-keys, then re-run the harness (and, separately, the desktop app).
+| connector | impl | gating | env required | key? | status | recs | persist | trail | redact | resolver | expose |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| gdelt-doc | impl | public | - | public | failed | 0 | n/a | n/a | n/a | no | no |
+| sec-edgar | impl | key-gated | ATLASZ_SEC_USER_AGENT | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
+| fred | impl | key-gated | ATLASZ_FRED_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
+| treasury-fiscal | impl | public | - | public | online | 3 | yes | yes | n/a | partial | yes |
+| bls | impl | public | - | public | online | 5 | yes | yes | n/a | partial | yes |
+| bea | impl | key-gated | ATLASZ_BEA_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
+| eia | impl | key-gated | ATLASZ_EIA_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
+| noaa-alerts | impl | public | - | public | online | 30 | yes | yes | n/a | partial | yes |
+| federal-register | impl | public | - | public | online | 25 | yes | yes | n/a | partial | yes |
+| ofac-sdn | impl | public | - | public | online | 40 | yes | yes | n/a | identifier-only | yes |
+| congress-gov | impl | key-gated | ATLASZ_CONGRESS_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | identifier-only | yes |
+| usgs-earthquakes | impl | public | - | public | online | 14 | yes | yes | n/a | partial | yes |
+| un-comtrade | impl | key-gated | ATLASZ_UN_COMTRADE_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | no | no |
+| uspto | impl | key-gated | ATLASZ_PATENTSVIEW_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
+| github-releases | impl | public | - | public | online | 15 | yes | yes | n/a | yes | yes |
+| cisa-kev | impl | public | - | public | online | 25 | yes | yes | n/a | partial | yes |
+| nvd | impl | public | - | public | online | 25 | yes | yes | n/a | partial | yes |
+| ghsa | impl | public | - | public | online | 30 | yes | yes | n/a | partial | yes |
+| osv | impl | public | - | public | online | 34 | yes | yes | n/a | partial | yes |
+| cisa-advisories | impl | public | - | public | online | 23 | yes | yes | n/a | partial | yes |
 
-## 2. Connector state matrix (cold start, real env)
+## Trust tiers
 
-This is the dashboard exactly as it renders **before** the fetch loop registers any source
-snapshot — derived from `buildConnectorAudit({ sources: [], events: [] })`.
-
-| Connector | State | Reason |
+| tier | count | connectors |
 |---|---|---|
-| SEC EDGAR | `missing-key` | Missing `ATLASZ_SEC_USER_AGENT` |
-| FRED | `missing-key` | Missing `ATLASZ_FRED_API_KEY` |
-| BEA | `missing-key` | Missing `ATLASZ_BEA_API_KEY` |
-| EIA | `missing-key` | Missing `ATLASZ_EIA_API_KEY` |
-| USPTO PatentsView | `missing-key` | Missing `ATLASZ_PATENTSVIEW_API_KEY` |
-| Treasury Fiscal Data | `pending-first-fetch`¹ | Configured; waiting for first poll/manual run |
-| BLS | `pending-first-fetch`¹ | Configured; waiting for first poll/manual run |
-| NOAA/NWS Alerts | `pending-first-fetch`¹ | Configured; waiting for first poll/manual run |
-| USGS Earthquakes | `pending-first-fetch`¹ | Configured; waiting for first poll (**fetches live — see §3**) |
-| GitHub Releases | `pending-first-fetch`¹ | Configured; waiting for first poll/manual run |
-| CISA KEV | `pending-first-fetch`¹ | Configured; waiting for first poll (**fetches live — see §3**) |
-| NVD CVEs | `pending-first-fetch`¹ | Configured; waiting for first poll/manual run |
-| GitHub Advisories | `pending-first-fetch`¹ | Configured; waiting for first poll/manual run |
-| OSV.dev | `pending-first-fetch`¹ | Configured; waiting for first poll/manual run |
-| CISA Advisories | `pending-first-fetch`¹ | Configured; waiting for first poll/manual run |
-| UN Comtrade | `not-wired`² | No runtime adapter/persistence/UI slice in this checkpoint (catalog only) |
+| media-observation | 1 | gdelt-doc |
+| public-disclosure | 1 | sec-edgar |
+| official-api | 16 | fred, treasury-fiscal, bls, bea, eia, noaa-alerts, federal-register, ofac-sdn, congress-gov, usgs-earthquakes, un-comtrade, uspto, cisa-kev, nvd, osv, cisa-advisories |
+| public-unauthenticated | 2 | github-releases, ghsa |
 
-¹ **Fixed (was the §8 finding).** Implemented, public, no-key connectors now cold-start as
-`pending-first-fetch` — "configured, hasn't polled yet" — instead of sharing the `not-wired`
-chip with genuinely-absent adapters. `not-wired` (²) is now reserved for
-`implemented === false`. These connectors **do** fetch (proven live in §3).
+## Failures
 
-## 3. Live fetch — public official sources (real network)
+_None — all checks passed._
 
-Real `https` fetches through the production adapter code (`fetchUsgsEarthquakes`,
-`fetchKevVulnerabilities`):
+## Next required keys (to exercise keyed connectors live)
 
-| Source | Result | Payload hash | retrievedAt | Trail URL |
-|---|---|---|---|---|
-| USGS Earthquakes | ✅ 14 records normalized | ✅ present | ✅ present | ✅ `https://…` |
-| CISA KEV | ✅ 25 records normalized | ✅ present | ✅ present | ✅ `https://…` |
+- `ATLASZ_BEA_API_KEY`
+- `ATLASZ_CONGRESS_API_KEY`
+- `ATLASZ_EIA_API_KEY`
+- `ATLASZ_FRED_API_KEY`
+- `ATLASZ_PATENTSVIEW_API_KEY`
+- `ATLASZ_SEC_USER_AGENT`
+- `ATLASZ_UN_COMTRADE_API_KEY`
 
-Both fetch **or** fail honestly (empty result throws nothing; HTTP errors would surface via
-`assertOk`). Every normalized event carried a non-empty `rawPayloadHash`, a numeric
-sub-record `retrievedAt`, and an `https` source-trail URL.
-
-## 4. Key redaction (sentinel canary, USPTO keyed adapter)
-
-No real key needed: a sentinel (`SENTINEL_LEAK_CANARY_…`) was injected as the USPTO API key
-with `fetch` stubbed, then the full normalize path was scanned.
-
-- ✅ Key travels **only** in the request header (`x-api-key`), confirmed captured outbound.
-- ✅ Key **absent** from the request URL / query string.
-- ✅ Key **absent** from the normalized event (source URL, payload, record) — 1,980 bytes scanned.
-- ✅ Key **absent** from the persisted SQLite DB after a restart (§5).
-
-No API key appeared in any UI-bound field, source URL, normalized payload, or persisted JSON.
-
-## 5. Persistence round-trip across restart
-
-- Persistence mode active: **`node:sqlite`**.
-- Saved 6 events (5 live public + 1 keyed-adapter patent) + an audit row, called `close()`
-  to simulate shutdown, reopened a **new** persistence instance against the same data dir.
-- ✅ **6/6** events reloaded after restart.
-- ✅ No sentinel key present in the reloaded DB.
-- ✅ Reloaded patent retained its `rawPayloadHash` and sub-record `retrievedAt` (sub-record
-  round-trip intact).
-
-## 6. Exposure activation vs honest non-resolution
-
-- ✅ Resolvable event (NVIDIA patent, CPC `H01L`/`G06N`) activated **3** curated seed
-  entities (company + technologies); every exposure carried `source: 'resolver-rule'`.
-- ✅ An event stripped of identifiers stayed **unresolved** — no seed exposure was inferred.
-- ✅ No `"verified"` token anywhere in exposure output. Curated structure is never shown as
-  verified.
-- `summarizeExposure` over today's live events: `considered=0`. Honest and expected — the
-  live USGS/KEV records' timestamps fall outside the rolling 24h materiality window (KEV
-  `dateAdded` values are historical). Not a failure; the window is working as designed.
-
-## 7. Restart / replay state
-
-Covered by §5: SQLite state (`world_intel_events`, sub-records, `source_audit_log`) survived
-a close+reopen cycle with full fidelity. Stale/cached states are labeled honestly by the
-audit engine (`stale`, `rate-limited`, `failed`, `unavailable` are distinct states).
-
-## 8. Failures & next fixes
-
-1. **No blocking failures. 16/16 harness checks passed.**
-2. ~~**`not-wired` is overloaded** (cold start).~~ **FIXED.** Added a distinct
-   `pending-first-fetch` status. `not-wired` is now reserved for `implemented === false`
-   (UN Comtrade). Implemented public connectors cold-start as `pending-first-fetch`;
-   key-gated connectors without a key stay `missing-key`; `unavailable`/`rate-limited`/
-   `failed`/`stale` keep their meaning. Change isolated to `connectorStatus` in
-   `runtimeAudit.ts` + dashboard legend/labels/CSS + tests.
-3. **Full keyed run still outstanding.** EIA / BEA / FRED / USPTO / SEC could not be
-   exercised end-to-end (no keys in this environment). Once `.env` is populated, re-run the
-   harness — it will fetch those sources for real and the key-redaction scan will cover the
-   query-param adapters (EIA/BEA/FRED) the same way it covered USPTO's header.
-4. **GUI pass not done.** A human/operator should still open the Electron app once with real
-   keys to confirm the visual dashboard chips and source-trail cards match these
-   logic-level results (they share the same engine, so divergence would be a rendering bug).
-
-## How to reproduce
+## Reproduce
 
 ```bash
-# logic + live public-source verification (no keys needed):
 npx tsx scripts/runtimeVerification.mts
-
-# full keyed run:
-cp .env.example .env && $EDITOR .env   # add real keys
-npx tsx scripts/runtimeVerification.mts
-npm run dev                            # then visually confirm the dashboards
 ```
