@@ -1,8 +1,8 @@
 # Runtime Verification Log
 
-**Generated:** 2026-06-23T18:40:29.139Z
+**Generated:** 2026-06-23T19:20:29.752Z
 **Command:** `npx tsx scripts/runtimeVerification.mts`
-**Result:** 12/12 checks passed
+**Result:** 13/13 checks passed
 **Persistence:** node:sqlite (with JSON fallback)
 
 > Operator pass. Drives the real adapter/registry/audit code: public connectors are
@@ -33,10 +33,11 @@
 | usgs-earthquakes | impl | public | - | public | online | 14 | yes | yes | n/a | partial | yes |
 | un-comtrade | impl | key-gated | ATLASZ_UN_COMTRADE_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | no | no |
 | openalex-works | impl | key-gated | ATLASZ_OPENALEX_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | no | no |
+| crossref-works | impl | public | - | public | online | 23 | yes | yes | n/a | no | no |
 | uspto | impl | key-gated | ATLASZ_PATENTSVIEW_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
 | github-releases | impl | public | - | public | online | 15 | yes | yes | n/a | yes | yes |
 | cisa-kev | impl | public | - | public | online | 25 | yes | yes | n/a | partial | yes |
-| nvd | impl | public | - | public | online | 25 | yes | yes | n/a | partial | yes |
+| nvd | impl | public | - | public | failed | 0 | n/a | n/a | n/a | partial | yes |
 | ghsa | impl | public | - | public | online | 30 | yes | yes | n/a | partial | yes |
 | osv | impl | public | - | public | online | 34 | yes | yes | n/a | partial | yes |
 | cisa-advisories | impl | public | - | public | online | 23 | yes | yes | n/a | partial | yes |
@@ -47,7 +48,7 @@
 |---|---|---|
 | media-observation | 1 | gdelt-doc |
 | public-disclosure | 1 | sec-edgar |
-| official-api | 17 | fred, treasury-fiscal, bls, bea, eia, noaa-alerts, federal-register, ofac-sdn, congress-gov, usgs-earthquakes, un-comtrade, openalex-works, uspto, cisa-kev, nvd, osv, cisa-advisories |
+| official-api | 18 | fred, treasury-fiscal, bls, bea, eia, noaa-alerts, federal-register, ofac-sdn, congress-gov, usgs-earthquakes, un-comtrade, openalex-works, crossref-works, uspto, cisa-kev, nvd, osv, cisa-advisories |
 | public-unauthenticated | 2 | github-releases, ghsa |
 
 ## Failures

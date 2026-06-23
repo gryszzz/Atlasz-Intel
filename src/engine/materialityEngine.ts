@@ -62,6 +62,7 @@ export type MaterialityChangeType =
   | 'trade-flow'
   | 'media-observation'
   | 'research'
+  | 'doi-metadata'
   | 'world-event'
 
 export type MaterialItem = {
@@ -159,6 +160,7 @@ const SOURCE_LABELS: Record<string, string> = {
   gdelt_doc_public: 'GDELT (media)',
   un_comtrade_public: 'UN Comtrade',
   openalex_works_public: 'OpenAlex',
+  crossref_works_public: 'Crossref',
   politician_disclosure_public: 'Public disclosure',
 }
 
@@ -453,6 +455,7 @@ export function classifyChangeType(event: WorldIntelEvent): MaterialityChangeTyp
   if (event.githubRelease) return 'oss-release'
   if (event.gdeltArticle) return 'media-observation'
   if (event.openAlexWork) return 'research'
+  if (event.crossrefWork) return 'doi-metadata'
   if (event.comtradeRecord) return 'trade-flow'
   if (/trade|comtrade|shipping/i.test(`${event.category} ${event.sourceId}`)) return 'trade-flow'
   return 'world-event'

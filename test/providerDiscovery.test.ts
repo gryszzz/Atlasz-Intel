@@ -180,6 +180,24 @@ describe('provider auto-discovery', () => {
     expect(fetchImpl.mock.calls.some(([url]) => String(url).includes('api_key=secret-openalex-key'))).toBe(true)
   })
 
+  it('health-checks Crossref with optional polite mailto without storing it in endpoint trails', async () => {
+    const fetchImpl = successfulDiscoveryFetch()
+    const { service } = makeService(fetchImpl, { ATLASZ_CROSSREF_MAILTO: 'operator@example.com' })
+
+    const snapshot = await service.discover()
+    const crossref = snapshot.providers.find((provider) => provider.providerId === 'crossref_works_public')
+
+    expect(crossref).toMatchObject({
+      status: 'available',
+      autoWired: true,
+      provenance: 'official-api',
+      envKeysRequired: [],
+    })
+    expect(crossref?.endpointsChecked[0]).toContain('api.crossref.org/works')
+    expect(crossref?.endpointsChecked[0]).not.toContain('operator@example.com')
+    expect(fetchImpl.mock.calls.some(([url]) => String(url).includes('mailto=operator%40example.com'))).toBe(true)
+  })
+
   it('fails closed and does not report KAS availability when public discovery endpoints fail', async () => {
     const { service } = makeService(async () => response({}, false, 503))
 

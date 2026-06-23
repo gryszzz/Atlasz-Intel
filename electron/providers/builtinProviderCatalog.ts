@@ -52,6 +52,7 @@ export const PROVIDER_CAPABILITY_META: Record<string, ProviderCapabilityMeta> = 
   congress_gov_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_CONGRESS_API_KEY'], supportedEventTypes: ['legislation', 'bill-action'], supportedRegions: ['US'] },
   un_comtrade_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_UN_COMTRADE_API_KEY'], supportedEventTypes: ['trade-flow'], supportedRegions: ['global'] },
   openalex_works_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_OPENALEX_API_KEY'], supportedEventTypes: ['research'], supportedRegions: ['global'] },
+  crossref_works_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['doi-metadata', 'research'], supportedRegions: ['global'] },
   uspto_patentsview_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_PATENTSVIEW_API_KEY'], supportedEventTypes: ['patent'], supportedRegions: ['US'] },
   cisa_kev_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['cyber-advisory'], supportedRegions: ['global'] },
   nvd_cve_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['cyber-advisory'], supportedRegions: ['global'] },

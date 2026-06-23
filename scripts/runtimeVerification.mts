@@ -51,7 +51,7 @@ function subRetrievedAt(e: WorldIntelEvent): number | undefined {
   const sub =
     e.earthquakeEvent ?? e.kevVulnerability ?? e.patentRecord ?? e.nvdCve ?? e.weatherAlert ??
     e.regulatoryDocument ?? e.ofacSanctionsRecord ?? e.congressBillAction ?? e.gdeltArticle ?? e.comtradeRecord ??
-    e.openAlexWork
+    e.openAlexWork ?? e.crossrefWork
   return (sub as { retrievedAt?: number } | undefined)?.retrievedAt
 }
 
@@ -237,6 +237,10 @@ async function main() {
   // OpenAlex research metadata unresolved by design.
   const openAlexLive = liveEvents.find((e) => e.sourceId === 'openalex_works_public')
   check('OpenAlex metadata unresolved by design', !openAlexLive || (!isEventResolvable(openAlexLive) && eventStructuralExposure(openAlexLive).length === 0), openAlexLive ? 'live OpenAlex event unresolved' : 'no live OpenAlex event (resolver has no rule)')
+
+  // Crossref DOI metadata unresolved by design.
+  const crossrefLive = liveEvents.find((e) => e.sourceId === 'crossref_works_public')
+  check('Crossref metadata unresolved by design', !crossrefLive || (!isEventResolvable(crossrefLive) && eventStructuralExposure(crossrefLive).length === 0), crossrefLive ? 'live Crossref event unresolved' : 'no live Crossref event (resolver has no rule)')
 
   // Curated-reference never shown as verified.
   const exposureJson = JSON.stringify(exposureSummary)

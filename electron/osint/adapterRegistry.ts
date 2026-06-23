@@ -16,6 +16,7 @@ import { fetchOfacSanctions, readOfacSanctionsConfig } from './adapters/ofacSanc
 import { fetchCongressGovBills, readCongressGovConfig } from './adapters/congressGovAdapter'
 import { fetchComtradeEvents, readComtradeConfig } from './adapters/comtradeAdapter'
 import { fetchOpenAlexWorks, readOpenAlexConfig } from './adapters/openAlexAdapter'
+import { fetchCrossrefWorks, readCrossrefConfig } from './adapters/crossrefAdapter'
 import { fetchTreasuryFiscalData, readTreasuryFiscalConfig } from './adapters/treasuryFiscalAdapter'
 import { fetchBlsObservations, readBlsConfig } from './adapters/blsAdapter'
 import { fetchBeaObservations, readBeaConfig } from './adapters/beaAdapter'
@@ -51,6 +52,7 @@ export const KNOWN_ADAPTERS = [
   'congress-gov',
   'un-comtrade',
   'openalex-works',
+  'crossref-works',
   'treasury-fiscal',
   'bls',
   'bea',
@@ -105,6 +107,10 @@ export function resolveAdapter(provider: ProviderDefinition, env: NodeJS.Process
     case 'openalex-works': {
       const config = readOpenAlexConfig(env)
       return { fetcher: config ? (signal) => fetchOpenAlexWorks(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'crossref-works': {
+      const config = readCrossrefConfig(env)
+      return { fetcher: config ? (signal) => fetchCrossrefWorks(signal, config) : undefined, configured: config !== null, managed: false }
     }
     case 'treasury-fiscal': {
       const config = readTreasuryFiscalConfig(env)

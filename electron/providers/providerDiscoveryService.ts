@@ -301,6 +301,8 @@ export class ProviderDiscoveryService {
           ? withQueryParam(url, 'api_key', this.env.ATLASZ_CONGRESS_API_KEY)
         : provider?.providerId === 'openalex_works_public' && this.env.ATLASZ_OPENALEX_API_KEY
           ? withQueryParam(url, 'api_key', this.env.ATLASZ_OPENALEX_API_KEY)
+        : provider?.providerId === 'crossref_works_public' && this.env.ATLASZ_CROSSREF_MAILTO
+          ? withQueryParam(url, 'mailto', this.env.ATLASZ_CROSSREF_MAILTO)
         : url
     const response = await this.fetchImpl(checkedUrl, {
       signal: abortSignal(discoveryTimeoutMs),
@@ -425,6 +427,9 @@ function endpointFor(provider: ProviderDefinition, env: NodeJS.ProcessEnv): stri
   }
   if (provider.providerId === 'openalex_works_public') {
     return 'https://api.openalex.org/works?search=semiconductors&filter=from_publication_date:2026-01-01&per-page=1&select=id,title,publication_date'
+  }
+  if (provider.providerId === 'crossref_works_public') {
+    return 'https://api.crossref.org/works?query=semiconductors&filter=from-pub-date:2026-01-01&rows=1'
   }
   if (provider.providerId === 'public_market_rest' || provider.providerId === 'yahoo_finance_1m_public') {
     return 'https://query1.finance.yahoo.com/v8/finance/chart/SPY?range=1d&interval=1m'

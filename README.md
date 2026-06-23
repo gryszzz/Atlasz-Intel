@@ -160,7 +160,7 @@ which entities they activated, and which exposure paths are only
 | Policy/regulatory | Federal Register, OFAC SDN | Official FederalRegister.gov and Treasury/OFAC sources | No key; official-api; no legal interpretation, sanctions screening, or inferred guilt/risk labels. |
 | Cyber/vulnerability | CISA KEV, NVD, GHSA, OSV, CISA advisories | Official/public defensive feeds | Defensive context only; no scanning, exploitation, or private target collection. |
 | OSS technology | GitHub Releases | Official GitHub REST API for configured public repos | Public release metadata; optional token only raises limits and is not persisted. |
-| Research metadata | OpenAlex Works | Official OpenAlex API | Key-gated official-api metadata; not validation of technical claims, breakthroughs, citations, or market impact. |
+| Research metadata | OpenAlex Works, Crossref DOI metadata | Official OpenAlex and Crossref APIs | OpenAlex is key-gated; Crossref is no-key. Metadata only; not validation of technical claims, breakthroughs, citations, or market impact. |
 
 ### Config-Required Runtime Connectors
 

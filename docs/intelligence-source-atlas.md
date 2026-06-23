@@ -40,7 +40,7 @@ because it is listed here.
 | Weather/natural events | NOAA/NWS active alerts, USGS earthquakes | Official APIs -> weather/quake event -> source trail -> timeline/evidence graph; unresolved exposure remains explicit. |
 | Cyber/vulnerability | CISA KEV, NVD, GHSA, OSV, CISA advisories | Defensive advisory/vulnerability records -> evidence graph/dossier/source trails. |
 | OSS technology | GitHub Releases | Official GitHub release metadata -> OSS technology timeline/source trail. |
-| Research metadata | OpenAlex Works API | Official API -> research work -> institution/topic/venue graph nodes -> source trail; metadata only. |
+| Research metadata | OpenAlex Works API, Crossref REST API | Official APIs -> research work / DOI metadata -> institution/topic/venue/publisher/funder graph nodes -> source trail; metadata only. |
 
 ### Config-Required Runtime
 

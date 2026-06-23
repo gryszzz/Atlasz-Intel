@@ -85,6 +85,39 @@ export type WorldIntelEvent = {
   gdeltArticle?: GdeltArticle
   comtradeRecord?: ComtradeTradeRecord
   openAlexWork?: OpenAlexWork
+  crossrefWork?: CrossrefWork
+}
+
+/**
+ * A single Crossref DOI/work metadata record. DOI registry metadata only - not
+ * full text, not validation of research claims, not citation quality, and not a
+ * market signal.
+ */
+export type CrossrefWork = {
+  id: string
+  doi: string
+  doiUrl: string
+  title: string
+  type: string
+  publisher?: string
+  containerTitle?: string
+  issuedDate?: string
+  publishedDate?: string
+  url?: string
+  licenseUrls: string[]
+  funders: string[]
+  subjects: string[]
+  referenceCount?: number
+  isReferencedByCount?: number
+  queryBucket: string
+  /** Crossref API URL with mailto stripped - safe to persist/display. */
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
 }
 
 export type OpenAlexChangeType = 'first_seen' | 'new_today' | 'updated' | 'unchanged'

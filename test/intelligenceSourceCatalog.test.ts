@@ -140,6 +140,12 @@ describe('intelligence source catalog', () => {
       provenance: 'official-api',
       envKeysRequired: ['ATLASZ_OPENALEX_API_KEY'],
     })
+    expect(lookupIntelligenceSource('crossref-rest-api')).toMatchObject({
+      accessModel: 'public-no-auth',
+      integrationMode: 'runtime-wired',
+      provenance: 'official-api',
+      envKeysRequired: [],
+    })
     expect(lookupIntelligenceSource('weather-gov')).toMatchObject({
       integrationMode: 'runtime-wired',
       provenance: 'official-api',

@@ -49,8 +49,11 @@ export type EntityKind =
   | 'committee'
   | 'trade-flow'
   | 'research-work'
+  | 'doi-work'
   | 'topic'
   | 'venue'
+  | 'publisher'
+  | 'funder'
   | 'filing'
   | 'macro-series'
   | 'fiscal-series'
@@ -401,6 +404,9 @@ export function deriveEventEntities(event: WorldIntelEvent): { entities: EntityR
     const work = event.openAlexWork
     const workEntity: EntityRef = { id: entityId('research-work', work.openAlexWorkId), kind: 'research-work', label: work.title.slice(0, 80) }
     link(eventEntity, workEntity, 'about')
+    if (work.doi) {
+      link(workEntity, { id: entityId('doi-work', work.doi), kind: 'doi-work', label: work.doi }, 'references')
+    }
     if (work.venue) link(workEntity, { id: entityId('venue', work.venue), kind: 'venue', label: work.venue }, 'references')
     for (const institution of work.institutions) {
       link(workEntity, { id: entityId('institution', institution), kind: 'institution', label: institution }, 'touches')
@@ -412,6 +418,25 @@ export function deriveEventEntities(event: WorldIntelEvent): { entities: EntityR
       link(workEntity, { id: entityId('country', country), kind: 'country', label: country }, 'in_country')
     }
     link(workEntity, { id: entityId('source', 'openalex'), kind: 'source', label: 'OpenAlex' }, 'reported_by')
+  }
+
+  // Crossref: event -> DOI/work record -> publisher / venue / funder / Crossref
+  // source. DOI registry metadata only; no full-text or research-claim validation
+  // is inferred. Exact DOI nodes can corroborate OpenAlex records when both exist.
+  if (event.crossrefWork) {
+    const work = event.crossrefWork
+    const doiEntity: EntityRef = { id: entityId('doi-work', work.doi), kind: 'doi-work', label: work.doi }
+    link(eventEntity, doiEntity, 'about')
+    if (work.publisher) {
+      link(doiEntity, { id: entityId('publisher', work.publisher), kind: 'publisher', label: work.publisher }, 'issued_by')
+    }
+    if (work.containerTitle) {
+      link(doiEntity, { id: entityId('venue', work.containerTitle), kind: 'venue', label: work.containerTitle }, 'references')
+    }
+    for (const funder of work.funders) {
+      link(doiEntity, { id: entityId('funder', funder), kind: 'funder', label: funder }, 'references')
+    }
+    link(doiEntity, { id: entityId('source', 'crossref'), kind: 'source', label: 'Crossref' }, 'reported_by')
   }
 
   // Generic normalized fields (apply to every connector).

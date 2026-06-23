@@ -202,7 +202,8 @@ Confirmed strengths in the current codebase:
 - Provider-driven source registry with fail-closed configuration.
 - Canonical provenance values and UI badges.
 - SQLite/WAL persistence with JSON fallback and visible mode.
-- SEC, FRED, Treasury Fiscal Data, BLS, BEA, EIA, NOAA/NWS, USGS, and OpenAlex
+- SEC, FRED, Treasury Fiscal Data, BLS, BEA, EIA, NOAA/NWS, USGS, OpenAlex,
+  and Crossref
   evidence-bearing vertical slices with source trails, confidence, freshness,
   and unavailable states.
 - Defensive/security connector slices for CISA KEV, NVD, GHSA, OSV, and CISA
