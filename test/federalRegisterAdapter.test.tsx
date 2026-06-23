@@ -166,7 +166,50 @@ describe('Federal Register adapter', () => {
         timeoutMs: 1_000,
         maxRetries: 0,
         backoffMs: 0,
+        agencySlugs: ['securities-and-exchange-commission'],
+        documentTypeCodes: ['RULE'],
       }),
     ).rejects.toMatchObject({ status: 429, retryAfterMs: 4_000 })
+  })
+
+  it('starts narrow: defaults to the curated agency + document-type allowlist', () => {
+    const config = readFederalRegisterConfig({})!
+    expect(config.agencySlugs).toContain('securities-and-exchange-commission')
+    expect(config.agencySlugs).toContain('federal-energy-regulatory-commission')
+    expect(config.agencySlugs).toContain('homeland-security-department')
+    // Every default slug must be a real, filterable FR agency (CISA publishes under DHS).
+    expect(config.agencySlugs.every((slug) => /^[a-z0-9-]+$/.test(slug))).toBe(true)
+    expect(config.documentTypeCodes).toEqual(['RULE', 'PRORULE', 'NOTICE', 'PRESDOCU'])
+    // Env overrides are validated; junk is dropped, valid values kept.
+    const overridden = readFederalRegisterConfig({
+      ATLASZ_FEDERAL_REGISTER_AGENCIES: 'securities-and-exchange-commission, not a slug!, treasury-department',
+      ATLASZ_FEDERAL_REGISTER_TYPES: 'RULE, BOGUS, presdocu',
+    })!
+    expect(overridden.agencySlugs).toEqual(['securities-and-exchange-commission', 'treasury-department'])
+    expect(overridden.documentTypeCodes).toEqual(['RULE', 'PRESDOCU'])
+  })
+
+  it('builds a request URL that applies the agency + type narrowing', async () => {
+    let capturedUrl = ''
+    vi.stubGlobal('fetch', async (url: string) => {
+      capturedUrl = String(url)
+      return { ok: true, status: 200, json: async () => ({ results: [] }) }
+    })
+    await fetchFederalRegisterDocuments(new AbortController().signal, {
+      documentsUrl: 'https://www.federalregister.gov/api/v1/documents.json',
+      userAgent: 'Atlasz',
+      lookbackDays: 7,
+      maxRecords: 10,
+      timeoutMs: 1_000,
+      maxRetries: 0,
+      backoffMs: 0,
+      agencySlugs: ['securities-and-exchange-commission', 'energy-department'],
+      documentTypeCodes: ['RULE', 'NOTICE'],
+    })
+    expect(capturedUrl).toContain('conditions%5Btype%5D%5B%5D=RULE')
+    expect(capturedUrl).toContain('conditions%5Btype%5D%5B%5D=NOTICE')
+    expect(capturedUrl).toContain('conditions%5Bagencies%5D%5B%5D=securities-and-exchange-commission')
+    expect(capturedUrl).toContain('conditions%5Bagencies%5D%5B%5D=energy-department')
+    expect(capturedUrl).toContain('conditions%5Bpublication_date%5D%5Bgte%5D=')
   })
 })

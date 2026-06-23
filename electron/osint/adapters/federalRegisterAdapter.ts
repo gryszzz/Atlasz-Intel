@@ -54,6 +54,29 @@ const FIELD_ALLOWLIST = [
   'action',
 ]
 
+// "Start narrow": query only the market/policy-relevant agencies (by their stable
+// FederalRegister.gov slugs) and the four core document types. This bounds the feed
+// to material regulatory activity instead of every routine notice. Operators can
+// override via env, but the defaults are the curated allowlist from the directive.
+const DEFAULT_AGENCY_SLUGS = [
+  'securities-and-exchange-commission',
+  'commodity-futures-trading-commission',
+  'treasury-department',
+  'commerce-department',
+  'energy-department',
+  'federal-energy-regulatory-commission',
+  'environmental-protection-agency',
+  'transportation-department',
+  'federal-communications-commission',
+  'food-and-drug-administration',
+  'homeland-security-department',
+  // CISA is not an independently filterable FederalRegister.gov agency — it
+  // publishes under DHS, which is already covered by homeland-security-department.
+]
+// FederalRegister.gov type condition codes: Rule, Proposed Rule, Notice, Presidential Document.
+const DEFAULT_DOCUMENT_TYPE_CODES = ['RULE', 'PRORULE', 'NOTICE', 'PRESDOCU']
+const VALID_TYPE_CODES = new Set(DEFAULT_DOCUMENT_TYPE_CODES)
+
 export type FederalRegisterConfig = {
   documentsUrl: string
   userAgent: string
@@ -62,6 +85,8 @@ export type FederalRegisterConfig = {
   timeoutMs: number
   maxRetries: number
   backoffMs: number
+  agencySlugs: string[]
+  documentTypeCodes: string[]
 }
 
 export function readFederalRegisterConfig(env: NodeJS.ProcessEnv = process.env): FederalRegisterConfig | null {
@@ -80,7 +105,29 @@ export function readFederalRegisterConfig(env: NodeJS.ProcessEnv = process.env):
     timeoutMs: clampInteger(Number(env.ATLASZ_FEDERAL_REGISTER_TIMEOUT_MS ?? DEFAULT_TIMEOUT_MS), 1_000, 60_000),
     maxRetries: clampInteger(Number(env.ATLASZ_FEDERAL_REGISTER_MAX_RETRIES ?? DEFAULT_MAX_RETRIES), 0, 5),
     backoffMs: clampInteger(Number(env.ATLASZ_FEDERAL_REGISTER_BACKOFF_MS ?? DEFAULT_BACKOFF_MS), 0, 60_000),
+    agencySlugs: parseAgencySlugs(env.ATLASZ_FEDERAL_REGISTER_AGENCIES) ?? DEFAULT_AGENCY_SLUGS,
+    documentTypeCodes: parseTypeCodes(env.ATLASZ_FEDERAL_REGISTER_TYPES) ?? DEFAULT_DOCUMENT_TYPE_CODES,
   }
+}
+
+/** Parse a comma-separated agency-slug override; invalid slugs dropped, empty -> default. */
+function parseAgencySlugs(value: unknown): string[] | undefined {
+  if (typeof value !== 'string') return undefined
+  const slugs = value
+    .split(',')
+    .map((slug) => slug.trim().toLowerCase())
+    .filter((slug) => /^[a-z0-9-]+$/.test(slug))
+  return slugs.length > 0 ? unique(slugs) : undefined
+}
+
+/** Parse a comma-separated type-code override; only valid FR codes kept, empty -> default. */
+function parseTypeCodes(value: unknown): string[] | undefined {
+  if (typeof value !== 'string') return undefined
+  const codes = value
+    .split(',')
+    .map((code) => code.trim().toUpperCase())
+    .filter((code) => VALID_TYPE_CODES.has(code))
+  return codes.length > 0 ? unique(codes) : undefined
 }
 
 export async function fetchFederalRegisterDocuments(
@@ -224,6 +271,14 @@ function buildRequestUrl(config: FederalRegisterConfig, now: number): string {
   url.searchParams.set('per_page', String(config.maxRecords))
   url.searchParams.set('order', 'newest')
   url.searchParams.set('conditions[publication_date][gte]', since)
+  // Narrow to the curated agency + document-type allowlist (AND across condition
+  // groups, OR within each), so the feed is bounded to material regulatory activity.
+  for (const code of config.documentTypeCodes) {
+    url.searchParams.append('conditions[type][]', code)
+  }
+  for (const slug of config.agencySlugs) {
+    url.searchParams.append('conditions[agencies][]', slug)
+  }
   for (const field of FIELD_ALLOWLIST) {
     url.searchParams.append('fields[]', field)
   }
