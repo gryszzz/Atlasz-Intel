@@ -1,6 +1,7 @@
 import { AssetIdentityService } from './assetIdentityService'
 import type { IntelPersistence, WorldHeadlineRecord } from './persistence'
 import { OsintSourceRegistry } from './osint/sourceRegistry'
+import { applyOfacChangeStatus } from './osint/adapters/ofacSanctionsAdapter'
 import {
   buildWorldIntelEventFromHeadline,
   deriveAssetIdentitiesFromEvents,
@@ -48,8 +49,9 @@ export class WorldIntelService {
       .pollEnabledSources()
       .then(({ events, sources }) => {
         this.persistSources(sources)
+        const priorEventsById = new Map(this.persistence.listWorldIntelEvents(1_000).map((event) => [event.id, event]))
         for (const event of events) {
-          this.persistWorldEvent(event)
+          this.persistWorldEvent(applyOfacChangeStatus(event, priorEventsById.get(event.id)))
         }
         const allEvents = this.persistence.listWorldIntelEvents(300)
         this.persistCountryState(deriveCountryIntelState(allEvents))

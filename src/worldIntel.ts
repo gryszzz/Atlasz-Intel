@@ -80,6 +80,32 @@ export type WorldIntelEvent = {
   earthquakeEvent?: EarthquakeEvent
   patentRecord?: PatentRecord
   regulatoryDocument?: RegulatoryDocument
+  ofacSanctionsRecord?: OfacSanctionsRecord
+}
+
+export type OfacSanctionsChangeStatus = 'new' | 'updated' | 'unchanged' | 'observed'
+
+export type OfacSanctionsRecord = {
+  id: string
+  uid: string
+  listType: 'SDN'
+  name: string
+  entityType: string
+  programs: string[]
+  countries: string[]
+  aliases: string[]
+  publishDate: string
+  publishTimestamp: number
+  recordCount?: number
+  sourceUrl: string
+  sourceDataUrl: string
+  sourceName: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  changeStatus: OfacSanctionsChangeStatus
+  rawPayloadHash: string
+  rawPayloadJson?: string
 }
 
 export type RegulatoryDocument = {

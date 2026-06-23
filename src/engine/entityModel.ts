@@ -42,6 +42,8 @@ export type EntityKind =
   | 'repository'
   | 'patent'
   | 'regulatory-document'
+  | 'sanctions-record'
+  | 'sanctions-program'
   | 'filing'
   | 'macro-series'
   | 'fiscal-series'
@@ -324,6 +326,28 @@ export function deriveEventEntities(event: WorldIntelEvent): { entities: EntityR
       const agencyEntity: EntityRef = { id: entityId('institution', agency), kind: 'institution', label: agency }
       link(documentEntity, agencyEntity, 'issued_by')
       link(agencyEntity, { id: entityId('country', 'US'), kind: 'country', label: 'United States' }, 'in_country')
+    }
+  }
+
+  // OFAC SDN: event -> sanctions record -> issuing institution / programs /
+  // listed countries. This is source-published list evidence only; no company
+  // exposure or identity enrichment is inferred.
+  if (event.ofacSanctionsRecord) {
+    const record = event.ofacSanctionsRecord
+    const sanctionsRecord: EntityRef = {
+      id: entityId('sanctions-record', `ofac-sdn-${record.uid}`),
+      kind: 'sanctions-record',
+      label: `OFAC SDN ${record.uid}`,
+    }
+    const ofac: EntityRef = { id: entityId('institution', 'treasury ofac'), kind: 'institution', label: 'Treasury OFAC' }
+    link(eventEntity, sanctionsRecord, 'about')
+    link(sanctionsRecord, ofac, 'issued_by')
+    link(ofac, { id: entityId('country', 'US'), kind: 'country', label: 'United States' }, 'in_country')
+    for (const program of record.programs) {
+      link(sanctionsRecord, { id: entityId('sanctions-program', program), kind: 'sanctions-program', label: program }, 'references')
+    }
+    for (const country of record.countries) {
+      link(sanctionsRecord, { id: entityId('country', country), kind: 'country', label: country }, 'touches')
     }
   }
 

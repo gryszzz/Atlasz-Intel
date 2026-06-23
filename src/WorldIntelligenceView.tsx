@@ -35,6 +35,9 @@ const WeatherAlertSourceTrail = lazy(() =>
 const RegulatorySourceTrail = lazy(() =>
   import('./components/intel/RegulatorySourceTrail').then((m) => ({ default: m.RegulatorySourceTrail })),
 )
+const OfacSourceTrail = lazy(() =>
+  import('./components/intel/OfacSourceTrail').then((m) => ({ default: m.OfacSourceTrail })),
+)
 
 type WorldWindowId = 'now' | '1h' | '6h' | '24h' | '7d'
 
@@ -167,6 +170,10 @@ export function WorldIntelligenceView({
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading regulatory source trail" /></div>}>
           <RegulatorySourceTrail events={visibleEvents} />
+        </Suspense>
+
+        <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading OFAC source trail" /></div>}>
+          <OfacSourceTrail events={visibleEvents} />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading entity detail" /></div>}>

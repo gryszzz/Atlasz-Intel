@@ -101,7 +101,7 @@ describe('runtime productization audit', () => {
     const rows = buildConnectorAudit({ now: NOW, sources: [], events: [] })
 
     // Public implemented connectors that simply have not polled yet -> pending-first-fetch.
-    for (const id of ['usgs-earthquakes', 'cisa-kev', 'nvd', 'treasury-fiscal', 'noaa-alerts', 'federal-register']) {
+    for (const id of ['usgs-earthquakes', 'cisa-kev', 'nvd', 'treasury-fiscal', 'noaa-alerts', 'federal-register', 'ofac-sdn']) {
       const row = rows.find((r) => r.id === id)
       expect(row?.status, id).toBe('pending-first-fetch')
       expect(row?.missingReason, id).toMatch(/waiting for first poll/i)

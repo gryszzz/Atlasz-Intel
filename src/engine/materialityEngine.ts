@@ -54,6 +54,7 @@ export type MaterialityChangeType =
   | 'weather'
   | 'earthquake'
   | 'regulatory'
+  | 'sanctions'
   | 'cyber'
   | 'patent'
   | 'oss-release'
@@ -146,6 +147,7 @@ const SOURCE_LABELS: Record<string, string> = {
   usgs_significant_quakes: 'USGS',
   noaa_alerts_public: 'NOAA/NWS',
   federal_register_public: 'Federal Register',
+  ofac_sdn_public: 'OFAC SDN',
   uspto_patentsview_public: 'USPTO',
   gdelt_doc_public: 'GDELT',
   politician_disclosure_public: 'Public disclosure',
@@ -179,6 +181,7 @@ function corroborationKeys(event: WorldIntelEvent): string[] {
   for (const sector of event.affectedSectors ?? []) keys.push(`sector:${sector.toLowerCase()}`)
   for (const commodity of event.affectedCommodities ?? []) keys.push(`commodity:${commodity.toLowerCase()}`)
   for (const currency of event.affectedCurrencies ?? []) keys.push(`currency:${currency.toLowerCase()}`)
+  if (event.ofacSanctionsRecord) keys.push(`ofac:${event.ofacSanctionsRecord.uid}`)
   for (const key of cyberKeys(event)) keys.push(key)
   return unique(keys)
 }
@@ -187,6 +190,7 @@ function corroborationKeys(event: WorldIntelEvent): string[] {
 function clusterKeys(event: WorldIntelEvent): string[] {
   const keys: string[] = []
   for (const asset of event.affectedAssets ?? []) keys.push(`asset:${asset.toLowerCase()}`)
+  if (event.ofacSanctionsRecord) keys.push(`ofac:${event.ofacSanctionsRecord.uid}`)
   for (const key of cyberKeys(event)) keys.push(key)
   return unique(keys)
 }
@@ -429,6 +433,7 @@ export function classifyChangeType(event: WorldIntelEvent): MaterialityChangeTyp
   if (event.weatherAlert) return 'weather'
   if (event.earthquakeEvent) return 'earthquake'
   if (event.regulatoryDocument) return 'regulatory'
+  if (event.ofacSanctionsRecord) return 'sanctions'
   if (event.kevVulnerability || event.nvdCve || event.ghsaAdvisory || event.osvVulnerability || event.cisaAdvisory) {
     return 'cyber'
   }
