@@ -128,20 +128,20 @@ export async function fetchComtradeEvents(
 
   const records: ComtradeTradeRecord[] = []
   for (const batch of window.batches) {
-    const batchRecords = await fetchComtradeBatch(batch, config, signal)
+    const batchRecords = await fetchComtradeBatch(batch, config, signal, catalog.rawPayloadHash)
     records.push(...batchRecords)
   }
   return normalizeComtradeRecords(records)
 }
 
-async function fetchComtradeBatch(batch: ComtradeQueryBatch, config: ComtradeConfig, signal: AbortSignal): Promise<ComtradeTradeRecord[]> {
+async function fetchComtradeBatch(batch: ComtradeQueryBatch, config: ComtradeConfig, signal: AbortSignal, catalogHash?: string): Promise<ComtradeTradeRecord[]> {
   const requestUrl = buildDataUrl(config, batch)
   const retrievedAt = Date.now()
   const payload = await fetchWithRetry(
     (attemptSignal) => fetchComtradeJson(requestUrl, config.apiKey, linkedSignal(signal, attemptSignal)),
     { maxRetries: config.maxRetries, backoffMs: config.backoffMs, timeoutMs: config.timeoutMs },
   )
-  return parseComtradeData(payload, { config, retrievedAt, sourceApiUrl: requestUrl })
+  return parseComtradeData(payload, { config, retrievedAt, sourceApiUrl: requestUrl, catalogHash })
 }
 
 async function fetchComtradeJson(url: string, apiKey: string, signal: AbortSignal): Promise<unknown> {
@@ -157,7 +157,7 @@ async function fetchComtradeJson(url: string, apiKey: string, signal: AbortSigna
 /** Pure parser — testable with official Comtrade data-API response fixtures. */
 export function parseComtradeData(
   payload: unknown,
-  options: { config?: Partial<ComtradeConfig>; retrievedAt?: number; sourceApiUrl?: string } = {},
+  options: { config?: Partial<ComtradeConfig>; retrievedAt?: number; sourceApiUrl?: string; catalogHash?: string } = {},
 ): ComtradeTradeRecord[] {
   if (!payload || typeof payload !== 'object') {
     return []
@@ -237,6 +237,7 @@ export function parseComtradeData(
       sourceUrl: COMTRADE_PAGE,
       sourceApiUrl,
       sourceName: SOURCE_NAME,
+      catalogHash: options.catalogHash,
       retrievedAt,
       provenance: 'official-api',
       confidence: confidenceForRecord({ reporterCode, partnerCode, commodityCode, flowCode, period, refYear, tradeValue, sourceApiUrl, retrievedAt }),

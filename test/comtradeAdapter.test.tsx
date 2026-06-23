@@ -138,7 +138,7 @@ describe('UN Comtrade adapter', () => {
     const markup = renderToStaticMarkup(createElement(ComtradeSourceTrail, { events: [event as WorldIntelEvent] }))
     expect(markup).toContain('UN Comtrade')
     expect(markup).toContain('854231')
-    expect(markup).toContain('not a company-level claim')
+    expect(markup).toContain('not company-level supply-chain proof')
     expect(markup).toContain('API query (key-free)')
     expect(markup).toContain('Commodities') // coverage strip
     expect(markup).not.toContain('SECRET-COMTRADE-KEY')

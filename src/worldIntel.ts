@@ -120,6 +120,8 @@ export type ComtradeTradeRecord = {
   /** API URL with the subscription key stripped — safe to persist/display. */
   sourceApiUrl: string
   sourceName: string
+  /** Content hash of the commodity catalog snapshot that produced this query. */
+  catalogHash?: string
   retrievedAt: number
   provenance: ProvenanceId
   confidence: number

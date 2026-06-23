@@ -156,6 +156,14 @@ export async function fetchCommodityCatalog(
   return parseCommodities(payload, { classification: cls, retrievedAt: options.now ?? Date.now() })
 }
 
+const DEFAULT_CATALOG_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
+
+/** A catalog snapshot is stale once its retrievedAt is older than maxAgeMs (default 30d). */
+export function isCatalogStale(catalog: ComtradeCatalog, now = Date.now(), maxAgeMs = DEFAULT_CATALOG_MAX_AGE_MS): boolean {
+  if (!Number.isFinite(catalog.retrievedAt)) return true
+  return now - catalog.retrievedAt > maxAgeMs
+}
+
 /** Commodity codes eligible for ingestion at a given digit level (leaf codes by default). */
 export function commodityCodesForLevel(catalog: ComtradeCatalog, options: { aggrLevel?: number; leafOnly?: boolean } = {}): string[] {
   const leafOnly = options.leafOnly ?? true

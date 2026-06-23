@@ -22,7 +22,7 @@ export function ComtradeSourceTrail({ events, limit = 8 }: { events: WorldIntelE
         <span>UN Comtrade</span>
         <strong>{records.length > 0 ? `${records.length} trade flows` : COMTRADE_UNAVAILABLE}</strong>
       </header>
-      <p className="comtrade-trail-note">Official country/partner/commodity trade-flow data — not a company-level claim or inferred supply chain.</p>
+      <p className="comtrade-trail-note">Country/commodity trade-flow evidence, not company-level supply-chain proof.</p>
       {records.length > 0 && <CoverageStrip records={records} />}
       {records.length > 0 ? (
         <div className="comtrade-trail-stack">
@@ -61,9 +61,23 @@ export function ComtradeSourceTrail({ events, limit = 8 }: { events: WorldIntelE
                   <dd>{record.datasetCode}</dd>
                 </div>
                 <div>
+                  <dt>Source</dt>
+                  <dd>{record.sourceName}</dd>
+                </div>
+                <div>
+                  <dt>Retrieved</dt>
+                  <dd>{new Date(record.retrievedAt).toISOString().slice(0, 10)}</dd>
+                </div>
+                <div>
                   <dt>Payload hash</dt>
                   <dd>{record.rawPayloadHash.slice(0, 12)}…</dd>
                 </div>
+                {record.catalogHash && (
+                  <div>
+                    <dt>Catalog hash</dt>
+                    <dd>{record.catalogHash.slice(0, 12)}…</dd>
+                  </div>
+                )}
               </dl>
               <div className="comtrade-links">
                 <a href={record.sourceUrl} target="_blank" rel="noreferrer">
