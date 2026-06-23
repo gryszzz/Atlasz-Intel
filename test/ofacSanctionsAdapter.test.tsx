@@ -175,7 +175,7 @@ describe('OFAC sanctions adapter', () => {
     expect(markup).toContain('96%')
   })
 
-  it('surfaces HttpError via fetchPolicy on rate limits', async () => {
+  it('surfaces HttpError via fetchPolicy on rate limits (fail-closed when retries exhausted)', async () => {
     vi.stubGlobal('fetch', async () => ({
       ok: false,
       status: 429,
@@ -188,8 +188,60 @@ describe('OFAC sanctions adapter', () => {
         sdnXmlUrl: SOURCE_DATA_URL,
         userAgent: 'Atlasz',
         maxRecords: 5,
+        timeoutMs: 1_000,
+        maxRetries: 0,
+        backoffMs: 0,
       }),
     ).rejects.toMatchObject({ status: 429, retryAfterMs: 5_000 })
+  })
+
+  it('honors 429 Retry-After then retries and succeeds (shared fetchWithRetry path)', async () => {
+    let calls = 0
+    vi.stubGlobal('fetch', async () => {
+      calls += 1
+      if (calls === 1) {
+        return {
+          ok: false,
+          status: 429,
+          // Retry-After of 0s must win over the (large) backoff below — proving it is honored.
+          headers: { get: (name: string) => (name.toLowerCase() === 'retry-after' ? '0' : null) },
+          text: async () => '',
+        }
+      }
+      return { ok: true, status: 200, headers: { get: () => null }, text: async () => XML_FIXTURE }
+    })
+
+    const events = await fetchOfacSanctions(new AbortController().signal, {
+      sdnXmlUrl: SOURCE_DATA_URL,
+      userAgent: 'Atlasz',
+      maxRecords: 5,
+      timeoutMs: 1_000,
+      maxRetries: 1,
+      backoffMs: 50_000,
+    })
+
+    expect(calls).toBe(2)
+    expect(events.length).toBeGreaterThan(0)
+    expect(events[0]?.ofacSanctionsRecord?.uid).toBe('36')
+  })
+
+  it('never persists the redirected/presigned S3 URL — sourceDataUrl stays the clean Treasury URL', async () => {
+    // Simulate Treasury's 302 -> presigned S3: fetch (which follows redirects) returns the
+    // XML body; the adapter must record only the configured Treasury URL, never the S3 one.
+    vi.stubGlobal('fetch', async () => ({ ok: true, status: 200, headers: { get: () => null }, text: async () => XML_FIXTURE }))
+
+    const events = await fetchOfacSanctions(new AbortController().signal, {
+      sdnXmlUrl: SOURCE_DATA_URL,
+      userAgent: 'Atlasz',
+      maxRecords: 5,
+      timeoutMs: 1_000,
+      maxRetries: 0,
+      backoffMs: 0,
+    })
+    const record = events[0]?.ofacSanctionsRecord
+    expect(record?.sourceDataUrl).toBe(SOURCE_DATA_URL)
+    expect(record?.sourceDataUrl).not.toMatch(/amazonaws|X-Amz|s3/i)
+    expect(record?.rawPayloadJson ?? '').not.toMatch(/amazonaws|X-Amz/i)
   })
 
   it('never resolves a sanctions record into curated company exposure (no inferred guilt/exposure)', () => {

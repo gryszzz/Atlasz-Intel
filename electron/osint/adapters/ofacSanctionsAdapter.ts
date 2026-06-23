@@ -19,7 +19,7 @@ import {
   stableStringify,
   unique,
 } from './adapterShared'
-import { assertOk } from '../fetchPolicy'
+import { assertOk, fetchWithRetry } from '../fetchPolicy'
 import type { OfacSanctionsRecord, WorldIntelEvent } from '../../../src/worldIntel'
 
 const SOURCE_ID = 'ofac_sdn_public'
@@ -29,12 +29,18 @@ const OFAC_SDN_PAGE = 'https://sanctionslist.ofac.treas.gov/Home/SdnList'
 const DEFAULT_USER_AGENT = 'Atlasz-Intel (github.com/gryszzz/Atlasz-Intel)'
 const DEFAULT_MAX_RECORDS = 40
 const MAX_RECORDS_CAP = 250
+const DEFAULT_TIMEOUT_MS = 30_000
+const DEFAULT_MAX_RETRIES = 1
+const DEFAULT_BACKOFF_MS = 1_000
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
 export type OfacSanctionsConfig = {
   sdnXmlUrl: string
   userAgent: string
   maxRecords: number
+  timeoutMs: number
+  maxRetries: number
+  backoffMs: number
 }
 
 type ParsedSdnXml = {
@@ -56,6 +62,9 @@ export function readOfacSanctionsConfig(env: NodeJS.ProcessEnv = process.env): O
     sdnXmlUrl,
     userAgent: stringValue(env.ATLASZ_OFAC_USER_AGENT) || stringValue(env.ATLASZ_HTTP_USER_AGENT) || DEFAULT_USER_AGENT,
     maxRecords: clampInteger(Number(env.ATLASZ_OFAC_MAX_RECORDS ?? DEFAULT_MAX_RECORDS), 1, MAX_RECORDS_CAP),
+    timeoutMs: clampInteger(Number(env.ATLASZ_OFAC_TIMEOUT_MS ?? DEFAULT_TIMEOUT_MS), 1_000, 60_000),
+    maxRetries: clampInteger(Number(env.ATLASZ_OFAC_MAX_RETRIES ?? DEFAULT_MAX_RETRIES), 0, 5),
+    backoffMs: clampInteger(Number(env.ATLASZ_OFAC_BACKOFF_MS ?? DEFAULT_BACKOFF_MS), 0, 60_000),
   }
 }
 
@@ -66,14 +75,26 @@ export async function fetchOfacSanctions(
   if (!config) {
     return []
   }
-  const response = await fetch(config.sdnXmlUrl, {
+  const retrievedAt = Date.now()
+  // Shared fetch path: per-attempt timeout + bounded retry/backoff that honors
+  // 429/Retry-After, matching the other government connectors. Fail-closed: a
+  // non-retryable error or exhausted retries propagates unchanged.
+  const xml = await fetchWithRetry(
+    (attemptSignal) => fetchOfacXml(config.sdnXmlUrl, config.userAgent, linkedSignal(signal, attemptSignal)),
+    { maxRetries: config.maxRetries, backoffMs: config.backoffMs, timeoutMs: config.timeoutMs },
+  )
+  // sourceDataUrl stays the clean Treasury URL — never the redirected/presigned S3 URL.
+  const parsed = parseOfacSdnXml(xml, { retrievedAt, sourceDataUrl: config.sdnXmlUrl, maxRecords: config.maxRecords })
+  return normalizeOfacSanctions(parsed.records)
+}
+
+async function fetchOfacXml(url: string, userAgent: string, signal: AbortSignal): Promise<string> {
+  const response = await fetch(url, {
     signal,
-    headers: { accept: 'application/xml, text/xml', 'user-agent': config.userAgent },
+    headers: { accept: 'application/xml, text/xml', 'user-agent': userAgent },
   })
   assertOk(response, 'OFAC SDN')
-  const xml = await response.text()
-  const parsed = parseOfacSdnXml(xml, { retrievedAt: Date.now(), sourceDataUrl: config.sdnXmlUrl, maxRecords: config.maxRecords })
-  return normalizeOfacSanctions(parsed.records)
+  return response.text()
 }
 
 /** Pure normalizer — testable with fixture SDN.XML payloads. */
@@ -302,6 +323,16 @@ function ofacRecordId(uid: string): string {
 function clampInteger(value: number, min: number, max: number): number {
   if (!Number.isFinite(value)) return min
   return Math.max(min, Math.min(max, Math.round(value)))
+}
+
+function linkedSignal(parent: AbortSignal, child: AbortSignal): AbortSignal {
+  if (parent.aborted) return parent
+  if (child.aborted) return child
+  const controller = new AbortController()
+  const abort = () => controller.abort()
+  parent.addEventListener('abort', abort, { once: true })
+  child.addEventListener('abort', abort, { once: true })
+  return controller.signal
 }
 
 export const OFAC_SANCTIONS_SOURCE_ID = SOURCE_ID
