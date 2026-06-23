@@ -188,4 +188,36 @@ describe('runtime productization audit', () => {
     expect(markup).toContain('events considered')
     expect(markup).toContain('unresolved')
   })
+
+  it('shows GDELT on the Connector Dashboard at the media-observation trust tier', () => {
+    const markup = renderToStaticMarkup(
+      createElement(ConnectorDashboardPanel, {
+        sources: [source({ sourceId: 'gdelt_doc_public', status: 'online', itemCount: 3, provenance: 'media-observation' })],
+        events: [event({ sourceId: 'gdelt_doc_public' })],
+        now: NOW,
+      }),
+    )
+    expect(markup).toContain('GDELT (media)')
+    expect(markup).toContain('media observation')
+    expect(markup).toContain('prov-tier-observed')
+    expect(markup).not.toContain('prov-tier-verified')
+  })
+
+  it('renders GDELT stale and rate-limited connector states honestly', () => {
+    const stale = buildConnectorAudit({
+      now: NOW,
+      sources: [source({ sourceId: 'gdelt_doc_public', status: 'online', lastSuccessAt: NOW - 4 * 24 * 60 * 60 * 1000, pollIntervalMs: 300_000 })],
+      events: [],
+    })
+    expect(stale.find((row) => row.id === 'gdelt-doc')?.status).toBe('stale')
+
+    const limited = buildConnectorAudit({
+      now: NOW,
+      sources: [source({ sourceId: 'gdelt_doc_public', status: 'rate-limited', lastError: 'HTTP 429' })],
+      events: [],
+    })
+    const row = limited.find((r) => r.id === 'gdelt-doc')
+    expect(row?.status).toBe('rate-limited')
+    expect(row?.trust).toBe('media-observation')
+  })
 })

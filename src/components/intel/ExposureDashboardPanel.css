@@ -32,7 +32,7 @@
 
 .exposure-kpis {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -70,6 +70,16 @@
 
 .exposure-kpi.tone-muted strong {
   color: var(--muted);
+}
+
+/* Media observed: dashed + faint so it reads as low-trust context, set apart
+ * from the resolved/curated exposure tiers and never confused with them. */
+.exposure-kpi.tone-observed {
+  border-style: dashed;
+}
+
+.exposure-kpi.tone-observed strong {
+  color: var(--faint);
 }
 
 .exposure-rank-grid {

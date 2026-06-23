@@ -63,6 +63,8 @@ export type ExposureSummary = {
   resolvedEventCount: number
   unresolvedEventCount: number
   curatedReferenceOnlyCount: number
+  /** Low-trust media observations (e.g. GDELT) — context only, never in the ranks. */
+  mediaObservationCount: number
   topCountries: ExposureCount[]
   topCompanies: ExposureCount[]
   topCommodities: ExposureCount[]
@@ -478,8 +480,14 @@ export function summarizeExposure(input: {
   const counts = new Map<string, ExposureCount>()
   const recentResolvedEvents: ResolvedExposureEvent[] = []
   let curatedReferenceOnlyCount = 0
+  // Low-trust media observations are tracked separately and NEVER enter the ranks.
+  let mediaObservationCount = 0
 
   for (const event of considered) {
+    if (event.provenance === 'media-observation') {
+      mediaObservationCount += 1
+      continue // media observation: context only, excluded from exposure ranking
+    }
     const exposed = eventStructuralExposure(event, { maxDepth: 3 })
     if (exposed.length === 0) continue
     curatedReferenceOnlyCount += 1
@@ -510,6 +518,7 @@ export function summarizeExposure(input: {
     resolvedEventCount: resolvedEventIds.size,
     unresolvedEventCount: Math.max(0, considered.length - resolvedEventIds.size),
     curatedReferenceOnlyCount,
+    mediaObservationCount,
     topCountries: topKind(counts, 'country', limit),
     topCompanies: topKind(counts, 'company', limit),
     topCommodities: topKind(counts, 'commodity', limit),

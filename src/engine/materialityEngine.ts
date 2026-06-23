@@ -60,6 +60,7 @@ export type MaterialityChangeType =
   | 'patent'
   | 'oss-release'
   | 'trade-flow'
+  | 'media-observation'
   | 'world-event'
 
 export type MaterialItem = {
@@ -447,6 +448,7 @@ export function classifyChangeType(event: WorldIntelEvent): MaterialityChangeTyp
   }
   if (event.patentRecord) return 'patent'
   if (event.githubRelease) return 'oss-release'
+  if (event.gdeltArticle) return 'media-observation'
   if (/trade|comtrade|shipping/i.test(`${event.category} ${event.sourceId}`)) return 'trade-flow'
   return 'world-event'
 }

@@ -135,6 +135,7 @@ function changeTypeLabel(changeType: MaterialityChangeType): string {
     patent: 'patent',
     'oss-release': 'OSS release',
     'trade-flow': 'trade flow',
+    'media-observation': 'media observation',
     'world-event': 'world event',
   }
   return labels[changeType]

@@ -30,9 +30,10 @@ export function ExposureDashboardPanel({
 
       <div className="exposure-kpis">
         <Kpi label="events considered" value={summary.consideredEventCount} />
-        <Kpi label="resolved" value={summary.resolvedEventCount} tone="ok" />
+        <Kpi label="official resolved" value={summary.resolvedEventCount} tone="ok" />
+        <Kpi label="curated context" value={summary.curatedReferenceOnlyCount} tone="muted" />
         <Kpi label="unresolved" value={summary.unresolvedEventCount} tone="warn" />
-        <Kpi label="curated only" value={summary.curatedReferenceOnlyCount} tone="muted" />
+        <Kpi label="media observed" value={summary.mediaObservationCount} tone="observed" />
       </div>
 
       {summary.consideredEventCount === 0 ? (
@@ -79,8 +80,9 @@ export function ExposureDashboardPanel({
 
       <footer className="exposure-footnote">
         <Link2 size={12} />
-        Live events keep their own source provenance. Exposure paths are local resolver output over curated reference
-        relationships, not verified live causality.
+        Three separate tiers: official/resolved events, curated-reference structural context, and media observations.
+        Media observations (e.g. GDELT) are context only — never resolved into exposure and never ranked. Exposure paths
+        are local resolver output over curated reference relationships, not verified live causality.
       </footer>
     </section>
   )
@@ -93,7 +95,7 @@ function Kpi({
 }: {
   label: string
   value: number
-  tone?: 'neutral' | 'ok' | 'warn' | 'muted'
+  tone?: 'neutral' | 'ok' | 'warn' | 'muted' | 'observed'
 }) {
   return (
     <div className={`exposure-kpi tone-${tone}`}>
