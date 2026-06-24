@@ -71,6 +71,7 @@ import { EntityEvidenceGraphPanel } from './components/intel/EntityEvidenceGraph
 import { EventResolutionPanel } from './components/intel/EventResolutionPanel'
 import { ConnectorDashboardPanel } from './components/intel/ConnectorDashboardPanel'
 import { MarketCoverageDashboard } from './components/intel/MarketCoverageDashboard'
+import { MissingMarketDataPanel } from './components/intel/MissingMarketDataPanel'
 import { ExposureDashboardPanel } from './components/intel/ExposureDashboardPanel'
 import { findWorldIntelEvent } from './engine/entityResolver'
 import type { WorldIntelSnapshot } from './worldIntel'
@@ -1503,6 +1504,10 @@ function App() {
 
             <article className="panel market-coverage-panel wide-panel">
               <MarketCoverageDashboard sources={worldSnapshot.sources} events={worldSnapshot.worldEvents} />
+            </article>
+
+            <article className="panel missing-market-data-panel wide-panel">
+              <MissingMarketDataPanel />
             </article>
 
             <article className="panel exposure-dashboard-panel wide-panel">
