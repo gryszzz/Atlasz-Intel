@@ -74,6 +74,12 @@ const EiaRefinerySourceTrail = lazy(() =>
 const LngTerminalSourceTrail = lazy(() =>
   import('./components/intel/LngTerminalSourceTrail').then((m) => ({ default: m.LngTerminalSourceTrail })),
 )
+const NuclearPlantSourceTrail = lazy(() =>
+  import('./components/intel/NuclearPlantSourceTrail').then((m) => ({ default: m.NuclearPlantSourceTrail })),
+)
+const NrcReactorStatusSourceTrail = lazy(() =>
+  import('./components/intel/NrcReactorStatusSourceTrail').then((m) => ({ default: m.NrcReactorStatusSourceTrail })),
+)
 const MarketIdentitySourceTrail = lazy(() =>
   import('./components/intel/MarketIdentitySourceTrail').then((m) => ({ default: m.MarketIdentitySourceTrail })),
 )
@@ -265,6 +271,14 @@ export function WorldIntelligenceView({
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading LNG terminals" /></div>}>
           <LngTerminalSourceTrail events={visibleEvents} now={now} />
+        </Suspense>
+
+        <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading nuclear plants" /></div>}>
+          <NuclearPlantSourceTrail events={visibleEvents} now={now} />
+        </Suspense>
+
+        <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading NRC reactor status" /></div>}>
+          <NrcReactorStatusSourceTrail events={visibleEvents} now={now} />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading entity detail" /></div>}>

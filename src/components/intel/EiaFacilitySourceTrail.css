@@ -224,6 +224,37 @@
   white-space: nowrap;
 }
 
+.eia-status-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-2xs);
+}
+
+.eia-status-table th,
+.eia-status-table td {
+  padding: 4px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.eia-status-table thead th {
+  font-family: var(--mono);
+  font-size: var(--fs-3xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--faint);
+}
+
+.eia-num {
+  font-family: var(--mono);
+  text-align: right;
+}
+
+.eia-hash {
+  font-family: var(--mono);
+  color: var(--faint);
+}
+
 .eia-fac-empty {
   display: flex;
   flex-direction: column;
