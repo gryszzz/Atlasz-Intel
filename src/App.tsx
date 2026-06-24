@@ -70,6 +70,7 @@ import { WhatChangedTodayPanel } from './components/intel/WhatChangedTodayPanel'
 import { EntityEvidenceGraphPanel } from './components/intel/EntityEvidenceGraphPanel'
 import { EventResolutionPanel } from './components/intel/EventResolutionPanel'
 import { ConnectorDashboardPanel } from './components/intel/ConnectorDashboardPanel'
+import { MarketCoverageDashboard } from './components/intel/MarketCoverageDashboard'
 import { ExposureDashboardPanel } from './components/intel/ExposureDashboardPanel'
 import { findWorldIntelEvent } from './engine/entityResolver'
 import type { WorldIntelSnapshot } from './worldIntel'
@@ -1498,6 +1499,10 @@ function App() {
 
             <article className="panel connector-dashboard-panel">
               <ConnectorDashboardPanel sources={worldSnapshot.sources} events={worldSnapshot.worldEvents} />
+            </article>
+
+            <article className="panel market-coverage-panel wide-panel">
+              <MarketCoverageDashboard sources={worldSnapshot.sources} events={worldSnapshot.worldEvents} />
             </article>
 
             <article className="panel exposure-dashboard-panel wide-panel">
