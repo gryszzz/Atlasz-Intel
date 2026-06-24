@@ -22,6 +22,7 @@ import { PORTS_TRADE_SEED } from './relationshipSeed.portsTrade'
 import { ENERGY_SEED } from './relationshipSeed.energy'
 import { PATENTS_TECH_SEED } from './relationshipSeed.patentsTech'
 import { CORPORATE_SEED } from './relationshipSeed.corporate'
+import { CRITICAL_MINERALS_SEED } from './relationshipSeed.criticalMinerals'
 import type { SeedEntity, SeedRelation, SeededRelationship } from './relationshipSeed.entities'
 
 export {
@@ -35,6 +36,7 @@ export { PORTS_TRADE_SEED } from './relationshipSeed.portsTrade'
 export { ENERGY_SEED } from './relationshipSeed.energy'
 export { PATENTS_TECH_SEED } from './relationshipSeed.patentsTech'
 export { CORPORATE_SEED } from './relationshipSeed.corporate'
+export { CRITICAL_MINERALS_SEED } from './relationshipSeed.criticalMinerals'
 
 export type ExposureHop = {
   entity: SeedEntity
@@ -58,6 +60,7 @@ export const ALL_SEED: SeededRelationship[] = [
   ...ENERGY_SEED,
   ...PATENTS_TECH_SEED,
   ...CORPORATE_SEED,
+  ...CRITICAL_MINERALS_SEED,
 ]
 
 type AdjEdge = { neighbor: SeedEntity; relation: SeedRelation; confidence: number; sourceNote: string }
