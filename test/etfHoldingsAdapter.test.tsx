@@ -78,13 +78,34 @@ function events(): WorldIntelEvent[] {
   return normalizeEtfHoldings(records())
 }
 
+function iSharesEvents(): WorldIntelEvent[] {
+  return normalizeEtfHoldings(parseEtfHoldingRows(ISHARES_ROWS, ISHARES_SOURCE, { retrievedAt: NOW, maxRows: 10 }))
+}
+
 describe('ETF holdings adapter', () => {
   it('is public by default, source-allowlisted, and bounded', () => {
-    expect(readEtfHoldingsConfig({})).not.toBeNull()
+    const defaultFunds = readEtfHoldingsConfig({})?.funds.map((f) => f.fundTicker)
+    expect(defaultFunds).toEqual(['SOXX', 'SPY', 'XLK', 'XLE', 'XLU'])
+    expect(defaultFunds).not.toContain('SMH')
+    expect(defaultFunds).not.toContain('QQQ')
     expect(readEtfHoldingsConfig({ ATLASZ_ETF_HOLDINGS_DISABLE: '1' })).toBeNull()
     expect(readEtfHoldingsConfig({ ATLASZ_ETF_HOLDINGS_FUNDS: 'XLK' })?.funds.map((f) => f.fundTicker)).toEqual(['XLK'])
     expect(readEtfHoldingsConfig({ ATLASZ_ETF_HOLDINGS_FUNDS: 'NOTREAL' })).toBeNull()
     expect(readEtfHoldingsConfig({ ATLASZ_ETF_HOLDINGS_MAX_ROWS: '2' })?.maxHoldingsPerFund).toBe(2)
+  })
+
+  it('guards official issuer domains before parsing or fetching', async () => {
+    const badSource: EtfFundSource = { ...SSGA_SOURCE, sourceUrl: 'https://example.com/holdings-daily-us-en-xlk.xlsx' }
+    expect(parseEtfHoldingRows(SSGA_ROWS, badSource, { retrievedAt: NOW })).toEqual([])
+
+    const config: EtfHoldingsConfig = {
+      funds: [badSource],
+      timeoutMs: 1000,
+      maxRetries: 0,
+      backoffMs: 0,
+      maxHoldingsPerFund: 10,
+    }
+    await expect(fetchEtfHoldings(new AbortController().signal, config)).rejects.toThrow(/approved official issuer URL/)
   })
 
   it('parses official State Street holdings rows with source date and source-provided weights', () => {
@@ -143,7 +164,7 @@ describe('ETF holdings adapter', () => {
     expect(event.summary).toContain('source-provided weight')
     expect(event.summary).toContain('Holdings snapshot only')
     const corpus = `${event.title} ${event.summary}`.toLowerCase()
-    for (const banned of ['buy', 'sell', 'bullish', 'bearish', 'momentum', 'price target', 'should']) {
+    for (const banned of ['buy', 'sell', 'bullish', 'bearish', 'momentum', 'price target', 'should', 'top pick', 'most exposed']) {
       expect(corpus, banned).not.toContain(banned)
     }
   })
@@ -213,8 +234,19 @@ describe('ETF holdings adapter', () => {
     expect(markup).toContain('NVIDIA CORP')
     expect(markup).toContain('as of 2026-06-22')
     expect(markup).toContain('fresh snapshot')
+    expect(markup).toContain('stale after 2026-06-29T00:00:00.000Z')
+    expect(markup).toContain('retrievedAt 2026-06-23T12:00:00.000Z')
+    expect(markup).toContain('CUSIP: 67066G104')
+    expect(markup).toContain('SEDOL: 2379504')
     expect(markup).toContain('15.147%')
+    expect(markup).toContain('90,784,367')
+    expect(markup).toContain(events()[0].rawPayloadHash.slice(0, 10))
     expect(markup).toContain('issuer holdings file')
+
+    const iSharesMarkup = renderToStaticMarkup(createElement(EtfHoldingsSourceTrail, { events: iSharesEvents(), now: NOW }))
+    expect(iSharesMarkup).toContain('SOXX')
+    expect(iSharesMarkup).toContain('MICRON TECHNOLOGY INC')
+    expect(iSharesMarkup).toContain('$4.06B USD')
 
     const staleMarkup = renderToStaticMarkup(createElement(EtfHoldingsSourceTrail, { events: events(), now: NOW + 8 * 24 * 60 * 60 * 1000 }))
     expect(staleMarkup).toContain('stale snapshot')

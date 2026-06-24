@@ -67,7 +67,8 @@ function FundHoldings({ holdings, now }: { holdings: EtfHolding[]; now: number }
         <code>{first.issuer}</code>
         <span>as of {first.sourceDate}</span>
         <span className={stale ? 'etf-stale' : 'etf-fresh'}>{stale ? 'stale snapshot' : 'fresh snapshot'}</span>
-        <span>retrieved {new Date(first.retrievedAt).toISOString().slice(0, 10)}</span>
+        <span>stale after {formatIso(first.staleAt)}</span>
+        <span>retrievedAt {formatIso(first.retrievedAt)}</span>
       </div>
       <table className="etf-holdings">
         <thead>
@@ -90,10 +91,10 @@ function FundHoldings({ holdings, now }: { holdings: EtfHolding[]; now: number }
                 {holding.assetClass && <span className="etf-asset-class"> · {holding.assetClass}</span>}
               </th>
               <td>{holding.holdingTicker || 'unresolved'}</td>
-              <td>{holding.cusip || holding.isin || holding.sedol || '—'}</td>
+              <td>{formatIdentifiers(holding)}</td>
               <td className="etf-num">{holding.weight !== undefined ? `${holding.weight.toFixed(3)}%` : '—'}</td>
               <td className="etf-num">{holding.shares !== undefined ? holding.shares.toLocaleString('en-US') : '—'}</td>
-              <td className="etf-num">{holding.marketValue !== undefined ? formatUsd(holding.marketValue) : '—'}</td>
+              <td className="etf-num">{holding.marketValue !== undefined ? formatMarketValue(holding.marketValue, holding.currency) : '—'}</td>
               <td>{holding.currency || '—'}</td>
               <td className="etf-hash">{holding.rawPayloadHash.slice(0, 10)}…</td>
             </tr>
@@ -111,10 +112,29 @@ function FundHoldings({ holdings, now }: { holdings: EtfHolding[]; now: number }
   )
 }
 
-function formatUsd(value: number): string {
+function formatIdentifiers(holding: EtfHolding): string {
+  const parts = [
+    holding.cusip ? `CUSIP: ${holding.cusip}` : '',
+    holding.isin ? `ISIN: ${holding.isin}` : '',
+    holding.sedol ? `SEDOL: ${holding.sedol}` : '',
+  ].filter(Boolean)
+  return parts.length > 0 ? parts.join(' · ') : '—'
+}
+
+function formatIso(value: number): string {
+  return Number.isFinite(value) ? new Date(value).toISOString() : 'unavailable'
+}
+
+function formatMarketValue(value: number, currency?: string): string {
+  const suffix = currency ? ` ${currency}` : ''
+  if (currency === 'USD') return `${formatCompactMoney(value, '$')}${suffix}`
+  return `${formatCompactMoney(value)}${suffix}`
+}
+
+function formatCompactMoney(value: number, symbol = ''): string {
   const abs = Math.abs(value)
-  if (abs >= 1e9) return `$${(value / 1e9).toFixed(2)}B`
-  if (abs >= 1e6) return `$${(value / 1e6).toFixed(2)}M`
-  if (abs >= 1e3) return `$${(value / 1e3).toFixed(1)}K`
-  return `$${value.toLocaleString('en-US')}`
+  if (abs >= 1e9) return `${symbol}${(value / 1e9).toFixed(2)}B`
+  if (abs >= 1e6) return `${symbol}${(value / 1e6).toFixed(2)}M`
+  if (abs >= 1e3) return `${symbol}${(value / 1e3).toFixed(1)}K`
+  return `${symbol}${value.toLocaleString('en-US')}`
 }
