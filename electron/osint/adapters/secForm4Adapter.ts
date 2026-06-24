@@ -104,13 +104,13 @@ export async function fetchSecForm4(signal: AbortSignal, config = readForm4Confi
     const filings = await listRecentForm4Filings(issuer, config, signal)
     for (const filing of filings.slice(0, config.filingsPerCompany)) {
       const xml = await fetchText(filing.xmlUrl, config, signal)
-      records.push(...parseForm4(xml, { issuer, accessionNumber: filing.accessionNumber, filingDate: filing.filingDate, sourceFilingUrl: filing.filingUrl, sourceXmlUrl: filing.xmlUrl, retrievedAt: Date.now() }))
+      records.push(...parseForm4(xml, { issuer, accessionNumber: filing.accessionNumber, filingDate: filing.filingDate, isAmendment: filing.isAmendment, sourceFilingUrl: filing.filingUrl, sourceXmlUrl: filing.xmlUrl, retrievedAt: Date.now() }))
     }
   }
   return normalizeForm4(records)
 }
 
-type Form4FilingRef = { accessionNumber: string; filingDate: string; filingUrl: string; xmlUrl: string }
+type Form4FilingRef = { accessionNumber: string; filingDate: string; filingUrl: string; xmlUrl: string; isAmendment: boolean }
 
 async function listRecentForm4Filings(issuer: Form4Issuer, config: Form4Config, signal: AbortSignal): Promise<Form4FilingRef[]> {
   const url = `${config.submissionsBase.replace(/\/$/, '')}/CIK${issuer.cikPadded}.json`
@@ -126,7 +126,9 @@ async function listRecentForm4Filings(issuer: Form4Issuer, config: Form4Config, 
   const docs = asArray(recent.primaryDocument)
   const out: Form4FilingRef[] = []
   for (let i = 0; i < forms.length; i += 1) {
-    if (asString(forms[i]) !== '4') continue
+    // Form 4 and its amendment 4/A only — never Form 3 (initial) or Form 5 (annual).
+    const form = asString(forms[i]).toUpperCase()
+    if (form !== '4' && form !== '4/A') continue
     const accessionNumber = asString(accns[i])
     const filingDate = asString(dates[i])
     const primaryDoc = asString(docs[i])
@@ -135,7 +137,7 @@ async function listRecentForm4Filings(issuer: Form4Issuer, config: Form4Config, 
     const xmlDoc = primaryDoc.replace(/^xsl[^/]*\//i, '') // strip the human-readable XSL render prefix
     if (!/\.xml$/i.test(xmlDoc)) continue
     const dir = `${config.archivesBase.replace(/\/$/, '')}/${Number(issuer.cik)}/${accnNoDashes}`
-    out.push({ accessionNumber, filingDate, filingUrl: `${dir}/`, xmlUrl: `${dir}/${xmlDoc}` })
+    out.push({ accessionNumber, filingDate, filingUrl: `${dir}/`, xmlUrl: `${dir}/${xmlDoc}`, isAmendment: form === '4/A' })
   }
   return out
 }
@@ -143,10 +145,12 @@ async function listRecentForm4Filings(issuer: Form4Issuer, config: Form4Config, 
 /** Pure parser — testable with real Form 4 ownership XML fixtures. */
 export function parseForm4(
   xml: string,
-  options: { issuer: Form4Issuer; accessionNumber: string; filingDate: string; sourceFilingUrl?: string; sourceXmlUrl?: string; retrievedAt?: number },
+  options: { issuer: Form4Issuer; accessionNumber: string; filingDate: string; isAmendment?: boolean; sourceFilingUrl?: string; sourceXmlUrl?: string; retrievedAt?: number },
 ): Form4Transaction[] {
   if (!xml || !/<ownershipDocument/i.test(xml)) return []
   const { issuer, accessionNumber, filingDate } = options
+  // Amendment if the submissions feed said 4/A, or the XML documentType reports it.
+  const isAmendment = Boolean(options.isAmendment) || /<documentType>\s*4\/A\s*<\/documentType>/i.test(xml)
   const retrievedAt = options.retrievedAt ?? Date.now()
   const sourceFilingUrl = options.sourceFilingUrl ?? ''
   const sourceXmlUrl = options.sourceXmlUrl ?? ''
@@ -185,6 +189,7 @@ export function parseForm4(
       issuerCik,
       issuerTicker: issuer.ticker,
       accessionNumber,
+      isAmendment,
       filingDate,
       transactionDate,
       ownerName,
@@ -207,6 +212,7 @@ export function parseForm4(
       issuerTicker: issuer.ticker,
       issuerName: textOf(issuerBlock, 'issuerName') || issuer.companyName,
       accessionNumber,
+      isAmendment,
       filingDate,
       transactionDate,
       ownerName,
@@ -260,8 +266,9 @@ function toEvent(record: Form4Transaction): WorldIntelEvent {
   const shares = record.transactionShares !== undefined ? `${record.transactionShares.toLocaleString('en-US')} shares` : 'shares'
   const price = record.transactionPricePerShare !== undefined ? ` at $${record.transactionPricePerShare}` : ''
   const rel = record.ownerRelationship ? ` (${record.ownerRelationship})` : ''
+  const formLabel = record.isAmendment ? 'SEC Form 4/A (amendment)' : 'SEC Form 4'
   const summary =
-    `SEC Form 4: ${record.ownerName}${rel} ${direction} ${shares} of ${record.issuerName} (${record.issuerTicker})${price} ` +
+    `${formLabel}: ${record.ownerName}${rel} ${direction} ${shares} of ${record.issuerName} (${record.issuerTicker})${price} ` +
     `on ${record.transactionDate} — code ${record.transactionCode} (${record.transactionCodeLabel}), filed ${record.filingDate}. ` +
     `Source-reported SEC ownership transaction; not sentiment, valuation, or trading advice.`
   const observedAt = Date.parse(`${record.filingDate}T00:00:00Z`)

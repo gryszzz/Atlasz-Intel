@@ -101,6 +101,17 @@
   font-weight: 400;
 }
 
+.f4-amend {
+  color: var(--yellow);
+  font-weight: 400;
+}
+
+.f4-retrieved {
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  color: var(--faint);
+}
+
 .f4-txns td {
   padding: 2px 8px 2px 0;
   font-family: var(--mono);

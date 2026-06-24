@@ -34,6 +34,7 @@ export function Form4SourceTrail({ events, limit = 24 }: { events: WorldIntelEve
                 <span>{txns[0]?.issuerName}</span>
                 <ProvenanceBadge value={txns[0]?.provenance ?? 'public-disclosure'} size="sm" />
                 <code>CIK {txns[0]?.issuerCikPadded}</code>
+                {txns[0] && <span className="f4-retrieved">retrieved {new Date(txns[0].retrievedAt).toISOString().slice(0, 10)}</span>}
               </div>
               <table className="f4-txns">
                 <thead>
@@ -44,6 +45,7 @@ export function Form4SourceTrail({ events, limit = 24 }: { events: WorldIntelEve
                     <th scope="col">Price</th>
                     <th scope="col">A/D</th>
                     <th scope="col">Nature</th>
+                    <th scope="col">Post</th>
                     <th scope="col">Txn date</th>
                     <th scope="col">Filed</th>
                     <th scope="col">Hash</th>
@@ -55,12 +57,14 @@ export function Form4SourceTrail({ events, limit = 24 }: { events: WorldIntelEve
                       <th scope="row">
                         {txn.ownerName}
                         {txn.ownerRelationship && <span className="f4-rel"> · {txn.ownerRelationship}</span>}
+                        {txn.isAmendment && <span className="f4-amend"> · 4/A amendment</span>}
                       </th>
                       <td title={txn.transactionCodeLabel}>{txn.transactionCode}</td>
                       <td className="f4-num">{txn.transactionShares?.toLocaleString('en-US') ?? '—'}</td>
                       <td className="f4-num">{txn.transactionPricePerShare !== undefined ? `$${txn.transactionPricePerShare}` : '—'}</td>
                       <td>{txn.acquiredDisposedCode || '—'}</td>
                       <td>{txn.ownershipNature || '—'}</td>
+                      <td className="f4-num">{txn.sharesOwnedFollowing?.toLocaleString('en-US') ?? '—'}</td>
                       <td>{txn.transactionDate}</td>
                       <td>{txn.filingDate}</td>
                       <td className="f4-hash">{txn.rawPayloadHash.slice(0, 10)}…</td>

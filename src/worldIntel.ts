@@ -106,6 +106,8 @@ export type Form4Transaction = {
   issuerTicker: string
   issuerName: string
   accessionNumber: string
+  /** True when the filing is a Form 4/A amendment (surfaced honestly, never as an original). */
+  isAmendment: boolean
   filingDate: string
   transactionDate: string
   ownerName: string
