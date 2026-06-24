@@ -64,6 +64,7 @@ export type MaterialityChangeType =
   | 'research'
   | 'doi-metadata'
   | 'market-reference'
+  | 'company-fact'
   | 'world-event'
 
 export type MaterialItem = {
@@ -162,6 +163,7 @@ const SOURCE_LABELS: Record<string, string> = {
   un_comtrade_public: 'UN Comtrade',
   openalex_works_public: 'OpenAlex',
   crossref_works_public: 'Crossref',
+  sec_company_facts_public: 'SEC Company Facts',
   sec_company_tickers_public: 'SEC Company Tickers',
   politician_disclosure_public: 'Public disclosure',
 }
@@ -457,6 +459,7 @@ export function classifyChangeType(event: WorldIntelEvent): MaterialityChangeTyp
   if (event.patentRecord) return 'patent'
   if (event.githubRelease) return 'oss-release'
   if (event.gdeltArticle) return 'media-observation'
+  if (event.companyFact) return 'company-fact'
   if (event.openAlexWork) return 'research'
   if (event.crossrefWork) return 'doi-metadata'
   if (event.marketIdentity) return 'market-reference'

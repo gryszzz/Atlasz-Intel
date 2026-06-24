@@ -16,6 +16,7 @@ import { fetchOfacSanctions, readOfacSanctionsConfig } from './adapters/ofacSanc
 import { fetchCongressGovBills, readCongressGovConfig } from './adapters/congressGovAdapter'
 import { fetchComtradeEvents, readComtradeConfig } from './adapters/comtradeAdapter'
 import { fetchOpenAlexWorks, readOpenAlexConfig } from './adapters/openAlexAdapter'
+import { fetchSecCompanyFacts, readCompanyFactsConfig } from './adapters/secCompanyFactsAdapter'
 import { fetchCrossrefWorks, readCrossrefConfig } from './adapters/crossrefAdapter'
 import { fetchMarketReference, readMarketReferenceConfig } from './adapters/marketReferenceAdapter'
 import { fetchTreasuryFiscalData, readTreasuryFiscalConfig } from './adapters/treasuryFiscalAdapter'
@@ -55,6 +56,7 @@ export const KNOWN_ADAPTERS = [
   'openalex-works',
   'crossref-works',
   'market-reference-sec',
+  'sec-company-facts',
   'treasury-fiscal',
   'bls',
   'bea',
@@ -117,6 +119,10 @@ export function resolveAdapter(provider: ProviderDefinition, env: NodeJS.Process
     case 'market-reference-sec': {
       const config = readMarketReferenceConfig(env)
       return { fetcher: config ? (signal) => fetchMarketReference(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'sec-company-facts': {
+      const config = readCompanyFactsConfig(env)
+      return { fetcher: config ? (signal) => fetchSecCompanyFacts(signal, config) : undefined, configured: config !== null, managed: false }
     }
     case 'treasury-fiscal': {
       const config = readTreasuryFiscalConfig(env)

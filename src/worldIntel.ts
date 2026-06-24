@@ -87,6 +87,46 @@ export type WorldIntelEvent = {
   openAlexWork?: OpenAlexWork
   crossrefWork?: CrossrefWork
   marketIdentity?: MarketIdentity
+  companyFact?: SecCompanyFact
+}
+
+export type SecCompanyFactChangeType = 'first_seen' | 'new_today' | 'updated' | 'unchanged'
+
+/**
+ * A single SEC-reported XBRL fact (companyfacts) attached to a canonical CIK/ticker
+ * identity. HISTORICAL reported fact only — never an estimate, forecast, valuation,
+ * or trading signal. The CIK comes from the Market Reference Master identity spine.
+ */
+export type SecCompanyFact = {
+  id: string
+  cik: string
+  cikPadded: string
+  ticker: string
+  companyName: string
+  taxonomy: string
+  concept: string
+  /** Canonical Atlasz concept label (e.g. "Net income"). */
+  conceptLabel: string
+  /** SEC-published label for the concept. */
+  factLabel: string
+  unit: string
+  value: number
+  periodStart?: string
+  periodEnd: string
+  fiscalYear?: number
+  fiscalPeriod?: string
+  form: string
+  filedDate: string
+  accessionNumber?: string
+  frame?: string
+  sourceUrl: string
+  retrievedAt: number
+  staleAt: number
+  provenance: ProvenanceId
+  confidence: number
+  changeType: SecCompanyFactChangeType
+  rawPayloadHash: string
+  rawPayloadJson?: string
 }
 
 /**

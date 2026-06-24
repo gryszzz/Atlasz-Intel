@@ -49,6 +49,7 @@ export type EntityKind =
   | 'policy-area'
   | 'committee'
   | 'trade-flow'
+  | 'financial-concept'
   | 'research-work'
   | 'doi-work'
   | 'topic'
@@ -450,6 +451,18 @@ export function deriveEventEntities(event: WorldIntelEvent): { entities: EntityR
       link(doiEntity, { id: entityId('funder', funder), kind: 'funder', label: funder }, 'references')
     }
     link(doiEntity, { id: entityId('source', 'crossref'), kind: 'source', label: 'Crossref' }, 'reported_by')
+  }
+
+  // SEC Company Facts: event -> company identity (CIK/ticker) -> financial concept
+  // -> SEC source. The company resolves into the curated exposure graph by exact
+  // ticker alias. Historical reported fact only — no valuation or signal inferred.
+  if (event.companyFact) {
+    const fact = event.companyFact
+    const company: EntityRef = { id: entityId('company', fact.cik || fact.ticker), kind: 'company', label: fact.companyName }
+    link(eventEntity, company, 'about')
+    link(company, { id: entityId('ticker', fact.ticker), kind: 'ticker', label: fact.ticker }, 'trades_as')
+    link(eventEntity, { id: entityId('financial-concept', fact.conceptLabel), kind: 'financial-concept', label: fact.conceptLabel }, 'references')
+    link(eventEntity, { id: entityId('source', 'sec-company-facts'), kind: 'source', label: 'SEC Company Facts' }, 'reported_by')
   }
 
   // Generic normalized fields (apply to every connector).

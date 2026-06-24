@@ -1435,6 +1435,7 @@ type WorldIntelSubRecords = Pick<
   | 'openAlexWork'
   | 'crossrefWork'
   | 'marketIdentity'
+  | 'companyFact'
 >
 
 /** Serialize the typed sub-records present on an event; null when there are none. */
@@ -1463,6 +1464,7 @@ export function serializeSubRecords(record: WorldIntelEvent): string | null {
   if (record.openAlexWork) sub.openAlexWork = record.openAlexWork
   if (record.crossrefWork) sub.crossrefWork = record.crossrefWork
   if (record.marketIdentity) sub.marketIdentity = record.marketIdentity
+  if (record.companyFact) sub.companyFact = record.companyFact
   return Object.keys(sub).length > 0 ? JSON.stringify(sub) : null
 }
 
@@ -1506,6 +1508,7 @@ export function parseSubRecords(value: unknown): WorldIntelSubRecords {
   if (isValidOpenAlexWork(record.openAlexWork)) out.openAlexWork = record.openAlexWork as WorldIntelEvent['openAlexWork']
   if (isValidCrossrefWork(record.crossrefWork)) out.crossrefWork = record.crossrefWork as WorldIntelEvent['crossrefWork']
   if (isValidMarketIdentity(record.marketIdentity)) out.marketIdentity = record.marketIdentity as WorldIntelEvent['marketIdentity']
+  if (isValidCompanyFact(record.companyFact)) out.companyFact = record.companyFact as WorldIntelEvent['companyFact']
   return out
 }
 
@@ -1588,6 +1591,20 @@ function isValidGdeltArticle(value: unknown): boolean {
 function isValidOpenAlexWork(value: unknown): boolean {
   const v = asRecord(value)
   return Boolean(v && typeof v.openAlexWorkId === 'string' && v.openAlexWorkId.length > 0 && typeof v.title === 'string' && v.title.length > 0 && hasHash(v))
+}
+
+function isValidCompanyFact(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(
+    v &&
+      typeof v.cik === 'string' &&
+      typeof v.concept === 'string' &&
+      v.concept.length > 0 &&
+      typeof v.value === 'number' &&
+      Number.isFinite(v.value) &&
+      typeof v.periodEnd === 'string' &&
+      hasHash(v),
+  )
 }
 
 function isValidCrossrefWork(value: unknown): boolean {

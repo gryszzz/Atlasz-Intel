@@ -53,6 +53,9 @@ const OpenAlexSourceTrail = lazy(() =>
 const CrossrefSourceTrail = lazy(() =>
   import('./components/intel/CrossrefSourceTrail').then((m) => ({ default: m.CrossrefSourceTrail })),
 )
+const CompanyFactsSourceTrail = lazy(() =>
+  import('./components/intel/CompanyFactsSourceTrail').then((m) => ({ default: m.CompanyFactsSourceTrail })),
+)
 const MarketIdentitySourceTrail = lazy(() =>
   import('./components/intel/MarketIdentitySourceTrail').then((m) => ({ default: m.MarketIdentitySourceTrail })),
 )
@@ -216,6 +219,10 @@ export function WorldIntelligenceView({
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading market identity source trail" /></div>}>
           <MarketIdentitySourceTrail events={visibleEvents} identities={snapshot.marketIdentities} now={now} />
+        </Suspense>
+
+        <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading SEC company facts" /></div>}>
+          <CompanyFactsSourceTrail events={visibleEvents} now={now} />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading entity detail" /></div>}>
