@@ -63,21 +63,9 @@ export const MARKET_DATA_SURFACES: MarketDataSurface[] = [
     marketRelevance: 'medium',
     note: 'Live public crypto exchanges; no key. The only realtime price source currently real.',
   },
-  // --- Key-gated / fragile, needs a real provider ---
-  {
-    id: 'equities-yahoo-alpaca',
-    label: 'Equity/ETF quotes (yahoo/alpaca, fragile)',
-    kind: 'price',
-    classification: 'source-needed',
-    source: 'realtime engine yahoo (unofficial) / alpaca (key-gated)',
-    usedIn: ['src/realtimeStore.ts', 'src/RealtimeWidgets.tsx'],
-    proofFields: QUOTE_PROOF,
-    productionAllowed: false,
-    currentlyRenderedInProduction: false,
-    marketRelevance: 'high',
-    note: 'Yahoo is unofficial/fragile; needs a proper key-gated provider abstraction (Polygon/Alpaca/Tiingo/IEX). Treat as source-needed until built.',
-    missingReason: 'No robust key-gated equity/ETF price provider with full proof fields yet.',
-  },
+  // --- Key-gated: real provider exists, requires a key (fail-closed) ---
+  keyGated('realtime-equities', 'Realtime equities', 'high', 'Key-gated Alpaca quote provider (alpaca_equity_quotes). Fail-closed -> PRICE_UNAVAILABLE until ATLASZ_ALPACA_API_KEY + ATLASZ_ALPACA_SECRET_KEY are set.'),
+  keyGated('etf-prices', 'ETF prices', 'high', 'Same key-gated Alpaca quote provider as equities. PRICE_UNAVAILABLE until keys configured.'),
   // --- Simulated / seeded (dev-only) — NOT allowed in production ---
   {
     id: 'seed-market-series',
@@ -145,14 +133,29 @@ export const MARKET_DATA_SURFACES: MarketDataSurface[] = [
     note: 'Mock ingestion tape used to illustrate the pipeline. Never a real source trail.',
   },
   // --- Source-needed (no provider wired) ---
-  sourceNeeded('realtime-equities', 'Realtime equities', 'high', 'No robust key-gated equities price provider wired (Polygon/Alpaca/Tiingo/IEX/Nasdaq Data Link).'),
-  sourceNeeded('etf-prices', 'ETF prices', 'high', 'No ETF price provider wired (same provider abstraction as equities).'),
   sourceNeeded('options-oi', 'Options chain / open interest', 'high', 'No options/OI source wired; no "flow" claims allowed without real trade prints.'),
   sourceNeeded('forex', 'Forex', 'high', 'No FX provider wired.'),
   sourceNeeded('commodity-futures', 'Commodity futures', 'high', 'No futures provider wired.'),
   sourceNeeded('short-interest', 'Short interest', 'medium', 'No FINRA/exchange short-interest source wired.'),
   sourceNeeded('earnings-transcripts', 'Earnings calendar / releases / transcripts', 'high', 'No earnings/transcript source wired (needs strict no-hype rules).'),
 ]
+
+function keyGated(id: string, label: string, marketRelevance: 'high' | 'medium' | 'low', note: string): MarketDataSurface {
+  return {
+    id,
+    label,
+    kind: 'price',
+    classification: 'key-gated',
+    source: 'Alpaca quote provider (alpaca_equity_quotes)',
+    usedIn: ['electron/osint/quotes/alpacaQuoteProvider.ts', 'src/components/intel/MarketQuoteSourceTrail.tsx'],
+    proofFields: QUOTE_PROOF,
+    productionAllowed: true,
+    currentlyRenderedInProduction: false, // PRICE_UNAVAILABLE until a key + real quote
+    marketRelevance,
+    note,
+    missingReason: 'Requires ATLASZ_ALPACA_API_KEY + ATLASZ_ALPACA_SECRET_KEY (fail-closed).',
+  }
+}
 
 function sourceNeeded(id: string, label: string, marketRelevance: 'high' | 'medium' | 'low', missingReason: string): MarketDataSurface {
   return {
@@ -188,6 +191,8 @@ export function isMarketSimEnabled(): boolean {
 
 export type MarketDataRealityReport = {
   real: MarketDataSurface[]
+  /** Real provider exists but requires a key (fail-closed until configured). */
+  keyGated: MarketDataSurface[]
   simulatedDevOnly: MarketDataSurface[]
   sourceNeeded: MarketDataSurface[]
   /** Simulated/seeded surfaces STILL rendered in production — must be gated/removed. */
@@ -196,7 +201,8 @@ export type MarketDataRealityReport = {
 
 export function marketDataRealityReport(surfaces: MarketDataSurface[] = MARKET_DATA_SURFACES): MarketDataRealityReport {
   return {
-    real: surfaces.filter((s) => s.classification === 'real-public' || s.classification === 'key-gated'),
+    real: surfaces.filter((s) => s.classification === 'real-public'),
+    keyGated: surfaces.filter((s) => s.classification === 'key-gated'),
     simulatedDevOnly: surfaces.filter((s) => s.classification === 'simulated-dev-only'),
     sourceNeeded: surfaces.filter((s) => s.classification === 'source-needed'),
     productionViolations: surfaces.filter((s) => !s.productionAllowed && s.currentlyRenderedInProduction),

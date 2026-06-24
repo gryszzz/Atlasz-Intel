@@ -58,7 +58,7 @@ describe('market coverage audit', () => {
 
   it('flags the known high-impact gaps', () => {
     const missingIds = new Set(audit().items.filter((i) => i.bucket === 'missing').map((i) => i.id))
-    for (const id of ['price-equities', 'ownership-short-options', 'trade-movement', 'infra-tech-plants', 'risk-fire-drought-flood', 'macro-central-banks']) {
+    for (const id of ['price-forex', 'ownership-short-options', 'trade-movement', 'infra-tech-plants', 'risk-fire-drought-flood', 'macro-central-banks']) {
       expect(missingIds.has(id)).toBe(true)
     }
   })

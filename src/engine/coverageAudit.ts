@@ -73,7 +73,7 @@ export type WatchedThing = {
   /** Connector audit ids backing this (runtimeAudit.CONNECTOR_AUDIT_DEFINITIONS). */
   connectors: string[]
   cadence: Cadence
-  trustTier: 'official-api' | 'public-disclosure' | 'public-unauthenticated' | 'curated-reference' | 'media-observation' | 'none'
+  trustTier: 'official-api' | 'auth-gated' | 'public-disclosure' | 'public-unauthenticated' | 'curated-reference' | 'media-observation' | 'none'
   freshnessWindowMs: number
   expectedProofFields: string[]
   marketRelevance: MarketRelevance
@@ -119,7 +119,7 @@ export const COVERAGE_REGISTRY: WatchedThing[] = [
   missing('identity-exchanges-industries', 'market-identity', 'Exchanges / industries / global identity', ['company', 'ticker'], 'medium', 'No exchange listing, GICS-style industry, or non-US registry / ADR identity source wired.'),
 
   // 2. Price / market data
-  missing('price-equities', 'price-market-data', 'Realtime equities', ['ticker', 'company'], 'high', 'No realtime/near-realtime equities price feed wired.'),
+  covered('price-equities', 'price-market-data', 'Equity/ETF quotes (key-gated)', ['equities-prices'], 'realtime', 'auth-gated', ['ticker', 'company', 'etf'], 'high', 15 * 60_000, 'Key-gated Alpaca quote provider; fail-closed -> PRICE_UNAVAILABLE until ATLASZ_ALPACA_API_KEY is configured. No seeded/default price rendered as real.'),
   missing('price-forex', 'price-market-data', 'Forex', ['ticker'], 'high', 'No FX feed wired.'),
   missing('price-futures', 'price-market-data', 'Commodity futures', ['commodity'], 'high', 'No commodity futures feed wired.'),
   missing('price-rates-vol', 'price-market-data', 'Rates / yields / volatility', ['macro-series'], 'high', 'Rates available via FRED (macro), but no realtime yield-curve/vol surface.'),

@@ -23,9 +23,24 @@ export function MissingMarketDataPanel() {
       </header>
 
       <div className="cov-sections">
+        <div className="cov-section cov-tone-warn">
+          <div className="cov-section-head">
+            <strong>Key-gated · key required (missing-key)</strong>
+            <span>{report.keyGated.length}</span>
+          </div>
+          <ul className="cov-list">
+            {report.keyGated
+              .slice()
+              .sort((a, b) => rel(a) - rel(b) || a.label.localeCompare(b.label))
+              .map((surface) => (
+                <SurfaceRow key={surface.id} surface={surface} statusLabel="key-gated" />
+              ))}
+          </ul>
+        </div>
+
         <div className="cov-section cov-tone-bad">
           <div className="cov-section-head">
-            <strong>Source needed / key required</strong>
+            <strong>Source needed (no provider)</strong>
             <span>{report.sourceNeeded.length}</span>
           </div>
           <ul className="cov-list">

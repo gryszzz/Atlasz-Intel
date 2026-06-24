@@ -706,6 +706,23 @@ export const CONNECTOR_AUDIT_DEFINITIONS: ConnectorAuditDefinition[] = [
     trust: 'official-api',
     notes: 'FAIL-CLOSED: requires official usgs.gov export(s). USMIN authoritative + MRDS legacy (not updated since 2011). Reference only — never production/reserves/ownership/investment.',
   }),
+  connector({
+    id: 'equities-prices',
+    label: 'Equity/ETF Quotes',
+    domain: 'market price data',
+    sourceIds: ['alpaca_equity_quotes'],
+    access: 'key-gated',
+    cadence: 'realtime',
+    sourceIdentity: 'Alpaca Market Data (IEX) latest trades',
+    officialUrl: 'https://alpaca.markets/data',
+    requiredEnv: ['ATLASZ_ALPACA_API_KEY', 'ATLASZ_ALPACA_SECRET_KEY'],
+    persistenceTables: [],
+    sourceTrailUi: 'Market Quote source trail',
+    resolverSupport: 'no',
+    exposureSupport: 'none',
+    trust: 'auth-gated',
+    notes: 'Key-gated real equity/ETF quotes (last trade). FAIL-CLOSED without keys -> PRICE_UNAVAILABLE; no random-walk fallback, no seeded/default price rendered as real. Keys travel only in request headers. No trading advice, prediction, or signal score.',
+  }),
 ]
 
 export function buildConnectorAudit(input: {

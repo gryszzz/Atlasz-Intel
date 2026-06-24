@@ -33,8 +33,21 @@ describe('market data reality pass', () => {
       expect(surface.missingReason && surface.missingReason.length).toBeTruthy()
     }
     const ids = new Set(report.sourceNeeded.map((s) => s.id))
-    for (const id of ['realtime-equities', 'etf-prices', 'options-oi', 'forex', 'commodity-futures', 'short-interest', 'earnings-transcripts']) {
+    for (const id of ['options-oi', 'forex', 'commodity-futures', 'short-interest', 'earnings-transcripts']) {
       expect(ids.has(id)).toBe(true)
+    }
+  })
+
+  it('equities/ETFs are now key-gated (provider exists, key required), not source-needed', () => {
+    const report = marketDataRealityReport()
+    const keyGatedIds = new Set(report.keyGated.map((s) => s.id))
+    expect(keyGatedIds.has('realtime-equities')).toBe(true)
+    expect(keyGatedIds.has('etf-prices')).toBe(true)
+    const sourceNeededIds = new Set(report.sourceNeeded.map((s) => s.id))
+    expect(sourceNeededIds.has('realtime-equities')).toBe(false)
+    for (const surface of report.keyGated) {
+      expect(surface.classification).toBe('key-gated')
+      expect(surface.missingReason && surface.missingReason.length).toBeTruthy() // key required
     }
   })
 
@@ -67,9 +80,14 @@ describe('market data reality pass', () => {
     expect(devWatchlist).toEqual([])
   })
 
-  it('real surfaces are public or key-gated with proof fields', () => {
-    for (const surface of marketDataRealityReport().real) {
-      expect(['real-public', 'key-gated']).toContain(surface.classification)
+  it('real and key-gated surfaces declare proof fields', () => {
+    const report = marketDataRealityReport()
+    for (const surface of report.real) {
+      expect(surface.classification).toBe('real-public')
+      expect(surface.proofFields.length).toBeGreaterThan(0)
+    }
+    for (const surface of report.keyGated) {
+      expect(surface.classification).toBe('key-gated')
       expect(surface.proofFields.length).toBeGreaterThan(0)
     }
   })
