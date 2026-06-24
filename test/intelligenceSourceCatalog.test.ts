@@ -98,6 +98,12 @@ describe('intelligence source catalog', () => {
       provenance: 'official-api',
       envKeysRequired: [],
     })
+    expect(lookupIntelligenceSource('sec-form-13f-holdings')).toMatchObject({
+      accessModel: 'public-requires-user-agent',
+      integrationMode: 'runtime-wired',
+      provenance: 'public-disclosure',
+      envKeysRequired: ['ATLASZ_SEC_USER_AGENT'],
+    })
     expect(lookupIntelligenceSource('fred-economic-data')).toMatchObject({
       integrationMode: 'auth-gated-adapter',
       envKeysRequired: ['ATLASZ_FRED_API_KEY'],

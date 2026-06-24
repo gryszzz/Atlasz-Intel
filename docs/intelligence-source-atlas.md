@@ -48,6 +48,7 @@ because it is listed here.
 | Layer | Provider/source | Required config | Default unavailable state |
 | --- | --- | --- | --- |
 | Company disclosure | SEC EDGAR company submissions | `ATLASZ_SEC_USER_AGENT` | `missing-config`; no simulated filings. |
+| Institutional holdings | SEC Form 13F-HR / 13F-HR/A information-table XML | `ATLASZ_SEC_USER_AGENT` | `missing-config`; no fake holdings or current-position claims. |
 | Macro time series | FRED | `ATLASZ_FRED_API_KEY` | `missing-config`; no synthetic macro observations. |
 | National accounts/GDP | BEA NIPA GDP | `ATLASZ_BEA_API_KEY` | `missing-config`; no synthetic GDP observations. |
 | Energy/commodities | EIA official energy series | `ATLASZ_EIA_API_KEY` | `missing-config`; no synthetic energy observations. |

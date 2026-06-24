@@ -89,6 +89,50 @@ export type WorldIntelEvent = {
   marketIdentity?: MarketIdentity
   companyFact?: SecCompanyFact
   form4Transaction?: Form4Transaction
+  form13fHolding?: Form13FHolding
+}
+
+export type Form13FChangeType = 'first_seen' | 'new_today' | 'updated' | 'unchanged'
+
+/**
+ * A single SEC Form 13F holding row (information table), attached to an institutional
+ * filer identity and, when an EXACT CUSIP mapping exists, a canonical issuer ticker.
+ * QUARTERLY DELAYED snapshot — NOT a current position. Never conviction, sentiment
+ * (bullish/bearish), fund performance, valuation, or trading advice. Holder/issuer
+ * data is source-bounded; no person enrichment.
+ */
+export type Form13FHolding = {
+  id: string
+  accessionNumber: string
+  filingType: string
+  isAmendment: boolean
+  reportPeriod: string
+  filingDate: string
+  filerCik: string
+  filerCikPadded: string
+  filerName: string
+  issuerName: string
+  /** Set only when an exact curated CUSIP→ticker mapping exists. */
+  issuerTicker?: string
+  cusip: string
+  classTitle: string
+  /** Numeric value exactly as reported in the 13F information table. */
+  value: number
+  sharesOrPrincipal?: number
+  sharesPrincipalType?: string
+  putCall?: string
+  investmentDiscretion?: string
+  votingSole?: number
+  votingShared?: number
+  votingNone?: number
+  sourceFilingUrl: string
+  sourceInfoTableUrl: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  changeType: Form13FChangeType
+  rawPayloadHash: string
+  rawPayloadJson?: string
 }
 
 export type Form4ChangeType = 'first_seen' | 'new_today' | 'updated' | 'unchanged'

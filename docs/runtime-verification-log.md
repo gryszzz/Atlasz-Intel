@@ -1,6 +1,6 @@
 # Runtime Verification Log
 
-**Generated:** 2026-06-24T00:02:32.700Z
+**Generated:** 2026-06-24T01:36:57.294Z
 **Command:** `npx tsx scripts/runtimeVerification.mts`
 **Result:** 13/13 checks passed
 **Persistence:** node:sqlite (with JSON fallback)
@@ -23,6 +23,8 @@
 | sec-edgar | impl | key-gated | ATLASZ_SEC_USER_AGENT | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
 | market-reference-master | impl | public | - | public | online | 8021 | yes | yes | n/a | yes | yes |
 | sec-company-facts | impl | key-gated | ATLASZ_SEC_USER_AGENT | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
+| sec-form4 | impl | key-gated | ATLASZ_SEC_USER_AGENT | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
+| sec-form13f | impl | key-gated | ATLASZ_SEC_USER_AGENT | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
 | fred | impl | key-gated | ATLASZ_FRED_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
 | treasury-fiscal | impl | public | - | public | online | 3 | yes | yes | n/a | partial | yes |
 | bls | impl | public | - | public | online | 5 | yes | yes | n/a | partial | yes |
@@ -39,7 +41,7 @@
 | uspto | impl | key-gated | ATLASZ_PATENTSVIEW_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
 | github-releases | impl | public | - | public | online | 15 | yes | yes | n/a | yes | yes |
 | cisa-kev | impl | public | - | public | online | 25 | yes | yes | n/a | partial | yes |
-| nvd | impl | public | - | public | failed | 0 | n/a | n/a | n/a | partial | yes |
+| nvd | impl | public | - | public | unavailable | 0 | n/a | n/a | n/a | partial | yes |
 | ghsa | impl | public | - | public | online | 30 | yes | yes | n/a | partial | yes |
 | osv | impl | public | - | public | online | 34 | yes | yes | n/a | partial | yes |
 | cisa-advisories | impl | public | - | public | online | 23 | yes | yes | n/a | partial | yes |
@@ -49,7 +51,7 @@
 | tier | count | connectors |
 |---|---|---|
 | media-observation | 1 | gdelt-doc |
-| public-disclosure | 2 | sec-edgar, sec-company-facts |
+| public-disclosure | 4 | sec-edgar, sec-company-facts, sec-form4, sec-form13f |
 | official-api | 19 | market-reference-master, fred, treasury-fiscal, bls, bea, eia, noaa-alerts, federal-register, ofac-sdn, congress-gov, usgs-earthquakes, un-comtrade, openalex-works, crossref-works, uspto, cisa-kev, nvd, osv, cisa-advisories |
 | public-unauthenticated | 2 | github-releases, ghsa |
 

@@ -358,6 +358,9 @@ export function resolveEvent(event: WorldIntelEvent, marketIndex?: MarketIdentit
     if (event.secFiling.ticker) consider(resolveByTicker(event.secFiling.ticker, marketIndex))
     consider(resolveByName(event.secFiling.companyName, marketIndex))
   }
+  if (event.form13fHolding?.issuerTicker) {
+    consider(resolveByTicker(event.form13fHolding.issuerTicker, marketIndex))
+  }
   if (event.eiaEnergyRecord?.commodity) consider(resolveByName(event.eiaEnergyRecord.commodity))
   if (event.eiaEnergyRecord?.seriesId) consider(resolveBySourceId(event.eiaEnergyRecord.seriesId))
   if (event.fredObservation?.seriesId) consider(resolveBySourceId(event.fredObservation.seriesId))
@@ -401,6 +404,11 @@ export function eventCandidateIdentifiers(event: WorldIntelEvent): Array<{ type:
     out.push({ type: 'cik', value: event.secFiling.cik })
     if (event.secFiling.ticker) out.push({ type: 'ticker', value: event.secFiling.ticker })
     out.push({ type: 'alias', value: event.secFiling.companyName })
+  }
+  if (event.form13fHolding) {
+    if (event.form13fHolding.issuerTicker) out.push({ type: 'ticker', value: event.form13fHolding.issuerTicker })
+    out.push({ type: 'source-id', value: event.form13fHolding.cusip })
+    out.push({ type: 'alias', value: event.form13fHolding.issuerName })
   }
   if (event.eiaEnergyRecord?.commodity) out.push({ type: 'alias', value: event.eiaEnergyRecord.commodity })
   if (event.eiaEnergyRecord?.seriesId) out.push({ type: 'source-id', value: event.eiaEnergyRecord.seriesId })

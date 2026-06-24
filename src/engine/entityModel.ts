@@ -52,6 +52,7 @@ export type EntityKind =
   | 'financial-concept'
   | 'reporting-owner'
   | 'transaction-code'
+  | 'cusip'
   | 'research-work'
   | 'doi-work'
   | 'topic'
@@ -480,6 +481,21 @@ export function deriveEventEntities(event: WorldIntelEvent): { entities: EntityR
     }
     link(eventEntity, { id: entityId('transaction-code', txn.transactionCode), kind: 'transaction-code', label: `${txn.transactionCode} — ${txn.transactionCodeLabel}` }, 'references')
     link(eventEntity, { id: entityId('source', 'sec-form4'), kind: 'source', label: 'SEC Form 4' }, 'reported_by')
+  }
+
+  // SEC Form 13F: holding -> institutional filer -> issuer company (only via exact
+  // CUSIP mapping) -> CUSIP -> SEC source. Quarterly delayed snapshot; no conviction
+  // or company exposure inferred without an exact identity mapping.
+  if (event.form13fHolding) {
+    const h = event.form13fHolding
+    link(eventEntity, { id: entityId('institution', h.filerCik || h.filerName), kind: 'institution', label: h.filerName }, 'filed_by')
+    link(eventEntity, { id: entityId('cusip', h.cusip), kind: 'cusip', label: `${h.cusip} (${h.issuerName})` }, 'references')
+    if (h.issuerTicker) {
+      const company: EntityRef = { id: entityId('company', h.issuerTicker), kind: 'company', label: h.issuerName }
+      link(eventEntity, company, 'about')
+      link(company, { id: entityId('ticker', h.issuerTicker), kind: 'ticker', label: h.issuerTicker }, 'trades_as')
+    }
+    link(eventEntity, { id: entityId('source', 'sec-13f'), kind: 'source', label: 'SEC Form 13F' }, 'reported_by')
   }
 
   // Generic normalized fields (apply to every connector).

@@ -102,6 +102,7 @@ export function EntityDossierPanel({
       )}
 
       <MarketIdentityProof node={node} neighbors={neighbors} />
+      <InstitutionalHoldingProof node={node} neighbors={neighbors} />
 
       <div className="dossier-connections">
         <span className="dossier-section-label">Connected entities ({neighbors.length})</span>
@@ -176,6 +177,38 @@ function MarketIdentityProof({ node, neighbors }: { node: EntityNode; neighbors:
         <a href={proof.sourceUrl} target="_blank" rel="noreferrer">
           <Link2 size={11} />
           SEC company_tickers.json
+        </a>
+      )}
+    </div>
+  )
+}
+
+function InstitutionalHoldingProof({ node, neighbors }: { node: EntityNode; neighbors: EntityNeighbor[] }) {
+  const proofs = node.evidence.filter((item) => item.sourceId === 'sec_form13f_public')
+  if (proofs.length === 0 || !['company', 'ticker', 'cusip', 'institution'].includes(node.kind)) {
+    return null
+  }
+  const linkedTickers = neighbors.filter((item) => item.entity.kind === 'ticker').map((item) => item.entity.label)
+  const linkedCusips = neighbors.filter((item) => item.entity.kind === 'cusip').map((item) => item.entity.label)
+  const latest = proofs.reduce((max, item) => Math.max(max, item.observedAt), 0)
+  return (
+    <div className="dossier-institutional-holdings">
+      <span className="dossier-section-label">Institutional Holdings</span>
+      <strong>SEC Form 13F reported holding snapshot</strong>
+      <p>
+        Quarterly delayed SEC-reported holding evidence. This is not a current position, conviction, performance
+        claim, valuation, price prediction, or trading advice.
+      </p>
+      <div className="dossier-institutional-grid">
+        <span>{proofs.length} proving row{proofs.length === 1 ? '' : 's'}</span>
+        <span>{linkedTickers.length > 0 ? linkedTickers.join(', ') : 'issuer ticker only if exact CUSIP map exists'}</span>
+        <span>{linkedCusips.length > 0 ? linkedCusips.join(', ') : 'CUSIP evidence attached'}</span>
+        <span>{latest ? `latest filed ${new Date(latest).toISOString().slice(0, 10)}` : 'filing date unavailable'}</span>
+      </div>
+      {proofs[0]?.sourceUrl && (
+        <a href={proofs[0].sourceUrl} target="_blank" rel="noreferrer">
+          <Link2 size={11} />
+          SEC Form 13F source trail
         </a>
       )}
     </div>

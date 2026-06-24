@@ -141,6 +141,7 @@ function changeTypeLabel(changeType: MaterialityChangeType): string {
     'market-reference': 'market reference',
     'company-fact': 'reported fundamental',
     'insider-transaction': 'insider filing',
+    'institutional-holding': 'institutional holding',
     'world-event': 'world event',
   }
   return labels[changeType]

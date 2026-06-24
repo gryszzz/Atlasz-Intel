@@ -51,7 +51,7 @@ function subRetrievedAt(e: WorldIntelEvent): number | undefined {
   const sub =
     e.earthquakeEvent ?? e.kevVulnerability ?? e.patentRecord ?? e.nvdCve ?? e.weatherAlert ??
     e.regulatoryDocument ?? e.ofacSanctionsRecord ?? e.congressBillAction ?? e.gdeltArticle ?? e.comtradeRecord ??
-    e.openAlexWork ?? e.crossrefWork ?? e.marketIdentity
+    e.openAlexWork ?? e.crossrefWork ?? e.marketIdentity ?? e.companyFact ?? e.form4Transaction ?? e.form13fHolding
   return (sub as { retrievedAt?: number } | undefined)?.retrievedAt
 }
 

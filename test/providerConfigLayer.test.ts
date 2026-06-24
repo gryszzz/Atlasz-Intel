@@ -29,6 +29,8 @@ describe('provider config layer', () => {
     expect(providers.length).toBe(BUILTIN_PROVIDERS.length)
     expect(isProviderConfigured(find(providers, 'gdelt_doc_public'), {})).toBe(true)
     expect(isProviderConfigured(find(providers, 'sec_company_tickers_public'), {})).toBe(true)
+    expect(isProviderConfigured(find(providers, 'sec_form13f_public'), {})).toBe(false)
+    expect(isProviderConfigured(find(providers, 'sec_form13f_public'), { ATLASZ_SEC_USER_AGENT: 'a@b.com' })).toBe(true)
     expect(isProviderConfigured(find(providers, 'macro_calendar_fred'), {})).toBe(false)
     expect(isProviderConfigured(find(providers, 'macro_calendar_fred'), { ATLASZ_FRED_API_KEY: 'x' })).toBe(true)
     expect(isProviderConfigured(find(providers, 'treasury_fiscal_public'), {})).toBe(true)
@@ -75,6 +77,8 @@ describe('adapter registry', () => {
     const providers = loadProviderConfig().providers
     expect(resolveAdapter(find(providers, 'gdelt_doc_public'), {}).fetcher).toBeTypeOf('function')
     expect(resolveAdapter(find(providers, 'sec_company_tickers_public'), {}).fetcher).toBeTypeOf('function')
+    expect(resolveAdapter(find(providers, 'sec_form13f_public'), {}).fetcher).toBeUndefined()
+    expect(resolveAdapter(find(providers, 'sec_form13f_public'), { ATLASZ_SEC_USER_AGENT: 'a@b.com' }).fetcher).toBeTypeOf('function')
     expect(resolveAdapter(find(providers, 'sec_edgar_public'), {}).fetcher).toBeUndefined()
     expect(resolveAdapter(find(providers, 'sec_edgar_public'), { ATLASZ_SEC_USER_AGENT: 'a@b.com' }).fetcher).toBeTypeOf('function')
     expect(resolveAdapter(find(providers, 'treasury_fiscal_public'), {}).fetcher).toBeTypeOf('function')

@@ -133,6 +133,62 @@
   text-decoration: underline;
 }
 
+.dossier-institutional-holdings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: rgba(116, 97, 58, 0.1);
+  border: 1px solid rgba(230, 169, 86, 0.22);
+  border-radius: 6px;
+}
+
+.dossier-institutional-holdings strong {
+  font-size: var(--fs-xs);
+  color: var(--text);
+}
+
+.dossier-institutional-holdings p {
+  margin: 0;
+  font-size: var(--fs-2xs);
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.dossier-institutional-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.dossier-institutional-grid span {
+  padding: 4px 6px;
+  background: var(--panel);
+  border: 1px solid var(--line-soft);
+  border-radius: 5px;
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dossier-institutional-holdings a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: max-content;
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  color: var(--green);
+  text-decoration: none;
+}
+
+.dossier-institutional-holdings a:hover {
+  text-decoration: underline;
+}
+
 .dossier-connections button {
   display: flex;
   align-items: center;

@@ -202,7 +202,7 @@ Confirmed strengths in the current codebase:
 - Provider-driven source registry with fail-closed configuration.
 - Canonical provenance values and UI badges.
 - SQLite/WAL persistence with JSON fallback and visible mode.
-- SEC, Market Reference Master, FRED, Treasury Fiscal Data, BLS, BEA, EIA,
+- SEC EDGAR, SEC Company Facts/Form 4/Form 13F, Market Reference Master, FRED, Treasury Fiscal Data, BLS, BEA, EIA,
   NOAA/NWS, USGS, OpenAlex, and Crossref
   evidence-bearing vertical slices with source trails, confidence, freshness,
   and unavailable states.

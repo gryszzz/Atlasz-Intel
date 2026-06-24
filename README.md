@@ -109,6 +109,7 @@ Runtime-wired means Atlasz has an adapter/provider path, tests, source health be
 | CISA advisories | defensive security | public | official-api | live-capable | advisory trail | cyber events/audit | partial product/vendor context |
 | Crossref DOI metadata | research metadata | public | official-api | live-capable | Crossref trail | DOI metadata/audit | DOI/publisher/venue/funder graph only |
 | SEC EDGAR | company disclosure | user-agent gated | public-disclosure | `missing-key` until `ATLASZ_SEC_USER_AGENT` | SEC filing trail | filings/events/audit | company/ticker/entity resolver |
+| SEC 13F holdings | institutional holdings | user-agent gated | public-disclosure | `missing-key` until `ATLASZ_SEC_USER_AGENT` | SEC 13F trail | holding events/audit | delayed quarterly snapshot, exact CUSIP→ticker only |
 | FRED | macro time series | key-gated | official-api | `missing-key` until `ATLASZ_FRED_API_KEY` | FRED trail | macro series/observations | partial macro context |
 | BEA | national accounts/GDP | key-gated | official-api | `missing-key` until `ATLASZ_BEA_API_KEY` | BEA trail | macro observations | partial macro context |
 | EIA | energy/commodities | key-gated | official-api | `missing-key` until `ATLASZ_EIA_API_KEY` | EIA trail | energy records/audit | commodity/energy resolver |
@@ -125,7 +126,7 @@ Market Reference Master via SEC company_tickers.json, Treasury Fiscal Data, BLS,
 
 **Key-gated or config-gated**
 
-SEC EDGAR, FRED, BEA, EIA, Congress.gov, UN Comtrade, USPTO PatentsView, OpenAlex Works, operator-provided public disclosure JSON, optional GitHub token, and optional local Ollama parsing.
+SEC EDGAR, SEC Company Facts/Form 4/Form 13F, FRED, BEA, EIA, Congress.gov, UN Comtrade, USPTO PatentsView, OpenAlex Works, operator-provided public disclosure JSON, optional GitHub token, and optional local Ollama parsing.
 
 **Media-observation**
 

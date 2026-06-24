@@ -25,6 +25,7 @@ export const PROVIDER_CAPABILITY_META: Record<string, ProviderCapabilityMeta> = 
   sec_company_tickers_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['market-reference'], supportedRegions: ['US'] },
   sec_company_facts_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_SEC_USER_AGENT'], supportedEventTypes: ['company-fact'], supportedRegions: ['US'] },
   sec_form4_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_SEC_USER_AGENT'], supportedEventTypes: ['insider-transaction'], supportedRegions: ['US'] },
+  sec_form13f_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_SEC_USER_AGENT'], supportedEventTypes: ['institutional-holding'], supportedRegions: ['US'] },
   macro_calendar_fred: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_FRED_API_KEY'], supportedEventTypes: ['macro-event'], supportedRegions: ['US'] },
   treasury_fiscal_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['fiscal-event'], supportedRegions: ['US'] },
   bls_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['macro-event'], supportedRegions: ['US'] },

@@ -110,7 +110,7 @@ describe('runtime productization audit', () => {
     }
 
     // Key-gated with no env key -> missing-key (incl. UN Comtrade + OpenAlex).
-    for (const id of ['eia', 'bea', 'uspto', 'fred', 'congress-gov', 'un-comtrade', 'openalex-works']) {
+    for (const id of ['eia', 'bea', 'uspto', 'fred', 'congress-gov', 'un-comtrade', 'openalex-works', 'sec-form13f']) {
       expect(rows.find((r) => r.id === id)?.status, id).toBe('missing-key')
     }
   })
@@ -171,6 +171,7 @@ describe('runtime productization audit', () => {
     expect(markup).toContain('OpenAlex')
     expect(markup).toContain('Crossref')
     expect(markup).toContain('Market Reference Master')
+    expect(markup).toContain('SEC Form 13F')
     expect(markup).not.toContain('verified live')
   })
 
