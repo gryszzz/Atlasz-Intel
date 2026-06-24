@@ -1426,6 +1426,7 @@ type WorldIntelSubRecords = Pick<
   | 'gridRegion'
   | 'unLocode'
   | 'worldPort'
+  | 'mineralSite'
   | 'kevVulnerability'
   | 'nvdCve'
   | 'ghsaAdvisory'
@@ -1466,6 +1467,7 @@ export function serializeSubRecords(record: WorldIntelEvent): string | null {
   if (record.gridRegion) sub.gridRegion = record.gridRegion
   if (record.unLocode) sub.unLocode = record.unLocode
   if (record.worldPort) sub.worldPort = record.worldPort
+  if (record.mineralSite) sub.mineralSite = record.mineralSite
   if (record.kevVulnerability) sub.kevVulnerability = record.kevVulnerability
   if (record.nvdCve) sub.nvdCve = record.nvdCve
   if (record.ghsaAdvisory) sub.ghsaAdvisory = record.ghsaAdvisory
@@ -1521,6 +1523,7 @@ export function parseSubRecords(value: unknown): WorldIntelSubRecords {
   if (isValidGridRegion(record.gridRegion)) out.gridRegion = record.gridRegion as WorldIntelEvent['gridRegion']
   if (isValidUnLocode(record.unLocode)) out.unLocode = record.unLocode as WorldIntelEvent['unLocode']
   if (isValidWorldPort(record.worldPort)) out.worldPort = record.worldPort as WorldIntelEvent['worldPort']
+  if (isValidMineralSite(record.mineralSite)) out.mineralSite = record.mineralSite as WorldIntelEvent['mineralSite']
   if (isValidKev(record.kevVulnerability)) out.kevVulnerability = record.kevVulnerability as WorldIntelEvent['kevVulnerability']
   if (isValidNvd(record.nvdCve)) out.nvdCve = record.nvdCve as WorldIntelEvent['nvdCve']
   if (isValidGhsa(record.ghsaAdvisory)) out.ghsaAdvisory = record.ghsaAdvisory as WorldIntelEvent['ghsaAdvisory']
@@ -1862,6 +1865,20 @@ function isValidWorldPort(value: unknown): boolean {
       (v.portNumber as string).length > 0 &&
       typeof v.portName === 'string' &&
       (v.portName as string).length > 0 &&
+      typeof v.geospatialPrecision === 'string' &&
+      hasHash(v),
+  )
+}
+
+function isValidMineralSite(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(
+    v &&
+      typeof v.siteId === 'string' &&
+      (v.siteId as string).length > 0 &&
+      typeof v.siteName === 'string' &&
+      (v.siteName as string).length > 0 &&
+      (v.database === 'USMIN' || v.database === 'MRDS') &&
       typeof v.geospatialPrecision === 'string' &&
       hasHash(v),
   )

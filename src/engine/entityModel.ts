@@ -554,6 +554,37 @@ export function deriveEventEntities(event: WorldIntelEvent): { entities: EntityR
     }
   }
 
+  // USGS mineral site (materials reference): location/country/operator via the geo
+  // core, plus commodity + materials sector. Reference only — never production,
+  // reserves, ownership, or investment. MRDS records are legacy (not current).
+  if (event.mineralSite) {
+    const site = event.mineralSite
+    const siteEntity: EntityRef = { id: entityId('facility', `${site.database}:${site.siteId}`), kind: 'facility', label: site.siteName }
+    if (site.countryCode) {
+      const asset: GeoAsset = {
+        assetId: `${site.database}:${site.siteId}`,
+        assetKind: site.facilityKind === 'mine' ? 'mine' : 'mineral-region',
+        name: site.siteName,
+        latitude: site.latitude,
+        longitude: site.longitude,
+        geospatialPrecision: site.geospatialPrecision,
+        state: site.countryCode === 'US' ? site.state : undefined,
+        stateName: site.countryCode === 'US' ? site.stateName : undefined,
+        county: site.countryCode === 'US' ? site.county : undefined,
+        countryCode: site.countryCode,
+        operatorName: site.operatorName,
+        operatorTicker: site.operatorTicker,
+      }
+      for (const edge of geoAssetEdges(eventEntity, asset)) link(edge.from, edge.to, edge.relation)
+    } else {
+      link(eventEntity, siteEntity, 'about') // unknown country -> standalone, no guess
+    }
+    for (const commodity of site.commodities) {
+      link(siteEntity, { id: entityId('commodity', commodity), kind: 'commodity', label: commodity }, 'touches')
+    }
+    link(siteEntity, { id: entityId('sector', 'Materials'), kind: 'sector', label: 'Materials' }, 'in_sector')
+  }
+
   // Nuclear plant LAYER 2 (NRC, regulatory status): reactor UNIT status, kept a
   // SEPARATE node namespace (no fuzzy merge into the EIA facility). No coordinates
   // in this feed -> location-less. Power level is source-reported, never editorial.
@@ -1062,6 +1093,14 @@ function unknownsForEvent(event: WorldIntelEvent, touched: EntityRef[]): string[
     if (!wpi.countryCode) unknowns.push('Country not resolved to ISO code (standalone port)')
     if (!wpi.linkedLocode) unknowns.push('No exact UN/LOCODE match (standalone port)')
     unknowns.push('Physical reference only — not live traffic, congestion, or disruption')
+  }
+  const mineral = event.mineralSite
+  if (mineral) {
+    if (mineral.geospatialPrecision !== 'exact') unknowns.push(`Location ${mineral.geospatialPrecision} (no source coordinates)`)
+    if (mineral.legacyNotMaintained) unknowns.push('MRDS legacy record — not systematically updated since 2011; not current activity')
+    if (!mineral.developmentStatus) unknowns.push('No development status in source')
+    if (!mineral.operatorTicker) unknowns.push('Operator not linked to a market identity')
+    unknowns.push('Reference only — not production, reserves, ownership, or investment signal')
   }
   if ((event.confidence ?? 0) < 90) unknowns.push('Below high-confidence threshold')
   if (provenanceTrust(event.provenance) < 0.5) unknowns.push('Source is unverified/low-trust')

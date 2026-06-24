@@ -79,6 +79,7 @@ export type WorldIntelEvent = {
   gridRegion?: GridRegion
   unLocode?: UnLocode
   worldPort?: WorldPortIndexRecord
+  mineralSite?: MineralSite
   kevVulnerability?: KevVulnerability
   nvdCve?: NvdCve
   ghsaAdvisory?: GhsaAdvisory
@@ -1197,6 +1198,59 @@ export type WorldPortIndexRecord = {
   shelter?: string
   /** Exact UN/LOCODE from the WPI source field, when present and valid. */
   linkedLocode?: string
+  sourceDataset: string
+  sourceUrl: string
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  staleAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+export type MineralDatabase = 'USMIN' | 'MRDS'
+export type MineralSiteKind = 'mine' | 'mineral-resource-site'
+
+/**
+ * A mineral site from official USGS Mineral Resources Online Spatial Data —
+ * the materials reference layer. TWO-SOURCE-AWARE:
+ *   - USMIN: the developing national-scale authoritative U.S. deposit database
+ *   - MRDS:  the older global occurrence database — LEGACY, not systematically
+ *            updated since 2011 (legacyNotMaintained = true)
+ *
+ * Reference data only: NOT current production, reserves, ownership, resource
+ * size, or any investment/trading signal. Production/development status appear
+ * ONLY when the source provides them. Operator links to a market identity ONLY
+ * on an exact curated match. Coordinates source-backed only.
+ */
+export type MineralSite = {
+  id: string
+  siteId: string
+  siteName: string
+  facilityKind: MineralSiteKind
+  database: MineralDatabase
+  /** True for MRDS: legacy occurrence DB, not maintained since 2011. */
+  legacyNotMaintained: boolean
+  commodities: string[]
+  depositType?: string
+  /** Source-backed development status (e.g. Producer/Prospect/Occurrence). */
+  developmentStatus?: string
+  /** Source-backed production status, when a distinct field exists. */
+  productionStatus?: string
+  operatorName?: string
+  /** Set ONLY when an exact curated market identity exists for the operator. */
+  operatorTicker?: string
+  country?: string
+  countryCode?: string
+  state?: string
+  stateName?: string
+  county?: string
+  district?: string
+  latitude?: number
+  longitude?: number
+  geospatialPrecision: GeospatialPrecision
   sourceDataset: string
   sourceUrl: string
   sourceApiUrl: string

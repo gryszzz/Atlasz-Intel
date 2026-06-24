@@ -158,6 +158,7 @@ const SOURCE_LABELS: Record<string, string> = {
   eia_balancing_authorities_public: 'EIA Grid',
   un_locode_public: 'UN/LOCODE',
   world_port_index_public: 'World Port Index',
+  usgs_minerals_public: 'USGS Minerals',
   cisa_kev_public: 'CISA KEV',
   nvd_cve_public: 'NVD',
   github_ghsa_public: 'GitHub',

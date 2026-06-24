@@ -34,6 +34,7 @@ import { fetchNrcReactorStatus, readNrcReactorStatusConfig } from './adapters/nr
 import { fetchEiaBalancingAuthorities, readEiaBalancingAuthorityConfig } from './adapters/eiaBalancingAuthorityAdapter'
 import { fetchUnLocodes, readUnLocodeConfig } from './adapters/unLocodeAdapter'
 import { fetchWorldPortIndex, readWorldPortIndexConfig } from './adapters/worldPortIndexAdapter'
+import { fetchUsgsMinerals, readUsgsMineralConfig } from './adapters/usgsMineralAdapter'
 import { fetchUsgsEarthquakes, readUsgsQuakeConfig } from './adapters/usgsQuakeAdapter'
 import { fetchKevVulnerabilities, readKevConfig } from './adapters/cisaKevAdapter'
 import { fetchNvdCves, readNvdConfig } from './adapters/nvdCveAdapter'
@@ -83,6 +84,7 @@ export const KNOWN_ADAPTERS = [
   'eia-balancing-authorities',
   'un-locode',
   'world-port-index',
+  'usgs-minerals',
   'usgs-quakes',
   'uspto-patents',
   'cisa-kev',
@@ -205,6 +207,10 @@ export function resolveAdapter(provider: ProviderDefinition, env: NodeJS.Process
     case 'world-port-index': {
       const config = readWorldPortIndexConfig(env)
       return { fetcher: config ? (signal) => fetchWorldPortIndex(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'usgs-minerals': {
+      const config = readUsgsMineralConfig(env)
+      return { fetcher: config ? (signal) => fetchUsgsMinerals(signal, config) : undefined, configured: config !== null, managed: false }
     }
     case 'usgs-quakes': {
       const config = readUsgsQuakeConfig(env)
