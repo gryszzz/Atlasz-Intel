@@ -33,15 +33,28 @@ export function CompanyFactsSourceTrail({ events, limit = 24, now }: { events: W
                 <span>{facts[0]?.companyName}</span>
                 <ProvenanceBadge value={facts[0]?.provenance ?? 'public-disclosure'} size="sm" />
                 <code>CIK {facts[0]?.cikPadded}</code>
+                <span className="cf-retrieved">retrieved {new Date(facts[0]?.retrievedAt ?? now).toISOString().slice(0, 10)}</span>
               </div>
               <table className="cf-facts">
+                <thead>
+                  <tr>
+                    <th scope="col">Concept</th>
+                    <th scope="col">Value</th>
+                    <th scope="col">Period</th>
+                    <th scope="col">Form</th>
+                    <th scope="col">Filed</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Hash</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {facts.map((fact) => (
                     <tr key={fact.id} className={isCompanyFactStale(fact, now) ? 'cf-stale' : undefined}>
-                      <th scope="row">{fact.conceptLabel}</th>
+                      <th scope="row">{fact.conceptLabel} <span className="cf-unit">({fact.unit})</span></th>
                       <td className="cf-value">{formatValue(fact.value, fact.unit)}</td>
-                      <td>{fact.periodEnd}</td>
+                      <td>{fact.periodEnd}{fact.frame ? ` · ${fact.frame}` : ''}</td>
                       <td>{fact.form}{fact.fiscalYear ? ` · ${fact.fiscalPeriod ?? ''} FY${fact.fiscalYear}` : ''}</td>
+                      <td>{fact.filedDate}</td>
                       <td className="cf-change">{fact.changeType.replace('_', ' ')}{isCompanyFactStale(fact, now) ? ' · stale' : ''}</td>
                       <td className="cf-hash">{fact.rawPayloadHash.slice(0, 10)}…</td>
                     </tr>

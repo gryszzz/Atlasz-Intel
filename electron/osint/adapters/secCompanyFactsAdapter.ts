@@ -68,13 +68,15 @@ export function readCompanyFactsConfig(env: NodeJS.ProcessEnv = process.env): Co
     return null
   }
   const factsBase = asString(env.ATLASZ_SEC_FACTS_BASE) || DEFAULT_FACTS_BASE
-  if (!/^https:\/\//i.test(factsBase)) {
+  const identityUrl = asString(env.ATLASZ_SEC_FACTS_IDENTITY_URL) || DEFAULT_IDENTITY_URL
+  // Official SEC sources only — refuse a non-SEC host rather than fetch elsewhere.
+  if (!isSecHost(factsBase) || !isSecHost(identityUrl)) {
     return null
   }
   const staleDays = clampInt(Number(env.ATLASZ_SEC_FACTS_STALE_DAYS ?? DEFAULT_STALE_DAYS), 1, 400)
   return {
     factsBase,
-    identityUrl: asString(env.ATLASZ_SEC_FACTS_IDENTITY_URL) || DEFAULT_IDENTITY_URL,
+    identityUrl,
     userAgent,
     tickers: parseTickers(env.ATLASZ_SEC_FACTS_TICKERS) ?? DEFAULT_TICKERS,
     staleAfterMs: staleDays * 24 * 60 * 60 * 1000,
@@ -312,6 +314,16 @@ function parseTickers(value: unknown): string[] | undefined {
 
 function asObject(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' ? (value as Record<string, unknown>) : null
+}
+
+/** Only official SEC hosts over https (data.sec.gov / www.sec.gov / sec.gov). */
+function isSecHost(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'https:' && /(^|\.)sec\.gov$/i.test(parsed.hostname)
+  } catch {
+    return false
+  }
 }
 
 function clampInt(value: number, min: number, max: number): number {

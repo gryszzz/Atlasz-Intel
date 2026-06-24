@@ -39,7 +39,16 @@ export function groupCompanyFactsByTicker(events: WorldIntelEvent[], limit = 24)
   return grouped
 }
 
-/** A fact's snapshot is stale once now passes its staleAt (cache-age, not period-age). */
+/** Reporting periods older than this read as stale fundamentals (≈ 15 months). */
+const REPORTING_STALE_AFTER_MS = 460 * 24 * 60 * 60 * 1000
+
+/**
+ * A fact is shown stale if our snapshot is cache-stale (now past staleAt) OR the
+ * reported period itself is old (e.g. a Capex last reported years ago). Old facts
+ * are preserved with their real period — never hidden or fabricated — but flagged.
+ */
 export function isCompanyFactStale(fact: SecCompanyFact, now = Date.now()): boolean {
-  return Number.isFinite(fact.staleAt) && now > fact.staleAt
+  if (Number.isFinite(fact.staleAt) && now > fact.staleAt) return true
+  const periodEnd = Date.parse(`${fact.periodEnd}T00:00:00Z`)
+  return Number.isFinite(periodEnd) && now - periodEnd > REPORTING_STALE_AFTER_MS
 }

@@ -76,6 +76,28 @@
   font-size: var(--fs-2xs);
 }
 
+.cf-facts thead th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-family: var(--mono);
+  padding: 0 8px 4px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.cf-unit {
+  color: var(--faint);
+  font-weight: 400;
+}
+
+.cf-retrieved {
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  color: var(--faint);
+}
+
 .cf-facts th[scope='row'] {
   text-align: left;
   font-weight: 500;
