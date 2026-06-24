@@ -35,6 +35,8 @@ export type IntelligenceFeedType =
   | 'RSS'
   | 'HTML'
   | 'CSV'
+  | 'XLS'
+  | 'XLSX'
   | 'JSON'
   | 'XML'
   | 'Atom'
@@ -89,6 +91,7 @@ export const INTELLIGENCE_SOURCES: IntelligenceSource[] = [
   source('sec-edgar-company-filings', 'SEC EDGAR company filings', 'financial-markets', 'SEC / Filings', 'https://data.sec.gov/', ['REST', 'JSON'], 'public-requires-user-agent', 'candidate-public-adapter', 'official-api', ['ATLASZ_SEC_USER_AGENT'], 'sec-edgar', ['8-K shocks', '10-Q/10-K fundamentals', 'risk factors', 'insider/entity links'], 'Official SEC public data. Requires fair-access User-Agent and must preserve filing URLs.'),
   source('sec-company-tickers-json', 'SEC company_tickers.json', 'financial-markets', 'SEC / Filings', 'https://www.sec.gov/files/company_tickers.json', ['REST', 'JSON'], 'public-no-auth', 'runtime-wired', 'official-api', [], 'market-reference-sec', ['ticker to CIK', 'legal title', 'market identity spine'], 'Official SEC reference file for ticker, CIK, and legal title only. No exchange, sector, industry, ETF weights, or fuzzy merge inferred.'),
   source('sec-form-13f-holdings', 'SEC Form 13F institutional holdings', 'financial-markets', 'SEC / Filings', 'https://data.sec.gov/submissions', ['REST', 'JSON', 'XML'], 'public-requires-user-agent', 'runtime-wired', 'public-disclosure', ['ATLASZ_SEC_USER_AGENT'], 'sec-form13f', ['13F-HR filings', 'institutional holding snapshots', 'CUSIP source trail'], 'Official SEC 13F-HR/13F-HR/A public disclosure. Quarterly delayed snapshot only; no current-position, conviction, performance, valuation, price prediction, or trading-advice claims.'),
+  source('issuer-etf-holdings', 'Issuer ETF holdings snapshots', 'financial-markets', 'ETF / Index Baskets', 'https://www.ssga.com/us/en/intermediary/fund-finder', ['REST', 'XLS', 'XLSX', 'XML'], 'public-no-auth', 'runtime-wired', 'public-disclosure', [], 'etf-holdings', ['ETF constituents', 'as-of holdings date', 'source-provided weights', 'basket exposure'], 'Official issuer-published holdings snapshots from allowlisted iShares/BlackRock and State Street/SPDR files. Source date required; weights/shares/market value only when source-provided. Not a current-position guarantee, recommendation, price signal, prediction, or trading advice.'),
   source('sec-edgar-search', 'SEC EDGAR search', 'financial-markets', 'SEC / Filings', 'https://www.sec.gov/edgar/search/', ['HTML'], 'public-no-auth', 'reference-only', 'official-api', [], 'manual-source-trail', ['company filing search', 'source trail verification'], 'Manual/source-trail reference; not a scraping target.'),
 
   source('crunchbase', 'Crunchbase', 'corporate-intelligence', 'Corporate Intelligence', 'https://www.crunchbase.com/', ['REST', 'HTML'], 'commercial-gated', 'commercial-gated', 'auth-gated', ['ATLASZ_CRUNCHBASE_API_KEY'], 'commercial-company-intel', ['funding rounds', 'investors', 'private-company graph', 'sector momentum'], 'Commercial source. No scraping or paywall bypass; adapter only with explicit API access and terms.'),

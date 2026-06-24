@@ -19,6 +19,7 @@ import { fetchOpenAlexWorks, readOpenAlexConfig } from './adapters/openAlexAdapt
 import { fetchSecCompanyFacts, readCompanyFactsConfig } from './adapters/secCompanyFactsAdapter'
 import { fetchSecForm4, readForm4Config } from './adapters/secForm4Adapter'
 import { fetchSecForm13F, readForm13FConfig } from './adapters/secForm13FAdapter'
+import { fetchEtfHoldings, readEtfHoldingsConfig } from './adapters/etfHoldingsAdapter'
 import { fetchCrossrefWorks, readCrossrefConfig } from './adapters/crossrefAdapter'
 import { fetchMarketReference, readMarketReferenceConfig } from './adapters/marketReferenceAdapter'
 import { fetchTreasuryFiscalData, readTreasuryFiscalConfig } from './adapters/treasuryFiscalAdapter'
@@ -61,6 +62,7 @@ export const KNOWN_ADAPTERS = [
   'sec-company-facts',
   'sec-form4',
   'sec-form13f',
+  'etf-holdings',
   'treasury-fiscal',
   'bls',
   'bea',
@@ -135,6 +137,10 @@ export function resolveAdapter(provider: ProviderDefinition, env: NodeJS.Process
     case 'sec-form13f': {
       const config = readForm13FConfig(env)
       return { fetcher: config ? (signal) => fetchSecForm13F(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'etf-holdings': {
+      const config = readEtfHoldingsConfig(env)
+      return { fetcher: config ? (signal) => fetchEtfHoldings(signal, config) : undefined, configured: config !== null, managed: false }
     }
     case 'treasury-fiscal': {
       const config = readTreasuryFiscalConfig(env)

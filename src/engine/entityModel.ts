@@ -30,6 +30,7 @@ export type EntityKind =
   | 'company'
   | 'ticker'
   | 'cik'
+  | 'etf'
   | 'index'
   | 'sector'
   | 'country'
@@ -80,6 +81,7 @@ export type RelationType =
   | 'released'
   | 'represents'
   | 'issued_by'
+  | 'holds'
 
 export type FreshnessState = 'fresh' | 'recent' | 'aging' | 'stale' | 'unavailable'
 
@@ -496,6 +498,31 @@ export function deriveEventEntities(event: WorldIntelEvent): { entities: EntityR
       link(company, { id: entityId('ticker', h.issuerTicker), kind: 'ticker', label: h.issuerTicker }, 'trades_as')
     }
     link(eventEntity, { id: entityId('source', 'sec-13f'), kind: 'source', label: 'SEC Form 13F' }, 'reported_by')
+  }
+
+  // ETF holdings: ETF -> issuer -> holding company/ticker/CUSIP. Dated issuer
+  // snapshot only; no current-position, recommendation, ranking, or trading claim.
+  if (event.etfHolding) {
+    const h = event.etfHolding
+    const etf: EntityRef = { id: entityId('etf', h.fundTicker), kind: 'etf', label: `${h.fundTicker} — ${h.fundName}` }
+    const issuer: EntityRef = { id: entityId('institution', h.issuer), kind: 'institution', label: h.issuer }
+    link(eventEntity, etf, 'about')
+    link(etf, issuer, 'issued_by')
+    if (h.holdingTicker) {
+      const company: EntityRef = { id: entityId('company', h.holdingTicker), kind: 'company', label: h.holdingName }
+      link(etf, company, 'holds')
+      link(company, { id: entityId('ticker', h.holdingTicker), kind: 'ticker', label: h.holdingTicker }, 'trades_as')
+      if (h.cusip) {
+        const cusip: EntityRef = { id: entityId('cusip', h.cusip), kind: 'cusip', label: `${h.cusip} (${h.holdingName})` }
+        link(cusip, company, 'represents')
+      }
+    } else if (h.cusip) {
+      link(etf, { id: entityId('cusip', h.cusip), kind: 'cusip', label: `${h.cusip} (${h.holdingName})` }, 'holds')
+    }
+    if (h.sector) {
+      link(etf, { id: entityId('sector', h.sector), kind: 'sector', label: h.sector }, 'in_sector')
+    }
+    link(eventEntity, { id: entityId('source', 'etf-holdings'), kind: 'source', label: 'ETF Holdings' }, 'reported_by')
   }
 
   // Generic normalized fields (apply to every connector).

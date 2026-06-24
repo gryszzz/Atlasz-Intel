@@ -8,6 +8,7 @@ import { applyOpenAlexChangeStatus } from './osint/adapters/openAlexAdapter'
 import { applyCompanyFactChangeStatus } from './osint/adapters/secCompanyFactsAdapter'
 import { applyForm4ChangeStatus } from './osint/adapters/secForm4Adapter'
 import { applyForm13FChangeStatus } from './osint/adapters/secForm13FAdapter'
+import { applyEtfHoldingChangeStatus } from './osint/adapters/etfHoldingsAdapter'
 import {
   buildWorldIntelEventFromHeadline,
   deriveAssetIdentitiesFromEvents,
@@ -58,7 +59,27 @@ export class WorldIntelService {
         const priorEventsById = new Map(this.persistence.listWorldIntelEvents(1_000).map((event) => [event.id, event]))
         for (const event of events) {
           const prior = priorEventsById.get(event.id)
-          this.persistWorldEvent(applyForm13FChangeStatus(applyForm4ChangeStatus(applyCompanyFactChangeStatus(applyOpenAlexChangeStatus(applyComtradeChangeStatus(applyCongressBillChangeStatus(applyOfacChangeStatus(event, prior), prior), prior), prior), prior), prior), prior))
+          this.persistWorldEvent(
+            applyEtfHoldingChangeStatus(
+              applyForm13FChangeStatus(
+                applyForm4ChangeStatus(
+                  applyCompanyFactChangeStatus(
+                    applyOpenAlexChangeStatus(
+                      applyComtradeChangeStatus(
+                        applyCongressBillChangeStatus(applyOfacChangeStatus(event, prior), prior),
+                        prior,
+                      ),
+                      prior,
+                    ),
+                    prior,
+                  ),
+                  prior,
+                ),
+                prior,
+              ),
+              prior,
+            ),
+          )
         }
         const allEvents = this.persistence.listWorldIntelEvents(300)
         this.persistCountryState(deriveCountryIntelState(allEvents))

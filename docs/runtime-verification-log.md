@@ -1,6 +1,6 @@
 # Runtime Verification Log
 
-**Generated:** 2026-06-24T01:46:24.896Z
+**Generated:** 2026-06-24T02:31:06.513Z
 **Command:** `npx tsx scripts/runtimeVerification.mts`
 **Result:** 13/13 checks passed
 **Persistence:** node:sqlite (with JSON fallback)
@@ -25,6 +25,7 @@
 | sec-company-facts | impl | key-gated | ATLASZ_SEC_USER_AGENT | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
 | sec-form4 | impl | key-gated | ATLASZ_SEC_USER_AGENT | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
 | sec-form13f | impl | key-gated | ATLASZ_SEC_USER_AGENT | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
+| etf-holdings | impl | public | - | public | online | 266 | yes | yes | n/a | partial | yes |
 | fred | impl | key-gated | ATLASZ_FRED_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
 | treasury-fiscal | impl | public | - | public | online | 3 | yes | yes | n/a | partial | yes |
 | bls | impl | public | - | public | online | 5 | yes | yes | n/a | partial | yes |
@@ -51,7 +52,7 @@
 | tier | count | connectors |
 |---|---|---|
 | media-observation | 1 | gdelt-doc |
-| public-disclosure | 4 | sec-edgar, sec-company-facts, sec-form4, sec-form13f |
+| public-disclosure | 5 | sec-edgar, sec-company-facts, sec-form4, sec-form13f, etf-holdings |
 | official-api | 19 | market-reference-master, fred, treasury-fiscal, bls, bea, eia, noaa-alerts, federal-register, ofac-sdn, congress-gov, usgs-earthquakes, un-comtrade, openalex-works, crossref-works, uspto, cisa-kev, nvd, osv, cisa-advisories |
 | public-unauthenticated | 2 | github-releases, ghsa |
 

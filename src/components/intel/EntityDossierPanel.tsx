@@ -28,6 +28,7 @@ import './EntityDossierPanel.css'
 // Kinds that can plausibly carry curated structural exposure.
 const EXPOSURE_KINDS = new Set<EntityKind>([
   'company',
+  'etf',
   'index',
   'country',
   'technology',
@@ -53,6 +54,7 @@ const RELATION_LABEL: Record<RelationType, string> = {
   released: 'released',
   represents: 'represents',
   issued_by: 'issued by',
+  holds: 'holds',
 }
 
 export function EntityDossierPanel({
@@ -103,6 +105,7 @@ export function EntityDossierPanel({
 
       <MarketIdentityProof node={node} neighbors={neighbors} />
       <InstitutionalHoldingProof node={node} neighbors={neighbors} />
+      <EtfHoldingProof node={node} neighbors={neighbors} />
 
       <div className="dossier-connections">
         <span className="dossier-section-label">Connected entities ({neighbors.length})</span>
@@ -209,6 +212,39 @@ function InstitutionalHoldingProof({ node, neighbors }: { node: EntityNode; neig
         <a href={proofs[0].sourceUrl} target="_blank" rel="noreferrer">
           <Link2 size={11} />
           SEC Form 13F source trail
+        </a>
+      )}
+    </div>
+  )
+}
+
+function EtfHoldingProof({ node, neighbors }: { node: EntityNode; neighbors: EntityNeighbor[] }) {
+  const proofs = node.evidence.filter((item) => item.sourceId === 'etf_holdings_public')
+  if (proofs.length === 0 || !['company', 'ticker', 'cusip', 'etf', 'institution'].includes(node.kind)) {
+    return null
+  }
+  const linkedEtfs = neighbors.filter((item) => item.entity.kind === 'etf').map((item) => item.entity.label)
+  const linkedCompanies = neighbors.filter((item) => item.entity.kind === 'company').map((item) => item.entity.label)
+  const linkedTickers = neighbors.filter((item) => item.entity.kind === 'ticker').map((item) => item.entity.label)
+  const latest = proofs.reduce((max, item) => Math.max(max, item.observedAt), 0)
+  return (
+    <div className="dossier-etf-holdings">
+      <span className="dossier-section-label">Basket Exposure</span>
+      <strong>Issuer-published ETF holdings snapshot</strong>
+      <p>
+        Dated ETF basket evidence. Weight, shares, and market value are shown only when the issuer source provides
+        them. This is not a current-position guarantee, recommendation, price signal, or trading advice.
+      </p>
+      <div className="dossier-etf-grid">
+        <span>{proofs.length} proving row{proofs.length === 1 ? '' : 's'}</span>
+        <span>{linkedEtfs.length > 0 ? linkedEtfs.join(', ') : 'ETF linked through this snapshot'}</span>
+        <span>{linkedCompanies.length > 0 ? linkedCompanies.join(', ') : linkedTickers.join(', ') || 'holding unresolved'}</span>
+        <span>{latest ? `as of ${new Date(latest).toISOString().slice(0, 10)}` : 'as-of date unavailable'}</span>
+      </div>
+      {proofs[0]?.sourceUrl && (
+        <a href={proofs[0].sourceUrl} target="_blank" rel="noreferrer">
+          <Link2 size={11} />
+          ETF holdings source trail
         </a>
       )}
     </div>

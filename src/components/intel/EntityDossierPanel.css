@@ -189,6 +189,62 @@
   text-decoration: underline;
 }
 
+.dossier-etf-holdings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: rgba(72, 116, 128, 0.11);
+  border: 1px solid rgba(91, 201, 219, 0.22);
+  border-radius: 6px;
+}
+
+.dossier-etf-holdings strong {
+  font-size: var(--fs-xs);
+  color: var(--text);
+}
+
+.dossier-etf-holdings p {
+  margin: 0;
+  font-size: var(--fs-2xs);
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.dossier-etf-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.dossier-etf-grid span {
+  padding: 4px 6px;
+  background: var(--panel);
+  border: 1px solid var(--line-soft);
+  border-radius: 5px;
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dossier-etf-holdings a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: max-content;
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  color: var(--green);
+  text-decoration: none;
+}
+
+.dossier-etf-holdings a:hover {
+  text-decoration: underline;
+}
+
 .dossier-connections button {
   display: flex;
   align-items: center;

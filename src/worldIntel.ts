@@ -90,6 +90,46 @@ export type WorldIntelEvent = {
   companyFact?: SecCompanyFact
   form4Transaction?: Form4Transaction
   form13fHolding?: Form13FHolding
+  etfHolding?: EtfHolding
+}
+
+export type EtfHoldingChangeType = 'first_seen' | 'new_today' | 'updated' | 'unchanged'
+
+/**
+ * A single issuer-published ETF holding row. Source-backed basket membership only:
+ * NOT a current-position guarantee, recommendation, ranking, price signal, or
+ * prediction. Weight/shares/market value are present only when the same source
+ * file provides them. Staleness is explicit via sourceDate/staleAt.
+ */
+export type EtfHolding = {
+  id: string
+  fundTicker: string
+  fundName: string
+  issuer: string
+  sourceDate: string
+  sourceTimestamp: number
+  holdingName: string
+  /** Set only when the source row provides an equity-like ticker. */
+  holdingTicker?: string
+  cusip?: string
+  isin?: string
+  sedol?: string
+  sector?: string
+  assetClass?: string
+  weight?: number
+  weightSource?: 'source-provided' | 'calculated-from-source'
+  shares?: number
+  marketValue?: number
+  currency?: string
+  sourceUrl: string
+  sourceName: string
+  retrievedAt: number
+  staleAt: number
+  provenance: ProvenanceId
+  confidence: number
+  changeType: EtfHoldingChangeType
+  rawPayloadHash: string
+  rawPayloadJson?: string
 }
 
 export type Form13FChangeType = 'first_seen' | 'new_today' | 'updated' | 'unchanged'

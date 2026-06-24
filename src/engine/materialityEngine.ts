@@ -67,6 +67,7 @@ export type MaterialityChangeType =
   | 'company-fact'
   | 'insider-transaction'
   | 'institutional-holding'
+  | 'etf-holding'
   | 'world-event'
 
 export type MaterialItem = {
@@ -168,6 +169,7 @@ const SOURCE_LABELS: Record<string, string> = {
   sec_company_facts_public: 'SEC Company Facts',
   sec_form4_public: 'SEC Form 4',
   sec_form13f_public: 'SEC Form 13F',
+  etf_holdings_public: 'ETF Holdings',
   sec_company_tickers_public: 'SEC Company Tickers',
   politician_disclosure_public: 'Public disclosure',
 }
@@ -465,6 +467,7 @@ export function classifyChangeType(event: WorldIntelEvent): MaterialityChangeTyp
   if (event.gdeltArticle) return 'media-observation'
   if (event.form4Transaction) return 'insider-transaction'
   if (event.form13fHolding) return 'institutional-holding'
+  if (event.etfHolding) return 'etf-holding'
   if (event.companyFact) return 'company-fact'
   if (event.openAlexWork) return 'research'
   if (event.crossrefWork) return 'doi-metadata'

@@ -1438,6 +1438,7 @@ type WorldIntelSubRecords = Pick<
   | 'companyFact'
   | 'form4Transaction'
   | 'form13fHolding'
+  | 'etfHolding'
 >
 
 /** Serialize the typed sub-records present on an event; null when there are none. */
@@ -1469,6 +1470,7 @@ export function serializeSubRecords(record: WorldIntelEvent): string | null {
   if (record.companyFact) sub.companyFact = record.companyFact
   if (record.form4Transaction) sub.form4Transaction = record.form4Transaction
   if (record.form13fHolding) sub.form13fHolding = record.form13fHolding
+  if (record.etfHolding) sub.etfHolding = record.etfHolding
   return Object.keys(sub).length > 0 ? JSON.stringify(sub) : null
 }
 
@@ -1515,6 +1517,7 @@ export function parseSubRecords(value: unknown): WorldIntelSubRecords {
   if (isValidCompanyFact(record.companyFact)) out.companyFact = record.companyFact as WorldIntelEvent['companyFact']
   if (isValidForm4Transaction(record.form4Transaction)) out.form4Transaction = record.form4Transaction as WorldIntelEvent['form4Transaction']
   if (isValidForm13FHolding(record.form13fHolding)) out.form13fHolding = record.form13fHolding as WorldIntelEvent['form13fHolding']
+  if (isValidEtfHolding(record.etfHolding)) out.etfHolding = record.etfHolding as WorldIntelEvent['etfHolding']
   return out
 }
 
@@ -1609,6 +1612,28 @@ function isValidForm13FHolding(value: unknown): boolean {
       typeof v.cusip === 'string' &&
       v.cusip.length > 0 &&
       typeof v.value === 'number' &&
+      hasHash(v),
+  )
+}
+
+function isValidEtfHolding(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(
+    v &&
+      typeof v.fundTicker === 'string' &&
+      v.fundTicker.length > 0 &&
+      typeof v.fundName === 'string' &&
+      v.fundName.length > 0 &&
+      typeof v.issuer === 'string' &&
+      v.issuer.length > 0 &&
+      typeof v.sourceDate === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(v.sourceDate) &&
+      typeof v.holdingName === 'string' &&
+      v.holdingName.length > 0 &&
+      typeof v.sourceUrl === 'string' &&
+      /^https:\/\/(?:www\.)?(?:blackrock|ishares|ssga)\.com\//i.test(v.sourceUrl) &&
+      typeof v.retrievedAt === 'number' &&
+      Number.isFinite(v.retrievedAt) &&
       hasHash(v),
   )
 }
