@@ -98,6 +98,11 @@ describe('SEC Form 13F adapter', () => {
     expect(readForm13FConfig({ ATLASZ_SEC_USER_AGENT: UA, ATLASZ_SEC_13F_ARCHIVES_BASE: 'https://evil.example.com/x' })).toBeNull()
   })
 
+  it('enforces the bounded manager allowlist even when env requests extra CIKs', () => {
+    expect(readForm13FConfig({ ATLASZ_SEC_USER_AGENT: UA, ATLASZ_SEC_13F_CIKS: '1067983,999999999' })?.managerCiks).toEqual(['1067983'])
+    expect(readForm13FConfig({ ATLASZ_SEC_USER_AGENT: UA, ATLASZ_SEC_13F_CIKS: '999999999' })?.managerCiks).toEqual([])
+  })
+
   it('parses multiple information-table rows and drops malformed holdings', () => {
     const parsed = holdings()
     expect(parsed).toHaveLength(2)
@@ -131,6 +136,12 @@ describe('SEC Form 13F adapter', () => {
     expect(markup).toContain('Berkshire Hathaway Inc')
     expect(markup).toContain('APPLE INC')
     expect(markup).toContain('Quarterly SEC-reported holding snapshot')
+    expect(markup).toContain('period 2024-12-31')
+    expect(markup).toContain('filed 2025-02-14')
+    expect(markup).toContain('retrieved 2026-06-23')
+    expect(markup).toContain('037833100')
+    expect(markup).toContain('458,035,497')
+    expect(markup).toContain('sole 3,000,000')
     expect(markup).toContain('information table XML')
 
     const broken = [{ ...events()[0], form13fHolding: { ...events()[0].form13fHolding!, sourceInfoTableUrl: '', confidence: 70 } }] as WorldIntelEvent[]
@@ -144,9 +155,23 @@ describe('SEC Form 13F adapter', () => {
       .toLowerCase()
       .replaceAll('not current position, conviction, or trading advice', '')
       .replaceAll('not current position, conviction, performance, or trading advice', '')
-    for (const banned of ['bullish', 'bearish', 'buy signal', 'sell signal', 'fund performance', 'price target', 'forecast', 'should buy', 'should sell']) {
+    for (const banned of ['bullish', 'bearish', 'buy signal', 'sell signal', 'fund performance', 'portfolio weight', 'outperformed', 'underperformed', 'price target', 'forecast', 'should buy', 'should sell']) {
       expect(corpus, banned).not.toContain(banned)
     }
+  })
+
+  it('drops non-13F forms and missing filer names before normalization', () => {
+    expect(holdings('13F-NT')).toEqual([])
+    expect(parseForm13F(FORM13F_XML, {
+      filer: { cik: '1067983', cikPadded: '0001067983', name: '' },
+      accessionNumber: '0000950123-25-002701',
+      filingType: '13F-HR',
+      reportPeriod: '2024-12-31',
+      filingDate: '2025-02-14',
+      sourceFilingUrl: FILING_URL,
+      sourceInfoTableUrl: XML_URL,
+      retrievedAt: NOW,
+    })).toEqual([])
   })
 
   it('resolves issuer exposure only when exact CUSIP mapping provides a ticker', () => {
@@ -208,6 +233,7 @@ describe('SEC Form 13F adapter', () => {
     expect(restored?.form13fHolding?.accessionNumber).toBe(event.form13fHolding?.accessionNumber)
     expect(restored?.form13fHolding?.cusip).toBe('037833100')
     expect(JSON.stringify(restored)).not.toContain('you@example.com')
+    expect(JSON.stringify(restored)).not.toMatch(/street|city|address/i)
   })
 
   it('fetches 13F-HR and 13F-HR/A information-table XML only and fails closed on 429', async () => {

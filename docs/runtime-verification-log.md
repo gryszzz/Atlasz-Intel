@@ -1,6 +1,6 @@
 # Runtime Verification Log
 
-**Generated:** 2026-06-24T01:36:57.294Z
+**Generated:** 2026-06-24T01:46:24.896Z
 **Command:** `npx tsx scripts/runtimeVerification.mts`
 **Result:** 13/13 checks passed
 **Persistence:** node:sqlite (with JSON fallback)
@@ -41,7 +41,7 @@
 | uspto | impl | key-gated | ATLASZ_PATENTSVIEW_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
 | github-releases | impl | public | - | public | online | 15 | yes | yes | n/a | yes | yes |
 | cisa-kev | impl | public | - | public | online | 25 | yes | yes | n/a | partial | yes |
-| nvd | impl | public | - | public | unavailable | 0 | n/a | n/a | n/a | partial | yes |
+| nvd | impl | public | - | public | online | 25 | yes | yes | n/a | partial | yes |
 | ghsa | impl | public | - | public | online | 30 | yes | yes | n/a | partial | yes |
 | osv | impl | public | - | public | online | 34 | yes | yes | n/a | partial | yes |
 | cisa-advisories | impl | public | - | public | online | 23 | yes | yes | n/a | partial | yes |

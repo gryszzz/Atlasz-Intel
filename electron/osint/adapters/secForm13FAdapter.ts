@@ -78,11 +78,15 @@ export function readForm13FConfig(env: NodeJS.ProcessEnv = process.env): Form13F
   const submissionsBase = asString(env.ATLASZ_SEC_13F_SUBMISSIONS_BASE) || DEFAULT_SUBMISSIONS_BASE
   const archivesBase = asString(env.ATLASZ_SEC_13F_ARCHIVES_BASE) || DEFAULT_ARCHIVES_BASE
   if (![submissionsBase, archivesBase].every(isSecHost)) return null // official SEC hosts only
+  const requestedCiks = parseCiks(env.ATLASZ_SEC_13F_CIKS)
+  const managerCiks = requestedCiks
+    ? requestedCiks.filter((cik) => DEFAULT_MANAGER_CIKS.includes(cik))
+    : DEFAULT_MANAGER_CIKS
   return {
     submissionsBase,
     archivesBase,
     userAgent,
-    managerCiks: parseCiks(env.ATLASZ_SEC_13F_CIKS) ?? DEFAULT_MANAGER_CIKS,
+    managerCiks,
     perManagerFilings: clampInt(Number(env.ATLASZ_SEC_13F_PER_MANAGER ?? DEFAULT_PER_MANAGER), 1, MAX_PER_MANAGER),
     maxHoldingsPerFiling: clampInt(Number(env.ATLASZ_SEC_13F_MAX_HOLDINGS ?? DEFAULT_MAX_HOLDINGS), 1, MAX_HOLDINGS_CAP),
     timeoutMs: clampInt(Number(env.ATLASZ_SEC_13F_TIMEOUT_MS ?? DEFAULT_TIMEOUT_MS), 1_000, 60_000),
@@ -100,7 +104,19 @@ export async function fetchSecForm13F(signal: AbortSignal, config = readForm13FC
       const infoTableUrl = await findInfoTableUrl(filing.dir, config, signal)
       if (!infoTableUrl) continue
       const xml = await fetchText(infoTableUrl, config, signal)
-      records.push(...parseForm13F(xml, { filer: filing.filer, accessionNumber: filing.accessionNumber, filingType: filing.filingType, reportPeriod: filing.reportPeriod, filingDate: filing.filingDate, sourceFilingUrl: filing.filingUrl, sourceInfoTableUrl: infoTableUrl, maxHoldings: config.maxHoldingsPerFiling, retrievedAt: Date.now() }))
+      records.push(
+        ...parseForm13F(xml, {
+          filer: filing.filer,
+          accessionNumber: filing.accessionNumber,
+          filingType: filing.filingType,
+          reportPeriod: filing.reportPeriod,
+          filingDate: filing.filingDate,
+          sourceFilingUrl: filing.filingUrl,
+          sourceInfoTableUrl: infoTableUrl,
+          maxHoldings: config.maxHoldingsPerFiling,
+          retrievedAt: Date.now(),
+        }),
+      )
     }
   }
   return normalizeForm13F(records)
@@ -200,7 +216,7 @@ export function parseForm13F(
     const investmentDiscretion = textOf(row, 'investmentDiscretion') || undefined
     const voting = firstTag(row, 'votingAuthority')
 
-    if (!hasValidHolding({ issuerName, cusip, value, accessionNumber, filingDate })) {
+    if (!hasValidHolding({ issuerName, cusip, value, accessionNumber, filingDate, filingType, filerName: filer.name })) {
       continue // malformed row -> drop, never repair, never infer missing values
     }
 
@@ -319,9 +335,19 @@ function toEvent(record: Form13FHolding): WorldIntelEvent {
   }
 }
 
-function hasValidHolding(input: { issuerName: string; cusip: string; value: number | undefined; accessionNumber: string; filingDate: string }): boolean {
+function hasValidHolding(input: {
+  issuerName: string
+  cusip: string
+  value: number | undefined
+  accessionNumber: string
+  filingDate: string
+  filingType: string
+  filerName: string
+}): boolean {
   return Boolean(
-    input.issuerName &&
+    input.filerName &&
+      (input.filingType === '13F-HR' || input.filingType === '13F-HR/A') &&
+      input.issuerName &&
       /^[0-9A-Z]{9}$/.test(input.cusip) &&
       input.value !== undefined &&
       Number.isFinite(input.value) &&

@@ -8650,17 +8650,19 @@ function Wu(e = process.env) {
 	let t = R(e.ATLASZ_SEC_USER_AGENT);
 	if (!t || !/@|https?:\/\//.test(t)) return null;
 	let n = R(e.ATLASZ_SEC_13F_SUBMISSIONS_BASE) || Mu, r = R(e.ATLASZ_SEC_13F_ARCHIVES_BASE) || Nu;
-	return [n, r].every(ed) ? {
+	if (![n, r].every(ed)) return null;
+	let i = cd(e.ATLASZ_SEC_13F_CIKS);
+	return {
 		submissionsBase: n,
 		archivesBase: r,
 		userAgent: t,
-		managerCiks: cd(e.ATLASZ_SEC_13F_CIKS) ?? Hu,
+		managerCiks: i ? i.filter((e) => Hu.includes(e)) : Hu,
 		perManagerFilings: dd(Number(e.ATLASZ_SEC_13F_PER_MANAGER ?? Pu), 1, Fu),
 		maxHoldingsPerFiling: dd(Number(e.ATLASZ_SEC_13F_MAX_HOLDINGS ?? Iu), 1, Lu),
 		timeoutMs: dd(Number(e.ATLASZ_SEC_13F_TIMEOUT_MS ?? Ru), 1e3, 6e4),
 		maxRetries: dd(Number(e.ATLASZ_SEC_13F_MAX_RETRIES ?? zu), 0, 5),
 		backoffMs: dd(Number(e.ATLASZ_SEC_13F_BACKOFF_MS ?? Bu), 0, 6e4)
-	} : null;
+	};
 }
 async function Gu(e, t = Wu()) {
 	if (!t) return [];
@@ -8739,7 +8741,9 @@ function Ju(e, t) {
 			cusip: f,
 			value: m,
 			accessionNumber: r,
-			filingDate: o
+			filingDate: o,
+			filingType: i,
+			filerName: n.name
 		})) continue;
 		let x = Uu[f], S = t.sourceFilingUrl ?? "", C = t.sourceInfoTableUrl ?? "", w = V({
 			filerCik: n.cik,
@@ -8850,7 +8854,7 @@ function Zu(e) {
 	};
 }
 function Qu(e) {
-	return !!(e.issuerName && /^[0-9A-Z]{9}$/.test(e.cusip) && e.value !== void 0 && Number.isFinite(e.value) && e.accessionNumber && Vu.test(e.filingDate));
+	return !!(e.filerName && (e.filingType === "13F-HR" || e.filingType === "13F-HR/A") && e.issuerName && /^[0-9A-Z]{9}$/.test(e.cusip) && e.value !== void 0 && Number.isFinite(e.value) && e.accessionNumber && Vu.test(e.filingDate));
 }
 function $u(e) {
 	return e.accessionNumber && Vu.test(e.filingDate) && ed(e.sourceFilingUrl) && ed(e.sourceInfoTableUrl) && e.rawPayloadJson.length > 2 ? 96 : 70;

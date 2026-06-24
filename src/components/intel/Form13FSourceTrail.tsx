@@ -57,6 +57,7 @@ function FilerHoldings({ holdings }: { holdings: Form13FHolding[] }) {
         <span>{first.isAmendment ? '13F-HR/A amendment' : '13F-HR'}</span>
         <span>period {first.reportPeriod || 'DATA_UNAVAILABLE'}</span>
         <span>filed {first.filingDate}</span>
+        <span>retrieved {new Date(first.retrievedAt).toISOString().slice(0, 10)}</span>
       </div>
       <table className="f13f-holdings">
         <thead>
