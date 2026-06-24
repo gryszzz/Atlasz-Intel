@@ -155,6 +155,7 @@ const SOURCE_LABELS: Record<string, string> = {
   lng_terminals_public: 'LNG Terminals',
   eia_nuclear_public: 'EIA Nuclear',
   nrc_reactor_status_public: 'NRC',
+  eia_balancing_authorities_public: 'EIA Grid',
   cisa_kev_public: 'CISA KEV',
   nvd_cve_public: 'NVD',
   github_ghsa_public: 'GitHub',

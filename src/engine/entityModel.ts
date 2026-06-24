@@ -41,6 +41,7 @@ export type EntityKind =
   | 'infrastructure'
   | 'facility'
   | 'place'
+  | 'balancing-authority'
   | 'commodity'
   | 'technology'
   | 'vulnerability'
@@ -90,6 +91,8 @@ export type RelationType =
   | 'operated_by'
   | 'processes'
   | 'produces'
+  | 'operates_in'
+  | 'serves'
 
 export type FreshnessState = 'fresh' | 'recent' | 'aging' | 'stale' | 'unavailable'
 
@@ -236,6 +239,20 @@ export function geoAssetEdges(eventEntity: EntityRef, asset: GeoAsset): DerivedE
 }
 
 /**
+ * Grid edges from a facility's SOURCE-BACKED balancing-authority code (present on
+ * EIA plant records). facility -> BA ('operates_in'); BA -> state ('serves') is
+ * derived from the same plant record. Grid context only — no outage/stress claim.
+ */
+function balancingAuthorityEdges(facility: EntityRef, baCode: string | undefined, state?: string, stateName?: string): DerivedEdge[] {
+  const code = (baCode ?? '').trim().toUpperCase()
+  if (!code) return []
+  const ba: EntityRef = { id: entityId('balancing-authority', code), kind: 'balancing-authority', label: code }
+  const edges: DerivedEdge[] = [{ from: facility, to: ba, relation: 'operates_in' }]
+  if (state) edges.push({ from: ba, to: { id: entityId('place', `state:${state}`), kind: 'place', label: stateName ?? state }, relation: 'serves' })
+  return edges
+}
+
+/**
  * Pure per-event extraction of typed entities + relationships. Shared by the
  * graph builder and the single-event evidence chain so they never diverge.
  */
@@ -362,9 +379,12 @@ export function deriveEventEntities(event: WorldIntelEvent): { entities: EntityR
     }
     for (const edge of geoAssetEdges(eventEntity, asset)) link(edge.from, edge.to, edge.relation)
 
+    const facilityEntity: EntityRef = { id: entityId('facility', facility.facilityId), kind: 'facility', label: facility.facilityName }
     if (facility.primaryFuel) {
-      const facilityEntity: EntityRef = { id: entityId('facility', facility.facilityId), kind: 'facility', label: facility.facilityName }
       link(facilityEntity, { id: entityId('commodity', facility.primaryFuel), kind: 'commodity', label: facility.primaryFuel }, 'fueled_by')
+    }
+    for (const edge of balancingAuthorityEdges(facilityEntity, facility.balancingAuthority, facility.state, facility.stateName)) {
+      link(edge.from, edge.to, edge.relation)
     }
   }
 
@@ -449,6 +469,32 @@ export function deriveEventEntities(event: WorldIntelEvent): { entities: EntityR
     link(plantEntity, { id: entityId('commodity', 'Electricity'), kind: 'commodity', label: 'Electricity' }, 'touches')
     link(plantEntity, { id: entityId('commodity', 'Nuclear'), kind: 'commodity', label: 'Nuclear' }, 'touches')
     link(plantEntity, { id: entityId('sector', 'Energy'), kind: 'sector', label: 'Energy' }, 'in_sector')
+    for (const edge of balancingAuthorityEdges(plantEntity, plant.balancingAuthority, plant.state, plant.stateName)) {
+      link(edge.from, edge.to, edge.relation)
+    }
+  }
+
+  // Balancing authority / grid region (EIA reference): event -> BA -> NERC region
+  // (place) + country + electricity + operator (exact only) + energy sector.
+  // Grid-context reference only — no outage/stress/reliability/disruption claim.
+  if (event.gridRegion) {
+    const region = event.gridRegion
+    const baEntity: EntityRef = { id: entityId('balancing-authority', region.baCode), kind: 'balancing-authority', label: `${region.baCode} — ${region.baName}` }
+    link(eventEntity, baEntity, 'about')
+    link(baEntity, { id: entityId('country', region.country), kind: 'country', label: region.country === 'US' ? 'United States' : region.country }, 'in_country')
+    link(baEntity, { id: entityId('commodity', 'Electricity'), kind: 'commodity', label: 'Electricity' }, 'touches')
+    link(baEntity, { id: entityId('sector', 'Energy'), kind: 'sector', label: 'Energy' }, 'in_sector')
+    if (region.nercRegion) {
+      link(baEntity, { id: entityId('place', `nerc:${region.nercRegion}`), kind: 'place', label: `${region.nercRegion} (NERC)` }, 'located_in')
+    }
+    for (const state of region.statesServed ?? []) {
+      link(baEntity, { id: entityId('place', `state:${state}`), kind: 'place', label: state }, 'serves')
+    }
+    if (region.operatorTicker && region.operatorName) {
+      const operatorEntity: EntityRef = { id: entityId('company', region.operatorName), kind: 'company', label: region.operatorName }
+      link(baEntity, operatorEntity, 'operated_by')
+      link(operatorEntity, { id: entityId('ticker', region.operatorTicker), kind: 'ticker', label: region.operatorTicker }, 'trades_as')
+    }
   }
 
   // Nuclear plant LAYER 2 (NRC, regulatory status): reactor UNIT status, kept a
@@ -939,6 +985,13 @@ function unknownsForEvent(event: WorldIntelEvent, touched: EntityRef[]): string[
   if (nrc) {
     unknowns.push('Reactor status has no coordinates (NRC status feed)')
     unknowns.push('Not linked to an EIA facility (no fuzzy merge)')
+  }
+  const grid = event.gridRegion
+  if (grid) {
+    unknowns.push('Region geometry unavailable (region-only)')
+    if (!grid.nercRegion) unknowns.push('No NERC region mapping')
+    if (!grid.statesServed || grid.statesServed.length === 0) unknowns.push('States served not enumerated from this source')
+    if (!grid.operatorTicker) unknowns.push('Operator not linked to a market identity')
   }
   if ((event.confidence ?? 0) < 90) unknowns.push('Below high-confidence threshold')
   if (provenanceTrust(event.provenance) < 0.5) unknowns.push('Source is unverified/low-trust')

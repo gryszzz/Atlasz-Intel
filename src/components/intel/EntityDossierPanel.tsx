@@ -60,6 +60,8 @@ const RELATION_LABEL: Record<RelationType, string> = {
   operated_by: 'operated by',
   processes: 'processes',
   produces: 'produces',
+  operates_in: 'operates in',
+  serves: 'serves',
 }
 
 export function EntityDossierPanel({

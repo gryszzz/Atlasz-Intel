@@ -31,6 +31,7 @@ import { fetchEiaRefineries, readEiaRefineryConfig } from './adapters/eiaRefiner
 import { fetchLngTerminals, readLngTerminalConfig } from './adapters/lngTerminalAdapter'
 import { fetchEiaNuclearPlants, readEiaNuclearConfig } from './adapters/eiaNuclearAdapter'
 import { fetchNrcReactorStatus, readNrcReactorStatusConfig } from './adapters/nrcReactorStatusAdapter'
+import { fetchEiaBalancingAuthorities, readEiaBalancingAuthorityConfig } from './adapters/eiaBalancingAuthorityAdapter'
 import { fetchUsgsEarthquakes, readUsgsQuakeConfig } from './adapters/usgsQuakeAdapter'
 import { fetchKevVulnerabilities, readKevConfig } from './adapters/cisaKevAdapter'
 import { fetchNvdCves, readNvdConfig } from './adapters/nvdCveAdapter'
@@ -77,6 +78,7 @@ export const KNOWN_ADAPTERS = [
   'lng-terminals',
   'eia-nuclear',
   'nrc-reactor-status',
+  'eia-balancing-authorities',
   'usgs-quakes',
   'uspto-patents',
   'cisa-kev',
@@ -187,6 +189,10 @@ export function resolveAdapter(provider: ProviderDefinition, env: NodeJS.Process
     case 'nrc-reactor-status': {
       const config = readNrcReactorStatusConfig(env)
       return { fetcher: config ? (signal) => fetchNrcReactorStatus(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'eia-balancing-authorities': {
+      const config = readEiaBalancingAuthorityConfig(env)
+      return { fetcher: config ? (signal) => fetchEiaBalancingAuthorities(signal, config) : undefined, configured: config !== null, managed: false }
     }
     case 'usgs-quakes': {
       const config = readUsgsQuakeConfig(env)

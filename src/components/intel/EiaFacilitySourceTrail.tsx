@@ -96,7 +96,7 @@ function FacilityCard({ facility, events, now }: { facility: EiaPowerPlantFacili
         <Field label="Status">{facility.status ?? 'unknown'}</Field>
         <Field label="State">{facility.stateName ?? facility.state ?? 'unknown'}</Field>
         <Field label="County">{facility.county ?? 'unknown'}</Field>
-        <Field label="Balancing authority">{facility.balancingAuthority ?? 'unknown'}</Field>
+        <Field label="Grid context (BA)">{facility.balancingAuthority ?? 'unknown'}</Field>
         <Field label="Coordinates">
           {facility.geospatialPrecision === 'exact' ? `${facility.latitude}, ${facility.longitude}` : 'unknown'}
         </Field>

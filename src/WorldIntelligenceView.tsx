@@ -80,6 +80,9 @@ const NuclearPlantSourceTrail = lazy(() =>
 const NrcReactorStatusSourceTrail = lazy(() =>
   import('./components/intel/NrcReactorStatusSourceTrail').then((m) => ({ default: m.NrcReactorStatusSourceTrail })),
 )
+const GridRegionSourceTrail = lazy(() =>
+  import('./components/intel/GridRegionSourceTrail').then((m) => ({ default: m.GridRegionSourceTrail })),
+)
 const MarketIdentitySourceTrail = lazy(() =>
   import('./components/intel/MarketIdentitySourceTrail').then((m) => ({ default: m.MarketIdentitySourceTrail })),
 )
@@ -279,6 +282,10 @@ export function WorldIntelligenceView({
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading NRC reactor status" /></div>}>
           <NrcReactorStatusSourceTrail events={visibleEvents} now={now} />
+        </Suspense>
+
+        <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading grid regions" /></div>}>
+          <GridRegionSourceTrail events={visibleEvents} now={now} />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading entity detail" /></div>}>

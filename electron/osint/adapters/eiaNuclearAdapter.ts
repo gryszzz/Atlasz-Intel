@@ -68,6 +68,7 @@ function toNuclearFacility(f: EiaPowerPlantFacility): NuclearPlantFacility {
     state: f.state,
     stateName: f.stateName,
     county: f.county,
+    balancingAuthority: f.balancingAuthority,
     latitude: f.latitude,
     longitude: f.longitude,
     geospatialPrecision: f.geospatialPrecision,

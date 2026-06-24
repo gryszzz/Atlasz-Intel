@@ -76,6 +76,7 @@ export type WorldIntelEvent = {
   lngTerminal?: LngTerminalFacility
   nuclearPlant?: NuclearPlantFacility
   nrcReactorStatus?: NrcReactorStatus
+  gridRegion?: GridRegion
   kevVulnerability?: KevVulnerability
   nvdCve?: NvdCve
   ghsaAdvisory?: GhsaAdvisory
@@ -1044,6 +1045,7 @@ export type NuclearPlantFacility = {
   stateName?: string
   county?: string
   city?: string
+  balancingAuthority?: string
   latitude?: number
   longitude?: number
   geospatialPrecision: GeospatialPrecision
@@ -1077,6 +1079,41 @@ export type NrcReactorStatus = {
   powerPercent: number
   sourceDataset: string
   sourceUrl: string
+  sourceName: string
+  retrievedAt: number
+  staleAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+export type GridRegionKind = 'balancing-authority' | 'grid-region'
+
+/**
+ * A grid operating region — a balancing authority (BA) or larger grid region —
+ * as published by official EIA reference data (EIA v2 electricity/rto respondent
+ * facet). Grid-context reference only: NOT an outage, grid-stress, reliability,
+ * emergency, or vulnerability claim. No geometry from this source -> region-only.
+ * NERC/FERC region and operator are included only when source-backed; operator
+ * links to a market identity ONLY on an exact curated match.
+ */
+export type GridRegion = {
+  id: string
+  baCode: string
+  baName: string
+  regionKind: GridRegionKind
+  country: string
+  /** States served — source-backed only (e.g. derived from EIA plant records). */
+  statesServed?: string[]
+  nercRegion?: string
+  fercRegion?: string
+  operatorName?: string
+  operatorTicker?: string
+  geospatialPrecision: GeospatialPrecision
+  sourceDataset: string
+  sourceUrl: string
+  sourceApiUrl: string
   sourceName: string
   retrievedAt: number
   staleAt: number

@@ -1423,6 +1423,7 @@ type WorldIntelSubRecords = Pick<
   | 'lngTerminal'
   | 'nuclearPlant'
   | 'nrcReactorStatus'
+  | 'gridRegion'
   | 'kevVulnerability'
   | 'nvdCve'
   | 'ghsaAdvisory'
@@ -1460,6 +1461,7 @@ export function serializeSubRecords(record: WorldIntelEvent): string | null {
   if (record.lngTerminal) sub.lngTerminal = record.lngTerminal
   if (record.nuclearPlant) sub.nuclearPlant = record.nuclearPlant
   if (record.nrcReactorStatus) sub.nrcReactorStatus = record.nrcReactorStatus
+  if (record.gridRegion) sub.gridRegion = record.gridRegion
   if (record.kevVulnerability) sub.kevVulnerability = record.kevVulnerability
   if (record.nvdCve) sub.nvdCve = record.nvdCve
   if (record.ghsaAdvisory) sub.ghsaAdvisory = record.ghsaAdvisory
@@ -1512,6 +1514,7 @@ export function parseSubRecords(value: unknown): WorldIntelSubRecords {
   if (isValidLngTerminal(record.lngTerminal)) out.lngTerminal = record.lngTerminal as WorldIntelEvent['lngTerminal']
   if (isValidNuclearPlant(record.nuclearPlant)) out.nuclearPlant = record.nuclearPlant as WorldIntelEvent['nuclearPlant']
   if (isValidNrcReactorStatus(record.nrcReactorStatus)) out.nrcReactorStatus = record.nrcReactorStatus as WorldIntelEvent['nrcReactorStatus']
+  if (isValidGridRegion(record.gridRegion)) out.gridRegion = record.gridRegion as WorldIntelEvent['gridRegion']
   if (isValidKev(record.kevVulnerability)) out.kevVulnerability = record.kevVulnerability as WorldIntelEvent['kevVulnerability']
   if (isValidNvd(record.nvdCve)) out.nvdCve = record.nvdCve as WorldIntelEvent['nvdCve']
   if (isValidGhsa(record.ghsaAdvisory)) out.ghsaAdvisory = record.ghsaAdvisory as WorldIntelEvent['ghsaAdvisory']
@@ -1814,6 +1817,20 @@ function isValidNrcReactorStatus(value: unknown): boolean {
       v.unitName.length > 0 &&
       typeof v.reportDate === 'string' &&
       typeof v.powerPercent === 'number' &&
+      hasHash(v),
+  )
+}
+
+function isValidGridRegion(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(
+    v &&
+      typeof v.baCode === 'string' &&
+      v.baCode.length > 0 &&
+      typeof v.baName === 'string' &&
+      v.baName.length > 0 &&
+      (v.regionKind === 'balancing-authority' || v.regionKind === 'grid-region') &&
+      typeof v.geospatialPrecision === 'string' &&
       hasHash(v),
   )
 }
