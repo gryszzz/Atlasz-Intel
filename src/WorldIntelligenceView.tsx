@@ -86,6 +86,9 @@ const GridRegionSourceTrail = lazy(() =>
 const PortLocodeSourceTrail = lazy(() =>
   import('./components/intel/PortLocodeSourceTrail').then((m) => ({ default: m.PortLocodeSourceTrail })),
 )
+const WorldPortIndexSourceTrail = lazy(() =>
+  import('./components/intel/WorldPortIndexSourceTrail').then((m) => ({ default: m.WorldPortIndexSourceTrail })),
+)
 const MarketIdentitySourceTrail = lazy(() =>
   import('./components/intel/MarketIdentitySourceTrail').then((m) => ({ default: m.MarketIdentitySourceTrail })),
 )
@@ -293,6 +296,10 @@ export function WorldIntelligenceView({
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading port locations" /></div>}>
           <PortLocodeSourceTrail events={visibleEvents} now={now} />
+        </Suspense>
+
+        <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading physical ports" /></div>}>
+          <WorldPortIndexSourceTrail events={visibleEvents} now={now} />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading entity detail" /></div>}>

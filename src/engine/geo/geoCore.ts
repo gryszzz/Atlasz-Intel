@@ -127,6 +127,33 @@ function titleCase(value: string): string {
   return value.replace(/\b\w/g, (ch) => ch.toUpperCase())
 }
 
+/** Country name -> ISO 3166-1 alpha-2 (major maritime/trade nations; extend as needed). */
+export const COUNTRY_NAME_TO_ISO2: Record<string, string> = {
+  'united states': 'US', 'united states of america': 'US', usa: 'US',
+  canada: 'CA', mexico: 'MX', 'united kingdom': 'GB', 'great britain': 'GB', ireland: 'IE',
+  netherlands: 'NL', belgium: 'BE', germany: 'DE', france: 'FR', spain: 'ES', portugal: 'PT',
+  italy: 'IT', greece: 'GR', 'türkiye': 'TR', turkey: 'TR', norway: 'NO', sweden: 'SE',
+  denmark: 'DK', finland: 'FI', poland: 'PL', russia: 'RU', ukraine: 'UA', romania: 'RO',
+  china: 'CN', "china, people's republic of": 'CN', japan: 'JP', 'south korea': 'KR',
+  'korea, south': 'KR', 'korea, republic of': 'KR', 'north korea': 'KP', taiwan: 'TW',
+  'hong kong': 'HK', singapore: 'SG', malaysia: 'MY', indonesia: 'ID', thailand: 'TH',
+  vietnam: 'VN', philippines: 'PH', india: 'IN', pakistan: 'PK', bangladesh: 'BD',
+  'sri lanka': 'LK', 'united arab emirates': 'AE', 'saudi arabia': 'SA', qatar: 'QA',
+  kuwait: 'KW', oman: 'OM', bahrain: 'BH', iran: 'IR', iraq: 'IQ', israel: 'IL', egypt: 'EG',
+  'south africa': 'ZA', nigeria: 'NG', angola: 'AO', morocco: 'MA', algeria: 'DZ',
+  australia: 'AU', 'new zealand': 'NZ', brazil: 'BR', argentina: 'AR', chile: 'CL',
+  peru: 'PE', colombia: 'CO', ecuador: 'EC', panama: 'PA', venezuela: 'VE',
+}
+
+/** Normalize a country value (ISO2 code OR name) to {code,name}; {} if unknown. */
+export function normalizeCountry(value: unknown): { code?: string; name?: string } {
+  const raw = typeof value === 'string' ? value.trim() : ''
+  if (!raw) return {}
+  if (/^[A-Z]{2}$/.test(raw.toUpperCase()) && raw.length === 2) return { code: raw.toUpperCase(), name: raw }
+  const code = COUNTRY_NAME_TO_ISO2[raw.toLowerCase()]
+  return code ? { code, name: titleCase(raw.toLowerCase()) } : { name: raw }
+}
+
 /** Coordinates are valid only inside Earth's bounds and not the null island (0,0). */
 export function coordinatesAreValid(lat: unknown, lon: unknown): boolean {
   return (

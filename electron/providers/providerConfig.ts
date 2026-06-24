@@ -375,6 +375,23 @@ export const BUILTIN_PROVIDERS: ProviderDefinition[] = [
       'Official UNECE UN/LOCODE code list (trade/transport location codes). FAIL-CLOSED: requires ATLASZ_UNLOCODE_URL pinned to an official unece.org CSV; inert without it. Location-code registry only — never live port activity, vessel traffic, congestion, or disruption. Physical port geometry is a later World Port Index enrichment.',
   },
   {
+    providerId: 'world_port_index_public',
+    providerName: 'NGA World Port Index (Pub 150) physical ports',
+    category: 'macro',
+    adapter: 'world-port-index',
+    enabled: true,
+    endpoint: 'https://msi.nga.mil/Publications/WPI',
+    authType: 'none',
+    pollIntervalMs: 30 * 24 * 60 * 60_000,
+    rateLimitGuardMs: 300_000,
+    timeoutMs: 30_000,
+    maxRetries: 2,
+    backoffMs: 1_000,
+    provenance: 'official-api',
+    legalSafetyNote:
+      'Official NGA World Port Index (Pub 150) physical port reference. Location + harbor attributes only — never live traffic, congestion, trade volume, or disruption. Links to UN/LOCODE only on an exact source-field code match. Default CSV key may change per edition; override via ATLASZ_WPI_URL (nga.mil host). Fail-closed on HTTP errors.',
+  },
+  {
     providerId: 'cisa_kev_public',
     providerName: 'CISA Known Exploited Vulnerabilities catalog',
     category: 'public-disclosure',

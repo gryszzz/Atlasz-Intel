@@ -524,6 +524,36 @@ export function deriveEventEntities(event: WorldIntelEvent): { entities: EntityR
     link(locEntity, { id: entityId('sector', 'Logistics'), kind: 'sector', label: 'Logistics' }, 'in_sector')
   }
 
+  // World Port Index (physical port, Layer 2): location/country edges via the geo
+  // core when country is known; otherwise standalone (no country guess). Exact
+  // UN/LOCODE link only ('references'). Physical reference only — no live activity.
+  if (event.worldPort) {
+    const port = event.worldPort
+    const portEntity: EntityRef = { id: entityId('facility', port.portNumber), kind: 'facility', label: port.portName }
+    if (port.countryCode) {
+      const asset: GeoAsset = {
+        assetId: port.portNumber,
+        assetKind: 'port',
+        name: port.portName,
+        latitude: port.latitude,
+        longitude: port.longitude,
+        geospatialPrecision: port.geospatialPrecision,
+        countryCode: port.countryCode, // no state: subdivision namespaced below
+      }
+      for (const edge of geoAssetEdges(eventEntity, asset)) link(edge.from, edge.to, edge.relation)
+      if (port.subdivision) {
+        link(portEntity, { id: entityId('place', `subdiv:${port.countryCode}:${port.subdivision}`), kind: 'place', label: `${port.subdivision}, ${port.countryCode}` }, 'located_in')
+      }
+    } else {
+      link(eventEntity, portEntity, 'about') // unknown country -> standalone, no guess
+    }
+    link(portEntity, { id: entityId('sector', 'Logistics'), kind: 'sector', label: 'Logistics' }, 'in_sector')
+    // Exact UN/LOCODE link only (source field), never fuzzy.
+    if (port.linkedLocode) {
+      link(portEntity, { id: entityId('facility', port.linkedLocode), kind: 'facility', label: port.linkedLocode }, 'references')
+    }
+  }
+
   // Nuclear plant LAYER 2 (NRC, regulatory status): reactor UNIT status, kept a
   // SEPARATE node namespace (no fuzzy merge into the EIA facility). No coordinates
   // in this feed -> location-less. Power level is source-reported, never editorial.
@@ -1025,6 +1055,13 @@ function unknownsForEvent(event: WorldIntelEvent, touched: EntityRef[]): string[
     if (loc.geospatialPrecision !== 'exact') unknowns.push(`Location ${loc.geospatialPrecision} (no source coordinates; World Port Index enrichment pending)`)
     unknowns.push('Code registry only — not proof of live port operations')
     if (!loc.subdivision) unknowns.push('No subdivision in source row')
+  }
+  const wpi = event.worldPort
+  if (wpi) {
+    if (wpi.geospatialPrecision !== 'exact') unknowns.push(`Location ${wpi.geospatialPrecision} (no source coordinates)`)
+    if (!wpi.countryCode) unknowns.push('Country not resolved to ISO code (standalone port)')
+    if (!wpi.linkedLocode) unknowns.push('No exact UN/LOCODE match (standalone port)')
+    unknowns.push('Physical reference only — not live traffic, congestion, or disruption')
   }
   if ((event.confidence ?? 0) < 90) unknowns.push('Below high-confidence threshold')
   if (provenanceTrust(event.provenance) < 0.5) unknowns.push('Source is unverified/low-trust')

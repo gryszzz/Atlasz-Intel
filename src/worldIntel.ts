@@ -78,6 +78,7 @@ export type WorldIntelEvent = {
   nrcReactorStatus?: NrcReactorStatus
   gridRegion?: GridRegion
   unLocode?: UnLocode
+  worldPort?: WorldPortIndexRecord
   kevVulnerability?: KevVulnerability
   nvdCve?: NvdCve
   ghsaAdvisory?: GhsaAdvisory
@@ -1161,6 +1162,41 @@ export type UnLocode = {
   latitude?: number
   longitude?: number
   geospatialPrecision: GeospatialPrecision
+  sourceDataset: string
+  sourceUrl: string
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  staleAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+/**
+ * A physical port from the official NGA World Port Index (Pub 150) — Layer 2 of
+ * the ports work: real port location + physical attributes. NOT live traffic,
+ * congestion, trade volume, or disruption; no company exposure. Linked to a
+ * UN/LOCODE ONLY on an exact code match from the WPI source field (never fuzzy);
+ * otherwise it stands alone. Coordinates are source-backed decimal degrees.
+ */
+export type WorldPortIndexRecord = {
+  id: string
+  portNumber: string
+  portName: string
+  country?: string
+  countryCode?: string
+  subdivision?: string
+  region?: string
+  latitude?: number
+  longitude?: number
+  geospatialPrecision: GeospatialPrecision
+  harborSize?: string
+  harborType?: string
+  shelter?: string
+  /** Exact UN/LOCODE from the WPI source field, when present and valid. */
+  linkedLocode?: string
   sourceDataset: string
   sourceUrl: string
   sourceApiUrl: string

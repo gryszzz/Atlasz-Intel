@@ -1425,6 +1425,7 @@ type WorldIntelSubRecords = Pick<
   | 'nrcReactorStatus'
   | 'gridRegion'
   | 'unLocode'
+  | 'worldPort'
   | 'kevVulnerability'
   | 'nvdCve'
   | 'ghsaAdvisory'
@@ -1464,6 +1465,7 @@ export function serializeSubRecords(record: WorldIntelEvent): string | null {
   if (record.nrcReactorStatus) sub.nrcReactorStatus = record.nrcReactorStatus
   if (record.gridRegion) sub.gridRegion = record.gridRegion
   if (record.unLocode) sub.unLocode = record.unLocode
+  if (record.worldPort) sub.worldPort = record.worldPort
   if (record.kevVulnerability) sub.kevVulnerability = record.kevVulnerability
   if (record.nvdCve) sub.nvdCve = record.nvdCve
   if (record.ghsaAdvisory) sub.ghsaAdvisory = record.ghsaAdvisory
@@ -1518,6 +1520,7 @@ export function parseSubRecords(value: unknown): WorldIntelSubRecords {
   if (isValidNrcReactorStatus(record.nrcReactorStatus)) out.nrcReactorStatus = record.nrcReactorStatus as WorldIntelEvent['nrcReactorStatus']
   if (isValidGridRegion(record.gridRegion)) out.gridRegion = record.gridRegion as WorldIntelEvent['gridRegion']
   if (isValidUnLocode(record.unLocode)) out.unLocode = record.unLocode as WorldIntelEvent['unLocode']
+  if (isValidWorldPort(record.worldPort)) out.worldPort = record.worldPort as WorldIntelEvent['worldPort']
   if (isValidKev(record.kevVulnerability)) out.kevVulnerability = record.kevVulnerability as WorldIntelEvent['kevVulnerability']
   if (isValidNvd(record.nvdCve)) out.nvdCve = record.nvdCve as WorldIntelEvent['nvdCve']
   if (isValidGhsa(record.ghsaAdvisory)) out.ghsaAdvisory = record.ghsaAdvisory as WorldIntelEvent['ghsaAdvisory']
@@ -1846,6 +1849,19 @@ function isValidUnLocode(value: unknown): boolean {
       /^[A-Z]{2}[A-Z0-9]{3}$/.test(v.locode as string) &&
       typeof v.locationName === 'string' &&
       (v.locationName as string).length > 0 &&
+      typeof v.geospatialPrecision === 'string' &&
+      hasHash(v),
+  )
+}
+
+function isValidWorldPort(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(
+    v &&
+      typeof v.portNumber === 'string' &&
+      (v.portNumber as string).length > 0 &&
+      typeof v.portName === 'string' &&
+      (v.portName as string).length > 0 &&
       typeof v.geospatialPrecision === 'string' &&
       hasHash(v),
   )
