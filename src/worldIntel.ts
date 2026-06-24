@@ -71,6 +71,11 @@ export type WorldIntelEvent = {
   beaObservation?: BeaObservation
   blsObservation?: BlsObservation
   eiaEnergyRecord?: EiaEnergyRecord
+  eiaFacility?: EiaPowerPlantFacility
+  eiaRefinery?: EiaRefineryFacility
+  lngTerminal?: LngTerminalFacility
+  nuclearPlant?: NuclearPlantFacility
+  nrcReactorStatus?: NrcReactorStatus
   kevVulnerability?: KevVulnerability
   nvdCve?: NvdCve
   ghsaAdvisory?: GhsaAdvisory
@@ -851,6 +856,230 @@ export type EiaEnergyRecord = {
   sourceApiUrl: string
   sourceName: string
   retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+/**
+ * How precisely a facility's location is known. Coordinates are source-backed
+ * only; when the official record omits lat/lon the facility is labeled
+ * `region-only` (state/county known) or `unknown` — never guessed.
+ */
+export type GeospatialPrecision = 'exact' | 'approximate' | 'region-only' | 'unknown'
+
+/**
+ * A single electric power-generation facility (power plant) as published by the
+ * official EIA generator inventory (EIA-860M, operating-generator-capacity).
+ *
+ * Real facility records only: location context, NOT an outage, disruption,
+ * vulnerability, or attack-path claim. Operator is shown only as published by
+ * EIA; an operator is linked to a market company ONLY when an exact curated
+ * identity exists (never fuzzy-merged). Coordinates appear only when the source
+ * provides them; otherwise geospatialPrecision is region-only/unknown.
+ */
+export type EiaPowerPlantFacility = {
+  id: string
+  facilityId: string
+  facilityName: string
+  facilityKind: 'power-plant'
+  /** Operating entity name exactly as EIA publishes it (no inference). */
+  operatorName?: string
+  operatorId?: string
+  /** Set ONLY when an exact curated market identity exists for the operator. */
+  operatorTicker?: string
+  /** EIA technology description (e.g. "Natural Gas Fired Combined Cycle"). */
+  plantType?: string
+  /** Human-readable primary fuel for the dominant generating unit. */
+  primaryFuel?: string
+  /** EIA energy-source code for the dominant unit (e.g. NG, SUN, WND). */
+  energySource?: string
+  /** Sum of source-reported nameplate capacity across the plant's units (MW). */
+  capacityMw?: number
+  /** Number of generator rows aggregated into this facility. */
+  unitCount?: number
+  /** Operating status; "mixed" when the plant's units differ. */
+  status?: string
+  state?: string
+  stateName?: string
+  county?: string
+  balancingAuthority?: string
+  latitude?: number
+  longitude?: number
+  geospatialPrecision: GeospatialPrecision
+  sourceDataset: string
+  sourceUrl: string
+  sourceApiUrl: string
+  sourceName: string
+  period?: string
+  retrievedAt: number
+  staleAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+/**
+ * A single petroleum refinery as published by the official EIA U.S. Energy Atlas
+ * (Petroleum Refineries layer / EIA-820 Refinery Capacity Report).
+ *
+ * Real refinery records only: location + capacity CONTEXT, NOT an outage,
+ * disruption, vulnerability, or targeting claim. Operator/company shown exactly
+ * as published; a market identity is linked ONLY on an exact curated match.
+ * Coordinates appear only when source-backed; otherwise region-only/unknown.
+ */
+export type EiaRefineryFacility = {
+  id: string
+  facilityId: string
+  facilityName: string
+  facilityKind: 'refinery'
+  /** Operating company name exactly as published (no inference). */
+  operatorName?: string
+  /** Parent corporation when the source distinguishes it from the operator. */
+  companyName?: string
+  operatorId?: string
+  /** Set ONLY when an exact curated market identity exists for the operator. */
+  operatorTicker?: string
+  state?: string
+  stateName?: string
+  county?: string
+  city?: string
+  /** PADD region (structural petroleum-district context), when published. */
+  padd?: string
+  latitude?: number
+  longitude?: number
+  geospatialPrecision: GeospatialPrecision
+  /** Atmospheric crude distillation capacity, exactly as the source reports it. */
+  crudeCapacity?: number
+  crudeCapacityUnit?: string
+  /** Refined products, only when the source names them. */
+  products?: string[]
+  status?: string
+  sourceDataset: string
+  sourceUrl: string
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  staleAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+export type LngTerminalType = 'import' | 'export' | 'liquefaction' | 'regasification'
+
+/**
+ * A single LNG (liquefied natural gas) import/export terminal as published by an
+ * official source (EIA U.S. Energy Atlas LNG Import/Export Terminals layer, which
+ * EIA builds from EIA + FERC information; or a FERC/DOE-FECM terminal source).
+ *
+ * Real terminal records only: location/capacity CONTEXT, NOT an outage,
+ * disruption, export-flow, vulnerability, or targeting claim. terminalType and
+ * capacity appear only when the source provides them. Operator/owner shown as
+ * published; a market identity is linked ONLY on an exact curated match.
+ */
+export type LngTerminalFacility = {
+  id: string
+  facilityId: string
+  facilityName: string
+  facilityKind: 'lng-terminal'
+  operatorName?: string
+  ownerName?: string
+  operatorId?: string
+  /** Set ONLY when an exact curated market identity exists for the operator. */
+  operatorTicker?: string
+  state?: string
+  stateName?: string
+  county?: string
+  city?: string
+  latitude?: number
+  longitude?: number
+  geospatialPrecision: GeospatialPrecision
+  /** Source-backed terminal role only; never inferred from the name. */
+  terminalType?: LngTerminalType
+  /** Capacity exactly as the source reports it (no flow inference). */
+  capacity?: number
+  capacityUnit?: string
+  status?: string
+  sourceDataset: string
+  sourceUrl: string
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  staleAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+/**
+ * LAYER 1 (EIA, geospatial). A nuclear power plant as published by the official
+ * EIA generator inventory (EIA-860M, operating-generator-capacity) filtered to
+ * nuclear fuel. Facility/geospatial + generator-capacity context only — NOT a
+ * safety, outage, emergency, or vulnerability claim. Reactor/regulatory fields
+ * are optional NRC enrichment and stay undefined unless a source provides them.
+ */
+export type NuclearPlantFacility = {
+  id: string
+  facilityId: string
+  facilityName: string
+  facilityKind: 'nuclear-plant'
+  operatorName?: string
+  operatorId?: string
+  ownerName?: string
+  /** Set ONLY when an exact curated market identity exists for the operator. */
+  operatorTicker?: string
+  /** EIA plant id (same as facilityId for the EIA layer). */
+  eiaPlantId?: string
+  /** NRC enrichment, source-backed only (undefined from the EIA layer alone). */
+  reactorName?: string
+  reactorType?: string
+  nrcDocket?: string
+  nrcLicense?: string
+  state?: string
+  stateName?: string
+  county?: string
+  city?: string
+  latitude?: number
+  longitude?: number
+  geospatialPrecision: GeospatialPrecision
+  capacityMw?: number
+  status?: string
+  energySource?: string
+  sourceDataset: string
+  sourceUrl: string
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  staleAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+/**
+ * LAYER 2 (NRC, regulatory status). A single daily reactor power-status row as
+ * published by the NRC Power Reactor Status Report. This is the operating power
+ * level the regulator reports — NOT an Atlasz safety, outage, or disruption
+ * assessment, and deliberately NOT auto-merged with the EIA facility layer.
+ */
+export type NrcReactorStatus = {
+  id: string
+  unitName: string
+  reportDate: string
+  reportTimestamp: number
+  /** Reactor power level percent (0-100) exactly as NRC reports it. */
+  powerPercent: number
+  sourceDataset: string
+  sourceUrl: string
+  sourceName: string
+  retrievedAt: number
+  staleAt: number
   provenance: ProvenanceId
   confidence: number
   rawPayloadHash: string

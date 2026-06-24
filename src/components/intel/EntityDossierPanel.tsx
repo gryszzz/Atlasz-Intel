@@ -55,6 +55,11 @@ const RELATION_LABEL: Record<RelationType, string> = {
   represents: 'represents',
   issued_by: 'issued by',
   holds: 'holds',
+  located_in: 'located in',
+  fueled_by: 'fueled by',
+  operated_by: 'operated by',
+  processes: 'processes',
+  produces: 'produces',
 }
 
 export function EntityDossierPanel({

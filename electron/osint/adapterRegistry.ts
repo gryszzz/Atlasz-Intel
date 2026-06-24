@@ -26,6 +26,11 @@ import { fetchTreasuryFiscalData, readTreasuryFiscalConfig } from './adapters/tr
 import { fetchBlsObservations, readBlsConfig } from './adapters/blsAdapter'
 import { fetchBeaObservations, readBeaConfig } from './adapters/beaAdapter'
 import { fetchEiaEnergyRecords, readEiaEnergyConfig } from './adapters/eiaEnergyAdapter'
+import { fetchEiaFacilities, readEiaFacilityConfig } from './adapters/eiaFacilityAdapter'
+import { fetchEiaRefineries, readEiaRefineryConfig } from './adapters/eiaRefineryAdapter'
+import { fetchLngTerminals, readLngTerminalConfig } from './adapters/lngTerminalAdapter'
+import { fetchEiaNuclearPlants, readEiaNuclearConfig } from './adapters/eiaNuclearAdapter'
+import { fetchNrcReactorStatus, readNrcReactorStatusConfig } from './adapters/nrcReactorStatusAdapter'
 import { fetchUsgsEarthquakes, readUsgsQuakeConfig } from './adapters/usgsQuakeAdapter'
 import { fetchKevVulnerabilities, readKevConfig } from './adapters/cisaKevAdapter'
 import { fetchNvdCves, readNvdConfig } from './adapters/nvdCveAdapter'
@@ -67,6 +72,11 @@ export const KNOWN_ADAPTERS = [
   'bls',
   'bea',
   'eia-energy',
+  'eia-power-plants',
+  'eia-refineries',
+  'lng-terminals',
+  'eia-nuclear',
+  'nrc-reactor-status',
   'usgs-quakes',
   'uspto-patents',
   'cisa-kev',
@@ -157,6 +167,26 @@ export function resolveAdapter(provider: ProviderDefinition, env: NodeJS.Process
     case 'eia-energy': {
       const config = readEiaEnergyConfig(env)
       return { fetcher: config ? (signal) => fetchEiaEnergyRecords(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'eia-power-plants': {
+      const config = readEiaFacilityConfig(env)
+      return { fetcher: config ? (signal) => fetchEiaFacilities(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'eia-refineries': {
+      const config = readEiaRefineryConfig(env)
+      return { fetcher: config ? (signal) => fetchEiaRefineries(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'lng-terminals': {
+      const config = readLngTerminalConfig(env)
+      return { fetcher: config ? (signal) => fetchLngTerminals(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'eia-nuclear': {
+      const config = readEiaNuclearConfig(env)
+      return { fetcher: config ? (signal) => fetchEiaNuclearPlants(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'nrc-reactor-status': {
+      const config = readNrcReactorStatusConfig(env)
+      return { fetcher: config ? (signal) => fetchNrcReactorStatus(signal, config) : undefined, configured: config !== null, managed: false }
     }
     case 'usgs-quakes': {
       const config = readUsgsQuakeConfig(env)

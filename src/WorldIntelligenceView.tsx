@@ -65,6 +65,15 @@ const Form13FSourceTrail = lazy(() =>
 const EtfHoldingsSourceTrail = lazy(() =>
   import('./components/intel/EtfHoldingsSourceTrail').then((m) => ({ default: m.EtfHoldingsSourceTrail })),
 )
+const EiaFacilitySourceTrail = lazy(() =>
+  import('./components/intel/EiaFacilitySourceTrail').then((m) => ({ default: m.EiaFacilitySourceTrail })),
+)
+const EiaRefinerySourceTrail = lazy(() =>
+  import('./components/intel/EiaRefinerySourceTrail').then((m) => ({ default: m.EiaRefinerySourceTrail })),
+)
+const LngTerminalSourceTrail = lazy(() =>
+  import('./components/intel/LngTerminalSourceTrail').then((m) => ({ default: m.LngTerminalSourceTrail })),
+)
 const MarketIdentitySourceTrail = lazy(() =>
   import('./components/intel/MarketIdentitySourceTrail').then((m) => ({ default: m.MarketIdentitySourceTrail })),
 )
@@ -244,6 +253,18 @@ export function WorldIntelligenceView({
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading ETF holdings" /></div>}>
           <EtfHoldingsSourceTrail events={visibleEvents} now={now} />
+        </Suspense>
+
+        <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading EIA power-plant facilities" /></div>}>
+          <EiaFacilitySourceTrail events={visibleEvents} now={now} />
+        </Suspense>
+
+        <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading EIA refineries" /></div>}>
+          <EiaRefinerySourceTrail events={visibleEvents} now={now} />
+        </Suspense>
+
+        <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading LNG terminals" /></div>}>
+          <LngTerminalSourceTrail events={visibleEvents} now={now} />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading entity detail" /></div>}>

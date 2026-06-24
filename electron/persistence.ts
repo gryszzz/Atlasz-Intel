@@ -1418,6 +1418,11 @@ type WorldIntelSubRecords = Pick<
   | 'beaObservation'
   | 'blsObservation'
   | 'eiaEnergyRecord'
+  | 'eiaFacility'
+  | 'eiaRefinery'
+  | 'lngTerminal'
+  | 'nuclearPlant'
+  | 'nrcReactorStatus'
   | 'kevVulnerability'
   | 'nvdCve'
   | 'ghsaAdvisory'
@@ -1450,6 +1455,11 @@ export function serializeSubRecords(record: WorldIntelEvent): string | null {
   if (record.beaObservation) sub.beaObservation = record.beaObservation
   if (record.blsObservation) sub.blsObservation = record.blsObservation
   if (record.eiaEnergyRecord) sub.eiaEnergyRecord = record.eiaEnergyRecord
+  if (record.eiaFacility) sub.eiaFacility = record.eiaFacility
+  if (record.eiaRefinery) sub.eiaRefinery = record.eiaRefinery
+  if (record.lngTerminal) sub.lngTerminal = record.lngTerminal
+  if (record.nuclearPlant) sub.nuclearPlant = record.nuclearPlant
+  if (record.nrcReactorStatus) sub.nrcReactorStatus = record.nrcReactorStatus
   if (record.kevVulnerability) sub.kevVulnerability = record.kevVulnerability
   if (record.nvdCve) sub.nvdCve = record.nvdCve
   if (record.ghsaAdvisory) sub.ghsaAdvisory = record.ghsaAdvisory
@@ -1497,6 +1507,11 @@ export function parseSubRecords(value: unknown): WorldIntelSubRecords {
   if (isValidBea(record.beaObservation)) out.beaObservation = record.beaObservation as WorldIntelEvent['beaObservation']
   if (isValidBls(record.blsObservation)) out.blsObservation = record.blsObservation as WorldIntelEvent['blsObservation']
   if (isValidEiaEnergy(record.eiaEnergyRecord)) out.eiaEnergyRecord = record.eiaEnergyRecord as WorldIntelEvent['eiaEnergyRecord']
+  if (isValidEiaFacility(record.eiaFacility)) out.eiaFacility = record.eiaFacility as WorldIntelEvent['eiaFacility']
+  if (isValidEiaRefinery(record.eiaRefinery)) out.eiaRefinery = record.eiaRefinery as WorldIntelEvent['eiaRefinery']
+  if (isValidLngTerminal(record.lngTerminal)) out.lngTerminal = record.lngTerminal as WorldIntelEvent['lngTerminal']
+  if (isValidNuclearPlant(record.nuclearPlant)) out.nuclearPlant = record.nuclearPlant as WorldIntelEvent['nuclearPlant']
+  if (isValidNrcReactorStatus(record.nrcReactorStatus)) out.nrcReactorStatus = record.nrcReactorStatus as WorldIntelEvent['nrcReactorStatus']
   if (isValidKev(record.kevVulnerability)) out.kevVulnerability = record.kevVulnerability as WorldIntelEvent['kevVulnerability']
   if (isValidNvd(record.nvdCve)) out.nvdCve = record.nvdCve as WorldIntelEvent['nvdCve']
   if (isValidGhsa(record.ghsaAdvisory)) out.ghsaAdvisory = record.ghsaAdvisory as WorldIntelEvent['ghsaAdvisory']
@@ -1733,6 +1748,74 @@ function isValidBea(value: unknown): boolean {
 function isValidEiaEnergy(value: unknown): boolean {
   const v = asRecord(value)
   return Boolean(v && typeof v.seriesId === 'string' && typeof v.commodity === 'string' && v.seriesId.length > 0 && v.commodity.length > 0 && hasHash(v))
+}
+
+function isValidEiaFacility(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(
+    v &&
+      typeof v.facilityId === 'string' &&
+      v.facilityId.length > 0 &&
+      typeof v.facilityName === 'string' &&
+      v.facilityName.length > 0 &&
+      v.facilityKind === 'power-plant' &&
+      typeof v.geospatialPrecision === 'string' &&
+      hasHash(v),
+  )
+}
+
+function isValidEiaRefinery(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(
+    v &&
+      typeof v.facilityId === 'string' &&
+      v.facilityId.length > 0 &&
+      typeof v.facilityName === 'string' &&
+      v.facilityName.length > 0 &&
+      v.facilityKind === 'refinery' &&
+      typeof v.geospatialPrecision === 'string' &&
+      hasHash(v),
+  )
+}
+
+function isValidLngTerminal(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(
+    v &&
+      typeof v.facilityId === 'string' &&
+      v.facilityId.length > 0 &&
+      typeof v.facilityName === 'string' &&
+      v.facilityName.length > 0 &&
+      v.facilityKind === 'lng-terminal' &&
+      typeof v.geospatialPrecision === 'string' &&
+      hasHash(v),
+  )
+}
+
+function isValidNuclearPlant(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(
+    v &&
+      typeof v.facilityId === 'string' &&
+      v.facilityId.length > 0 &&
+      typeof v.facilityName === 'string' &&
+      v.facilityName.length > 0 &&
+      v.facilityKind === 'nuclear-plant' &&
+      typeof v.geospatialPrecision === 'string' &&
+      hasHash(v),
+  )
+}
+
+function isValidNrcReactorStatus(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(
+    v &&
+      typeof v.unitName === 'string' &&
+      v.unitName.length > 0 &&
+      typeof v.reportDate === 'string' &&
+      typeof v.powerPercent === 'number' &&
+      hasHash(v),
+  )
 }
 
 function rowToWorldIntelEvent(row: Record<string, unknown>): WorldIntelEvent {

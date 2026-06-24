@@ -25,6 +25,7 @@
 import type { ProvenanceId } from '../provenance'
 import type { WorldIntelEvent } from '../worldIntel'
 import { provenanceTrust, sourceLabel } from './materialityEngine'
+import type { GeoAsset } from './geo/geoCore'
 
 export type EntityKind =
   | 'company'
@@ -38,6 +39,8 @@ export type EntityKind =
   | 'chokepoint'
   | 'trade-route'
   | 'infrastructure'
+  | 'facility'
+  | 'place'
   | 'commodity'
   | 'technology'
   | 'vulnerability'
@@ -82,6 +85,11 @@ export type RelationType =
   | 'represents'
   | 'issued_by'
   | 'holds'
+  | 'located_in'
+  | 'fueled_by'
+  | 'operated_by'
+  | 'processes'
+  | 'produces'
 
 export type FreshnessState = 'fresh' | 'recent' | 'aging' | 'stale' | 'unavailable'
 
@@ -179,6 +187,53 @@ function evidenceOf(event: WorldIntelEvent): EvidenceRef {
 }
 
 type DerivedEdge = { from: EntityRef; to: EntityRef; relation: RelationType }
+
+/**
+ * Universal location/operator edges for any physical-world `GeoAsset` (power
+ * plant, refinery, port, mine, fab, ...). Shared by every geospatial connector
+ * so the graph spans `event -> facility -> place(state/county) -> country` and,
+ * ONLY on an exact identity, `facility -> operator company -> ticker`. Connector
+ * blocks add their own domain edges (fuel, commodity, sector, route) on top.
+ */
+export function geoAssetEdges(eventEntity: EntityRef, asset: GeoAsset): DerivedEdge[] {
+  const edges: DerivedEdge[] = []
+  const facilityEntity: EntityRef = { id: entityId('facility', asset.assetId), kind: 'facility', label: asset.name }
+  edges.push({ from: eventEntity, to: facilityEntity, relation: 'about' })
+
+  const countryCode = asset.countryCode ?? 'US'
+  const countryRef: EntityRef = {
+    id: entityId('country', countryCode),
+    kind: 'country',
+    label: countryCode === 'US' ? 'United States' : countryCode,
+  }
+
+  if (asset.state) {
+    const stateEntity: EntityRef = { id: entityId('place', `state:${asset.state}`), kind: 'place', label: asset.stateName ?? asset.state }
+    edges.push({ from: facilityEntity, to: stateEntity, relation: 'located_in' })
+    edges.push({ from: stateEntity, to: countryRef, relation: 'in_country' })
+    if (asset.county) {
+      const countyEntity: EntityRef = {
+        id: entityId('place', `county:${asset.state}:${asset.county}`),
+        kind: 'place',
+        label: `${asset.county}, ${asset.state}`,
+      }
+      edges.push({ from: facilityEntity, to: countyEntity, relation: 'located_in' })
+      edges.push({ from: countyEntity, to: stateEntity, relation: 'located_in' })
+    }
+  } else {
+    edges.push({ from: facilityEntity, to: countryRef, relation: 'in_country' })
+  }
+
+  // Operator -> market company ONLY on an exact curated identity (no fuzzy merge).
+  if (asset.operatorTicker && asset.operatorName) {
+    const operatorEntity: EntityRef = { id: entityId('company', asset.operatorName), kind: 'company', label: asset.operatorName }
+    const tickerEntity: EntityRef = { id: entityId('ticker', asset.operatorTicker), kind: 'ticker', label: asset.operatorTicker }
+    edges.push({ from: facilityEntity, to: operatorEntity, relation: 'operated_by' })
+    edges.push({ from: operatorEntity, to: tickerEntity, relation: 'trades_as' })
+  }
+
+  return edges
+}
 
 /**
  * Pure per-event extraction of typed entities + relationships. Shared by the
@@ -284,6 +339,135 @@ export function deriveEventEntities(event: WorldIntelEvent): { entities: EntityR
     if (record.countryCode) {
       link(eia, { id: entityId('country', record.countryCode), kind: 'country', label: record.countryCode === 'US' ? 'United States' : record.countryCode }, 'in_country')
     }
+  }
+
+  // EIA power-plant facility: universal location/operator edges via the Shared
+  // Geospatial Core, plus the power-plant domain edge (fuel -> commodity).
+  // Structural location context only — never an outage/disruption/exposure claim.
+  if (event.eiaFacility) {
+    const facility = event.eiaFacility
+    const asset: GeoAsset = {
+      assetId: facility.facilityId,
+      assetKind: 'power-plant',
+      name: facility.facilityName,
+      latitude: facility.latitude,
+      longitude: facility.longitude,
+      geospatialPrecision: facility.geospatialPrecision,
+      state: facility.state,
+      stateName: facility.stateName,
+      county: facility.county,
+      countryCode: 'US',
+      operatorName: facility.operatorName,
+      operatorTicker: facility.operatorTicker,
+    }
+    for (const edge of geoAssetEdges(eventEntity, asset)) link(edge.from, edge.to, edge.relation)
+
+    if (facility.primaryFuel) {
+      const facilityEntity: EntityRef = { id: entityId('facility', facility.facilityId), kind: 'facility', label: facility.facilityName }
+      link(facilityEntity, { id: entityId('commodity', facility.primaryFuel), kind: 'commodity', label: facility.primaryFuel }, 'fueled_by')
+    }
+  }
+
+  // EIA petroleum refinery: universal location/operator edges via the Shared
+  // Geospatial Core, plus refinery domain edges (processes crude, produces refined
+  // products if source-backed, in energy sector). Location/capacity context only.
+  if (event.eiaRefinery) {
+    const refinery = event.eiaRefinery
+    const asset: GeoAsset = {
+      assetId: refinery.facilityId,
+      assetKind: 'refinery',
+      name: refinery.facilityName,
+      latitude: refinery.latitude,
+      longitude: refinery.longitude,
+      geospatialPrecision: refinery.geospatialPrecision,
+      state: refinery.state,
+      stateName: refinery.stateName,
+      county: refinery.county,
+      countryCode: 'US',
+      operatorName: refinery.operatorName ?? refinery.companyName,
+      operatorTicker: refinery.operatorTicker,
+    }
+    for (const edge of geoAssetEdges(eventEntity, asset)) link(edge.from, edge.to, edge.relation)
+
+    const refineryEntity: EntityRef = { id: entityId('facility', refinery.facilityId), kind: 'facility', label: refinery.facilityName }
+    link(refineryEntity, { id: entityId('commodity', 'Crude Oil'), kind: 'commodity', label: 'Crude Oil' }, 'processes')
+    for (const product of refinery.products ?? []) {
+      link(refineryEntity, { id: entityId('commodity', product), kind: 'commodity', label: product }, 'produces')
+    }
+    link(refineryEntity, { id: entityId('sector', 'Energy'), kind: 'sector', label: 'Energy' }, 'in_sector')
+  }
+
+  // LNG terminal: universal location/operator edges via the Shared Geospatial
+  // Core, plus structural commodity links (LNG + natural gas) and energy sector.
+  // No flow direction implied — 'touches' is neutral. Location/capacity context only.
+  if (event.lngTerminal) {
+    const terminal = event.lngTerminal
+    const asset: GeoAsset = {
+      assetId: terminal.facilityId,
+      assetKind: 'lng-terminal',
+      name: terminal.facilityName,
+      latitude: terminal.latitude,
+      longitude: terminal.longitude,
+      geospatialPrecision: terminal.geospatialPrecision,
+      state: terminal.state,
+      stateName: terminal.stateName,
+      county: terminal.county,
+      countryCode: 'US',
+      operatorName: terminal.operatorName ?? terminal.ownerName,
+      operatorTicker: terminal.operatorTicker,
+    }
+    for (const edge of geoAssetEdges(eventEntity, asset)) link(edge.from, edge.to, edge.relation)
+
+    const terminalEntity: EntityRef = { id: entityId('facility', terminal.facilityId), kind: 'facility', label: terminal.facilityName }
+    link(terminalEntity, { id: entityId('commodity', 'LNG'), kind: 'commodity', label: 'LNG' }, 'touches')
+    link(terminalEntity, { id: entityId('commodity', 'Natural Gas'), kind: 'commodity', label: 'Natural Gas' }, 'touches')
+    link(terminalEntity, { id: entityId('sector', 'Energy'), kind: 'sector', label: 'Energy' }, 'in_sector')
+  }
+
+  // Nuclear plant LAYER 1 (EIA, geospatial): universal location/operator edges via
+  // the Shared Geospatial Core, plus electricity + nuclear commodity + energy
+  // sector. Facility/capacity context only — no safety/outage/disruption claim.
+  if (event.nuclearPlant) {
+    const plant = event.nuclearPlant
+    const asset: GeoAsset = {
+      assetId: plant.facilityId,
+      assetKind: 'nuclear-plant',
+      name: plant.facilityName,
+      latitude: plant.latitude,
+      longitude: plant.longitude,
+      geospatialPrecision: plant.geospatialPrecision,
+      state: plant.state,
+      stateName: plant.stateName,
+      county: plant.county,
+      countryCode: 'US',
+      operatorName: plant.operatorName,
+      operatorTicker: plant.operatorTicker,
+    }
+    for (const edge of geoAssetEdges(eventEntity, asset)) link(edge.from, edge.to, edge.relation)
+
+    const plantEntity: EntityRef = { id: entityId('facility', plant.facilityId), kind: 'facility', label: plant.facilityName }
+    link(plantEntity, { id: entityId('commodity', 'Electricity'), kind: 'commodity', label: 'Electricity' }, 'touches')
+    link(plantEntity, { id: entityId('commodity', 'Nuclear'), kind: 'commodity', label: 'Nuclear' }, 'touches')
+    link(plantEntity, { id: entityId('sector', 'Energy'), kind: 'sector', label: 'Energy' }, 'in_sector')
+  }
+
+  // Nuclear plant LAYER 2 (NRC, regulatory status): reactor UNIT status, kept a
+  // SEPARATE node namespace (no fuzzy merge into the EIA facility). No coordinates
+  // in this feed -> location-less. Power level is source-reported, never editorial.
+  if (event.nrcReactorStatus) {
+    const status = event.nrcReactorStatus
+    const asset: GeoAsset = {
+      assetId: `nrc-unit:${status.unitName}`,
+      assetKind: 'nuclear-plant',
+      name: status.unitName,
+      geospatialPrecision: 'unknown',
+      countryCode: 'US',
+    }
+    for (const edge of geoAssetEdges(eventEntity, asset)) link(edge.from, edge.to, edge.relation)
+
+    const unitEntity: EntityRef = { id: entityId('facility', `nrc-unit:${status.unitName}`), kind: 'facility', label: status.unitName }
+    link(unitEntity, { id: entityId('commodity', 'Electricity'), kind: 'commodity', label: 'Electricity' }, 'touches')
+    link(unitEntity, { id: entityId('sector', 'Energy'), kind: 'sector', label: 'Energy' }, 'in_sector')
   }
 
   // Vulnerabilities: KEV + NVD + GHSA + OSV all attach to ONE node (corroboration).
@@ -722,6 +906,39 @@ function unknownsForEvent(event: WorldIntelEvent, touched: EntityRef[]): string[
   if (quake) {
     if (!quake.countryCode) unknowns.push('No mapped country')
     if (quake.depthKm === undefined) unknowns.push('No depth reported')
+  }
+  const facility = event.eiaFacility
+  if (facility) {
+    if (facility.geospatialPrecision !== 'exact') unknowns.push(`Location ${facility.geospatialPrecision} (no source coordinates)`)
+    if (!facility.operatorTicker) unknowns.push('Operator not linked to a market identity')
+    if (facility.capacityMw === undefined) unknowns.push('No source-reported capacity')
+    if (!facility.primaryFuel) unknowns.push('No primary fuel reported')
+  }
+  const refinery = event.eiaRefinery
+  if (refinery) {
+    if (refinery.geospatialPrecision !== 'exact') unknowns.push(`Location ${refinery.geospatialPrecision} (no source coordinates)`)
+    if (!refinery.operatorTicker) unknowns.push('Operator not linked to a market identity')
+    if (refinery.crudeCapacity === undefined) unknowns.push('No source-reported crude capacity')
+    if (!refinery.products || refinery.products.length === 0) unknowns.push('No source-named refined products')
+  }
+  const lng = event.lngTerminal
+  if (lng) {
+    if (lng.geospatialPrecision !== 'exact') unknowns.push(`Location ${lng.geospatialPrecision} (no source coordinates)`)
+    if (!lng.operatorTicker) unknowns.push('Operator not linked to a market identity')
+    if (!lng.terminalType) unknowns.push('No source-backed terminal type')
+    if (lng.capacity === undefined) unknowns.push('No source-reported capacity')
+  }
+  const nuke = event.nuclearPlant
+  if (nuke) {
+    if (nuke.geospatialPrecision !== 'exact') unknowns.push(`Location ${nuke.geospatialPrecision} (no source coordinates)`)
+    if (!nuke.operatorTicker) unknowns.push('Operator not linked to a market identity')
+    if (nuke.capacityMw === undefined) unknowns.push('No source-reported capacity')
+    if (!nuke.reactorType) unknowns.push('No NRC reactor-type enrichment')
+  }
+  const nrc = event.nrcReactorStatus
+  if (nrc) {
+    unknowns.push('Reactor status has no coordinates (NRC status feed)')
+    unknowns.push('Not linked to an EIA facility (no fuzzy merge)')
   }
   if ((event.confidence ?? 0) < 90) unknowns.push('Below high-confidence threshold')
   if (provenanceTrust(event.provenance) < 0.5) unknowns.push('Source is unverified/low-trust')

@@ -1,0 +1,249 @@
+.eia-fac-trail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.eia-fac-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.eia-fac-head strong {
+  color: var(--text);
+}
+
+.eia-fac-note {
+  margin: 0;
+  font-size: var(--fs-2xs);
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.eia-fac-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.eia-fac {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: var(--space-2);
+  background: var(--panel-2);
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid var(--green);
+  border-radius: 6px;
+}
+
+.eia-fac-row-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.eia-fac-row-head strong {
+  font-size: var(--fs-sm);
+  color: var(--text);
+}
+
+.eia-fac-row-head code {
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  color: var(--faint);
+}
+
+.eia-precision {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--mono);
+  font-size: var(--fs-3xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.eia-precision-exact {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.eia-precision-region-only {
+  color: var(--yellow);
+  border-color: var(--line);
+}
+
+.eia-precision-unknown,
+.eia-precision-approximate {
+  color: var(--faint);
+  border-style: dashed;
+}
+
+.eia-fresh {
+  font-family: var(--mono);
+  font-size: var(--fs-3xs);
+  color: var(--green);
+}
+
+.eia-stale {
+  font-family: var(--mono);
+  font-size: var(--fs-3xs);
+  color: var(--yellow);
+}
+
+.eia-ticker {
+  color: var(--green);
+  font-family: var(--mono);
+}
+
+.eia-dossier,
+.eia-proof-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 6px 10px;
+  margin: 0;
+}
+
+.eia-dossier div,
+.eia-proof-grid div {
+  min-width: 0;
+}
+
+.eia-dossier dt,
+.eia-proof-grid dt {
+  font-family: var(--mono);
+  font-size: var(--fs-3xs);
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.eia-dossier dd,
+.eia-proof-grid dd {
+  margin: 2px 0 0;
+  overflow: hidden;
+  font-size: var(--fs-2xs);
+  color: var(--text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eia-geo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-2);
+  background: var(--panel);
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+}
+
+.eia-geo-head {
+  font-family: var(--mono);
+  font-size: var(--fs-3xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--faint);
+}
+
+.eia-geo-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-2xs);
+  color: var(--text);
+}
+
+.eia-geo-item em {
+  flex-basis: 100%;
+  font-style: normal;
+  font-size: var(--fs-3xs);
+  color: var(--muted);
+}
+
+.eia-geo-tag {
+  font-family: var(--mono);
+  font-size: var(--fs-3xs);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+}
+
+.eia-geo-weather {
+  color: var(--yellow);
+}
+
+.eia-geo-seismic {
+  color: var(--red);
+}
+
+.eia-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.eia-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  color: var(--green);
+  text-decoration: none;
+}
+
+.eia-links a:hover {
+  text-decoration: underline;
+}
+
+.eia-api {
+  overflow: hidden;
+  font-family: var(--mono);
+  font-size: var(--fs-3xs);
+  color: var(--faint);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eia-fac-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-3);
+  background: var(--panel-2);
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+}
+
+.eia-fac-empty strong {
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  color: var(--faint);
+  letter-spacing: 0.06em;
+}
+
+.eia-fac-empty p {
+  margin: 0;
+  font-size: var(--fs-2xs);
+  color: var(--muted);
+  line-height: 1.5;
+}
