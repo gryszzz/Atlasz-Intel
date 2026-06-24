@@ -18,7 +18,7 @@ import {
   type DecisionStatus,
   type EmotionalState,
 } from './types/decision'
-import { radarEvents, topSignals } from './data/intel'
+import { devRadarEvents, devTopSignals } from './devMarketData'
 import './DecisionJournal.css'
 
 const DIRECTIONS: DecisionDirection[] = ['positive', 'negative', 'neutral', 'avoid', 'watch']
@@ -30,9 +30,10 @@ const REVIEW_OUTCOMES: NonNullable<DecisionJournalEntry['outcome']>[] = [
   'inconclusive',
 ]
 
+// Seeded subjects render only behind the dev simulator flag; empty in production.
 const evidenceOptions = [
-  ...topSignals.map((signal) => ({ id: signal.id, label: signal.title })),
-  ...radarEvents.map((event) => ({ id: event.id, label: event.title })),
+  ...devTopSignals.map((signal) => ({ id: signal.id, label: signal.title })),
+  ...devRadarEvents.map((event) => ({ id: event.id, label: event.title })),
 ]
 
 function persistenceLabel(mode: PersistenceInfo['mode']): string {

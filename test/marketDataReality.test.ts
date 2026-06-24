@@ -4,6 +4,7 @@ import {
   marketDataRealityReport,
   marketSimEnabled,
 } from '../src/engine/marketDataReality'
+import { gateSeed, devTopSignals, devRadarEvents, devMarketMovers, devWatchlist } from '../src/devMarketData'
 
 describe('market data reality pass', () => {
   it('never marks a simulated-dev surface as production-allowed', () => {
@@ -37,15 +38,14 @@ describe('market data reality pass', () => {
     }
   })
 
-  it('honestly reports simulated/seeded surfaces still rendered in production', () => {
-    const report = marketDataRealityReport()
-    // The audit must SURFACE these violations (seeded candles/signals/movers), not hide them.
-    const violationIds = new Set(report.productionViolations.map((s) => s.id))
-    expect(violationIds.has('seed-market-series')).toBe(true)
-    expect(violationIds.has('seed-top-signals')).toBe(true)
-    for (const surface of report.productionViolations) {
-      expect(surface.classification).toBe('simulated-dev-only')
-      expect(surface.productionAllowed).toBe(false)
+  it('has zero production violations after enforcement (no seeded market data in prod)', () => {
+    // After the enforcement refactor every seeded surface is gated; nothing
+    // simulated renders in production.
+    expect(marketDataRealityReport().productionViolations).toHaveLength(0)
+    for (const surface of MARKET_DATA_SURFACES) {
+      if (surface.classification === 'simulated-dev-only') {
+        expect(surface.currentlyRenderedInProduction).toBe(false)
+      }
     }
   })
 
@@ -54,6 +54,17 @@ describe('market data reality pass', () => {
     expect(marketSimEnabled({ prod: false })).toBe(false) // off by default in dev
     expect(marketSimEnabled({ prod: false, flag: '0' })).toBe(false)
     expect(marketSimEnabled({ prod: false, flag: '1' })).toBe(true) // explicit dev opt-in only
+  })
+
+  it('gates seeded market data: empty unless the dev simulator is explicitly on', () => {
+    const seed = [{ id: 'a' }, { id: 'b' }]
+    expect(gateSeed(seed, false)).toEqual([])
+    expect(gateSeed(seed, true)).toBe(seed)
+    // In the test/production env the flag is off, so all seeded exports are empty.
+    expect(devTopSignals).toEqual([])
+    expect(devRadarEvents).toEqual([])
+    expect(devMarketMovers).toEqual([])
+    expect(devWatchlist).toEqual([])
   })
 
   it('real surfaces are public or key-gated with proof fields', () => {

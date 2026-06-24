@@ -1,4 +1,5 @@
-import { marketMovers, watchlist, type MarketMover } from './data/intel'
+import { type MarketMover } from './data/intel'
+import { devMarketMovers, devWatchlist } from './devMarketData'
 import type { LiveAssetConfig, LiveAssetKind } from './realtime'
 
 export type AssetUniverseItem = LiveAssetConfig & {
@@ -202,8 +203,11 @@ function canonicalCryptoSymbol(normalized: string): string | null {
   return null
 }
 
+// Seeded movers/watchlist resolve a symbol's name/kind only behind the dev
+// simulator flag; in production this is empty and resolveAssetQuery falls through
+// to the known-symbol maps + the real public feed (no seeded prices rendered).
 function findSeedMarket(symbol: string): MarketMover | undefined {
-  return [...marketMovers, ...watchlist].find((item) => item.ticker === symbol)
+  return [...devMarketMovers, ...devWatchlist].find((item) => item.ticker === symbol)
 }
 
 function fromSeedMarket(market: MarketMover, enablePublicCrypto = false): AssetUniverseItem {
