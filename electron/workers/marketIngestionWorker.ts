@@ -12,6 +12,8 @@ import type {
 } from '../../src/realtime'
 import type { MicrostructureBookUpdate } from '../../src/microstructure'
 import { StreamingScreener } from '../microstructure/streamingScreener'
+import { resolveQuoteProvider } from '../osint/quotes/quoteProvider'
+import { pollQuotesOnce } from '../osint/quotes/quotePoller'
 
 type WorkerConfig = {
   assets: LiveAssetConfig[]
@@ -368,7 +370,7 @@ function createConnectorRegistry(workerConfig: WorkerConfig): Map<ConnectorId, W
   const coincap = createCoinCapConnector(workerConfig)
   const binance = createBinanceConnector()
   const coinbase = createCoinbaseConnector()
-  const alpaca = createAlpacaPlaceholderConnector()
+  const alpaca = createAlpacaPlaceholderConnector(workerConfig)
   for (const connector of [publicRest, coingecko, coincap, binance, coinbase, alpaca]) {
     registry.set(connector.id, connector)
   }
@@ -1010,11 +1012,25 @@ function buildCoinbaseProductMap(): Record<string, string> {
   )
 }
 
-function createAlpacaPlaceholderConnector(): WorkerConnector {
+function createAlpacaPlaceholderConnector(workerConfig: WorkerConfig): WorkerConnector {
   let status: ConnectorStatus = 'idle'
+  let timer: ReturnType<typeof setInterval> | null = null
+  let emitRef: ConnectorEmit | null = null
+  let stopped = true
+  let pollInFlight = false
+  // Real key-gated provider; null when ATLASZ_ALPACA_API_KEY/SECRET are absent.
+  const provider = resolveQuoteProvider(process.env)
+  const tickers = [
+    ...new Set(
+      workerConfig.assets
+        .filter((asset) => asset.kind === 'equity' || asset.kind === 'etf')
+        .map((asset) => asset.symbol.toUpperCase()),
+    ),
+  ]
+
   const connector: WorkerConnector = {
     id: 'alpaca_iex_placeholder',
-    label: 'Alpaca IEX placeholder',
+    label: 'Alpaca IEX equities/ETFs (key-gated)',
     assetClasses: ['equity', 'etf'],
     requiresAuth: true,
     get status() {
@@ -1023,18 +1039,59 @@ function createAlpacaPlaceholderConnector(): WorkerConnector {
     lastError: undefined,
     reconnectCount: 0,
     sourceTrust: 'auth-gated',
-    start() {
-      status = 'failed'
-      connector.lastError = 'Alpaca IEX requires an API key and is intentionally disabled in the default local path.'
-      enqueueAudit('connector_failed', connector.id, 'watch', connector.lastError)
+    start(emit) {
+      emitRef = emit
+      stopped = false
+      // Fail closed without keys: no polling, missing-key surfaced as failed.
+      if (!provider) {
+        status = 'failed'
+        connector.lastError = 'Alpaca quotes require ATLASZ_ALPACA_API_KEY + ATLASZ_ALPACA_SECRET_KEY (fail-closed).'
+        enqueueAudit('connector_failed', connector.id, 'watch', connector.lastError)
+        return
+      }
+      status = 'connecting'
+      enqueueAudit('connector_started', connector.id, 'info', 'Alpaca key-gated quote connector started', { symbols: tickers })
+      void poll()
+      timer = setInterval(() => void poll(), integerEnv('ATLASZ_ALPACA_POLL_MS', 15_000))
     },
     stop() {
+      stopped = true
+      if (timer) {
+        clearInterval(timer)
+        timer = null
+      }
       status = 'stopped'
     },
     normalizeMessage() {
       return { ticks: [], attention: [] }
     },
   }
+
+  async function poll(): Promise<void> {
+    if (stopped || pollInFlight || !provider) {
+      return
+    }
+    pollInFlight = true
+    try {
+      const controller = new AbortController()
+      const result = await pollQuotesOnce({ provider, tickers, signal: controller.signal, source: 'alpaca' })
+      status = result.status === 'connected' ? 'connected' : result.status === 'idle' ? 'idle' : 'failed'
+      connector.lastError = result.error
+      if (result.status === 'failed') {
+        connector.reconnectCount += 1
+        enqueueAudit('connector_failed', connector.id, 'watch', result.error ?? 'Alpaca quote poll failed', {
+          reconnectCount: connector.reconnectCount,
+        })
+      }
+      // Only real, proof-gated ticks are emitted; never a fabricated/fallback tick.
+      if (result.ticks.length > 0) {
+        emitRef?.({ ticks: result.ticks, attention: attentionFromTicks(result.ticks, connector.id) })
+      }
+    } finally {
+      pollInFlight = false
+    }
+  }
+
   return connector
 }
 

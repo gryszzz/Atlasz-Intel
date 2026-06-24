@@ -7,9 +7,30 @@
  * ONLY in request headers — never in the sanitized sourceApiUrl or rawPayloadJson.
  * No random-walk fallback; HTTP/rate-limit/schema failures fail closed.
  */
-import { sha256, stableStringify } from '../adapters/adapterShared'
+import { createHash } from 'node:crypto'
 import { assertOk, fetchWithRetry } from '../fetchPolicy'
 import type { MarketQuote, MarketQuoteAssetType } from '../../../src/marketQuote'
+
+// Self-contained hashing so this provider stays decoupled from the WorldIntelEvent
+// builder (keeps it light + safe to import inside the market ingestion worker).
+function sha256(input: string): string {
+  return createHash('sha256').update(input).digest('hex')
+}
+function stableStringify(value: unknown): string {
+  return JSON.stringify(sortValue(value))
+}
+function sortValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sortValue)
+  if (value && typeof value === 'object') {
+    return Object.keys(value as Record<string, unknown>)
+      .sort()
+      .reduce<Record<string, unknown>>((acc, key) => {
+        acc[key] = sortValue((value as Record<string, unknown>)[key])
+        return acc
+      }, {})
+  }
+  return value
+}
 
 const SOURCE_ID = 'alpaca_equity_quotes'
 const SOURCE_NAME = 'Alpaca Market Data (IEX)'
