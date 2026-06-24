@@ -56,6 +56,9 @@ const CrossrefSourceTrail = lazy(() =>
 const CompanyFactsSourceTrail = lazy(() =>
   import('./components/intel/CompanyFactsSourceTrail').then((m) => ({ default: m.CompanyFactsSourceTrail })),
 )
+const Form4SourceTrail = lazy(() =>
+  import('./components/intel/Form4SourceTrail').then((m) => ({ default: m.Form4SourceTrail })),
+)
 const MarketIdentitySourceTrail = lazy(() =>
   import('./components/intel/MarketIdentitySourceTrail').then((m) => ({ default: m.MarketIdentitySourceTrail })),
 )
@@ -223,6 +226,10 @@ export function WorldIntelligenceView({
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading SEC company facts" /></div>}>
           <CompanyFactsSourceTrail events={visibleEvents} now={now} />
+        </Suspense>
+
+        <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading SEC Form 4 insider transactions" /></div>}>
+          <Form4SourceTrail events={visibleEvents} />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading entity detail" /></div>}>

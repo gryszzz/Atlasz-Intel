@@ -88,6 +88,47 @@ export type WorldIntelEvent = {
   crossrefWork?: CrossrefWork
   marketIdentity?: MarketIdentity
   companyFact?: SecCompanyFact
+  form4Transaction?: Form4Transaction
+}
+
+export type Form4ChangeType = 'first_seen' | 'new_today' | 'updated' | 'unchanged'
+
+/**
+ * A single SEC Form 4 non-derivative ownership transaction, attached to a canonical
+ * issuer CIK/ticker identity. Source-reported transaction EVIDENCE only — never
+ * sentiment (no bullish/bearish), valuation, price prediction, or trading advice.
+ * Reporting-owner data is limited to source-published name/title; no enrichment.
+ */
+export type Form4Transaction = {
+  id: string
+  issuerCik: string
+  issuerCikPadded: string
+  issuerTicker: string
+  issuerName: string
+  accessionNumber: string
+  filingDate: string
+  transactionDate: string
+  ownerName: string
+  ownerCik?: string
+  /** Source-published relationship only (e.g. "Director", "Officer: General Counsel"). */
+  ownerRelationship: string
+  securityTitle: string
+  transactionCode: string
+  /** Neutral SEC definition of the code — descriptive, not sentiment. */
+  transactionCodeLabel: string
+  transactionShares?: number
+  transactionPricePerShare?: number
+  acquiredDisposedCode: string
+  ownershipNature?: string
+  sharesOwnedFollowing?: number
+  sourceFilingUrl: string
+  sourceXmlUrl: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  changeType: Form4ChangeType
+  rawPayloadHash: string
+  rawPayloadJson?: string
 }
 
 export type SecCompanyFactChangeType = 'first_seen' | 'new_today' | 'updated' | 'unchanged'

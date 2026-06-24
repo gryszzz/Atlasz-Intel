@@ -1436,6 +1436,7 @@ type WorldIntelSubRecords = Pick<
   | 'crossrefWork'
   | 'marketIdentity'
   | 'companyFact'
+  | 'form4Transaction'
 >
 
 /** Serialize the typed sub-records present on an event; null when there are none. */
@@ -1465,6 +1466,7 @@ export function serializeSubRecords(record: WorldIntelEvent): string | null {
   if (record.crossrefWork) sub.crossrefWork = record.crossrefWork
   if (record.marketIdentity) sub.marketIdentity = record.marketIdentity
   if (record.companyFact) sub.companyFact = record.companyFact
+  if (record.form4Transaction) sub.form4Transaction = record.form4Transaction
   return Object.keys(sub).length > 0 ? JSON.stringify(sub) : null
 }
 
@@ -1509,6 +1511,7 @@ export function parseSubRecords(value: unknown): WorldIntelSubRecords {
   if (isValidCrossrefWork(record.crossrefWork)) out.crossrefWork = record.crossrefWork as WorldIntelEvent['crossrefWork']
   if (isValidMarketIdentity(record.marketIdentity)) out.marketIdentity = record.marketIdentity as WorldIntelEvent['marketIdentity']
   if (isValidCompanyFact(record.companyFact)) out.companyFact = record.companyFact as WorldIntelEvent['companyFact']
+  if (isValidForm4Transaction(record.form4Transaction)) out.form4Transaction = record.form4Transaction as WorldIntelEvent['form4Transaction']
   return out
 }
 
@@ -1591,6 +1594,20 @@ function isValidGdeltArticle(value: unknown): boolean {
 function isValidOpenAlexWork(value: unknown): boolean {
   const v = asRecord(value)
   return Boolean(v && typeof v.openAlexWorkId === 'string' && v.openAlexWorkId.length > 0 && typeof v.title === 'string' && v.title.length > 0 && hasHash(v))
+}
+
+function isValidForm4Transaction(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(
+    v &&
+      typeof v.issuerCik === 'string' &&
+      typeof v.accessionNumber === 'string' &&
+      v.accessionNumber.length > 0 &&
+      typeof v.transactionCode === 'string' &&
+      v.transactionCode.length > 0 &&
+      typeof v.transactionDate === 'string' &&
+      hasHash(v),
+  )
 }
 
 function isValidCompanyFact(value: unknown): boolean {

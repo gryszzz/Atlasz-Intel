@@ -50,6 +50,8 @@ export type EntityKind =
   | 'committee'
   | 'trade-flow'
   | 'financial-concept'
+  | 'reporting-owner'
+  | 'transaction-code'
   | 'research-work'
   | 'doi-work'
   | 'topic'
@@ -463,6 +465,21 @@ export function deriveEventEntities(event: WorldIntelEvent): { entities: EntityR
     link(company, { id: entityId('ticker', fact.ticker), kind: 'ticker', label: fact.ticker }, 'trades_as')
     link(eventEntity, { id: entityId('financial-concept', fact.conceptLabel), kind: 'financial-concept', label: fact.conceptLabel }, 'references')
     link(eventEntity, { id: entityId('source', 'sec-company-facts'), kind: 'source', label: 'SEC Company Facts' }, 'reported_by')
+  }
+
+  // SEC Form 4: transaction -> issuer company (CIK/ticker) -> reporting owner ->
+  // transaction code -> SEC source. The issuer resolves into the curated exposure
+  // graph by exact ticker alias. Transaction evidence only — no sentiment inferred.
+  if (event.form4Transaction) {
+    const txn = event.form4Transaction
+    const company: EntityRef = { id: entityId('company', txn.issuerCik || txn.issuerTicker), kind: 'company', label: txn.issuerName }
+    link(eventEntity, company, 'about')
+    link(company, { id: entityId('ticker', txn.issuerTicker), kind: 'ticker', label: txn.issuerTicker }, 'trades_as')
+    if (txn.ownerName) {
+      link(eventEntity, { id: entityId('reporting-owner', txn.ownerCik || txn.ownerName), kind: 'reporting-owner', label: txn.ownerName }, 'filed_by')
+    }
+    link(eventEntity, { id: entityId('transaction-code', txn.transactionCode), kind: 'transaction-code', label: `${txn.transactionCode} — ${txn.transactionCodeLabel}` }, 'references')
+    link(eventEntity, { id: entityId('source', 'sec-form4'), kind: 'source', label: 'SEC Form 4' }, 'reported_by')
   }
 
   // Generic normalized fields (apply to every connector).

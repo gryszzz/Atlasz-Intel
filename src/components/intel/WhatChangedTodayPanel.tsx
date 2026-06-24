@@ -140,6 +140,7 @@ function changeTypeLabel(changeType: MaterialityChangeType): string {
     'doi-metadata': 'DOI metadata',
     'market-reference': 'market reference',
     'company-fact': 'reported fundamental',
+    'insider-transaction': 'insider filing',
     'world-event': 'world event',
   }
   return labels[changeType]
