@@ -37,6 +37,7 @@ export type GeoAssetKind =
   | 'rail-hub'
   | 'border-crossing'
   | 'warehouse'
+  | 'logistics-location'
   // Commodities / Materials
   | 'mine'
   | 'oil-gas-field'

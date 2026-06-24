@@ -77,6 +77,7 @@ export type WorldIntelEvent = {
   nuclearPlant?: NuclearPlantFacility
   nrcReactorStatus?: NrcReactorStatus
   gridRegion?: GridRegion
+  unLocode?: UnLocode
   kevVulnerability?: KevVulnerability
   nvdCve?: NvdCve
   ghsaAdvisory?: GhsaAdvisory
@@ -1110,6 +1111,55 @@ export type GridRegion = {
   fercRegion?: string
   operatorName?: string
   operatorTicker?: string
+  geospatialPrecision: GeospatialPrecision
+  sourceDataset: string
+  sourceUrl: string
+  sourceApiUrl: string
+  sourceName: string
+  retrievedAt: number
+  staleAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
+  rawPayloadJson?: string
+}
+
+/** UN/LOCODE transport function flags (one per source classifier position). */
+export type UnLocodeFunctions = {
+  port: boolean
+  rail: boolean
+  road: boolean
+  airport: boolean
+  postal: boolean
+  multimodal: boolean
+  fixedTransport: boolean
+  borderCrossing: boolean
+}
+
+export type UnLocodeKind = 'port' | 'airport' | 'rail-terminal' | 'logistics-location'
+
+/**
+ * A single UN/LOCODE entry — the official UNECE trade/transport location code
+ * registry (Layer 1). This is a STANDARDIZED LOCATION CODE, not proof of live
+ * port operations: no vessel traffic, congestion, or disruption is implied.
+ * Coordinates appear only when the source row provides them (else region-only).
+ * Physical port geometry/attributes are a later World Port Index enrichment.
+ */
+export type UnLocode = {
+  id: string
+  /** Full code, e.g. "USLAX" (country + location). */
+  locode: string
+  countryCode: string
+  locationCode: string
+  locationName: string
+  subdivision?: string
+  status?: string
+  iata?: string
+  functions: UnLocodeFunctions
+  functionCode: string
+  facilityKind: UnLocodeKind
+  latitude?: number
+  longitude?: number
   geospatialPrecision: GeospatialPrecision
   sourceDataset: string
   sourceUrl: string

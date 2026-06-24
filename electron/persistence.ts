@@ -1424,6 +1424,7 @@ type WorldIntelSubRecords = Pick<
   | 'nuclearPlant'
   | 'nrcReactorStatus'
   | 'gridRegion'
+  | 'unLocode'
   | 'kevVulnerability'
   | 'nvdCve'
   | 'ghsaAdvisory'
@@ -1462,6 +1463,7 @@ export function serializeSubRecords(record: WorldIntelEvent): string | null {
   if (record.nuclearPlant) sub.nuclearPlant = record.nuclearPlant
   if (record.nrcReactorStatus) sub.nrcReactorStatus = record.nrcReactorStatus
   if (record.gridRegion) sub.gridRegion = record.gridRegion
+  if (record.unLocode) sub.unLocode = record.unLocode
   if (record.kevVulnerability) sub.kevVulnerability = record.kevVulnerability
   if (record.nvdCve) sub.nvdCve = record.nvdCve
   if (record.ghsaAdvisory) sub.ghsaAdvisory = record.ghsaAdvisory
@@ -1515,6 +1517,7 @@ export function parseSubRecords(value: unknown): WorldIntelSubRecords {
   if (isValidNuclearPlant(record.nuclearPlant)) out.nuclearPlant = record.nuclearPlant as WorldIntelEvent['nuclearPlant']
   if (isValidNrcReactorStatus(record.nrcReactorStatus)) out.nrcReactorStatus = record.nrcReactorStatus as WorldIntelEvent['nrcReactorStatus']
   if (isValidGridRegion(record.gridRegion)) out.gridRegion = record.gridRegion as WorldIntelEvent['gridRegion']
+  if (isValidUnLocode(record.unLocode)) out.unLocode = record.unLocode as WorldIntelEvent['unLocode']
   if (isValidKev(record.kevVulnerability)) out.kevVulnerability = record.kevVulnerability as WorldIntelEvent['kevVulnerability']
   if (isValidNvd(record.nvdCve)) out.nvdCve = record.nvdCve as WorldIntelEvent['nvdCve']
   if (isValidGhsa(record.ghsaAdvisory)) out.ghsaAdvisory = record.ghsaAdvisory as WorldIntelEvent['ghsaAdvisory']
@@ -1830,6 +1833,19 @@ function isValidGridRegion(value: unknown): boolean {
       typeof v.baName === 'string' &&
       v.baName.length > 0 &&
       (v.regionKind === 'balancing-authority' || v.regionKind === 'grid-region') &&
+      typeof v.geospatialPrecision === 'string' &&
+      hasHash(v),
+  )
+}
+
+function isValidUnLocode(value: unknown): boolean {
+  const v = asRecord(value)
+  return Boolean(
+    v &&
+      typeof v.locode === 'string' &&
+      /^[A-Z]{2}[A-Z0-9]{3}$/.test(v.locode as string) &&
+      typeof v.locationName === 'string' &&
+      (v.locationName as string).length > 0 &&
       typeof v.geospatialPrecision === 'string' &&
       hasHash(v),
   )

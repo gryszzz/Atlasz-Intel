@@ -32,6 +32,7 @@ import { fetchLngTerminals, readLngTerminalConfig } from './adapters/lngTerminal
 import { fetchEiaNuclearPlants, readEiaNuclearConfig } from './adapters/eiaNuclearAdapter'
 import { fetchNrcReactorStatus, readNrcReactorStatusConfig } from './adapters/nrcReactorStatusAdapter'
 import { fetchEiaBalancingAuthorities, readEiaBalancingAuthorityConfig } from './adapters/eiaBalancingAuthorityAdapter'
+import { fetchUnLocodes, readUnLocodeConfig } from './adapters/unLocodeAdapter'
 import { fetchUsgsEarthquakes, readUsgsQuakeConfig } from './adapters/usgsQuakeAdapter'
 import { fetchKevVulnerabilities, readKevConfig } from './adapters/cisaKevAdapter'
 import { fetchNvdCves, readNvdConfig } from './adapters/nvdCveAdapter'
@@ -79,6 +80,7 @@ export const KNOWN_ADAPTERS = [
   'eia-nuclear',
   'nrc-reactor-status',
   'eia-balancing-authorities',
+  'un-locode',
   'usgs-quakes',
   'uspto-patents',
   'cisa-kev',
@@ -193,6 +195,10 @@ export function resolveAdapter(provider: ProviderDefinition, env: NodeJS.Process
     case 'eia-balancing-authorities': {
       const config = readEiaBalancingAuthorityConfig(env)
       return { fetcher: config ? (signal) => fetchEiaBalancingAuthorities(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'un-locode': {
+      const config = readUnLocodeConfig(env)
+      return { fetcher: config ? (signal) => fetchUnLocodes(signal, config) : undefined, configured: config !== null, managed: false }
     }
     case 'usgs-quakes': {
       const config = readUsgsQuakeConfig(env)

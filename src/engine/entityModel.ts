@@ -497,6 +497,33 @@ export function deriveEventEntities(event: WorldIntelEvent): { entities: EntityR
     }
   }
 
+  // UN/LOCODE (trade/location registry): event -> location -> country + subdivision
+  // (country-namespaced place) + trade/logistics sector. Location-code context only
+  // — never live port activity, vessel traffic, congestion, or disruption.
+  if (event.unLocode) {
+    const loc = event.unLocode
+    const asset: GeoAsset = {
+      assetId: loc.locode,
+      assetKind: loc.facilityKind === 'rail-terminal' ? 'rail-hub' : loc.facilityKind,
+      name: loc.locationName,
+      latitude: loc.latitude,
+      longitude: loc.longitude,
+      geospatialPrecision: loc.geospatialPrecision,
+      countryCode: loc.countryCode, // no state: subdivision is namespaced below to avoid US collisions
+    }
+    for (const edge of geoAssetEdges(eventEntity, asset)) link(edge.from, edge.to, edge.relation)
+
+    const locEntity: EntityRef = { id: entityId('facility', loc.locode), kind: 'facility', label: loc.locationName }
+    if (loc.subdivision) {
+      link(
+        locEntity,
+        { id: entityId('place', `subdiv:${loc.countryCode}:${loc.subdivision}`), kind: 'place', label: `${loc.subdivision}, ${loc.countryCode}` },
+        'located_in',
+      )
+    }
+    link(locEntity, { id: entityId('sector', 'Logistics'), kind: 'sector', label: 'Logistics' }, 'in_sector')
+  }
+
   // Nuclear plant LAYER 2 (NRC, regulatory status): reactor UNIT status, kept a
   // SEPARATE node namespace (no fuzzy merge into the EIA facility). No coordinates
   // in this feed -> location-less. Power level is source-reported, never editorial.
@@ -992,6 +1019,12 @@ function unknownsForEvent(event: WorldIntelEvent, touched: EntityRef[]): string[
     if (!grid.nercRegion) unknowns.push('No NERC region mapping')
     if (!grid.statesServed || grid.statesServed.length === 0) unknowns.push('States served not enumerated from this source')
     if (!grid.operatorTicker) unknowns.push('Operator not linked to a market identity')
+  }
+  const loc = event.unLocode
+  if (loc) {
+    if (loc.geospatialPrecision !== 'exact') unknowns.push(`Location ${loc.geospatialPrecision} (no source coordinates; World Port Index enrichment pending)`)
+    unknowns.push('Code registry only — not proof of live port operations')
+    if (!loc.subdivision) unknowns.push('No subdivision in source row')
   }
   if ((event.confidence ?? 0) < 90) unknowns.push('Below high-confidence threshold')
   if (provenanceTrust(event.provenance) < 0.5) unknowns.push('Source is unverified/low-trust')
