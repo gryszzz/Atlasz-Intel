@@ -1,7 +1,7 @@
 {
   "name": "atlasz-intel",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Local-first world intelligence command center for market context, public event streams, entity graphs, and research notes.",
   "author": "Atlasz Intel",
   "type": "module",
