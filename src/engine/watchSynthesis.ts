@@ -13,13 +13,27 @@
  *    predictions ("watch for / confirm via", never "X will happen").
  *  - unresolved stays unresolved; media-observation never counts as proof.
  */
-import { evidenceChainFor, type EntityModelOptions } from './entityModel'
+import { evidenceChainFor, freshnessState, type EntityModelOptions } from './entityModel'
 import { eventStructuralExposure } from './entityResolver'
-import { sourceLabel } from './materialityEngine'
+import { corroborationKeys, sourceLabel } from './materialityEngine'
 import type { EntityRef, FreshnessState } from './entityModel'
 import type { WorldIntelEvent } from '../worldIntel'
 
 export type ClaimBasis = 'live-evidence' | 'curated-reference' | 'inference-rule' | 'unknown'
+
+export type CorroborationSummary = {
+  /** Distinct source-backed connectors (NOT media, NOT same-provider dupes) on the same key. */
+  independentSourceCount: number
+  /** Distinct media-observation sources on the same key — tracked, never counted as corroboration. */
+  mediaSourceCount: number
+  sourceTypes: WorldIntelEvent['provenance'][]
+  connectors: string[]
+  sharedEntities: string[]
+  sharedTimeWindow: { from: number; to: number } | null
+  freshness: FreshnessState
+  confidenceEffect: 'raises' | 'neutral' | 'limits'
+  caveat: string
+}
 
 export type WatchItem = {
   id: string
@@ -46,12 +60,18 @@ export type IntelligenceBrief = {
   /** Curated-reference structural exposure (never live evidence of impact). */
   systemsConnected: EntityRef[]
   resolvedEntityIds: string[]
+  corroboration: CorroborationSummary
   watchNext: WatchItem[]
   unknowns: string[]
   doesNotProve: string[]
 }
 
-export type WatchSynthesisOptions = EntityModelOptions & { maxDepth?: number; maxWatch?: number }
+export type WatchSynthesisOptions = EntityModelOptions & {
+  maxDepth?: number
+  maxWatch?: number
+  /** Other events to scan for cross-source corroboration (independent overlap). */
+  corpus?: WorldIntelEvent[]
+}
 
 const SOURCE_BACKED: ReadonlySet<WorldIntelEvent['provenance']> = new Set([
   'official-api',
@@ -66,6 +86,7 @@ export function synthesizeBrief(event: WorldIntelEvent, options: WatchSynthesisO
   const exposed = eventStructuralExposure(event, options.maxDepth ? { maxDepth: options.maxDepth } : {})
   const systems = dedupeRefs(exposed.flatMap((e) => e.exposure.map((p) => p.entity)))
   const resolvedEntityIds = exposed.map((e) => e.resolution.canonicalSeedEntityId)
+  const corroboration = buildCorroboration(event, options.corpus ?? [event], options.now ?? Date.now())
 
   return {
     eventId: event.id,
@@ -82,7 +103,8 @@ export function synthesizeBrief(event: WorldIntelEvent, options: WatchSynthesisO
     entitiesTouched: chain.entitiesTouched,
     systemsConnected: systems,
     resolvedEntityIds,
-    watchNext: buildWatchItems(event, chain.unknowns, systems).slice(0, options.maxWatch ?? 6),
+    corroboration,
+    watchNext: buildWatchItems(event, chain.unknowns, systems, corroboration).slice(0, options.maxWatch ?? 6),
     unknowns: chain.unknowns,
     doesNotProve: buildDoesNotProve(event, systems.length > 0),
   }
@@ -95,16 +117,18 @@ export function synthesizeBriefs(events: WorldIntelEvent[], options: WatchSynthe
     .filter((event) => Number.isFinite(event.timestamp))
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, limit)
-    .map((event) => synthesizeBrief(event, options))
+    .map((event) => synthesizeBrief(event, { ...options, corpus: events }))
 }
 
-function buildWatchItems(event: WorldIntelEvent, unknowns: string[], systems: EntityRef[]): WatchItem[] {
+function buildWatchItems(event: WorldIntelEvent, unknowns: string[], systems: EntityRef[], corroboration: CorroborationSummary): WatchItem[] {
   const items: WatchItem[] = []
   const add = (id: string, label: string, rationale: string) => items.push({ id, label, basis: 'inference-rule', rationale })
 
-  // Confirmation discipline: low-trust / single-source / low-confidence changes.
-  if (event.provenance === 'media-observation') {
-    add('confirm-official', 'Watch for an official source to confirm this', 'Media observation is not verified fact; seek an official/source-backed corroboration.')
+  // Confirmation discipline driven by cross-source corroboration.
+  if (corroboration.independentSourceCount === 0 && corroboration.mediaSourceCount > 0) {
+    add('confirm-official', 'Watch for an official source to confirm this', 'Media-only observation; media is not corroboration.')
+  } else if (corroboration.independentSourceCount <= 1) {
+    add('confirm-independent', 'Watch for an independent official/public source', 'Single-source so far; independent overlap would raise confidence (not prove impact).')
   }
   if (unknowns.some((u) => /below high-confidence|unverified|low-trust/i.test(u))) {
     add('confirm-confidence', 'Watch for a higher-confidence confirmation', 'This change is below the high-confidence threshold or low-trust.')
@@ -158,6 +182,108 @@ function buildDoesNotProve(event: WorldIntelEvent, hasExposure: boolean): string
   if (event.mineralSite) out.push('Does not reflect current production, reserves, or ownership.')
   if (hasExposure) out.push('Structural exposure is curated reference, not evidence of live impact.')
   return out
+}
+
+const SOURCE_BACKED_CORROBORATION: ReadonlySet<WorldIntelEvent['provenance']> = new Set([
+  'official-api',
+  'auth-gated',
+  'public-disclosure',
+  'public-unauthenticated',
+  'verified',
+])
+
+/**
+ * Cross-source corroboration: how many INDEPENDENT source-backed connectors touch
+ * the same thematic key as this event. Media is tracked separately (never counts
+ * as corroboration); same-provider duplicates collapse to one; curated structure
+ * is not in the corpus. Overlap raises confidence, never proves impact/causality.
+ */
+function buildCorroboration(event: WorldIntelEvent, corpus: WorldIntelEvent[], now: number): CorroborationSummary {
+  const keys = new Set(corroborationKeys(event))
+  // Events sharing at least one thematic key with this event (incl. the event itself).
+  const cohort = corpus.filter((e) => e.id === event.id || corroborationKeys(e).some((k) => keys.has(k)))
+
+  const independent = new Set<string>()
+  const media = new Set<string>()
+  const sourceTypes = new Set<WorldIntelEvent['provenance']>()
+  const connectors = new Set<string>()
+  let from = Number.POSITIVE_INFINITY
+  let to = Number.NEGATIVE_INFINITY
+  let mostRecent = Number.NEGATIVE_INFINITY
+
+  for (const e of cohort) {
+    if (Number.isFinite(e.timestamp)) {
+      from = Math.min(from, e.timestamp)
+      to = Math.max(to, e.timestamp)
+      mostRecent = Math.max(mostRecent, e.timestamp)
+    }
+    if (e.provenance === 'media-observation') {
+      media.add(e.sourceId) // tracked, never corroboration
+      continue
+    }
+    if (SOURCE_BACKED_CORROBORATION.has(e.provenance)) {
+      independent.add(e.sourceId) // distinct connector => same-provider dupes collapse
+      sourceTypes.add(e.provenance)
+      connectors.add(sourceLabel(e.sourceId))
+    }
+  }
+
+  // Shared keys actually spanning >1 distinct connector are the real corroborators.
+  const sharedEntities = sharedKeyLabels(cohort, keys)
+  const freshness = mostRecent > Number.NEGATIVE_INFINITY ? freshnessState(mostRecent, now) : 'unavailable'
+  const stale = freshness === 'stale' || freshness === 'unavailable'
+  const independentSourceCount = independent.size
+
+  let confidenceEffect: CorroborationSummary['confidenceEffect']
+  let caveat: string
+  if (independentSourceCount >= 2) {
+    confidenceEffect = stale ? 'neutral' : 'raises'
+    caveat = `Corroborated by ${independentSourceCount} independent ${[...sourceTypes].join('/')} sources — independent overlap, not proof of impact or causality.${stale ? ' Some corroborating sources are stale.' : ''}`
+  } else if (independentSourceCount === 1 && media.size > 0) {
+    confidenceEffect = 'neutral'
+    caveat = 'Single official/public source plus media mentions — media is not corroboration; seek a second independent source.'
+  } else if (independentSourceCount === 1) {
+    confidenceEffect = 'neutral'
+    caveat = 'Single-source observation — seek independent confirmation.'
+  } else if (media.size > 0) {
+    confidenceEffect = 'limits'
+    caveat = 'Media-only observation — seek official confirmation.'
+  } else {
+    confidenceEffect = 'neutral'
+    caveat = 'No corroborating sources found in the current window.'
+  }
+
+  return {
+    independentSourceCount,
+    mediaSourceCount: media.size,
+    sourceTypes: [...sourceTypes],
+    connectors: [...connectors],
+    sharedEntities,
+    sharedTimeWindow: Number.isFinite(from) && Number.isFinite(to) ? { from, to } : null,
+    freshness,
+    confidenceEffect,
+    caveat,
+  }
+}
+
+/** Thematic keys shared across >1 distinct connector, as readable labels. */
+function sharedKeyLabels(cohort: WorldIntelEvent[], keys: Set<string>): string[] {
+  const connectorsByKey = new Map<string, Set<string>>()
+  for (const e of cohort) {
+    if (e.provenance === 'media-observation') continue
+    if (!SOURCE_BACKED_CORROBORATION.has(e.provenance)) continue
+    for (const k of corroborationKeys(e)) {
+      if (!keys.has(k)) continue
+      const set = connectorsByKey.get(k) ?? new Set<string>()
+      set.add(e.sourceId)
+      connectorsByKey.set(k, set)
+    }
+  }
+  return [...connectorsByKey.entries()]
+    .filter(([, sources]) => sources.size >= 2)
+    .map(([key]) => key)
+    .sort()
+    .slice(0, 12)
 }
 
 function dedupeRefs(refs: EntityRef[]): EntityRef[] {

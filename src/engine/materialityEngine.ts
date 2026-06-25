@@ -205,7 +205,7 @@ function recencyScore(observedAt: number, now: number, windowMs: number): number
 }
 
 /** Broad keys used to detect cross-source corroboration (thematic bridges). */
-function corroborationKeys(event: WorldIntelEvent): string[] {
+export function corroborationKeys(event: WorldIntelEvent): string[] {
   const keys: string[] = []
   for (const asset of event.affectedAssets ?? []) keys.push(`asset:${asset.toLowerCase()}`)
   for (const sector of event.affectedSectors ?? []) keys.push(`sector:${sector.toLowerCase()}`)

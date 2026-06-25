@@ -9,6 +9,7 @@
 import { useMemo } from 'react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
 import { synthesizeBriefs, type IntelligenceBrief } from '../../engine/watchSynthesis'
+import type { CorroborationSummary } from '../../engine/watchSynthesis'
 import type { WorldIntelEvent } from '../../worldIntel'
 import './MarketCoverageDashboard.css'
 
@@ -50,6 +51,21 @@ export function WhatToWatchPanel({ events, now, limit = 10 }: { events: WorldInt
   )
 }
 
+function corroborationLabel(brief: IntelligenceBrief): string {
+  const c = brief.corroboration
+  if (c.independentSourceCount >= 2) return `corroborated ×${c.independentSourceCount}`
+  if (c.independentSourceCount === 1 && c.mediaSourceCount > 0) return 'single source + media'
+  if (c.independentSourceCount === 1) return 'single source'
+  if (c.mediaSourceCount > 0) return 'media-only'
+  return 'uncorroborated'
+}
+
+function corroborationTone(effect: CorroborationSummary['confidenceEffect']): string {
+  if (effect === 'raises') return 'cov-rel cov-rel-low'
+  if (effect === 'limits') return 'cov-rel cov-rel-high'
+  return 'cov-rel cov-rel-medium'
+}
+
 function BriefCard({ brief }: { brief: IntelligenceBrief }) {
   return (
     <div className="cov-section cov-tone-periodic">
@@ -63,6 +79,11 @@ function BriefCard({ brief }: { brief: IntelligenceBrief }) {
           <span className="cov-cadence">{brief.proof.freshness}</span>
           {brief.proof.sourceBacked ? <span className="cov-rel cov-rel-low">source-backed</span> : <span className="cov-rel cov-rel-high">unconfirmed</span>}
           {brief.proof.payloadHash ? <span className="cov-conn">#{brief.proof.payloadHash.slice(0, 8)}</span> : null}
+          <span className={corroborationTone(brief.corroboration.confidenceEffect)}>{corroborationLabel(brief)}</span>
+        </div>
+
+        <div className="cov-row-detail">
+          <span className="cov-note">{brief.corroboration.caveat}</span>
         </div>
 
         {brief.entitiesTouched.length > 0 && (

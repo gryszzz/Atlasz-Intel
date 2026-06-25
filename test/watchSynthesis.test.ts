@@ -92,6 +92,60 @@ describe('intelligence synthesis (what to watch next)', () => {
     expect(brief.watchNext.some((w) => w.id === 'confirm-exposure')).toBe(false)
   })
 
+  it('SEC + market identity + ETF holdings corroborate company context, not impact', () => {
+    const corpus = [
+      mkEvent({ id: 'c-sec', sourceId: 'sec_edgar_public', provenance: 'public-disclosure', affectedAssets: ['NVDA'] }),
+      mkEvent({ id: 'c-id', sourceId: 'sec_company_tickers_public', provenance: 'official-api', affectedAssets: ['NVDA'] }),
+      mkEvent({ id: 'c-etf', sourceId: 'etf_holdings_public', provenance: 'public-disclosure', affectedAssets: ['NVDA'] }),
+    ]
+    const brief = synthesizeBrief(corpus[0], { now: NOW, corpus })
+    expect(brief.corroboration.independentSourceCount).toBe(3)
+    expect(brief.corroboration.confidenceEffect).toBe('raises')
+    expect(brief.corroboration.caveat).toMatch(/not proof of impact or causality/i)
+    expect(brief.corroboration.connectors.length).toBe(3)
+    expect(brief.watchNext.some((w) => w.id === 'confirm-independent')).toBe(false) // already corroborated
+  })
+
+  it('media stays separate: GDELT does not count as independent corroboration', () => {
+    const corpus = [
+      mkEvent({ id: 'off', sourceId: 'sec_edgar_public', provenance: 'public-disclosure', affectedAssets: ['NVDA'] }),
+      mkEvent({ id: 'gd', sourceId: 'gdelt_doc_public', provenance: 'media-observation', affectedAssets: ['NVDA'], gdeltArticle: { url: 'https://x', title: 'n' } as WorldIntelEvent['gdeltArticle'] }),
+    ]
+    const brief = synthesizeBrief(corpus[0], { now: NOW, corpus })
+    expect(brief.corroboration.independentSourceCount).toBe(1)
+    expect(brief.corroboration.mediaSourceCount).toBe(1)
+    expect(brief.corroboration.caveat).toMatch(/media is not corroboration/i)
+  })
+
+  it('same-connector duplicates do not raise the independent count', () => {
+    const corpus = [
+      mkEvent({ id: 'd1', sourceId: 'sec_edgar_public', provenance: 'public-disclosure', affectedAssets: ['NVDA'] }),
+      mkEvent({ id: 'd2', sourceId: 'sec_edgar_public', provenance: 'public-disclosure', affectedAssets: ['NVDA'] }),
+    ]
+    expect(synthesizeBrief(corpus[0], { now: NOW, corpus }).corroboration.independentSourceCount).toBe(1)
+  })
+
+  it('stale corroborating sources lower the confidence effect to neutral', () => {
+    const old = NOW - 40 * 24 * 60 * 60_000 // > 30 days -> unavailable/stale
+    const corpus = [
+      mkEvent({ id: 's-a', sourceId: 'sec_edgar_public', provenance: 'public-disclosure', affectedAssets: ['NVDA'], timestamp: old }),
+      mkEvent({ id: 's-b', sourceId: 'etf_holdings_public', provenance: 'public-disclosure', affectedAssets: ['NVDA'], timestamp: old }),
+    ]
+    const c = synthesizeBrief(corpus[0], { now: NOW, corpus }).corroboration
+    expect(c.independentSourceCount).toBe(2)
+    expect(c.confidenceEffect).toBe('neutral') // stale -> not "raises"
+    expect(c.caveat).toMatch(/stale/i)
+  })
+
+  it('caveat never asserts confirmed impact', () => {
+    const corpus = [
+      mkEvent({ id: 'i1', sourceId: 'sec_edgar_public', provenance: 'public-disclosure', affectedAssets: ['NVDA'] }),
+      mkEvent({ id: 'i2', sourceId: 'etf_holdings_public', provenance: 'public-disclosure', affectedAssets: ['NVDA'] }),
+    ]
+    const c = synthesizeBrief(corpus[0], { now: NOW, corpus }).corroboration
+    expect(c.caveat).not.toMatch(/confirmed impact|proves impact|impact confirmed/i)
+  })
+
   it('synthesizeBriefs orders by recency and is bounded', () => {
     const events = [
       mkEvent({ id: 'a', sourceId: 'sec_edgar_public', provenance: 'public-disclosure', timestamp: NOW - 1000 }),
