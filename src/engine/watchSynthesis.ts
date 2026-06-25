@@ -17,8 +17,22 @@ import { evidenceChainFor, freshnessState, type EntityModelOptions } from './ent
 import { eventStructuralExposure } from './entityResolver'
 import { corroborationKeys, sourceLabel } from './materialityEngine'
 import { conflictsForEvent, detectConflicts, type ConflictSignal } from './conflictDetection'
+import { freshnessLabel, freshnessWeight, type FreshnessLabel } from './freshness'
 import type { EntityRef, FreshnessState } from './entityModel'
 import type { WorldIntelEvent } from '../worldIntel'
+
+/** Freshness weight at/above which corroboration is fresh enough to raise confidence. */
+const RAISE_FRESHNESS_FLOOR = 0.65
+
+/** Provenance classes that are derived/inferred structure, never live-change evidence. */
+const STRUCTURAL_PROVENANCE: ReadonlySet<WorldIntelEvent['provenance']> = new Set([
+  'local-derived',
+  'local-computed',
+  'math-derived',
+  'local-model',
+  'model-inferred',
+  'simulated',
+])
 
 export type ClaimBasis = 'live-evidence' | 'curated-reference' | 'inference-rule' | 'unknown'
 
@@ -32,6 +46,10 @@ export type CorroborationSummary = {
   sharedEntities: string[]
   sharedTimeWindow: { from: number; to: number } | null
   freshness: FreshnessState
+  /** Canonical freshness label of the freshest corroborating source. */
+  freshnessLabel: FreshnessLabel
+  /** Freshness weight [0,1] of the corroboration cohort; undefined = unknown (no signal). */
+  freshnessWeight: number | undefined
   confidenceEffect: 'raises' | 'neutral' | 'limits'
   caveat: string
 }
@@ -42,6 +60,14 @@ export type WatchItem = {
   basis: ClaimBasis
   /** Why this is worth watching — traces to evidence/structure, not a forecast. */
   rationale: string
+}
+
+export type BriefConfidence = {
+  /** Freshness-weighted confidence in [0,1]; undefined = unknown (not zero-risk). */
+  weight: number | undefined
+  basis: ClaimBasis
+  freshness: FreshnessLabel
+  note: string
 }
 
 export type IntelligenceBrief = {
@@ -61,6 +87,8 @@ export type IntelligenceBrief = {
   /** Curated-reference structural exposure (never live evidence of impact). */
   systemsConnected: EntityRef[]
   resolvedEntityIds: string[]
+  /** Freshness-weighted confidence in the proving evidence (stale/expired weigh less, never hidden). */
+  confidence: BriefConfidence
   corroboration: CorroborationSummary
   /** Source/identity disagreements touching this event — surfaced, never merged. */
   conflicts: ConflictSignal[]
@@ -96,6 +124,7 @@ export function synthesizeBrief(event: WorldIntelEvent, options: WatchSynthesisO
   const allConflicts = options.conflicts ?? detectConflicts(options.corpus ?? [event], now)
   const conflicts = conflictsForEvent(event, allConflicts)
   const conflictUnknowns = conflicts.map((c) => `Conflict (${c.severity}): ${c.subject}`)
+  const confidence = buildConfidence(event, chain.whenHappened, corroboration, now)
 
   return {
     eventId: event.id,
@@ -112,6 +141,7 @@ export function synthesizeBrief(event: WorldIntelEvent, options: WatchSynthesisO
     entitiesTouched: chain.entitiesTouched,
     systemsConnected: systems,
     resolvedEntityIds,
+    confidence,
     corroboration,
     conflicts,
     watchNext: buildWatchItems(event, chain.unknowns, systems, corroboration, conflicts).slice(0, options.maxWatch ?? 6),
@@ -120,15 +150,81 @@ export function synthesizeBrief(event: WorldIntelEvent, options: WatchSynthesisO
   }
 }
 
-/** Synthesize briefs for a set of events (most recent first). */
+/**
+ * Synthesize briefs for a set of events, ranked for "what to watch next":
+ * blocking conflicts first, then fresh + independently-corroborated changes, then
+ * freshness-weighted confidence, with recency as the tiebreak. A bounded
+ * most-recent candidate pool is synthesized, then ranked, then sliced.
+ */
 export function synthesizeBriefs(events: WorldIntelEvent[], options: WatchSynthesisOptions & { limit?: number } = {}): IntelligenceBrief[] {
   const limit = options.limit ?? 12
   const conflicts = detectConflicts(events, options.now ?? Date.now())
-  return [...events]
+  const candidates = [...events]
     .filter((event) => Number.isFinite(event.timestamp))
     .sort((a, b) => b.timestamp - a.timestamp)
-    .slice(0, limit)
+    .slice(0, Math.max(limit, 24))
+  return candidates
     .map((event) => synthesizeBrief(event, { ...options, corpus: events, conflicts }))
+    .sort((a, b) => briefPriority(b) - briefPriority(a) || b.proof.observedAt - a.proof.observedAt)
+    .slice(0, limit)
+}
+
+/**
+ * Freshness-weighted confidence in the proving evidence. Fresh evidence weighs
+ * more than stale/expired (which stay visible at lower weight); a source with no
+ * freshness signal (missing-key/unavailable/rate-limited) is UNKNOWN, not zero;
+ * media observation is capped low; derived/inferred structure is structural, not
+ * recent-change evidence. Corroboration is noted but never lifts past freshness.
+ */
+function buildConfidence(event: WorldIntelEvent, observedAt: number, corroboration: CorroborationSummary, now: number): BriefConfidence {
+  const label = Number.isFinite(observedAt) ? freshnessLabel({ now, retrievedAt: observedAt }) : 'unavailable'
+  const weight = freshnessWeight(label)
+  if (weight === undefined) {
+    return {
+      weight: undefined,
+      basis: 'unknown',
+      freshness: label,
+      note: 'Source has no freshness signal (missing-key / unavailable / rate-limited) — treat as unknown, not zero-risk.',
+    }
+  }
+  if (event.provenance === 'media-observation') {
+    return {
+      weight: Math.min(weight, 0.3),
+      basis: 'live-evidence',
+      freshness: label,
+      note: 'Media observation — confidence capped low; media is never corroboration or verified fact.',
+    }
+  }
+  if (STRUCTURAL_PROVENANCE.has(event.provenance)) {
+    return {
+      weight,
+      basis: 'curated-reference',
+      freshness: label,
+      note: 'Derived/inferred structure — supports relationships, not recent-change evidence.',
+    }
+  }
+  let note = `Source-backed evidence weighted by freshness (${label}).`
+  if (corroboration.confidenceEffect === 'raises') note += ' Independent corroboration raises confidence (not proof of impact).'
+  else if (corroboration.confidenceEffect === 'limits') note += ' Only limited/media corroboration so far.'
+  else note += ' Seek independent corroboration.'
+  return {
+    weight,
+    basis: SOURCE_BACKED.has(event.provenance) ? 'live-evidence' : 'inference-rule',
+    freshness: label,
+    note,
+  }
+}
+
+/**
+ * What-To-Watch ordering: blocking identity conflicts first, then fresh +
+ * independently-corroborated changes, then freshness-weighted confidence.
+ * Unknown-freshness items rank at a neutral midpoint — never buried as if zero-risk.
+ */
+function briefPriority(brief: IntelligenceBrief): number {
+  const blocking = brief.conflicts.some((c) => c.severity === 'blocking') ? 1 : 0
+  const corroborated = brief.corroboration.confidenceEffect === 'raises' ? 1 : 0
+  const weight = brief.confidence.weight ?? 0.5
+  return blocking * 100 + corroborated * 10 + weight
 }
 
 function buildWatchItems(event: WorldIntelEvent, unknowns: string[], systems: EntityRef[], corroboration: CorroborationSummary, conflicts: ConflictSignal[]): WatchItem[] {
@@ -249,14 +345,24 @@ function buildCorroboration(event: WorldIntelEvent, corpus: WorldIntelEvent[], n
   // Shared keys actually spanning >1 distinct connector are the real corroborators.
   const sharedEntities = sharedKeyLabels(cohort, keys)
   const freshness = mostRecent > Number.NEGATIVE_INFINITY ? freshnessState(mostRecent, now) : 'unavailable'
-  const stale = freshness === 'stale' || freshness === 'unavailable'
+  const corroborationLabel: FreshnessLabel = mostRecent > Number.NEGATIVE_INFINITY ? freshnessLabel({ now, retrievedAt: mostRecent }) : 'unavailable'
+  const weight = freshnessWeight(corroborationLabel)
+  // Only fresh-enough corroboration (cached or better) may RAISE confidence; stale/
+  // expired or unknown-freshness overlap stays visible but cannot boost.
+  const freshEnoughToRaise = weight !== undefined && weight >= RAISE_FRESHNESS_FLOOR
+  const lowFreshnessNote =
+    weight === undefined
+      ? ' Corroborating sources have no current freshness signal (unknown).'
+      : !freshEnoughToRaise
+        ? ' Some corroborating sources are stale/expired (counted, but not boosting).'
+        : ''
   const independentSourceCount = independent.size
 
   let confidenceEffect: CorroborationSummary['confidenceEffect']
   let caveat: string
   if (independentSourceCount >= 2) {
-    confidenceEffect = stale ? 'neutral' : 'raises'
-    caveat = `Corroborated by ${independentSourceCount} independent ${[...sourceTypes].join('/')} sources — independent overlap, not proof of impact or causality.${stale ? ' Some corroborating sources are stale.' : ''}`
+    confidenceEffect = freshEnoughToRaise ? 'raises' : 'neutral'
+    caveat = `Corroborated by ${independentSourceCount} independent ${[...sourceTypes].join('/')} sources — independent overlap, not proof of impact or causality.${lowFreshnessNote}`
   } else if (independentSourceCount === 1 && media.size > 0) {
     confidenceEffect = 'neutral'
     caveat = 'Single official/public source plus media mentions — media is not corroboration; seek a second independent source.'
@@ -279,6 +385,8 @@ function buildCorroboration(event: WorldIntelEvent, corpus: WorldIntelEvent[], n
     sharedEntities,
     sharedTimeWindow: Number.isFinite(from) && Number.isFinite(to) ? { from, to } : null,
     freshness,
+    freshnessLabel: corroborationLabel,
+    freshnessWeight: weight,
     confidenceEffect,
     caveat,
   }

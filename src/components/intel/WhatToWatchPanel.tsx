@@ -9,7 +9,7 @@
 import { useMemo } from 'react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
 import { synthesizeBriefs, type IntelligenceBrief } from '../../engine/watchSynthesis'
-import type { CorroborationSummary } from '../../engine/watchSynthesis'
+import type { BriefConfidence, CorroborationSummary } from '../../engine/watchSynthesis'
 import type { WorldIntelEvent } from '../../worldIntel'
 import './MarketCoverageDashboard.css'
 
@@ -66,6 +66,17 @@ function corroborationTone(effect: CorroborationSummary['confidenceEffect']): st
   return 'cov-rel cov-rel-medium'
 }
 
+/** Freshness-weighted confidence chip: high weight reads positive, low reads attention, no signal reads unknown. */
+function ConfidenceChip({ confidence }: { confidence: BriefConfidence }) {
+  const pct = confidence.weight === undefined ? 'unknown' : `${Math.round(confidence.weight * 100)}%`
+  const tone = confidence.weight === undefined ? 'cov-rel-medium' : confidence.weight >= 0.65 ? 'cov-rel-low' : 'cov-rel-high'
+  return (
+    <span className={`cov-rel ${tone}`} title={confidence.note}>
+      conf {pct} · {confidence.freshness}
+    </span>
+  )
+}
+
 function BriefCard({ brief }: { brief: IntelligenceBrief }) {
   return (
     <div className="cov-section cov-tone-periodic">
@@ -76,7 +87,7 @@ function BriefCard({ brief }: { brief: IntelligenceBrief }) {
       <div className="cov-row">
         <div className="cov-row-main">
           <ProvenanceBadge value={brief.proof.provenance} size="sm" />
-          <span className="cov-cadence">{brief.proof.freshness}</span>
+          <ConfidenceChip confidence={brief.confidence} />
           {brief.proof.sourceBacked ? <span className="cov-rel cov-rel-low">source-backed</span> : <span className="cov-rel cov-rel-high">unconfirmed</span>}
           {brief.proof.payloadHash ? <span className="cov-conn">#{brief.proof.payloadHash.slice(0, 8)}</span> : null}
           <span className={corroborationTone(brief.corroboration.confidenceEffect)}>{corroborationLabel(brief)}</span>

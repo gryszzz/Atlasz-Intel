@@ -61,3 +61,36 @@ export function freshnessLabel(input: FreshnessInput): FreshnessLabel {
 export function isAttentionLabel(label: FreshnessLabel): boolean {
   return label === 'stale' || label === 'expired' || label === 'missing-key' || label === 'unavailable' || label === 'rate-limited'
 }
+
+/**
+ * Evidence weight for a freshness label, in [0,1]. Fresh evidence weighs more
+ * than stale/expired evidence WITHOUT hiding it (expired still has weight 0.2,
+ * remains visible, just lower confidence).
+ *
+ * `undefined` means UNKNOWN, not zero: a missing-key / unavailable / rate-limited
+ * source has no freshness signal at all, so it must be treated as an open unknown
+ * (uncertainty to resolve) rather than as fresh, stale, or "no risk".
+ */
+export function freshnessWeight(label: FreshnessLabel): number | undefined {
+  switch (label) {
+    case 'live':
+      return 1.0
+    case 'fresh':
+      return 0.9
+    case 'cached':
+      return 0.65
+    case 'stale':
+      return 0.4
+    case 'expired':
+      return 0.2
+    case 'missing-key':
+    case 'unavailable':
+    case 'rate-limited':
+      return undefined
+  }
+}
+
+/** True when a label carries no freshness signal and must be treated as unknown. */
+export function isUnknownFreshness(label: FreshnessLabel): boolean {
+  return freshnessWeight(label) === undefined
+}
