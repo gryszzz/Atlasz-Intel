@@ -28,6 +28,9 @@ import {
   type ConnectorAuditDefinition,
 } from '../src/engine/runtimeAudit'
 import { eventStructuralExposure, isEventResolvable } from '../src/engine/entityResolver'
+import { eligibleForToday } from '../src/engine/materialityEngine'
+import { detectConflicts } from '../src/engine/conflictDetection'
+import { synthesizeBriefs } from '../src/engine/watchSynthesis'
 import { fetchUsptoPatents } from '../electron/osint/adapters/usptoPatentAdapter'
 import { PROVENANCE_VALUES, type ProvenanceId } from '../src/provenance'
 import type { WorldIntelEvent } from '../src/worldIntel'
@@ -190,6 +193,26 @@ async function main() {
 
   // --- Print the connector truth table ---
   printTruthTable(rows)
+
+  // --- Freshness & coverage metrics (reported, not pass/fail) ---
+  const now = Date.now()
+  const sampleEvents = rows.map((r) => r.sampleEvent).filter((e): e is WorldIntelEvent => Boolean(e))
+  const tsValues = sampleEvents.map((e) => e.timestamp).filter((t) => Number.isFinite(t))
+  const countByStatus = (s: string) => rows.filter((r) => r.status === s).length
+  const keyGated = rows.filter((r) => r.gating === 'key-gated')
+  const usOnly = sampleEvents.filter((e) => e.countryCodes.length > 0 && e.countryCodes.every((c) => c === 'US')).length
+  const global = sampleEvents.filter((e) => e.countryCodes.some((c) => c !== 'US')).length
+  const conflicts = detectConflicts(sampleEvents, now)
+  const corroboratedBriefs = synthesizeBriefs(sampleEvents, { now, limit: sampleEvents.length }).filter((b) => b.corroboration.independentSourceCount >= 2).length
+  const wctEligible = sampleEvents.filter((e) => eligibleForToday(e, now)).length
+
+  console.log('\nFreshness & coverage metrics:')
+  console.log(`  connectors online: ${countByStatus('online')}  empty: ${countByStatus('configured (empty)')}  missing-key: ${countByStatus('missing-key')}  rate-limited: ${countByStatus('rate-limited')}  unavailable: ${countByStatus('unavailable')}  failed: ${countByStatus('failed')}`)
+  console.log(`  key-gated: ${keyGated.length}  configured: ${keyGated.filter((r) => r.keyPresent === 'yes').length}  unconfigured: ${keyGated.filter((r) => r.keyPresent === 'no').length}`)
+  console.log(`  displayed records: ${sampleEvents.length}  freshest: ${tsValues.length ? new Date(Math.max(...tsValues)).toISOString() : '-'}  oldest: ${tsValues.length ? new Date(Math.min(...tsValues)).toISOString() : '-'}`)
+  console.log(`  coverage: US-only events ${usOnly}  global (non-US) events ${global}`)
+  console.log(`  what-changed-today eligible: ${wctEligible}/${sampleEvents.length}  (static/annual re-fetch excluded)`)
+  console.log(`  corroborated briefs (>=2 independent sources): ${corroboratedBriefs}  conflicts detected: ${conflicts.length}`)
 
   // --- 3. Trust tier table ---
   console.log('\nTrust tier table (connector count per tier):')

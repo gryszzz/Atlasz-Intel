@@ -256,6 +256,37 @@ function hasKevEvidence(event: WorldIntelEvent): boolean {
   )
 }
 
+/**
+ * Static-reference / annual connectors whose event.timestamp = retrievedAt (fetch
+ * time), so they would falsely look "today" on every poll. They only belong in
+ * "What Changed Today" when genuinely change-tracked today (which they are not yet).
+ */
+const STATIC_REFERENCE_SOURCES: ReadonlySet<string> = new Set([
+  'un_locode_public',
+  'world_port_index_public',
+  'eia_refineries_public',
+  'lng_terminals_public',
+  'usgs_minerals_public',
+  'eia_balancing_authorities_public',
+])
+
+const TODAY_CHANGE_TYPES: ReadonlySet<string> = new Set(['first_seen', 'new_today', 'updated'])
+
+/**
+ * Is this a genuine "today" change? Recent + source-backed, and NOT a static/
+ * annual reference re-fetch (those only count if change-tracked today). Curated
+ * structure is never an event; media stays (labeled) but scores low.
+ */
+export function eligibleForToday(event: WorldIntelEvent, now: number, windowMs = DAY_MS): boolean {
+  if (!Number.isFinite(event.timestamp)) return false
+  if (event.timestamp < now - windowMs || event.timestamp > now + 60_000) return false
+  if (STATIC_REFERENCE_SOURCES.has(event.sourceId)) {
+    const changeType = event.etfHolding?.changeType ?? event.form13fHolding?.changeType
+    return changeType !== undefined && TODAY_CHANGE_TYPES.has(changeType)
+  }
+  return true
+}
+
 export function assessWhatChangedToday(
   events: WorldIntelEvent[],
   options: MaterialityOptions = {},
@@ -267,12 +298,7 @@ export function assessWhatChangedToday(
   const weights = normalizeWeights({ ...DEFAULT_WEIGHTS, ...(options.weights ?? {}) })
 
   const considered = events.filter(
-    (event) =>
-      Number.isFinite(event.timestamp) &&
-      !event.marketIdentity &&
-      event.timestamp >= now - windowMs &&
-      event.timestamp <= now + 60_000 &&
-      (event.confidence ?? 0) >= minConfidence,
+    (event) => !event.marketIdentity && (event.confidence ?? 0) >= minConfidence && eligibleForToday(event, now, windowMs),
   )
 
   if (considered.length === 0) {
