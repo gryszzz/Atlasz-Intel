@@ -126,12 +126,12 @@ describe('SEC Form 13F adapter', () => {
     const event = events('13F-HR/A')[0]
     expect(event.form13fHolding?.isAmendment).toBe(true)
     expect(event.summary).toContain('SEC Form 13F-HR/A (amendment)')
-    const markup = renderToStaticMarkup(createElement(Form13FSourceTrail, { events: [event] }))
+    const markup = renderToStaticMarkup(createElement(Form13FSourceTrail, { events: [event], now: NOW }))
     expect(markup).toContain('13F-HR/A amendment')
   })
 
   it('renders source trail cards and proof-gates incomplete rows', () => {
-    const markup = renderToStaticMarkup(createElement(Form13FSourceTrail, { events: events() }))
+    const markup = renderToStaticMarkup(createElement(Form13FSourceTrail, { events: events(), now: NOW }))
     expect(markup).toContain('SEC Form 13F · Institutional Holdings')
     expect(markup).toContain('Berkshire Hathaway Inc')
     expect(markup).toContain('APPLE INC')
@@ -146,11 +146,11 @@ describe('SEC Form 13F adapter', () => {
 
     const broken = [{ ...events()[0], form13fHolding: { ...events()[0].form13fHolding!, sourceInfoTableUrl: '', confidence: 70 } }] as WorldIntelEvent[]
     expect(selectRenderableForm13F(broken)).toHaveLength(0)
-    expect(renderToStaticMarkup(createElement(Form13FSourceTrail, { events: [] }))).toContain('DATA_UNAVAILABLE')
+    expect(renderToStaticMarkup(createElement(Form13FSourceTrail, { events: [], now: NOW }))).toContain('DATA_UNAVAILABLE')
   })
 
   it('uses no bullish/bearish/conviction wording except explicit negative disclaimers', () => {
-    const markup = renderToStaticMarkup(createElement(Form13FSourceTrail, { events: events() }))
+    const markup = renderToStaticMarkup(createElement(Form13FSourceTrail, { events: events(), now: NOW }))
     const corpus = `${events().map((e) => `${e.title} ${e.summary}`).join(' ')} ${markup}`
       .toLowerCase()
       .replaceAll('not current position, conviction, or trading advice', '')

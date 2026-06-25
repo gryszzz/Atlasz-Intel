@@ -9,13 +9,14 @@
  */
 import { Link2 } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
+import { FreshnessBadge } from '../ui/FreshnessBadge'
 import { groupForm4ByIssuer } from './form4TrailSelect'
 import type { WorldIntelEvent } from '../../worldIntel'
 import './Form4SourceTrail.css'
 
 const FORM4_UNAVAILABLE = 'DATA_UNAVAILABLE'
 
-export function Form4SourceTrail({ events, limit = 24 }: { events: WorldIntelEvent[]; limit?: number }) {
+export function Form4SourceTrail({ events, limit = 24, now }: { events: WorldIntelEvent[]; limit?: number; now: number }) {
   const grouped = groupForm4ByIssuer(events, limit)
   const issuers = [...grouped.entries()]
   return (
@@ -33,6 +34,7 @@ export function Form4SourceTrail({ events, limit = 24 }: { events: WorldIntelEve
                 <strong>{ticker}</strong>
                 <span>{txns[0]?.issuerName}</span>
                 <ProvenanceBadge value={txns[0]?.provenance ?? 'public-disclosure'} size="sm" />
+                {txns[0] && <FreshnessBadge size="sm" now={now} retrievedAt={txns[0].retrievedAt} />}
                 <code>CIK {txns[0]?.issuerCikPadded}</code>
                 {txns[0] && <span className="f4-retrieved">retrieved {new Date(txns[0].retrievedAt).toISOString().slice(0, 10)}</span>}
               </div>

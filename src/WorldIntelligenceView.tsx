@@ -225,7 +225,7 @@ export function WorldIntelligenceView({
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading weather source trail" /></div>}>
-          <WeatherAlertSourceTrail events={visibleEvents} />
+          <WeatherAlertSourceTrail events={visibleEvents} now={now} />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading regulatory source trail" /></div>}>
@@ -245,15 +245,15 @@ export function WorldIntelligenceView({
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading UN Comtrade source trail" /></div>}>
-          <ComtradeSourceTrail events={visibleEvents} />
+          <ComtradeSourceTrail events={visibleEvents} now={now} />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading OpenAlex source trail" /></div>}>
-          <OpenAlexSourceTrail events={visibleEvents} />
+          <OpenAlexSourceTrail events={visibleEvents} now={now} />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading Crossref source trail" /></div>}>
-          <CrossrefSourceTrail events={visibleEvents} />
+          <CrossrefSourceTrail events={visibleEvents} now={now} />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading market identity source trail" /></div>}>
@@ -265,7 +265,7 @@ export function WorldIntelligenceView({
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading SEC Form 4 insider transactions" /></div>}>
-          <Form4SourceTrail events={visibleEvents} />
+          <Form4SourceTrail events={visibleEvents} now={now} />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading what to watch next" /></div>}>
@@ -273,7 +273,7 @@ export function WorldIntelligenceView({
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading SEC Form 13F holdings" /></div>}>
-          <Form13FSourceTrail events={visibleEvents} />
+          <Form13FSourceTrail events={visibleEvents} now={now} />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading ETF holdings" /></div>}>

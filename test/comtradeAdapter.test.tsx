@@ -135,7 +135,7 @@ describe('UN Comtrade adapter', () => {
 
   it('renders the source trail with proof fields, query scope, and no company claim', () => {
     const event = normalizeComtradeRecords(records())[0]
-    const markup = renderToStaticMarkup(createElement(ComtradeSourceTrail, { events: [event as WorldIntelEvent] }))
+    const markup = renderToStaticMarkup(createElement(ComtradeSourceTrail, { events: [event as WorldIntelEvent], now: NOW }))
     expect(markup).toContain('UN Comtrade')
     expect(markup).toContain('854231')
     expect(markup).toContain('not company-level supply-chain proof')

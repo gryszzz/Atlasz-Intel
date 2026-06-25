@@ -8,13 +8,14 @@
  */
 import { Link2 } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
+import { FreshnessBadge } from '../ui/FreshnessBadge'
 import { selectRenderableCrossrefWorks } from './crossrefTrailSelect'
 import type { WorldIntelEvent } from '../../worldIntel'
 import './CrossrefSourceTrail.css'
 
 const CROSSREF_UNAVAILABLE = 'DATA_UNAVAILABLE'
 
-export function CrossrefSourceTrail({ events, limit = 8 }: { events: WorldIntelEvent[]; limit?: number }) {
+export function CrossrefSourceTrail({ events, limit = 8, now }: { events: WorldIntelEvent[]; limit?: number; now: number }) {
   const works = selectRenderableCrossrefWorks(events, limit)
   return (
     <section className="crossref-trail">
@@ -30,6 +31,7 @@ export function CrossrefSourceTrail({ events, limit = 8 }: { events: WorldIntelE
               <div className="crossref-row-head">
                 <strong>{work.queryBucket || 'query bucket'}</strong>
                 <ProvenanceBadge value={work.provenance} size="sm" />
+                <FreshnessBadge size="sm" now={now} retrievedAt={work.retrievedAt} />
                 <span>{work.confidence}%</span>
               </div>
               <p className="crossref-title">{work.title}</p>

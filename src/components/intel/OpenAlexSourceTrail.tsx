@@ -9,13 +9,14 @@
  */
 import { Link2 } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
+import { FreshnessBadge } from '../ui/FreshnessBadge'
 import { selectRenderableOpenAlexWorks } from './openAlexTrailSelect'
 import type { WorldIntelEvent } from '../../worldIntel'
 import './OpenAlexSourceTrail.css'
 
 const OPENALEX_UNAVAILABLE = 'DATA_UNAVAILABLE'
 
-export function OpenAlexSourceTrail({ events, limit = 8 }: { events: WorldIntelEvent[]; limit?: number }) {
+export function OpenAlexSourceTrail({ events, limit = 8, now }: { events: WorldIntelEvent[]; limit?: number; now: number }) {
   const works = selectRenderableOpenAlexWorks(events, limit)
   return (
     <section className="openalex-trail">
@@ -31,6 +32,7 @@ export function OpenAlexSourceTrail({ events, limit = 8 }: { events: WorldIntelE
               <div className="openalex-row-head">
                 <strong>{work.queryBucket || 'topic bucket'}</strong>
                 <ProvenanceBadge value={work.provenance} size="sm" />
+                <FreshnessBadge size="sm" now={now} retrievedAt={work.retrievedAt} />
                 <span className="openalex-change">{work.changeType.replace('_', ' ')}</span>
                 <span>{work.confidence}%</span>
               </div>

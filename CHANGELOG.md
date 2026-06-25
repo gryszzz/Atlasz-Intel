@@ -57,8 +57,12 @@ Known limits:
 - Configured-only facility datasets require official endpoint URLs.
 - GDELT may rate-limit (shown as rate-limited, never replaced with fake data).
 - Options provider live-wiring is deferred (built + tested; reports `deferred`).
-- Some source-trail cards still show raw retrievedAt/staleAt rather than the new
-  canonical freshness label (incremental adoption).
+- Source-trail cards whose records carry retrieval timestamps now render the
+  shared canonical FreshnessBadge (live/fresh/cached/stale/expired/missing-key/
+  unavailable/rate-limited). Event-stream cards (Congress, USPTO, OFAC, Federal
+  Register, GDELT) display source-domain dates (publication/action/seen) and do
+  not yet carry a retrieval-freshness chip; SEC Company Facts uses a per-fact
+  stale-row highlight rather than a single badge.
 
 ## v0.1.0
 

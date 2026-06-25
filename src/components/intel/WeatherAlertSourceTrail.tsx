@@ -8,13 +8,14 @@
  */
 import { Link2 } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
+import { FreshnessBadge } from '../ui/FreshnessBadge'
 import { selectRenderableAlerts } from './weatherTrailSelect'
 import type { WorldIntelEvent } from '../../worldIntel'
 import './WeatherAlertSourceTrail.css'
 
 const ALERT_UNAVAILABLE = 'DATA_UNAVAILABLE'
 
-export function WeatherAlertSourceTrail({ events, limit = 8 }: { events: WorldIntelEvent[]; limit?: number }) {
+export function WeatherAlertSourceTrail({ events, limit = 8, now }: { events: WorldIntelEvent[]; limit?: number; now: number }) {
   const alerts = selectRenderableAlerts(events, limit)
   return (
     <section className="wx-trail">
@@ -29,6 +30,7 @@ export function WeatherAlertSourceTrail({ events, limit = 8 }: { events: WorldIn
               <div className="wx-row-head">
                 <strong>{alert.event}</strong>
                 <ProvenanceBadge value={alert.provenance} size="sm" />
+                <FreshnessBadge size="sm" now={now} retrievedAt={alert.retrievedAt} />
               </div>
               <p className="wx-area">{alert.areaDesc}</p>
               <div className="wx-meta">

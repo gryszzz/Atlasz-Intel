@@ -168,7 +168,7 @@ describe('OpenAlex Works adapter', () => {
 
   it('renders the source trail with proof fields, key-free API URL, and boundary label', () => {
     const event = normalizeOpenAlexWorks(records())[0]
-    const markup = renderToStaticMarkup(createElement(OpenAlexSourceTrail, { events: [event as WorldIntelEvent] }))
+    const markup = renderToStaticMarkup(createElement(OpenAlexSourceTrail, { events: [event as WorldIntelEvent], now: NOW }))
     expect(markup).toContain('OpenAlex research')
     expect(markup).toContain('Silicon photonics for AI accelerator interconnects')
     expect(markup).toContain('Research metadata, not validation')
@@ -179,7 +179,7 @@ describe('OpenAlex Works adapter', () => {
   })
 
   it('renders DATA_UNAVAILABLE when no OpenAlex work proof is present', () => {
-    const markup = renderToStaticMarkup(createElement(OpenAlexSourceTrail, { events: [] }))
+    const markup = renderToStaticMarkup(createElement(OpenAlexSourceTrail, { events: [], now: NOW }))
     expect(markup).toContain('DATA_UNAVAILABLE')
   })
 

@@ -179,7 +179,7 @@ describe('Crossref Works adapter', () => {
 
   it('renders the source trail with proof fields, key-free API URL, and boundary label', () => {
     const event = normalizeCrossrefWorks(records())[0]
-    const markup = renderToStaticMarkup(createElement(CrossrefSourceTrail, { events: [event as WorldIntelEvent] }))
+    const markup = renderToStaticMarkup(createElement(CrossrefSourceTrail, { events: [event as WorldIntelEvent], now: NOW }))
     expect(markup).toContain('Crossref DOI metadata')
     expect(markup).toContain('Silicon photonics for AI accelerator interconnects')
     expect(markup).toContain('DOI registry metadata, not full text')
@@ -190,7 +190,7 @@ describe('Crossref Works adapter', () => {
   })
 
   it('renders DATA_UNAVAILABLE when no Crossref proof is present', () => {
-    const markup = renderToStaticMarkup(createElement(CrossrefSourceTrail, { events: [] }))
+    const markup = renderToStaticMarkup(createElement(CrossrefSourceTrail, { events: [], now: NOW }))
     expect(markup).toContain('DATA_UNAVAILABLE')
   })
 

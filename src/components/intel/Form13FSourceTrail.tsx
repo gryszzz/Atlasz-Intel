@@ -8,13 +8,14 @@
  */
 import { Link2 } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
+import { FreshnessBadge } from '../ui/FreshnessBadge'
 import { groupForm13FByFiler } from './form13FTrailSelect'
 import type { Form13FHolding, WorldIntelEvent } from '../../worldIntel'
 import './Form13FSourceTrail.css'
 
 const FORM13F_UNAVAILABLE = 'DATA_UNAVAILABLE'
 
-export function Form13FSourceTrail({ events, limit = 24 }: { events: WorldIntelEvent[]; limit?: number }) {
+export function Form13FSourceTrail({ events, limit = 24, now }: { events: WorldIntelEvent[]; limit?: number; now: number }) {
   const grouped = groupForm13FByFiler(events, limit)
   const filers = [...grouped.entries()]
   return (
@@ -29,7 +30,7 @@ export function Form13FSourceTrail({ events, limit = 24 }: { events: WorldIntelE
       {filers.length > 0 ? (
         <div className="f13f-trail-stack">
           {filers.map(([key, holdings]) => (
-            <FilerHoldings key={key} holdings={holdings} />
+            <FilerHoldings key={key} holdings={holdings} now={now} />
           ))}
         </div>
       ) : (
@@ -45,7 +46,7 @@ export function Form13FSourceTrail({ events, limit = 24 }: { events: WorldIntelE
   )
 }
 
-function FilerHoldings({ holdings }: { holdings: Form13FHolding[] }) {
+function FilerHoldings({ holdings, now }: { holdings: Form13FHolding[]; now: number }) {
   const first = holdings[0]
   if (!first) return null
   return (
@@ -53,6 +54,7 @@ function FilerHoldings({ holdings }: { holdings: Form13FHolding[] }) {
       <div className="f13f-filer-head">
         <strong>{first.filerName}</strong>
         <ProvenanceBadge value={first.provenance} size="sm" />
+        <FreshnessBadge size="sm" now={now} retrievedAt={first.retrievedAt} />
         <code>CIK {first.filerCikPadded}</code>
         <span>{first.isAmendment ? '13F-HR/A amendment' : '13F-HR'}</span>
         <span>period {first.reportPeriod || 'DATA_UNAVAILABLE'}</span>

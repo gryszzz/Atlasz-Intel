@@ -8,13 +8,14 @@
  */
 import { Link2 } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
+import { FreshnessBadge } from '../ui/FreshnessBadge'
 import { selectRenderableComtradeRecords } from './comtradeTrailSelect'
 import type { WorldIntelEvent } from '../../worldIntel'
 import './ComtradeSourceTrail.css'
 
 const COMTRADE_UNAVAILABLE = 'DATA_UNAVAILABLE'
 
-export function ComtradeSourceTrail({ events, limit = 8 }: { events: WorldIntelEvent[]; limit?: number }) {
+export function ComtradeSourceTrail({ events, limit = 8, now }: { events: WorldIntelEvent[]; limit?: number; now: number }) {
   const records = selectRenderableComtradeRecords(events, limit)
   return (
     <section className="comtrade-trail">
@@ -31,6 +32,7 @@ export function ComtradeSourceTrail({ events, limit = 8 }: { events: WorldIntelE
               <div className="comtrade-row-head">
                 <strong>{record.flowDesc}</strong>
                 <ProvenanceBadge value={record.provenance} size="sm" />
+                <FreshnessBadge size="sm" now={now} retrievedAt={record.retrievedAt} />
                 <span className="comtrade-change">{record.changeType.replace('_', ' ')}</span>
                 <span>{record.confidence}%</span>
               </div>

@@ -60,7 +60,7 @@ const event: WorldIntelEvent = {
 
 describe('NOAA weather alert source-trail UI', () => {
   it('renders only weather alerts with complete proof fields', () => {
-    const html = renderToStaticMarkup(<WeatherAlertSourceTrail events={[event]} />)
+    const html = renderToStaticMarkup(<WeatherAlertSourceTrail events={[event]} now={NOW} />)
 
     expect(selectRenderableAlerts([event])).toHaveLength(1)
     expect(html).toContain('NOAA Weather Alerts')
@@ -81,7 +81,7 @@ describe('NOAA weather alert source-trail UI', () => {
   })
 
   it('shows DATA_UNAVAILABLE instead of fabricated weather alerts', () => {
-    const html = renderToStaticMarkup(<WeatherAlertSourceTrail events={[]} />)
+    const html = renderToStaticMarkup(<WeatherAlertSourceTrail events={[]} now={NOW} />)
 
     expect(html).toContain('DATA_UNAVAILABLE')
     expect(html).toContain('No active NWS alerts available')

@@ -12,13 +12,14 @@
  */
 import { Link2, ShieldAlert } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
+import { FreshnessBadge } from '../ui/FreshnessBadge'
 import { selectRenderableNvdCves } from './cveTrailSelect'
 import type { NvdCve, WorldIntelEvent } from '../../worldIntel'
 import './CveSourceTrailPanel.css'
 
 const CVE_UNAVAILABLE = 'DATA_UNAVAILABLE'
 
-export function CveSourceTrailPanel({ events, limit = 6 }: { events: WorldIntelEvent[]; limit?: number }) {
+export function CveSourceTrailPanel({ events, limit = 6, now }: { events: WorldIntelEvent[]; limit?: number; now: number }) {
   const cves = selectRenderableNvdCves(events, limit)
   return (
     <section className="cve-trail">
@@ -29,7 +30,7 @@ export function CveSourceTrailPanel({ events, limit = 6 }: { events: WorldIntelE
       {cves.length > 0 ? (
         <div className="cve-trail-stack">
           {cves.map((cve) => (
-            <CveCard key={cve.id} cve={cve} />
+            <CveCard key={cve.id} cve={cve} now={now} />
           ))}
         </div>
       ) : (
@@ -45,7 +46,7 @@ export function CveSourceTrailPanel({ events, limit = 6 }: { events: WorldIntelE
   )
 }
 
-function CveCard({ cve }: { cve: NvdCve }) {
+function CveCard({ cve, now }: { cve: NvdCve; now: number }) {
   return (
     <article className="cve-row">
       <div className="cve-row-head">
@@ -56,6 +57,7 @@ function CveCard({ cve }: { cve: NvdCve }) {
           </span>
         )}
         <ProvenanceBadge value={cve.provenance} size="sm" />
+        <FreshnessBadge size="sm" now={now} retrievedAt={cve.retrievedAt} />
       </div>
       <p className="cve-desc">{cve.description || 'No English description provided by NVD.'}</p>
       <div className="cve-meta">
