@@ -16,6 +16,7 @@
 import { evidenceChainFor, freshnessState, type EntityModelOptions } from './entityModel'
 import { eventStructuralExposure } from './entityResolver'
 import { corroborationKeys, sourceLabel } from './materialityEngine'
+import { conflictsForEvent, detectConflicts, type ConflictSignal } from './conflictDetection'
 import type { EntityRef, FreshnessState } from './entityModel'
 import type { WorldIntelEvent } from '../worldIntel'
 
@@ -61,6 +62,8 @@ export type IntelligenceBrief = {
   systemsConnected: EntityRef[]
   resolvedEntityIds: string[]
   corroboration: CorroborationSummary
+  /** Source/identity disagreements touching this event — surfaced, never merged. */
+  conflicts: ConflictSignal[]
   watchNext: WatchItem[]
   unknowns: string[]
   doesNotProve: string[]
@@ -71,6 +74,8 @@ export type WatchSynthesisOptions = EntityModelOptions & {
   maxWatch?: number
   /** Other events to scan for cross-source corroboration (independent overlap). */
   corpus?: WorldIntelEvent[]
+  /** Precomputed conflicts over the corpus (avoids recomputing per brief). */
+  conflicts?: ConflictSignal[]
 }
 
 const SOURCE_BACKED: ReadonlySet<WorldIntelEvent['provenance']> = new Set([
@@ -86,7 +91,11 @@ export function synthesizeBrief(event: WorldIntelEvent, options: WatchSynthesisO
   const exposed = eventStructuralExposure(event, options.maxDepth ? { maxDepth: options.maxDepth } : {})
   const systems = dedupeRefs(exposed.flatMap((e) => e.exposure.map((p) => p.entity)))
   const resolvedEntityIds = exposed.map((e) => e.resolution.canonicalSeedEntityId)
-  const corroboration = buildCorroboration(event, options.corpus ?? [event], options.now ?? Date.now())
+  const now = options.now ?? Date.now()
+  const corroboration = buildCorroboration(event, options.corpus ?? [event], now)
+  const allConflicts = options.conflicts ?? detectConflicts(options.corpus ?? [event], now)
+  const conflicts = conflictsForEvent(event, allConflicts)
+  const conflictUnknowns = conflicts.map((c) => `Conflict (${c.severity}): ${c.subject}`)
 
   return {
     eventId: event.id,
@@ -104,8 +113,9 @@ export function synthesizeBrief(event: WorldIntelEvent, options: WatchSynthesisO
     systemsConnected: systems,
     resolvedEntityIds,
     corroboration,
-    watchNext: buildWatchItems(event, chain.unknowns, systems, corroboration).slice(0, options.maxWatch ?? 6),
-    unknowns: chain.unknowns,
+    conflicts,
+    watchNext: buildWatchItems(event, chain.unknowns, systems, corroboration, conflicts).slice(0, options.maxWatch ?? 6),
+    unknowns: [...chain.unknowns, ...conflictUnknowns],
     doesNotProve: buildDoesNotProve(event, systems.length > 0),
   }
 }
@@ -113,16 +123,24 @@ export function synthesizeBrief(event: WorldIntelEvent, options: WatchSynthesisO
 /** Synthesize briefs for a set of events (most recent first). */
 export function synthesizeBriefs(events: WorldIntelEvent[], options: WatchSynthesisOptions & { limit?: number } = {}): IntelligenceBrief[] {
   const limit = options.limit ?? 12
+  const conflicts = detectConflicts(events, options.now ?? Date.now())
   return [...events]
     .filter((event) => Number.isFinite(event.timestamp))
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, limit)
-    .map((event) => synthesizeBrief(event, { ...options, corpus: events }))
+    .map((event) => synthesizeBrief(event, { ...options, corpus: events, conflicts }))
 }
 
-function buildWatchItems(event: WorldIntelEvent, unknowns: string[], systems: EntityRef[], corroboration: CorroborationSummary): WatchItem[] {
+function buildWatchItems(event: WorldIntelEvent, unknowns: string[], systems: EntityRef[], corroboration: CorroborationSummary, conflicts: ConflictSignal[]): WatchItem[] {
   const items: WatchItem[] = []
   const add = (id: string, label: string, rationale: string) => items.push({ id, label, basis: 'inference-rule', rationale })
+
+  // Identity/source conflicts take priority — resolve disagreement before trusting.
+  if (conflicts.some((c) => c.severity === 'blocking')) {
+    add('resolve-conflict', 'Resolve the identity conflict before relying on this', 'Sources disagree on identity (refuse-merge); treat the resolution as uncertain.')
+  } else if (conflicts.length > 0) {
+    add('review-conflict', 'Review the flagged source disagreement', 'Sources/identifiers do not fully line up; surfaced as uncertainty, not merged.')
+  }
 
   // Confirmation discipline driven by cross-source corroboration.
   if (corroboration.independentSourceCount === 0 && corroboration.mediaSourceCount > 0) {

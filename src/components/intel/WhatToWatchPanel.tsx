@@ -111,6 +111,14 @@ function BriefCard({ brief }: { brief: IntelligenceBrief }) {
           ))}
         </ul>
 
+        {brief.conflicts.length > 0 && (
+          <div className="cov-row-detail">
+            <em className="cov-missing">
+              conflicts: {brief.conflicts.map((c) => `${c.subject} [${c.severity} · ${c.resolutionBehavior}]`).join(' · ')}
+            </em>
+          </div>
+        )}
+
         {brief.unknowns.length > 0 && (
           <div className="cov-row-detail">
             <em className="cov-missing">unknown: {brief.unknowns.slice(0, 5).join('; ')}</em>
