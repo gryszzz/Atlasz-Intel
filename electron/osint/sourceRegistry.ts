@@ -17,6 +17,23 @@ import { HttpError, fetchWithRetry } from './fetchPolicy'
 
 const DEFAULT_MAX_RETRIES = 2
 const DEFAULT_BACKOFF_MS = 1_000
+const MAX_FAILURE_BACKOFF_MS = 60 * 60 * 1000
+
+/**
+ * How long to wait before re-polling a source. Normally the source's own
+ * `rateLimitMs`; once it has consecutive failures, a bounded exponential backoff
+ * extends the window so a persistently-failing source is not re-hammered (and
+ * re-charged its full timeout) on every refresh. Capped, deterministic, pure.
+ */
+export function sourcePollCooldownMs(
+  rateLimitMs: number,
+  consecutiveFailures: number,
+  capMs = MAX_FAILURE_BACKOFF_MS,
+): number {
+  if (consecutiveFailures <= 0) return rateLimitMs
+  const backoff = rateLimitMs * 2 ** Math.min(consecutiveFailures, 6)
+  return Math.min(Math.max(rateLimitMs, backoff), capMs)
+}
 
 type SourceStatus = OsintSourceSnapshot['status']
 
@@ -80,8 +97,14 @@ export class OsintSourceRegistry {
         continue
       }
       const state = this.requireState(definition.sourceId)
-      if (state.lastAttemptAt && now - state.lastAttemptAt < definition.rateLimitMs) {
-        state.status = 'rate-limited'
+      const cooldownMs = sourcePollCooldownMs(definition.rateLimitMs, state.consecutiveFailures)
+      if (state.lastAttemptAt && now - state.lastAttemptAt < cooldownMs) {
+        // Within the cooldown window. If the source is in a failure backoff,
+        // keep its honest failed/rate-limited status; otherwise it is simply
+        // not due yet (reported as rate-limited, as before).
+        if (state.consecutiveFailures === 0) {
+          state.status = 'rate-limited'
+        }
         continue
       }
       state.lastAttemptAt = now
