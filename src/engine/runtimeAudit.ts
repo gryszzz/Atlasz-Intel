@@ -1,6 +1,7 @@
 import type { ProvenanceId } from '../provenance'
 import type { OsintSourceSnapshot, WorldIntelEvent } from '../worldIntel'
 import { eventStructuralExposure } from './entityResolver'
+import { freshnessLabel, freshnessWeight, type FreshnessLabel } from './freshness'
 
 export type ConnectorAccessModel =
   | 'public'
@@ -82,6 +83,8 @@ export type ExposureCount = {
   label: string
   kind: string
   count: number
+  /** Freshness × path-directness weighted score; ranks fresh+exact above stale+indirect. */
+  score: number
 }
 
 export type ResolvedExposureEvent = {
@@ -92,6 +95,10 @@ export type ResolvedExposureEvent = {
   resolvedEntityIds: string[]
   exposedEntityCount: number
   exposureTrust: 'curated-reference'
+  /** Canonical freshness of the proving event. */
+  freshness: FreshnessLabel
+  /** Sum of freshness × path-confidence over this event's exposure paths. */
+  exposureScore: number
 }
 
 const HOUR_MS = 60 * 60 * 1000
@@ -811,12 +818,20 @@ export function summarizeExposure(input: {
     const exposed = eventStructuralExposure(event, { maxDepth: 3 })
     if (exposed.length === 0) continue
     curatedReferenceOnlyCount += 1
+    // Fresh, source-backed evidence outranks stale; an exact (depth-1, high
+    // path-confidence) exposure outranks an indirect, decayed one. Unknown
+    // freshness is neutral (0.5) — never zero, never boosted.
+    const freshness = freshnessLabel({ now, retrievedAt: event.timestamp })
+    const eventWeight = freshnessWeight(freshness) ?? 0.5
     const resolvedEntityIds = exposed.map(({ resolution }) => resolution.canonicalSeedEntityId)
     let exposedEntityCount = 0
+    let exposureScore = 0
     for (const item of exposed) {
       for (const path of item.exposure) {
         exposedEntityCount += 1
-        bump(counts, path.entity.id, path.entity.label, path.entity.kind)
+        const contribution = eventWeight * path.pathConfidence
+        exposureScore += contribution
+        bump(counts, path.entity.id, path.entity.label, path.entity.kind, contribution)
       }
     }
     recentResolvedEvents.push({
@@ -827,8 +842,11 @@ export function summarizeExposure(input: {
       resolvedEntityIds,
       exposedEntityCount,
       exposureTrust: 'curated-reference',
+      freshness,
+      exposureScore,
     })
   }
+  recentResolvedEvents.sort((a, b) => b.exposureScore - a.exposureScore || b.observedAt - a.observedAt)
 
   const resolvedEventIds = new Set(recentResolvedEvents.map((event) => event.eventId))
   return {
@@ -898,18 +916,19 @@ function sum(values: number[]): number {
   return values.reduce((total, value) => total + (Number.isFinite(value) ? value : 0), 0)
 }
 
-function bump(counts: Map<string, ExposureCount>, id: string, label: string, kind: string) {
+function bump(counts: Map<string, ExposureCount>, id: string, label: string, kind: string, weight: number) {
   const current = counts.get(id)
   if (current) {
     current.count += 1
+    current.score += weight
     return
   }
-  counts.set(id, { id, label, kind, count: 1 })
+  counts.set(id, { id, label, kind, count: 1, score: weight })
 }
 
 function topKind(counts: Map<string, ExposureCount>, kind: string, limit: number): ExposureCount[] {
   return [...counts.values()]
     .filter((item) => item.kind === kind)
-    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
+    .sort((a, b) => b.score - a.score || b.count - a.count || a.label.localeCompare(b.label))
     .slice(0, limit)
 }

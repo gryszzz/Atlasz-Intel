@@ -59,7 +59,7 @@ export function ExposureDashboardPanel({
                     <div>
                       <strong>{event.title}</strong>
                       <small>
-                        {sourceLabel(event.sourceId)} · {event.exposedEntityCount} exposed nodes · {formatAge(event.observedAt)}
+                        {sourceLabel(event.sourceId)} · {event.exposedEntityCount} exposed nodes · {formatAge(event.observedAt)} · {event.freshness}
                       </small>
                     </div>
                     <span>{event.resolvedEntityIds.slice(0, 2).join(' · ')}</span>
