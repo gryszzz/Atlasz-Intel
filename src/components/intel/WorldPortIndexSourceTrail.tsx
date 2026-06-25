@@ -10,7 +10,7 @@ import { Link2, MapPin } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
 import { selectRenderableWorldPorts } from './worldPortTrailSelect'
 import { buildGeoContext, hasGeoContext, type GeoContext } from '../../engine/geo/geoContext'
-import { isStale } from '../../engine/geo/geoCore'
+import { FreshnessBadge } from '../ui/FreshnessBadge'
 import type { GeospatialPrecision, WorldIntelEvent, WorldPortIndexRecord } from '../../worldIntel'
 import './EiaFacilitySourceTrail.css'
 
@@ -57,7 +57,6 @@ export function WorldPortIndexSourceTrail({ events, limit = 30, now }: { events:
 }
 
 function PortCard({ port, events, now }: { port: WorldPortIndexRecord; events: WorldIntelEvent[]; now: number }) {
-  const stale = isStale(port.staleAt, now)
   const geo = buildGeoContext(
     { id: port.portNumber, name: port.portName, latitude: port.latitude, longitude: port.longitude, state: port.countryCode === 'US' ? port.subdivision : undefined },
     events,
@@ -72,7 +71,7 @@ function PortCard({ port, events, now }: { port: WorldPortIndexRecord; events: W
         <span className={`eia-precision eia-precision-${port.geospatialPrecision}`}>
           <MapPin size={11} /> {PRECISION_LABEL[port.geospatialPrecision]}
         </span>
-        <span className={stale ? 'eia-stale' : 'eia-fresh'}>{stale ? 'stale (cached)' : 'fresh'}</span>
+        <FreshnessBadge size="sm" now={now} retrievedAt={port.retrievedAt} staleAt={port.staleAt} />
       </div>
 
       <dl className="eia-dossier">

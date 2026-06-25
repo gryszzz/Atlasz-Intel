@@ -12,7 +12,7 @@ import { Link2, MapPin } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
 import { selectRenderableRefineries } from './eiaRefineryTrailSelect'
 import { buildGeoContext, hasGeoContext, type GeoContext } from '../../engine/geo/geoContext'
-import { isStale } from '../../engine/geo/geoCore'
+import { FreshnessBadge } from '../ui/FreshnessBadge'
 import type { EiaRefineryFacility, GeospatialPrecision, WorldIntelEvent } from '../../worldIntel'
 import './EiaFacilitySourceTrail.css'
 
@@ -68,7 +68,6 @@ export function EiaRefinerySourceTrail({
 }
 
 function RefineryCard({ refinery, events, now }: { refinery: EiaRefineryFacility; events: WorldIntelEvent[]; now: number }) {
-  const stale = isStale(refinery.staleAt, now)
   const geo = buildGeoContext(
     { id: refinery.facilityId, name: refinery.facilityName, latitude: refinery.latitude, longitude: refinery.longitude, state: refinery.state, stateName: refinery.stateName },
     events,
@@ -82,7 +81,7 @@ function RefineryCard({ refinery, events, now }: { refinery: EiaRefineryFacility
         <span className={`eia-precision eia-precision-${refinery.geospatialPrecision}`}>
           <MapPin size={11} /> {PRECISION_LABEL[refinery.geospatialPrecision]}
         </span>
-        <span className={stale ? 'eia-stale' : 'eia-fresh'}>{stale ? 'stale (cached)' : 'fresh'}</span>
+        <FreshnessBadge size="sm" now={now} retrievedAt={refinery.retrievedAt} staleAt={refinery.staleAt} />
       </div>
 
       <dl className="eia-dossier">

@@ -11,7 +11,7 @@ import { Link2, MapPin } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
 import { selectRenderableNuclearPlants } from './nuclearPlantTrailSelect'
 import { buildGeoContext, hasGeoContext, type GeoContext } from '../../engine/geo/geoContext'
-import { isStale } from '../../engine/geo/geoCore'
+import { FreshnessBadge } from '../ui/FreshnessBadge'
 import type { GeospatialPrecision, NuclearPlantFacility, WorldIntelEvent } from '../../worldIntel'
 import './EiaFacilitySourceTrail.css'
 
@@ -59,7 +59,6 @@ export function NuclearPlantSourceTrail({ events, limit = 24, now }: { events: W
 }
 
 function PlantCard({ plant, events, now }: { plant: NuclearPlantFacility; events: WorldIntelEvent[]; now: number }) {
-  const stale = isStale(plant.staleAt, now)
   const geo = buildGeoContext(
     { id: plant.facilityId, name: plant.facilityName, latitude: plant.latitude, longitude: plant.longitude, state: plant.state, stateName: plant.stateName },
     events,
@@ -73,7 +72,7 @@ function PlantCard({ plant, events, now }: { plant: NuclearPlantFacility; events
         <span className={`eia-precision eia-precision-${plant.geospatialPrecision}`}>
           <MapPin size={11} /> {PRECISION_LABEL[plant.geospatialPrecision]}
         </span>
-        <span className={stale ? 'eia-stale' : 'eia-fresh'}>{stale ? 'stale (cached)' : 'fresh'}</span>
+        <FreshnessBadge size="sm" now={now} retrievedAt={plant.retrievedAt} staleAt={plant.staleAt} />
       </div>
 
       <dl className="eia-dossier">

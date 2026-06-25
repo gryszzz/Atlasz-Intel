@@ -7,6 +7,7 @@
  */
 import { Link2 } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
+import { FreshnessBadge } from '../ui/FreshnessBadge'
 import { filterRenderableMarketIdentities, selectRenderableMarketIdentities } from './marketIdentityTrailSelect'
 import type { MarketIdentity, WorldIntelEvent } from '../../worldIntel'
 import './MarketIdentitySourceTrail.css'
@@ -40,15 +41,12 @@ export function MarketIdentitySourceTrail({
       {identities.length > 0 ? (
         <div className="market-identity-stack">
           {identities.map((identity) => {
-            const stale = effectiveNow > identity.staleAt
             return (
               <article key={identity.id} className="market-identity-row">
                 <div className="market-identity-row-head">
                   <strong>{identity.ticker}</strong>
                   <ProvenanceBadge value={identity.provenance} size="sm" />
-                  <span className={stale ? 'identity-state stale' : 'identity-state fresh'}>
-                    {stale ? 'stale-cache' : 'fresh reference'}
-                  </span>
+                  <FreshnessBadge size="sm" now={effectiveNow} retrievedAt={identity.retrievedAt} staleAt={identity.staleAt} />
                   <span>{identity.confidence}%</span>
                 </div>
                 <p>{identity.legalName}</p>

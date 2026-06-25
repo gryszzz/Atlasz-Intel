@@ -9,8 +9,8 @@
  */
 import { Link2 } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
+import { FreshnessBadge } from '../ui/FreshnessBadge'
 import { selectRenderableReactorStatus } from './nrcReactorStatusTrailSelect'
-import { isStale } from '../../engine/geo/geoCore'
 import type { NrcReactorStatus, WorldIntelEvent } from '../../worldIntel'
 import './EiaFacilitySourceTrail.css'
 
@@ -34,7 +34,7 @@ export function NrcReactorStatusSourceTrail({ events, limit = 120, now }: { even
         <article className="eia-fac">
           <div className="eia-fac-row-head">
             {first ? <ProvenanceBadge value={first.provenance} size="sm" /> : null}
-            {first ? <span className={isStale(first.staleAt, now) ? 'eia-stale' : 'eia-fresh'}>{isStale(first.staleAt, now) ? 'stale (cached)' : 'fresh'}</span> : null}
+            {first ? <FreshnessBadge size="sm" now={now} retrievedAt={first.retrievedAt} staleAt={first.staleAt} /> : null}
             {first ? <code>as of {first.reportDate}</code> : null}
           </div>
           <table className="eia-status-table">

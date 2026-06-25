@@ -12,7 +12,7 @@ import { Link2, MapPin } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
 import { selectRenderableLngTerminals } from './lngTerminalTrailSelect'
 import { buildGeoContext, hasGeoContext, type GeoContext } from '../../engine/geo/geoContext'
-import { isStale } from '../../engine/geo/geoCore'
+import { FreshnessBadge } from '../ui/FreshnessBadge'
 import type { GeospatialPrecision, LngTerminalFacility, WorldIntelEvent } from '../../worldIntel'
 import './EiaFacilitySourceTrail.css'
 
@@ -68,7 +68,6 @@ export function LngTerminalSourceTrail({
 }
 
 function TerminalCard({ terminal, events, now }: { terminal: LngTerminalFacility; events: WorldIntelEvent[]; now: number }) {
-  const stale = isStale(terminal.staleAt, now)
   const geo = buildGeoContext(
     { id: terminal.facilityId, name: terminal.facilityName, latitude: terminal.latitude, longitude: terminal.longitude, state: terminal.state, stateName: terminal.stateName },
     events,
@@ -83,7 +82,7 @@ function TerminalCard({ terminal, events, now }: { terminal: LngTerminalFacility
         <span className={`eia-precision eia-precision-${terminal.geospatialPrecision}`}>
           <MapPin size={11} /> {PRECISION_LABEL[terminal.geospatialPrecision]}
         </span>
-        <span className={stale ? 'eia-stale' : 'eia-fresh'}>{stale ? 'stale (cached)' : 'fresh'}</span>
+        <FreshnessBadge size="sm" now={now} retrievedAt={terminal.retrievedAt} staleAt={terminal.staleAt} />
       </div>
 
       <dl className="eia-dossier">

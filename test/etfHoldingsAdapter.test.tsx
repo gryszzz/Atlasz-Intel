@@ -233,7 +233,7 @@ describe('ETF holdings adapter', () => {
     expect(markup).toContain('XLK')
     expect(markup).toContain('NVIDIA CORP')
     expect(markup).toContain('as of 2026-06-22')
-    expect(markup).toContain('fresh snapshot')
+    expect(markup).toContain('data-freshness="fresh"')
     expect(markup).toContain('stale after 2026-06-29T00:00:00.000Z')
     expect(markup).toContain('retrievedAt 2026-06-23T12:00:00.000Z')
     expect(markup).toContain('CUSIP: 67066G104')
@@ -248,8 +248,9 @@ describe('ETF holdings adapter', () => {
     expect(iSharesMarkup).toContain('MICRON TECHNOLOGY INC')
     expect(iSharesMarkup).toContain('$4.06B USD')
 
+    // now is 8 days out, past the snapshot's staleAt → canonical label is "expired".
     const staleMarkup = renderToStaticMarkup(createElement(EtfHoldingsSourceTrail, { events: events(), now: NOW + 8 * 24 * 60 * 60 * 1000 }))
-    expect(staleMarkup).toContain('stale snapshot')
+    expect(staleMarkup).toContain('data-freshness="expired"')
 
     const broken = [{ ...events()[0], etfHolding: { ...events()[0].etfHolding!, sourceUrl: 'https://example.com/bad.xlsx' } }] as WorldIntelEvent[]
     expect(selectRenderableEtfHoldings(broken, 10, NOW)).toHaveLength(0)

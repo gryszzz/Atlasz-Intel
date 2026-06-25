@@ -7,6 +7,7 @@
  */
 import { Link2 } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
+import { FreshnessBadge } from '../ui/FreshnessBadge'
 import { groupEtfHoldingsByFund } from './etfHoldingTrailSelect'
 import type { EtfHolding, WorldIntelEvent } from '../../worldIntel'
 import './EtfHoldingsSourceTrail.css'
@@ -57,7 +58,6 @@ export function EtfHoldingsSourceTrail({
 function FundHoldings({ holdings, now }: { holdings: EtfHolding[]; now: number }) {
   const first = holdings[0]
   if (!first) return null
-  const stale = first.staleAt <= now
   return (
     <article className="etf-fund">
       <div className="etf-fund-head">
@@ -66,7 +66,7 @@ function FundHoldings({ holdings, now }: { holdings: EtfHolding[]; now: number }
         <ProvenanceBadge value={first.provenance} size="sm" />
         <code>{first.issuer}</code>
         <span>as of {first.sourceDate}</span>
-        <span className={stale ? 'etf-stale' : 'etf-fresh'}>{stale ? 'stale snapshot' : 'fresh snapshot'}</span>
+        <FreshnessBadge size="sm" now={now} retrievedAt={first.retrievedAt} staleAt={first.staleAt} />
         <span>stale after {formatIso(first.staleAt)}</span>
         <span>retrievedAt {formatIso(first.retrievedAt)}</span>
       </div>

@@ -11,7 +11,7 @@ import { Link2, MapPin } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
 import { selectRenderableMineralSites } from './mineralSiteTrailSelect'
 import { buildGeoContext, hasGeoContext, type GeoContext } from '../../engine/geo/geoContext'
-import { isStale } from '../../engine/geo/geoCore'
+import { FreshnessBadge } from '../ui/FreshnessBadge'
 import type { GeospatialPrecision, MineralSite, WorldIntelEvent } from '../../worldIntel'
 import './EiaFacilitySourceTrail.css'
 
@@ -58,7 +58,6 @@ export function MineralSiteSourceTrail({ events, limit = 30, now }: { events: Wo
 }
 
 function MineralCard({ site, events, now }: { site: MineralSite; events: WorldIntelEvent[]; now: number }) {
-  const stale = isStale(site.staleAt, now)
   const geo = buildGeoContext(
     { id: site.siteId, name: site.siteName, latitude: site.latitude, longitude: site.longitude, state: site.countryCode === 'US' ? site.state : undefined, stateName: site.countryCode === 'US' ? site.stateName : undefined },
     events,
@@ -74,7 +73,7 @@ function MineralCard({ site, events, now }: { site: MineralSite; events: WorldIn
         <span className={`eia-precision eia-precision-${site.geospatialPrecision}`}>
           <MapPin size={11} /> {PRECISION_LABEL[site.geospatialPrecision]}
         </span>
-        <span className={stale ? 'eia-stale' : 'eia-fresh'}>{stale ? 'stale (cached)' : 'fresh'}</span>
+        <FreshnessBadge size="sm" now={now} retrievedAt={site.retrievedAt} staleAt={site.staleAt} />
       </div>
 
       <dl className="eia-dossier">

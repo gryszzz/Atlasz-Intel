@@ -12,7 +12,7 @@ import { Link2 } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
 import { selectRenderableGridRegions, statesForBa } from './gridRegionTrailSelect'
 import { buildGeoContext, type GeoWeatherRegionMatch } from '../../engine/geo/geoContext'
-import { isStale } from '../../engine/geo/geoCore'
+import { FreshnessBadge } from '../ui/FreshnessBadge'
 import type { GridRegion, WorldIntelEvent } from '../../worldIntel'
 import './EiaFacilitySourceTrail.css'
 
@@ -52,7 +52,6 @@ export function GridRegionSourceTrail({ events, limit = 40, now }: { events: Wor
 }
 
 function RegionCard({ region, events, now }: { region: GridRegion; events: WorldIntelEvent[]; now: number }) {
-  const stale = isStale(region.staleAt, now)
   const states = region.statesServed && region.statesServed.length > 0 ? region.statesServed : statesForBa(events, region.baCode)
   // Region weather context: a NWS alert in any of those states = same-region match (never outage).
   const weatherMatches = collectWeatherMatches(states, events)
@@ -63,7 +62,7 @@ function RegionCard({ region, events, now }: { region: GridRegion; events: World
         <span>{region.baName}</span>
         <ProvenanceBadge value={region.provenance} size="sm" />
         <span className="eia-precision eia-precision-region-only">region only</span>
-        <span className={stale ? 'eia-stale' : 'eia-fresh'}>{stale ? 'stale (cached)' : 'fresh'}</span>
+        <FreshnessBadge size="sm" now={now} retrievedAt={region.retrievedAt} staleAt={region.staleAt} />
       </div>
 
       <dl className="eia-dossier">

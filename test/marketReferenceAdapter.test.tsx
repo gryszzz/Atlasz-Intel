@@ -156,10 +156,11 @@ describe('Market Reference Master adapter', () => {
     expect(freshMarkup).toContain('Market Reference Master')
     expect(freshMarkup).toContain('NVIDIA CORP')
     expect(freshMarkup).toContain('DATA_UNAVAILABLE')
-    expect(freshMarkup).toContain('fresh reference')
+    expect(freshMarkup).toContain('data-freshness="fresh"')
 
+    // now is past the source staleAt (NOW + 1_000) → canonical label is "expired", never styled fresh.
     const staleMarkup = renderToStaticMarkup(createElement(MarketIdentitySourceTrail, { events: events(), now: NOW + 2_000 }))
-    expect(staleMarkup).toContain('stale-cache')
+    expect(staleMarkup).toContain('data-freshness="expired"')
 
     const emptyMarkup = renderToStaticMarkup(createElement(MarketIdentitySourceTrail, { events: [] }))
     expect(emptyMarkup).toContain('DATA_UNAVAILABLE')

@@ -11,7 +11,7 @@ import { Link2, MapPin } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
 import { selectRenderableLocodes } from './portLocodeTrailSelect'
 import { buildGeoContext, hasGeoContext, type GeoContext } from '../../engine/geo/geoContext'
-import { isStale } from '../../engine/geo/geoCore'
+import { FreshnessBadge } from '../ui/FreshnessBadge'
 import type { GeospatialPrecision, UnLocode, WorldIntelEvent } from '../../worldIntel'
 import './EiaFacilitySourceTrail.css'
 
@@ -58,7 +58,6 @@ export function PortLocodeSourceTrail({ events, limit = 30, now }: { events: Wor
 }
 
 function LocodeCard({ loc, events, now }: { loc: UnLocode; events: WorldIntelEvent[]; now: number }) {
-  const stale = isStale(loc.staleAt, now)
   // NOAA region match only meaningful for US subdivisions (US state codes).
   const geo = buildGeoContext(
     { id: loc.locode, name: loc.locationName, latitude: loc.latitude, longitude: loc.longitude, state: loc.countryCode === 'US' ? loc.subdivision : undefined, stateName: undefined },
@@ -74,7 +73,7 @@ function LocodeCard({ loc, events, now }: { loc: UnLocode; events: WorldIntelEve
         <span className={`eia-precision eia-precision-${loc.geospatialPrecision}`}>
           <MapPin size={11} /> {PRECISION_LABEL[loc.geospatialPrecision]}
         </span>
-        <span className={stale ? 'eia-stale' : 'eia-fresh'}>{stale ? 'stale (cached)' : 'fresh'}</span>
+        <FreshnessBadge size="sm" now={now} retrievedAt={loc.retrievedAt} staleAt={loc.staleAt} />
       </div>
 
       <dl className="eia-dossier">
