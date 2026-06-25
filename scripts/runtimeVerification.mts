@@ -211,7 +211,7 @@ async function main() {
 
   // Cold-start dashboard sanity (no live keys needed for baseline).
   const cold = buildConnectorAudit({ sources: [], events: [], now: Date.now() })
-  check('every keyed connector without a key reports missing-key', cold.filter((r) => r.requiredEnv.length > 0 && !r.requiredEnv.every((e) => process.env[e])).every((r) => r.status === 'missing-key'), 'cold-start keyed rows')
+  check('every keyed connector without a key reports missing-key (or deferred)', cold.filter((r) => r.requiredEnv.length > 0 && !r.requiredEnv.every((e) => process.env[e])).every((r) => r.status === 'missing-key' || r.status === 'deferred'), 'cold-start keyed rows')
   check('no connector is implemented:false but claims a trust tier other than catalog-only', CONNECTOR_AUDIT_DEFINITIONS.every((d) => d.implemented || d.trust === 'catalog-only'), 'implemented/trust consistency')
 
   // No simulated / fake fallback events among real connector output.

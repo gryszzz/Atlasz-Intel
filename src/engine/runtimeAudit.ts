@@ -21,6 +21,7 @@ export type ConnectorRuntimeStatus =
   | 'rate-limited'
   | 'failed'
   | 'disabled'
+  | 'deferred'
   | 'not-wired'
 
 export type ConnectorAuditDefinition = {
@@ -41,6 +42,10 @@ export type ConnectorAuditDefinition = {
   notes: string
   implemented: boolean
   staleAfterMs?: number
+  /** Unresolved by design (metadata/media/registry/status/market-data): not a gap. */
+  unresolvedByDesign?: boolean
+  /** Built + tested but live runtime wiring intentionally deferred. */
+  liveWiringDeferred?: boolean
 }
 
 type ConnectorAuditDefinitionInput =
@@ -108,6 +113,7 @@ export const CONNECTOR_AUDIT_DEFINITIONS: ConnectorAuditDefinition[] = [
     sourceTrailUi: 'GDELT media-observation source trail',
     resolverSupport: 'no',
     exposureSupport: 'none',
+    unresolvedByDesign: true,
     trust: 'media-observation',
     notes: 'Media observation, not verified fact. No causality, tone, or company exposure inferred from headlines.',
   }),
@@ -397,6 +403,7 @@ export const CONNECTOR_AUDIT_DEFINITIONS: ConnectorAuditDefinition[] = [
     sourceTrailUi: 'UN Comtrade trade-flow source trail',
     resolverSupport: 'no',
     exposureSupport: 'none',
+    unresolvedByDesign: true,
     trust: 'official-api',
     notes: 'Catalog-driven, bounded pulls only. Country/partner/commodity trade-flow evidence; no company-level claims or inferred supply chains.',
   }),
@@ -414,6 +421,7 @@ export const CONNECTOR_AUDIT_DEFINITIONS: ConnectorAuditDefinition[] = [
     sourceTrailUi: 'OpenAlex research source trail',
     resolverSupport: 'no',
     exposureSupport: 'none',
+    unresolvedByDesign: true,
     trust: 'official-api',
     notes: 'Research metadata only; not validation of technical claims. No company exposure inferred; authors kept minimal.',
   }),
@@ -431,6 +439,7 @@ export const CONNECTOR_AUDIT_DEFINITIONS: ConnectorAuditDefinition[] = [
     sourceTrailUi: 'Crossref DOI metadata source trail',
     resolverSupport: 'no',
     exposureSupport: 'none',
+    unresolvedByDesign: true,
     trust: 'official-api',
     notes: 'DOI registry metadata only. No full-text scraping, claim validation, citation-quality claim, or company/market exposure inference.',
   }),
@@ -635,6 +644,7 @@ export const CONNECTOR_AUDIT_DEFINITIONS: ConnectorAuditDefinition[] = [
     sourceTrailUi: 'NRC reactor status source trail',
     resolverSupport: 'no',
     exposureSupport: 'none',
+    unresolvedByDesign: true,
     trust: 'official-api',
     notes: 'Daily reactor power level as the regulator publishes it — never an Atlasz safety/outage/disruption assessment. Separate from EIA facility geography.',
   }),
@@ -669,6 +679,7 @@ export const CONNECTOR_AUDIT_DEFINITIONS: ConnectorAuditDefinition[] = [
     sourceTrailUi: 'Port / UN/LOCODE source trail',
     resolverSupport: 'no',
     exposureSupport: 'none',
+    unresolvedByDesign: true,
     trust: 'official-api',
     notes: 'FAIL-CLOSED: requires an official unece.org CSV. Location-code registry only — never live port activity, vessel traffic, congestion, or disruption.',
   }),
@@ -686,6 +697,7 @@ export const CONNECTOR_AUDIT_DEFINITIONS: ConnectorAuditDefinition[] = [
     sourceTrailUi: 'World Port Index source trail',
     resolverSupport: 'no',
     exposureSupport: 'none',
+    unresolvedByDesign: true,
     trust: 'official-api',
     notes: 'Physical port reference (location/harbor attributes). Links to UN/LOCODE only on exact code match. Never live traffic, congestion, or disruption. NGA may block non-browser fetches.',
   }),
@@ -720,6 +732,7 @@ export const CONNECTOR_AUDIT_DEFINITIONS: ConnectorAuditDefinition[] = [
     sourceTrailUi: 'Market Quote source trail',
     resolverSupport: 'no',
     exposureSupport: 'none',
+    unresolvedByDesign: true,
     trust: 'auth-gated',
     notes: 'Key-gated real equity/ETF quotes (last trade). FAIL-CLOSED without keys -> PRICE_UNAVAILABLE; no random-walk fallback, no seeded/default price rendered as real. Keys travel only in request headers. No trading advice, prediction, or signal score.',
   }),
@@ -737,6 +750,8 @@ export const CONNECTOR_AUDIT_DEFINITIONS: ConnectorAuditDefinition[] = [
     sourceTrailUi: 'Options source trail',
     resolverSupport: 'no',
     exposureSupport: 'none',
+    liveWiringDeferred: true,
+    unresolvedByDesign: true,
     trust: 'auth-gated',
     notes: 'Key-gated option contracts (last trade/quote, IV, greeks, open interest when source-provided). Identity decoded from OCC symbol. FAIL-CLOSED without keys + underlyings allowlist. NO flow/unusual-activity inference, no trading advice or signal score.',
   }),
@@ -847,6 +862,8 @@ function connectorStatus(
 ): ConnectorRuntimeStatus {
   // `not-wired` is reserved for connectors with no runtime adapter at all.
   if (!definition.implemented) return 'not-wired'
+  // Built + tested but live runtime wiring intentionally deferred (honest, not a failure).
+  if (definition.liveWiringDeferred) return 'deferred'
   // Implemented but no source snapshot yet: key-gated -> missing-key; otherwise the
   // connector is configured and simply hasn't completed its first poll -> pending-first-fetch.
   if (sources.length === 0) return definition.requiredEnv.length > 0 ? 'missing-key' : 'pending-first-fetch'
