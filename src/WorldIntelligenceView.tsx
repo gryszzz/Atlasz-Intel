@@ -68,6 +68,9 @@ const EtfHoldingsSourceTrail = lazy(() =>
 const EiaFacilitySourceTrail = lazy(() =>
   import('./components/intel/EiaFacilitySourceTrail').then((m) => ({ default: m.EiaFacilitySourceTrail })),
 )
+const WhatToWatchPanel = lazy(() =>
+  import('./components/intel/WhatToWatchPanel').then((m) => ({ default: m.WhatToWatchPanel })),
+)
 const EiaRefinerySourceTrail = lazy(() =>
   import('./components/intel/EiaRefinerySourceTrail').then((m) => ({ default: m.EiaRefinerySourceTrail })),
 )
@@ -263,6 +266,10 @@ export function WorldIntelligenceView({
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading SEC Form 4 insider transactions" /></div>}>
           <Form4SourceTrail events={visibleEvents} />
+        </Suspense>
+
+        <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading what to watch next" /></div>}>
+          <WhatToWatchPanel events={visibleEvents} now={now} />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading SEC Form 13F holdings" /></div>}>
