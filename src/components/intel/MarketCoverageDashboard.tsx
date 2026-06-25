@@ -40,6 +40,16 @@ export function MarketCoverageDashboard({
     return buildCoverageAudit({ connectorRows, now })
   }, [sources, events, now])
 
+  // Fresh-weighted effective coverage: stale connectors count less, unknown is
+  // neutral (not zero) — so a long "covered" list can't hide stale coverage.
+  const effectiveCoverage = useMemo(() => {
+    const weight = { fresh: 1, stale: 0.4, unknown: 0.5 } as const
+    const total = audit.items
+      .filter((item) => item.provider === 'connector')
+      .reduce((sum, item) => sum + weight[item.freshness], 0)
+    return Math.round(total * 10) / 10
+  }, [audit])
+
   const s = audit.summary
   return (
     <section className="cov-dash world-panel">
@@ -53,6 +63,7 @@ export function MarketCoverageDashboard({
 
       <div className="cov-summary" aria-label="Coverage summary">
         <Chip label="covered" value={s.covered} tone="ok" />
+        <Chip label="fresh-weighted" value={effectiveCoverage} tone="ok" />
         <Chip label="missing" value={s.missing} tone="bad" />
         <Chip label="high-impact missing" value={s.highRelevanceMissing} tone="bad" />
         <Chip label="realtime/near" value={s.realtime} tone="live" />

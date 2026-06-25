@@ -203,8 +203,15 @@ async function main() {
   const usOnly = sampleEvents.filter((e) => e.countryCodes.length > 0 && e.countryCodes.every((c) => c === 'US')).length
   const global = sampleEvents.filter((e) => e.countryCodes.some((c) => c !== 'US')).length
   const conflicts = detectConflicts(sampleEvents, now)
-  const corroboratedBriefs = synthesizeBriefs(sampleEvents, { now, limit: sampleEvents.length }).filter((b) => b.corroboration.independentSourceCount >= 2).length
+  const briefs = synthesizeBriefs(sampleEvents, { now, limit: sampleEvents.length })
+  const corroboratedBriefs = briefs.filter((b) => b.corroboration.independentSourceCount >= 2).length
   const wctEligible = sampleEvents.filter((e) => eligibleForToday(e, now)).length
+  // Source-freshness weighting: average confidence weight of known-freshness briefs,
+  // and how many carry no freshness signal (unknown — counted, never treated as zero).
+  const briefWeights = briefs.map((b) => b.confidence.weight)
+  const knownWeights = briefWeights.filter((w): w is number => typeof w === 'number')
+  const avgWeight = knownWeights.length ? knownWeights.reduce((a, b) => a + b, 0) / knownWeights.length : 0
+  const unknownWeight = briefWeights.length - knownWeights.length
 
   console.log('\nFreshness & coverage metrics:')
   console.log(`  connectors online: ${countByStatus('online')}  empty: ${countByStatus('configured (empty)')}  missing-key: ${countByStatus('missing-key')}  rate-limited: ${countByStatus('rate-limited')}  unavailable: ${countByStatus('unavailable')}  failed: ${countByStatus('failed')}`)
@@ -213,6 +220,7 @@ async function main() {
   console.log(`  coverage: US-only events ${usOnly}  global (non-US) events ${global}`)
   console.log(`  what-changed-today eligible: ${wctEligible}/${sampleEvents.length}  (static/annual re-fetch excluded)`)
   console.log(`  corroborated briefs (>=2 independent sources): ${corroboratedBriefs}  conflicts detected: ${conflicts.length}`)
+  console.log(`  source-freshness weighting: avg confidence weight ${avgWeight.toFixed(2)} (n=${knownWeights.length})  unknown-freshness (counted, not zero): ${unknownWeight}`)
 
   // --- 3. Trust tier table ---
   console.log('\nTrust tier table (connector count per tier):')
