@@ -120,6 +120,7 @@ export const COVERAGE_REGISTRY: WatchedThing[] = [
 
   // 2. Price / market data
   covered('price-equities', 'price-market-data', 'Equity/ETF quotes (key-gated)', ['equities-prices'], 'realtime', 'auth-gated', ['ticker', 'company', 'etf'], 'high', 15 * 60_000, 'Key-gated Alpaca quote provider; fail-closed -> PRICE_UNAVAILABLE until ATLASZ_ALPACA_API_KEY is configured. No seeded/default price rendered as real.'),
+  covered('price-options', 'price-market-data', 'Options chain / open interest (key-gated)', ['options-oi'], 'realtime', 'auth-gated', ['ticker', 'company'], 'high', 15 * 60_000, 'Key-gated Alpaca options snapshots; fail-closed -> unavailable until keys + ATLASZ_OPTIONS_UNDERLYINGS. No flow inference.'),
   missing('price-forex', 'price-market-data', 'Forex', ['ticker'], 'high', 'No FX feed wired.'),
   missing('price-futures', 'price-market-data', 'Commodity futures', ['commodity'], 'high', 'No commodity futures feed wired.'),
   missing('price-rates-vol', 'price-market-data', 'Rates / yields / volatility', ['macro-series'], 'high', 'Rates available via FRED (macro), but no realtime yield-curve/vol surface.'),
@@ -132,7 +133,7 @@ export const COVERAGE_REGISTRY: WatchedThing[] = [
   covered('ownership-insiders', 'ownership-positioning', 'Insider transactions (Form 4)', ['sec-form4'], 'daily', 'public-disclosure', ['company', 'reporting-owner'], 'high', 2 * DAY, 'Event-driven insider ownership transactions.'),
   covered('ownership-institutions', 'ownership-positioning', 'Institutional holdings (13F)', ['sec-form13f'], 'quarterly', 'public-disclosure', ['company', 'institution', 'cusip'], 'high', 100 * DAY, 'Quarterly DELAYED 13F snapshots; not current positions.'),
   covered('ownership-etf', 'ownership-positioning', 'ETF basket holdings', ['etf-holdings'], 'daily', 'public-disclosure', ['etf', 'index', 'company'], 'high', 8 * DAY, 'Dated issuer holdings (SOXX/SPY/XLK/XLE/XLU). Limited fund coverage.'),
-  missing('ownership-short-options', 'ownership-positioning', 'Short interest / options open interest', ['ticker', 'company'], 'high', 'No short-interest or options-OI source wired.'),
+  missing('ownership-short-options', 'ownership-positioning', 'Short interest', ['ticker', 'company'], 'high', 'No FINRA/exchange short-interest source wired. (Options open interest is covered via the key-gated options provider.)'),
 
   // 5. Macro / rates / fiscal
   covered('macro-us', 'macro-rates-fiscal', 'US macro (FRED/Treasury/BLS/BEA)', ['fred', 'treasury-fiscal', 'bls', 'bea'], 'monthly', 'official-api', ['macro-series', 'fiscal-series', 'institution'], 'high', 35 * DAY, 'Official US macro/fiscal/labor/national-accounts series.'),

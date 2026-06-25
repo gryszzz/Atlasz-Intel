@@ -723,6 +723,23 @@ export const CONNECTOR_AUDIT_DEFINITIONS: ConnectorAuditDefinition[] = [
     trust: 'auth-gated',
     notes: 'Key-gated real equity/ETF quotes (last trade). FAIL-CLOSED without keys -> PRICE_UNAVAILABLE; no random-walk fallback, no seeded/default price rendered as real. Keys travel only in request headers. No trading advice, prediction, or signal score.',
   }),
+  connector({
+    id: 'options-oi',
+    label: 'Options chain / open interest',
+    domain: 'options market data',
+    sourceIds: ['alpaca_options'],
+    access: 'key-gated',
+    cadence: 'realtime',
+    sourceIdentity: 'Alpaca Market Data options snapshots',
+    officialUrl: 'https://alpaca.markets/options',
+    requiredEnv: ['ATLASZ_ALPACA_API_KEY', 'ATLASZ_ALPACA_SECRET_KEY', 'ATLASZ_OPTIONS_UNDERLYINGS'],
+    persistenceTables: [],
+    sourceTrailUi: 'Options source trail',
+    resolverSupport: 'no',
+    exposureSupport: 'none',
+    trust: 'auth-gated',
+    notes: 'Key-gated option contracts (last trade/quote, IV, greeks, open interest when source-provided). Identity decoded from OCC symbol. FAIL-CLOSED without keys + underlyings allowlist. NO flow/unusual-activity inference, no trading advice or signal score.',
+  }),
 ]
 
 export function buildConnectorAudit(input: {

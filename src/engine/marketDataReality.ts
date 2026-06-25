@@ -66,6 +66,7 @@ export const MARKET_DATA_SURFACES: MarketDataSurface[] = [
   // --- Key-gated: real provider exists, requires a key (fail-closed) ---
   keyGated('realtime-equities', 'Realtime equities', 'high', 'Key-gated Alpaca quote provider (alpaca_equity_quotes). Fail-closed -> PRICE_UNAVAILABLE until ATLASZ_ALPACA_API_KEY + ATLASZ_ALPACA_SECRET_KEY are set.'),
   keyGated('etf-prices', 'ETF prices', 'high', 'Same key-gated Alpaca quote provider as equities. PRICE_UNAVAILABLE until keys configured.'),
+  keyGated('options-oi', 'Options chain / open interest', 'high', 'Key-gated Alpaca options snapshots (last trade/quote, IV, greeks, OI when source-provided). Requires keys + ATLASZ_OPTIONS_UNDERLYINGS. No flow inference.'),
   // --- Simulated / seeded (dev-only) — NOT allowed in production ---
   {
     id: 'seed-market-series',
@@ -133,7 +134,6 @@ export const MARKET_DATA_SURFACES: MarketDataSurface[] = [
     note: 'Mock ingestion tape used to illustrate the pipeline. Never a real source trail.',
   },
   // --- Source-needed (no provider wired) ---
-  sourceNeeded('options-oi', 'Options chain / open interest', 'high', 'No options/OI source wired; no "flow" claims allowed without real trade prints.'),
   sourceNeeded('forex', 'Forex', 'high', 'No FX provider wired.'),
   sourceNeeded('commodity-futures', 'Commodity futures', 'high', 'No futures provider wired.'),
   sourceNeeded('short-interest', 'Short interest', 'medium', 'No FINRA/exchange short-interest source wired.'),

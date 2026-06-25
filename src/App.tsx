@@ -73,6 +73,7 @@ import { ConnectorDashboardPanel } from './components/intel/ConnectorDashboardPa
 import { MarketCoverageDashboard } from './components/intel/MarketCoverageDashboard'
 import { MissingMarketDataPanel } from './components/intel/MissingMarketDataPanel'
 import { MarketQuoteSourceTrail } from './components/intel/MarketQuoteSourceTrail'
+import { OptionsSourceTrail } from './components/intel/OptionsSourceTrail'
 import { ExposureDashboardPanel } from './components/intel/ExposureDashboardPanel'
 import { findWorldIntelEvent } from './engine/entityResolver'
 import type { WorldIntelSnapshot } from './worldIntel'
@@ -1513,6 +1514,10 @@ function App() {
 
             <article className="panel market-quote-panel wide-panel">
               <MarketQuoteSourceTrail />
+            </article>
+
+            <article className="panel options-panel wide-panel">
+              <OptionsSourceTrail />
             </article>
 
             <article className="panel exposure-dashboard-panel wide-panel">

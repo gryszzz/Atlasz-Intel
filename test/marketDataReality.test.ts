@@ -33,7 +33,7 @@ describe('market data reality pass', () => {
       expect(surface.missingReason && surface.missingReason.length).toBeTruthy()
     }
     const ids = new Set(report.sourceNeeded.map((s) => s.id))
-    for (const id of ['options-oi', 'forex', 'commodity-futures', 'short-interest', 'earnings-transcripts']) {
+    for (const id of ['forex', 'commodity-futures', 'short-interest', 'earnings-transcripts']) {
       expect(ids.has(id)).toBe(true)
     }
   })
@@ -43,6 +43,7 @@ describe('market data reality pass', () => {
     const keyGatedIds = new Set(report.keyGated.map((s) => s.id))
     expect(keyGatedIds.has('realtime-equities')).toBe(true)
     expect(keyGatedIds.has('etf-prices')).toBe(true)
+    expect(keyGatedIds.has('options-oi')).toBe(true)
     const sourceNeededIds = new Set(report.sourceNeeded.map((s) => s.id))
     expect(sourceNeededIds.has('realtime-equities')).toBe(false)
     for (const surface of report.keyGated) {
