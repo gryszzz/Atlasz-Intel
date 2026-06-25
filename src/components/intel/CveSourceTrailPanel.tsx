@@ -1,44 +1,44 @@
 /*
- * NVD CVE source-trail cards.
+ * Unified Vulnerability Intelligence dossier.
  *
- * Renders defensive vulnerability intelligence from normalized WorldIntelEvent
- * records that carry an `nvdCve` payload. Every card must earn the right to
- * render: a CVE is shown only when it has a CVE ID, official NVD URL, retrieval
- * timestamp, source identity, raw provenance hash, and high confidence. When no
- * record qualifies, the panel shows DATA_UNAVAILABLE instead of an empty shell.
- *
- * Exploitability is implied only when the CVE is in the CISA KEV catalog (KEV
- * badge) — never inferred from severity alone.
+ * Collapses defensive vulnerability evidence — NVD CVE, CISA KEV, GitHub GHSA
+ * advisory, OSV vulnerability, and CISA ICS/advisory — into one dossier per CVE
+ * (records without a CVE link keep their own native identity). Each source keeps
+ * its own provenance, freshness, proof link, and confidence; nothing is merged
+ * into a single unverified claim. Defensive metadata only — exploitation status
+ * is shown only when CISA KEV / NVD / GHSA assert it, never inferred and never
+ * accompanied by exploitation guidance. No dossier renders without proof.
  */
 import { Link2, ShieldAlert } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
 import { FreshnessBadge } from '../ui/FreshnessBadge'
-import { selectRenderableNvdCves } from './cveTrailSelect'
-import type { NvdCve, WorldIntelEvent } from '../../worldIntel'
+import { selectVulnerabilityDossiers, type VulnerabilityDossier } from './vulnerabilityTrailSelect'
+import type { CisaAdvisory, GhsaAdvisory, KevVulnerability, NvdCve, OsvVulnerability, WorldIntelEvent } from '../../worldIntel'
 import './CveSourceTrailPanel.css'
 
-const CVE_UNAVAILABLE = 'DATA_UNAVAILABLE'
+const UNAVAILABLE = 'DATA_UNAVAILABLE'
 
-export function CveSourceTrailPanel({ events, limit = 6, now }: { events: WorldIntelEvent[]; limit?: number; now: number }) {
-  const cves = selectRenderableNvdCves(events, limit)
+export function CveSourceTrailPanel({ events, limit = 8, now }: { events: WorldIntelEvent[]; limit?: number; now: number }) {
+  const dossiers = selectVulnerabilityDossiers(events, limit)
   return (
     <section className="cve-trail">
       <header className="cve-trail-head">
-        <span>NVD CVE Intelligence</span>
-        <strong>{cves.length > 0 ? `${cves.length} official` : CVE_UNAVAILABLE}</strong>
+        <span>Vulnerability Intelligence</span>
+        <strong>{dossiers.length > 0 ? `${dossiers.length} dossiers` : UNAVAILABLE}</strong>
       </header>
-      {cves.length > 0 ? (
+      {dossiers.length > 0 ? (
         <div className="cve-trail-stack">
-          {cves.map((cve) => (
-            <CveCard key={cve.id} cve={cve} now={now} />
+          {dossiers.map((dossier) => (
+            <DossierCard key={dossier.key} dossier={dossier} now={now} />
           ))}
         </div>
       ) : (
         <div className="cve-trail-empty">
-          <strong>{CVE_UNAVAILABLE}</strong>
+          <strong>{UNAVAILABLE}</strong>
           <p>
-            No NVD CVE records available. The public NIST NVD API returned no records, was rate-limited,
-            or the connector is disabled. Nothing is fabricated.
+            No proven vulnerability records available. The NVD / CISA KEV / GitHub GHSA / OSV / CISA advisory connectors
+            returned nothing, were rate-limited, or are disabled — or no record carried a complete source trail. Nothing
+            is fabricated.
           </p>
         </div>
       )}
@@ -46,19 +46,49 @@ export function CveSourceTrailPanel({ events, limit = 6, now }: { events: WorldI
   )
 }
 
-function CveCard({ cve, now }: { cve: NvdCve; now: number }) {
+function DossierCard({ dossier, now }: { dossier: VulnerabilityDossier; now: number }) {
   return (
     <article className="cve-row">
       <div className="cve-row-head">
-        <strong>{cve.cveId}</strong>
-        {cve.inKnownExploitedCatalog && (
-          <span className="cve-kev-badge" title="Listed in the CISA Known Exploited Vulnerabilities catalog">
-            <ShieldAlert size={11} /> CISA KEV
+        <strong>{dossier.cveId ?? dossier.key}</strong>
+        {dossier.exploited && (
+          <span className="cve-kev-badge" title="Known-exploited per CISA KEV / NVD / GHSA — defensive status only">
+            <ShieldAlert size={11} /> known exploited
           </span>
         )}
-        <ProvenanceBadge value={cve.provenance} size="sm" />
-        <FreshnessBadge size="sm" now={now} retrievedAt={cve.retrievedAt} />
+        <span className="cve-srccount">{dossier.sourceCount} source{dossier.sourceCount === 1 ? '' : 's'}</span>
+        <FreshnessBadge size="sm" now={now} retrievedAt={dossier.latestRetrievedAt} />
       </div>
+
+      {dossier.nvd && <NvdSection cve={dossier.nvd} now={now} />}
+      {dossier.kev && <KevSection kev={dossier.kev} now={now} />}
+      {dossier.ghsa.map((ghsa) => (
+        <GhsaSection key={ghsa.id} ghsa={ghsa} now={now} />
+      ))}
+      {dossier.osv.map((osv) => (
+        <OsvSection key={osv.id} osv={osv} now={now} />
+      ))}
+      {dossier.cisa.map((cisa) => (
+        <CisaSection key={cisa.id} cisa={cisa} now={now} />
+      ))}
+    </article>
+  )
+}
+
+function SourceHead({ label, provenance, retrievedAt, now }: { label: string; provenance: string; retrievedAt: number; now: number }) {
+  return (
+    <div className="cve-source-head">
+      <span className="cve-source-tag">{label}</span>
+      <ProvenanceBadge value={provenance} size="sm" />
+      <FreshnessBadge size="sm" now={now} retrievedAt={retrievedAt} />
+    </div>
+  )
+}
+
+function NvdSection({ cve, now }: { cve: NvdCve; now: number }) {
+  return (
+    <div className="cve-source-section">
+      <SourceHead label="NVD" provenance={cve.provenance} retrievedAt={cve.retrievedAt} now={now} />
       <p className="cve-desc">{cve.description || 'No English description provided by NVD.'}</p>
       <div className="cve-meta">
         {cve.cvss ? (
@@ -71,32 +101,6 @@ function CveCard({ cve, now }: { cve: NvdCve; now: number }) {
         <span>{cve.vulnStatus}</span>
         <span>{cve.confidence}% confidence</span>
       </div>
-      <dl>
-        <div>
-          <dt>Source</dt>
-          <dd>{cve.sourceName}</dd>
-        </div>
-        <div>
-          <dt>Source ID</dt>
-          <dd>{cve.sourceIdentifier}</dd>
-        </div>
-        <div>
-          <dt>Published</dt>
-          <dd>{cve.published.slice(0, 10)}</dd>
-        </div>
-        <div>
-          <dt>Modified</dt>
-          <dd>{cve.lastModified.slice(0, 10)}</dd>
-        </div>
-        <div>
-          <dt>Retrieved</dt>
-          <dd>{formatAge(cve.retrievedAt)} ago</dd>
-        </div>
-        <div>
-          <dt>Raw hash</dt>
-          <dd>{cve.rawPayloadHash.slice(0, 12)}…</dd>
-        </div>
-      </dl>
       {cve.cweIds.length > 0 && (
         <div className="cve-cwe">
           {cve.cweIds.map((cwe) => (
@@ -106,21 +110,98 @@ function CveCard({ cve, now }: { cve: NvdCve; now: number }) {
       )}
       {cve.vendorProducts.length > 0 && <small>Affected: {cve.vendorProducts.slice(0, 4).join(', ')}</small>}
       <a href={cve.sourceUrl} target="_blank" rel="noreferrer">
-        <Link2 size={12} />
-        NVD source trail
+        <Link2 size={12} /> NVD source trail
       </a>
-    </article>
+    </div>
   )
 }
 
-function formatAge(timestamp: number): string {
-  const minutes = Math.max(0, Math.round((Date.now() - timestamp) / 60_000))
-  if (minutes < 60) {
-    return `${minutes}m`
-  }
-  const hours = Math.round(minutes / 60)
-  if (hours < 48) {
-    return `${hours}h`
-  }
-  return `${Math.round(hours / 24)}d`
+function KevSection({ kev, now }: { kev: KevVulnerability; now: number }) {
+  return (
+    <div className="cve-source-section">
+      <SourceHead label="CISA KEV" provenance={kev.provenance} retrievedAt={kev.retrievedAt} now={now} />
+      <p className="cve-desc">{kev.vulnerabilityName || kev.shortDescription}</p>
+      <div className="cve-meta">
+        <span>{kev.vendorProject} · {kev.product}</span>
+        <span>added {kev.dateAdded.slice(0, 10)}</span>
+        {kev.dueDate && <span>remediate by {kev.dueDate.slice(0, 10)}</span>}
+        {kev.knownRansomwareCampaignUse && <span className="cve-severity sev-high">ransomware-linked</span>}
+      </div>
+      {kev.requiredAction && <small>Required action (CISA): {kev.requiredAction}</small>}
+      <a href={kev.sourceCatalogUrl || kev.sourceUrl} target="_blank" rel="noreferrer">
+        <Link2 size={12} /> CISA KEV catalog
+      </a>
+    </div>
+  )
+}
+
+function GhsaSection({ ghsa, now }: { ghsa: GhsaAdvisory; now: number }) {
+  return (
+    <div className="cve-source-section">
+      <SourceHead label={`GHSA · ${ghsa.ghsaId}`} provenance={ghsa.provenance} retrievedAt={ghsa.retrievedAt} now={now} />
+      <p className="cve-desc">{ghsa.summary}</p>
+      <div className="cve-meta">
+        <span className={`cve-severity sev-${ghsa.severity.toLowerCase()}`}>{ghsa.severity || 'severity n/a'}</span>
+        {ghsa.withdrawnAt && <span>withdrawn {ghsa.withdrawnAt.slice(0, 10)}</span>}
+        <span>updated {ghsa.updatedAt.slice(0, 10)}</span>
+      </div>
+      {ghsa.packages.length > 0 && (
+        <div className="cve-cwe">
+          {ghsa.packages.slice(0, 4).map((pkg) => (
+            <span key={`${pkg.ecosystem}:${pkg.name}`} className="cve-pkg">
+              {pkg.ecosystem}:{pkg.name}
+              {pkg.firstPatched ? ` → ${pkg.firstPatched}` : ''}
+            </span>
+          ))}
+        </div>
+      )}
+      <a href={ghsa.sourceUrl} target="_blank" rel="noreferrer">
+        <Link2 size={12} /> GitHub advisory
+      </a>
+    </div>
+  )
+}
+
+function OsvSection({ osv, now }: { osv: OsvVulnerability; now: number }) {
+  return (
+    <div className="cve-source-section">
+      <SourceHead label={`OSV · ${osv.osvId}`} provenance={osv.provenance} retrievedAt={osv.retrievedAt} now={now} />
+      <p className="cve-desc">{osv.summary || osv.details || 'No OSV summary provided.'}</p>
+      <div className="cve-meta">
+        {osv.ecosystem && <span>{osv.ecosystem}</span>}
+        {osv.severity && <span>{osv.severity}</span>}
+        {osv.aliases.length > 0 && <span>aliases: {osv.aliases.slice(0, 4).join(', ')}</span>}
+      </div>
+      {osv.affectedPackages.length > 0 && (
+        <div className="cve-cwe">
+          {osv.affectedPackages.slice(0, 4).map((pkg) => (
+            <span key={`${pkg.ecosystem}:${pkg.name}`} className="cve-pkg">
+              {pkg.ecosystem}:{pkg.name}
+              {pkg.fixed ? ` → ${pkg.fixed}` : ''}
+            </span>
+          ))}
+        </div>
+      )}
+      <a href={osv.sourceUrl} target="_blank" rel="noreferrer">
+        <Link2 size={12} /> OSV record
+      </a>
+    </div>
+  )
+}
+
+function CisaSection({ cisa, now }: { cisa: CisaAdvisory; now: number }) {
+  return (
+    <div className="cve-source-section">
+      <SourceHead label={`CISA · ${cisa.advisoryId}`} provenance={cisa.provenance} retrievedAt={cisa.retrievedAt} now={now} />
+      <p className="cve-desc">{cisa.title || cisa.summary}</p>
+      <div className="cve-meta">
+        {cisa.vendors.length > 0 && <span>vendors: {cisa.vendors.slice(0, 3).join(', ')}</span>}
+        {cisa.products.length > 0 && <span>products: {cisa.products.slice(0, 3).join(', ')}</span>}
+        <span>updated {cisa.updated.slice(0, 10)}</span>
+      </div>
+      <a href={cisa.sourceUrl} target="_blank" rel="noreferrer">
+        <Link2 size={12} /> CISA advisory
+      </a>
+    </div>
+  )
 }

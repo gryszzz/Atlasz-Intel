@@ -44,6 +44,9 @@ const CongressSourceTrail = lazy(() =>
 const GdeltSourceTrail = lazy(() =>
   import('./components/intel/GdeltSourceTrail').then((m) => ({ default: m.GdeltSourceTrail })),
 )
+const CveSourceTrailPanel = lazy(() =>
+  import('./components/intel/CveSourceTrailPanel').then((m) => ({ default: m.CveSourceTrailPanel })),
+)
 const ComtradeSourceTrail = lazy(() =>
   import('./components/intel/ComtradeSourceTrail').then((m) => ({ default: m.ComtradeSourceTrail })),
 )
@@ -242,6 +245,10 @@ export function WorldIntelligenceView({
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading GDELT media source trail" /></div>}>
           <GdeltSourceTrail events={visibleEvents} />
+        </Suspense>
+
+        <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading vulnerability intelligence" /></div>}>
+          <CveSourceTrailPanel events={visibleEvents} now={now} />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading UN Comtrade source trail" /></div>}>

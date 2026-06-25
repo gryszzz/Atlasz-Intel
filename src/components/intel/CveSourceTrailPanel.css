@@ -65,6 +65,43 @@
   border-radius: 999px;
 }
 
+.cve-srccount {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  color: var(--faint);
+  letter-spacing: 0.04em;
+}
+
+.cve-source-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-2);
+  background: var(--panel);
+  border: 1px solid var(--line-soft);
+  border-radius: 5px;
+}
+
+.cve-source-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cve-source-tag {
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text);
+}
+
+.cve-pkg {
+  font-family: var(--mono);
+}
+
 .cve-desc {
   margin: 0;
   font-size: var(--fs-xs);
