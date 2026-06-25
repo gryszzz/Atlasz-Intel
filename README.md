@@ -1,53 +1,87 @@
+<div align="center">
+
+<img src="docs/atlasz-intel-banner-transparent.png" alt="Atlasz Intel" width="880" />
+
 # Atlasz Intel
 
-<p align="center">
-  <img src="docs/atlasz-intel-banner-transparent.png" alt="Atlasz Intel" width="880" />
-</p>
+**A local-first, real-source intelligence terminal.**
+It turns official and public data into source-trailed events, an evidence graph, and structural exposure context — and refuses to fake the parts it cannot prove.
 
-<p align="center">
-  <strong>Atlasz Intel is a local-first real-source intelligence terminal that turns official/public data into source-trailed events, evidence graphs, and structural exposure context.</strong>
-</p>
+<br/>
 
-<p align="center">
-  <a href="https://github.com/gryszzz/Atlasz-Intel/releases/latest">Latest release</a>
-  |
-  <a href="docs/runtime-verification-log.md">Runtime verification log</a>
-  |
-  <a href="docs/intelligence-source-atlas.md">Source atlas</a>
-  |
-  <a href="docs/atlasz-runtime-engineering-standards.md">Engineering standards</a>
-</p>
+[![Real data only](https://img.shields.io/badge/data-real--source%20only-0b7285?style=flat-square)](docs/runtime-verification-log.md)
+[![Connectors](https://img.shields.io/badge/connectors-38%20wired-1864ab?style=flat-square)](docs/connector-hardening-audit.md)
+[![Local-first](https://img.shields.io/badge/runtime-local--first%20desktop-364fc7?style=flat-square)](#run-locally)
+[![Stack](https://img.shields.io/badge/stack-Electron%20%2B%20React%2019%20%2B%20TS%20%2B%20SQLite-5f3dc4?style=flat-square)](#tech-stack)
+[![Verification](https://img.shields.io/badge/runtime%20verification-13%2F13%20passing-2b8a3e?style=flat-square)](docs/runtime-verification-log.md)
 
-Atlasz is not a chatbot, news clone, trading bot, or placeholder dashboard. It is a local desktop intelligence workspace for asking: what changed, where did it come from, what proves it, which entities does it touch, and what is still unknown?
+<br/>
 
-## What Atlasz Answers
+[Latest release](https://github.com/gryszzz/Atlasz-Intel/releases/latest)
+&nbsp;·&nbsp;
+[Runtime verification log](docs/runtime-verification-log.md)
+&nbsp;·&nbsp;
+[Connector hardening audit](docs/connector-hardening-audit.md)
+&nbsp;·&nbsp;
+[Source atlas](docs/intelligence-source-atlas.md)
+&nbsp;·&nbsp;
+[Engineering standards](docs/atlasz-runtime-engineering-standards.md)
 
-- What changed today?
-- Where did it come from?
-- How fresh is it?
-- What proves it?
-- What entities does it touch?
-- What structural exposure exists?
-- What is unknown?
+</div>
 
-## Real Data Contract
+---
 
-Atlasz is allowed to be incomplete. It is not allowed to fake intelligence.
+Atlasz is **not** a chatbot, a news clone, a trading bot, or a placeholder dashboard. It is a desktop intelligence workspace built around one discipline: every line on screen traces to live evidence, curated structure, an explicitly-labeled inference, or an honest *unknown*. Nothing is invented to fill a gap.
 
-- No simulated replacement data.
-- No fake events, fake alerts, fake macro data, fake filings, fake patents, fake sanctions, or fake weather.
-- Missing keys show `missing-key` or `missing-config`.
-- Failed, stale, malformed, unavailable, and rate-limited sources fail closed.
-- Media observations are not verified facts.
-- Curated exposure is structural context, not live proof.
-- Public unauthenticated data is labeled as public unauthenticated.
-- Local-derived and model-inferred outputs never become verified by UI wording.
-- Source trails require source identity, timestamp/freshness, confidence, provenance, URL when available, and payload proof when practical.
-- Secrets are read from environment only and must not appear in source trails, logs, raw payload JSON, or UI endpoint lists.
+It exists to answer seven questions, fast and with receipts:
 
-## Interface Preview
+> **What changed? · Where did it come from? · How fresh is it? · What proves it? · Which entities does it touch? · What structural exposure exists? · What is still unknown?**
 
-These repo-owned images show the public-facing Atlasz surfaces and the evidence boundaries they enforce.
+---
+
+## The Real-Data Contract
+
+This is the core of the product, not a footnote. Atlasz is *allowed to be incomplete*. It is *not allowed to fabricate intelligence*.
+
+- **No simulated production data.** No fake events, alerts, macro prints, filings, patents, sanctions, prices, or weather.
+- **Fail closed, always.** Failed, stale, malformed, unavailable, or rate-limited sources surface as exactly that — never as silently-substituted data.
+- **Missing keys are honest.** Key-gated providers render `missing-key` / `DATA_UNAVAILABLE` until configured. There is no random-walk price fallback.
+- **Provenance or it didn't happen.** Source trails carry source identity, freshness, confidence, provenance, a URL when available, and payload proof when practical.
+- **Media is observation, not fact.** GDELT shows what public media *metadata* observed — it never becomes a verified event and never enters exposure ranking.
+- **Curated structure is reference, not causality.** Exposure chains describe relationships; they are labeled `curated-reference` and are never upgraded into live proof.
+- **Secrets stay secret.** Keys are read from the environment only and must never appear in source trails, logs, raw payloads, or UI endpoint lists. A redaction scan enforces it.
+
+---
+
+## What's New in v0.2.0
+
+The terminal grew from a connector dashboard into a full reasoning surface. Highlights since the last README:
+
+### Intelligence Synthesis — "What To Watch Next"
+The forward end of the evidence chain. Atlasz composes briefs that walk:
+`observed change → proof → resolved entities → curated systems → corroboration → conflicts → unknowns → what it does NOT prove → confirmation-seeking watch items` — **every line basis-labeled** so you always know whether you're reading evidence, structure, or inference.
+
+### Cross-Source Corroboration & Conflict Detection
+- **Corroboration** rewards independent overlap across sources — media never counts as corroboration, and stale sources are downgraded.
+- **Conflict detection** flags contradictions instead of silently merging them: ticker↔CIK, CIK↔name, facility coordinates, ETF ticker↔CUSIP, and operator-identity mismatches.
+
+### Canonical Freshness Model
+One freshness vocabulary across the whole app: `live · fresh · cached · stale · expired · missing-key · unavailable · rate-limited`. **"What Changed Today"** now excludes static/annual reference data unless it was genuinely change-tracked today.
+
+### Geospatial + Energy / Trade / Materials Core
+A real geospatial layer with energy, logistics, and critical-materials connectors: EIA **power plants, refineries, LNG terminals, nuclear plants**, **NRC reactor status**, **grid regions / balancing authorities**, **ports (UN/LOCODE + World Port Index)**, **USGS minerals**, and a curated **critical-minerals crosswalk**.
+
+### Real Market Data (no fake prices)
+A key-gated equity/ETF **quote provider (Alpaca)** wired live into the ingestion worker, plus an **options chain / open-interest** provider. Seeded/default market surfaces are gated out of production — it's `PRICE_UNAVAILABLE` until a real quote arrives, never a guess.
+
+### Honesty Harness
+A self-auditing spine: Connector Dashboard, Market Coverage Dashboard, Market Data Reality audit, the [Connector Super-Hardening audit](docs/connector-hardening-audit.md), and an upgraded [runtime verification pass](docs/runtime-verification-log.md) reporting freshest/oldest record, coverage, eligibility, and corroboration/conflict counts.
+
+---
+
+## Interface
+
+Repo-owned previews of the public-facing surfaces and the evidence boundaries they enforce.
 
 | Connector Dashboard | Exposure Dashboard |
 | --- | --- |
@@ -61,157 +95,92 @@ These repo-owned images show the public-facing Atlasz surfaces and the evidence 
 | --- |
 | ![Curated Exposure Chains](docs/screenshots/curated-exposure-chains.svg) |
 
+---
+
 ## Architecture Loop
 
 ```text
-connectors
-  -> normalize
-  -> persist
-  -> source trail
-  -> Evidence Graph
-  -> resolver
-  -> curated exposure
-  -> dashboards
-  -> verification log
+ connectors ─▶ normalize ─▶ persist ─▶ source trail ─▶ Evidence Graph ─▶ resolver
+                                                                            │
+   verification log ◀── dashboards ◀── intelligence synthesis ◀── curated exposure
 ```
 
-Runtime flow:
+**Runtime flow**
 
-- Official/public connectors fetch bounded records with retry/backoff and fail-closed guards.
-- Adapters normalize records into stable internal types with source identity and payload hashes.
-- Local persistence stores source-backed records, audit rows, source trails, and graph evidence.
-- The Evidence Graph links source records to entities, topics, publishers, companies, countries, sectors, commodities, vulnerabilities, filings, patents, and events when proof fields exist.
-- Resolver output can surface curated structural exposure, but it is labeled `curated-reference` and never upgraded into live causality.
-- Dashboards show source health, stale/missing-key states, ranked changes, source trails, entity dossiers, and unresolved gaps.
-- `scripts/runtimeVerification.mts` drives the real registry and writes an auditable truth table.
+1. **Connectors** fetch bounded records from official/public sources with retry, backoff, and fail-closed guards.
+2. **Adapters** normalize records into stable internal types carrying source identity and payload hashes.
+3. **Persistence** stores source-backed records, audit rows, source trails, and graph evidence in local SQLite (WAL) with a JSON fallback.
+4. The **Evidence Graph** links records to entities, topics, publishers, companies, countries, sectors, commodities, vulnerabilities, filings, patents, facilities, and events — only when proof fields exist.
+5. The **resolver** can surface curated structural exposure, labeled `curated-reference`, never upgraded into live causality.
+6. **Corroboration & conflict** passes cross-check sources before anything is presented as agreement.
+7. **Intelligence synthesis** composes basis-labeled "What To Watch Next" briefs.
+8. **Dashboards** show source health, freshness state, ranked change, source trails, entity dossiers, and unresolved gaps.
+9. `scripts/runtimeVerification.mts` drives the real registry and writes an auditable truth table.
+
+---
 
 ## Connector Matrix
 
-Runtime-wired means Atlasz has an adapter/provider path, tests, source health behavior, and UI/persistence wiring. It does not mean every source is reachable without keys on every machine.
+**38 runtime-wired connectors.** *Runtime-wired* means there is an adapter/provider path, tests, source-health behavior, and UI/persistence wiring — not that every source is reachable without keys on every machine. The live, generated table lives in [`docs/connector-hardening-audit.md`](docs/connector-hardening-audit.md) (average hardening score **100/100**).
 
-| Connector | Domain | Public/key-gated | Trust tier | Runtime status | Source trail | Persistence | Exposure/resolver behavior |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Public market REST | markets/watchlist | public | public-unauthenticated | default live-capable | Data Core | sampled market state | price context only, not advice |
-| Public crypto websockets | crypto ticks | public opt-in | public-unauthenticated | live-capable when enabled | Data Core | sampled frames/ticks | local-computed proxy pressure only |
-| Market Reference Master | ticker/CIK/legal identity | public | official-api | live-capable | Market identity trail | `market_identity_master` | exact ticker/CIK/name resolver, no fake sectors |
-| ETF holdings | basket constituents | public | public-disclosure | live-capable | ETF holdings trail | holding events/audit | dated issuer snapshot, source-provided weights only |
-| GDELT DOC | media observation | public | media-observation | live-capable, may fail closed | GDELT trail | world events/audit | no exposure ranking, no verified event claim |
-| Treasury Fiscal Data | government fiscal | public | official-api | live-capable | Treasury trail | macro/fiscal records | partial macro/fiscal context |
-| BLS | labor/economic | public | official-api | live-capable | BLS trail | macro observations | partial macro context |
-| NOAA/NWS alerts | weather disruption | public | official-api | live-capable | NOAA weather trail | weather events/audit | partial region resolver, unresolved is allowed |
-| USGS earthquakes | geophysical events | public | official-api | live-capable | USGS trail | world events/audit | partial region resolver |
-| Federal Register | policy/regulatory | public | official-api | live-capable | regulatory trail | policy events/audit | partial agency/policy resolver |
-| OFAC SDN | sanctions/enforcement | public | official-api | live-capable | OFAC trail | sanctions events/audit | identifier-only, no inferred guilt/risk |
-| GitHub Releases | OSS technology | public, optional token | public-unauthenticated | live-capable | GitHub release trail | release events/audit | configured repo/entity resolver |
-| CISA KEV | exploited vulnerabilities | public | official-api | live-capable | KEV trail | cyber events/audit | partial CVE/product context |
-| NVD | vulnerabilities | public | official-api | live-capable, may rate-limit/fail closed | NVD trail | cyber events/audit | partial CVE/product context |
-| GHSA | security advisories | public | public-unauthenticated | live-capable | GHSA trail | cyber events/audit | partial package/CVE context |
-| OSV | open-source vulnerabilities | public | official-api | live-capable | OSV trail | cyber events/audit | partial package/CVE context |
-| CISA advisories | defensive security | public | official-api | live-capable | advisory trail | cyber events/audit | partial product/vendor context |
-| Crossref DOI metadata | research metadata | public | official-api | live-capable | Crossref trail | DOI metadata/audit | DOI/publisher/venue/funder graph only |
-| SEC EDGAR | company disclosure | user-agent gated | public-disclosure | `missing-key` until `ATLASZ_SEC_USER_AGENT` | SEC filing trail | filings/events/audit | company/ticker/entity resolver |
-| SEC 13F holdings | institutional holdings | user-agent gated | public-disclosure | `missing-key` until `ATLASZ_SEC_USER_AGENT` | SEC 13F trail | holding events/audit | delayed quarterly snapshot, exact CUSIP→ticker only |
-| FRED | macro time series | key-gated | official-api | `missing-key` until `ATLASZ_FRED_API_KEY` | FRED trail | macro series/observations | partial macro context |
-| BEA | national accounts/GDP | key-gated | official-api | `missing-key` until `ATLASZ_BEA_API_KEY` | BEA trail | macro observations | partial macro context |
-| EIA | energy/commodities | key-gated | official-api | `missing-key` until `ATLASZ_EIA_API_KEY` | EIA trail | energy records/audit | commodity/energy resolver |
-| Congress.gov | legislation | key-gated | official-api | `missing-key` until `ATLASZ_CONGRESS_API_KEY` | Congress trail | bill/action events | identifier/policy resolver |
-| UN Comtrade | trade flows | key-gated | official-api | `missing-key` until `ATLASZ_UN_COMTRADE_API_KEY` | Comtrade trail | trade records/audit | no company exposure by design |
-| USPTO PatentsView | patent intelligence | key-gated | official-api | `missing-key` until `ATLASZ_PATENTSVIEW_API_KEY` | USPTO trail | patent records/audit | assignee/classification resolver |
-| OpenAlex Works | research graph metadata | key-gated | official-api | `missing-key` until `ATLASZ_OPENALEX_API_KEY` | OpenAlex trail | research records/audit | topic/institution graph only |
+### Live public — fetch live, no key required
+SEC Market Reference Master · ETF Holdings · Treasury Fiscal Data · BLS · Federal Register · OFAC SDN · NOAA/NWS Alerts · USGS Earthquakes · CISA KEV · CISA Advisories · NVD · GHSA · OSV · GitHub Releases · Crossref DOI · EIA Refineries · NRC Reactor Status · World Port Index · GDELT *(media observation)* · Yahoo/CoinGecko public market paths · optional public crypto websockets
 
-## Live, Key-Gated, Media, Curated, Future
+### Key-gated — require `.env`, fail closed to `missing-key`
+SEC EDGAR · SEC Company Facts · SEC Form 4 · SEC Form 13F *(SEC User-Agent)* · FRED · BEA · EIA *(+ power plants / nuclear / grid / LNG)* · Congress.gov · UN Comtrade · UN/LOCODE · USPTO PatentsView · OpenAlex Works · Alpaca equity/ETF quotes · Alpaca options chain/open-interest
 
-**Live public**
+### Domain coverage at a glance
 
-Market Reference Master via SEC company_tickers.json, Treasury Fiscal Data, BLS, NOAA/NWS alerts, USGS earthquakes, Federal Register, OFAC SDN, GitHub Releases, CISA KEV, NVD, GHSA, OSV, CISA advisories, Crossref DOI metadata, GDELT media observation, Yahoo/CoinGecko public market paths, and optional public crypto websocket paths.
+| Domain | Connectors |
+| --- | --- |
+| **Markets & identity** | Market Reference Master, Equity/ETF Quotes, ETF Holdings, Options chain/OI |
+| **Company disclosure** | SEC EDGAR, Company Facts, Form 4 (insiders), Form 13F (institutions) |
+| **Macro & fiscal** | FRED, BEA, BLS, Treasury Fiscal Data |
+| **Policy & regulatory** | Federal Register, Congress.gov, OFAC SDN |
+| **Cyber & vulnerabilities** | CISA KEV, CISA Advisories, NVD, GHSA, OSV |
+| **Energy & facilities** | EIA, EIA Power/Nuclear Plants, Refineries, LNG Terminals, NRC Reactor Status, Grid Regions |
+| **Trade, ports & materials** | UN Comtrade, UN/LOCODE, World Port Index, USGS Minerals |
+| **Physical world** | USGS Earthquakes, NOAA/NWS Alerts |
+| **Research & IP** | USPTO PatentsView, OpenAlex Works, Crossref DOI |
+| **OSS & media** | GitHub Releases, GDELT *(media observation)* |
 
-**Key-gated or config-gated**
-
-SEC EDGAR, SEC Company Facts/Form 4/Form 13F, FRED, BEA, EIA, Congress.gov, UN Comtrade, USPTO PatentsView, OpenAlex Works, operator-provided public disclosure JSON, optional GitHub token, and optional local Ollama parsing.
-
-**Media-observation**
-
-GDELT is treated as media observation. It can show that something was observed in public media metadata; it is not a verified event and does not enter exposure ranking.
-
-**Curated-reference**
-
-Curated exposure chains describe structural relationships such as company -> sector -> commodity -> region. They are useful context, but they are not live proof that a specific event caused a specific impact.
-
-**Future/not implemented**
-
-Crossref is now runtime-wired. Still future or reference-only: richer GKG/media entities, OpenCTI/MISP/Yeti integrations, World Bank/IMF connectors, aviation/ADS-B, shipping/AIS, OpenStreetMap/geography surfaces, NASA/earth observation, premium news providers, broader BEA/BLS/EIA expansions, and semantic/vector matching.
-
-## Operator Verification
-
-Run:
-
-```bash
-npx tsx scripts/runtimeVerification.mts
-```
-
-This command:
-
-- drives the real provider registry and adapter code
-- checks public connectors live where reachable
-- reports keyed connectors without keys as `missing-key`
-- verifies fail-closed boundaries and source trust labels
-- scans normalized output for secret leakage
-- writes `docs/runtime-verification-log.md`
-- prints environment key names only, never secret values
-
-Latest checked state in this repo:
-
-```text
-npm run lint
-npm run build
-npm test
-git diff --check
-npx tsx scripts/runtimeVerification.mts
-```
-
-The current verification log is the source of truth for what was online, failed closed, or missing-key on the last operator run.
+---
 
 ## What It Does
 
-- High-density local desktop command center.
-- Connector Dashboard for source health, trust tier, stale/rate-limited/missing-key state, record count, persistence, and source trail coverage.
-- Exposure Dashboard for resolved events, unresolved gaps, media-observation boundaries, and curated-reference exposure counts.
-- What Changed Today ranking across source-backed filings, macro records, weather, policy, cyber, research metadata, fiscal data, patents, OSS releases, and trade/fiscal layers as configured.
-- Evidence Graph linking events, entities, topics, publishers, countries, companies, sectors, commodities, vulnerabilities, filings, patents, and sources.
-- Entity dossiers with timelines, proof rows, unknowns, source links, freshness, confidence, and curated exposure chains.
-- Local SQLite WAL persistence with JSON fallback.
-- Worker-thread realtime market ingestion and browser fallback store.
-- Decision Journal and research-note surfaces for local operator context.
-- Ctrl/Cmd + K command menu for navigation and inspection.
+- **High-density local command center** — a desktop workspace, not a web tab.
+- **Connector Dashboard** — source health, trust tier, freshness state, record counts, persistence, and source-trail coverage.
+- **Exposure Dashboard** — resolved events, unresolved gaps, media-observation boundaries, and curated-reference exposure counts.
+- **Market Coverage Dashboard + Market Data Reality panel** — honest gaps where real quotes don't exist yet.
+- **What Changed Today** — ranked change across filings, macro, weather, policy, cyber, research, fiscal, patents, OSS releases, and trade layers.
+- **What To Watch Next** — forward-looking, basis-labeled intelligence briefs.
+- **Evidence Graph + Entity Dossiers** — timelines, proof rows, unknowns, source links, freshness, confidence, and curated exposure chains.
+- **World globe + event timeline** — geospatial context for physical-world and facility events.
+- **Quant terminal, Decision Journal, and research notes** — local operator context.
+- **`Ctrl/Cmd + K` command palette** — navigation and inspection from the keyboard.
 
-## Boundaries
+---
 
-Atlasz Intel is informational research software.
+## Tech Stack
 
-- Not financial advice.
-- Not legal advice.
-- Not a sanctions screening tool.
-- Not a trading bot.
-- Not a broker, execution engine, smart order router, or price oracle.
-- Not true Level 2 order-book depth unless a real depth connector is added later.
-- Not OSINT targeting people.
-- No scraping private/personal data.
-- No bypassing authentication, paywalls, CAPTCHAs, or rate limits.
-- No offensive security automation.
-- No guarantee that public unauthenticated data is complete, fresh, or verified.
+| Layer | Choice |
+| --- | --- |
+| Shell | **Electron 42** (desktop) with a browser-only preview mode |
+| UI | **React 19** + TypeScript, Tailwind v4, Recharts, `@xyflow/react` graph |
+| Build | **Vite 8**, `vite-plugin-electron`, `tsc` project references |
+| Persistence | **SQLite (WAL)** via `better-sqlite3`, with a JSON fallback store |
+| Ingestion | Worker-thread realtime market ingestion + browser fallback store |
+| Verification | `scripts/runtimeVerification.mts` (real registry, fail-closed, redaction scan) |
 
-## Install
+---
+
+## Quickstart
 
 ```bash
 git clone https://github.com/gryszzz/Atlasz-Intel.git
 cd Atlasz-Intel
 npm install
-```
-
-## Run Locally
-
-```bash
-npm run dev
+npm run dev          # desktop (Electron) dev
 ```
 
 Browser-only preview:
@@ -220,13 +189,11 @@ Browser-only preview:
 npm run web:dev
 ```
 
-With no `.env`, Atlasz starts with safe defaults: public/no-auth paths may run, key-gated providers show missing-key, unavailable data stays unavailable, and simulator/dev data must be explicitly enabled and labeled.
+With no `.env`, Atlasz starts on safe defaults: public/no-auth paths may run, key-gated providers report `missing-key`, unavailable data stays unavailable, and any simulator/dev data must be explicitly enabled **and** labeled.
 
-## Configuration
+### Configuration
 
-Copy `.env.example` to `.env` only when you want to opt in to external public feeds, keyed official APIs, or local model experiments.
-
-Common examples:
+Copy `.env.example` to `.env` only to opt into external public feeds, keyed official APIs, or local model experiments.
 
 ```bash
 ATLASZ_ENABLE_PUBLIC_WORLD=1
@@ -235,11 +202,26 @@ ATLASZ_FRED_API_KEY="..."
 ATLASZ_EIA_API_KEY="..."
 ATLASZ_OPENALEX_API_KEY="..."
 ATLASZ_CROSSREF_MAILTO="you@example.com"
+# Real market data (no fake prices):
+ATLASZ_ALPACA_API_KEY="..."
+ATLASZ_ALPACA_SECRET_KEY="..."
 ```
 
-Never commit `.env`, generated local databases, logs, caches, or local API keys.
+> Never commit `.env`, generated local databases, logs, caches, or local API keys.
 
-## Validate
+---
+
+## Operator Verification
+
+The verification pass is the source of truth for what was online, failed closed, or missing-key on the last run.
+
+```bash
+npx tsx scripts/runtimeVerification.mts
+```
+
+It drives the **real** provider registry and adapter code: public connectors are exercised live where reachable, keyed connectors without keys report `missing-key`, and keyed connectors with keys do a real fetch. It verifies fail-closed boundaries and trust labels, scans normalized output for secret leakage, prints **environment key names only — never values**, and writes [`docs/runtime-verification-log.md`](docs/runtime-verification-log.md).
+
+Full local gate:
 
 ```bash
 npm run lint
@@ -249,24 +231,39 @@ git diff --check
 npx tsx scripts/runtimeVerification.mts
 ```
 
-Desktop packaging is available when Electron packaging dependencies and host platform requirements are satisfied:
+Desktop packaging (when Electron build deps and host requirements are satisfied):
 
 ```bash
 npm run desktop:build
 ```
 
-## Source Atlas And Private Skills
+---
 
-The OSINT, security, agent, UI, data-engineering, and systems-design corpora are reference material unless promoted through the provider registry, adapter tests, source health, persistence, and UI evidence path.
+## Boundaries
 
-Private Codex/Claude skills are operator-private agent instructions. They are not Atlasz runtime, not required for a public checkout, and should not be treated as source connectors. Repo docs may describe the engineering doctrine; private skills belong in the user/agent skill system.
+Atlasz Intel is **informational research software**. It is:
+
+- **Not** financial, legal, or sanctions-screening advice.
+- **Not** a trading bot, broker, execution engine, smart order router, or price oracle.
+- **Not** true Level-2 order-book depth unless a real depth connector is added later.
+- **Not** OSINT targeting people — no scraping of private/personal data.
+- **Not** a tool for bypassing authentication, paywalls, CAPTCHAs, or rate limits, and **not** for offensive security automation.
+
+Public unauthenticated data carries no guarantee of completeness, freshness, or verification — and Atlasz labels it as such.
+
+---
+
+## Source Atlas & Private Skills
+
+The OSINT, security, agent, UI, data-engineering, and systems-design corpora in `docs/` are **reference material** unless promoted through the full evidence path: provider registry → adapter tests → source health → persistence → UI.
+
+Private Codex/Claude skills are operator-private agent instructions. They are **not** Atlasz runtime, not required for a public checkout, and not source connectors. The repo docs may describe the engineering doctrine; private skills live in the user/agent skill system.
 
 ## Release Hygiene
 
-Release assets should exclude `node_modules`, `.env`, generated databases, logs, caches, local screenshots with secrets, and untracked Electron output unless a desktop package is explicitly produced.
+Release assets exclude `node_modules`, `.env`, generated databases, logs, caches, local screenshots containing secrets, and untracked Electron output unless a desktop package is explicitly produced.
 
-Public repo target:
-
-```text
-https://github.com/gryszzz/Atlasz-Intel
-```
+<div align="center">
+<br/>
+<sub>Public repo · <a href="https://github.com/gryszzz/Atlasz-Intel">github.com/gryszzz/Atlasz-Intel</a> · Real data only.</sub>
+</div>
