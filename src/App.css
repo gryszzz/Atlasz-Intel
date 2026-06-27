@@ -147,8 +147,8 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 16px;
-  padding: 22px;
+  gap: 12px;
+  padding: 18px 22px 22px;
 }
 
 .topbar {
@@ -156,18 +156,18 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  min-height: 82px;
+  min-height: 66px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(13, 17, 16, 0.88);
   box-shadow: var(--shadow);
-  padding: 18px 18px 18px 20px;
+  padding: 14px 18px 14px 20px;
 }
 
 .topbar h2 {
   max-width: 850px;
-  margin: 5px 0 0;
-  font-size: 24px;
+  margin: 4px 0 0;
+  font-size: 21px;
   font-weight: 650;
   line-height: 1.2;
 }
@@ -257,6 +257,260 @@
 
 .command-grid .wct-panel {
   grid-column: span 12;
+}
+
+.command-grid .worldwatch-command-surface {
+  grid-column: span 12;
+}
+
+.worldwatch-command-surface {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  min-height: calc(100vh - 178px);
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 34%, rgba(94, 234, 212, 0.13), transparent 32%),
+    radial-gradient(circle at 70% 50%, rgba(103, 232, 249, 0.07), transparent 30%),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(148, 163, 184, 0.04) 1px, transparent 1px),
+    #040606;
+  background-size: auto, auto, 46px 46px, 46px 46px, auto;
+  box-shadow: var(--shadow), inset 0 0 80px rgba(94, 234, 212, 0.04);
+  padding: 14px;
+}
+
+.worldwatch-command-surface::before {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  content: "";
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), transparent 18%),
+    radial-gradient(circle at 50% 50%, transparent 0 34%, rgba(0, 0, 0, 0.22) 70%);
+}
+
+.worldwatch-command-head,
+.worldwatch-command-grid,
+.worldwatch-bottom-dock {
+  position: relative;
+  z-index: 1;
+}
+
+.worldwatch-command-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid rgba(94, 234, 212, 0.18);
+  border-radius: 8px;
+  background: rgba(7, 12, 11, 0.78);
+  padding: 12px 14px;
+  backdrop-filter: blur(18px);
+}
+
+.worldwatch-command-head span,
+.worldwatch-map-title span,
+.worldwatch-map-metrics span {
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.worldwatch-command-head h2 {
+  margin: 4px 0 0;
+  color: var(--white);
+  font-size: 19px;
+  line-height: 1.2;
+}
+
+.worldwatch-command-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.worldwatch-command-actions button {
+  border: 1px solid rgba(94, 234, 212, 0.28);
+  border-radius: 7px;
+  background: rgba(8, 17, 15, 0.82);
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  padding: 8px 10px;
+  text-transform: uppercase;
+}
+
+.worldwatch-command-actions button:hover {
+  border-color: rgba(94, 234, 212, 0.58);
+  background: rgba(16, 32, 28, 0.92);
+}
+
+.worldwatch-command-actions button:disabled {
+  cursor: progress;
+  opacity: 0.58;
+}
+
+.worldwatch-command-grid {
+  display: grid;
+  grid-template-columns: minmax(248px, 0.74fr) minmax(520px, 1.52fr) minmax(280px, 0.78fr);
+  gap: 12px;
+  align-items: stretch;
+  min-height: 640px;
+}
+
+.worldwatch-rail,
+.worldwatch-globe-panel,
+.worldwatch-dock-card {
+  min-width: 0;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 8px;
+  background: rgba(7, 10, 10, 0.78);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(18px);
+}
+
+.worldwatch-rail {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  max-height: 760px;
+  overflow: auto;
+  padding: 10px;
+}
+
+.worldwatch-rail .wct,
+.worldwatch-rail .world-intel-strip,
+.worldwatch-dock-card .cov-dash {
+  border-color: rgba(94, 234, 212, 0.16);
+  background: rgba(9, 13, 12, 0.82);
+}
+
+.worldwatch-rail .world-intel-strip {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 0;
+}
+
+.worldwatch-rail .world-intel-strip button,
+.worldwatch-rail .world-intel-lineage {
+  grid-column: 1 / -1;
+}
+
+.worldwatch-globe-panel {
+  display: grid;
+  gap: 12px;
+  overflow: hidden;
+  padding: 12px;
+}
+
+.worldwatch-map-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: rgba(4, 8, 8, 0.74);
+  padding: 10px 11px;
+}
+
+.worldwatch-map-title strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--white);
+  font-size: 14px;
+}
+
+.worldwatch-map-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.worldwatch-map-metrics span {
+  border: 1px solid rgba(94, 234, 212, 0.18);
+  border-radius: 999px;
+  background: rgba(94, 234, 212, 0.05);
+  color: var(--muted);
+  padding: 5px 8px;
+}
+
+.worldwatch-globe-panel .pulse-toolbar {
+  display: none;
+}
+
+.worldwatch-globe-panel .pulse-stage {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.worldwatch-globe-panel .pulse-sidecar {
+  display: none;
+}
+
+.worldwatch-globe-panel .globe-viewport {
+  min-height: 560px;
+  border-color: rgba(94, 234, 212, 0.16);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(94, 234, 212, 0.08), transparent 45%),
+    linear-gradient(90deg, rgba(94, 234, 212, 0.04) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(94, 234, 212, 0.035) 1px, transparent 1px),
+    #030707;
+  background-size: auto, 36px 36px, 36px 36px, auto;
+}
+
+.worldwatch-globe-panel .globe-sphere {
+  min-height: 520px;
+  background:
+    radial-gradient(circle at 42% 36%, rgba(255, 255, 255, 0.08), transparent 16%),
+    radial-gradient(circle at 50% 45%, rgba(94, 234, 212, 0.17), transparent 34%),
+    radial-gradient(circle at 50% 55%, rgba(103, 232, 249, 0.09), transparent 52%),
+    #06100e;
+  box-shadow:
+    inset 0 0 92px rgba(94, 234, 212, 0.1),
+    0 0 70px rgba(94, 234, 212, 0.08);
+}
+
+.worldwatch-globe-panel .timeline-control {
+  margin-top: 0;
+}
+
+.worldwatch-right-rail .intel-dossier {
+  border: 0;
+  padding: 0;
+}
+
+.worldwatch-right-rail .dossier-note {
+  display: none;
+}
+
+.worldwatch-right-rail .dossier-metric-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.worldwatch-bottom-dock {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 12px;
+}
+
+.worldwatch-dock-card {
+  overflow: hidden;
+  padding: 10px;
+}
+
+.worldwatch-dock-card .global-overview {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.worldwatch-dock-card .overview-lead {
+  grid-column: span 4;
 }
 
 .command-grid .command-status-panel {
@@ -2627,6 +2881,8 @@ textarea {
   }
 
   .global-overview,
+  .worldwatch-command-grid,
+  .worldwatch-bottom-dock,
   .pulse-toolbar,
   .pulse-stage,
   .sidecar-metrics,
@@ -2637,6 +2893,19 @@ textarea {
   .cyber-state-grid,
   .cyber-columns {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .worldwatch-command-grid,
+  .worldwatch-bottom-dock {
+    grid-template-columns: 1fr;
+  }
+
+  .worldwatch-rail {
+    max-height: none;
+  }
+
+  .worldwatch-globe-panel .globe-viewport {
+    min-height: 520px;
   }
 
   .overview-lead,
@@ -2697,6 +2966,8 @@ textarea {
   }
 
   .global-overview,
+  .worldwatch-command-head,
+  .worldwatch-map-title,
   .pulse-toolbar,
   .pulse-stage,
   .sidecar-metrics,
@@ -2710,6 +2981,30 @@ textarea {
   .cyber-columns,
   .cyber-doctrine {
     grid-template-columns: 1fr;
+  }
+
+  .worldwatch-command-head,
+  .worldwatch-map-title {
+    display: grid;
+  }
+
+  .worldwatch-command-actions,
+  .worldwatch-map-metrics {
+    justify-content: flex-start;
+  }
+
+  .worldwatch-command-surface {
+    min-height: auto;
+    padding: 10px;
+  }
+
+  .worldwatch-globe-panel .globe-viewport {
+    min-height: 390px;
+    padding: 12px;
+  }
+
+  .worldwatch-globe-panel .globe-sphere {
+    min-height: 360px;
   }
 
   .status-kicker,

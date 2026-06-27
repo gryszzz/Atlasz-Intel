@@ -68,6 +68,7 @@ import type { LiveAssetSnapshot, SourceTrust } from './realtime'
 import { useWorldIntelSnapshot } from './worldIntelStore'
 import { useWorldwatchProfiles } from './worldwatchStore'
 import { WhatChangedTodayPanel } from './components/intel/WhatChangedTodayPanel'
+import { WhatToWatchPanel } from './components/intel/WhatToWatchPanel'
 import { EntityEvidenceGraphPanel } from './components/intel/EntityEvidenceGraphPanel'
 import { EventResolutionPanel } from './components/intel/EventResolutionPanel'
 import { ConnectorActivationPanel } from './components/intel/ConnectorActivationPanel'
@@ -195,7 +196,7 @@ type DefensiveReferenceEntry = {
 }
 
 const views: Array<{ id: ViewId; label: string; icon: typeof MonitorDot }> = [
-  { id: 'command', label: 'Global Overview', icon: MonitorDot },
+  { id: 'command', label: 'Worldwatch', icon: MonitorDot },
   { id: 'world', label: 'World Intel', icon: Globe2 },
   { id: 'graph', label: 'Intelligence Graph', icon: Network },
   { id: 'radar', label: 'Event Timelines', icon: RadioTower },
@@ -1479,29 +1480,106 @@ function App() {
         <ViewErrorBoundary key={activeView}>
         {activeView === 'command' && (
           <section className="dashboard-grid command-grid">
-            {/* First impression: what matters, above raw feeds and evidence cards. */}
-            <article className="wct-panel">
-              <WhatChangedTodayPanel events={worldSnapshot.worldEvents} profile={worldwatch.activeProfile} />
-            </article>
+            <section className="worldwatch-command-surface" aria-label="Atlasz Worldwatch command surface">
+              <header className="worldwatch-command-head">
+                <div>
+                  <span>Aegis Worldwatch</span>
+                  <h2>Source-backed world intelligence, ranked by what matters to your profile.</h2>
+                </div>
+                <div className="worldwatch-command-actions">
+                  <button type="button" onClick={() => setActiveView('world')}>
+                    Open world map
+                  </button>
+                  <button type="button" onClick={() => setActiveView('sources')}>
+                    Source ops
+                  </button>
+                  <button type="button" onClick={() => void refreshWorldIntel()} disabled={worldIntelLoading}>
+                    {worldIntelLoading ? 'Refreshing' : 'Refresh OSINT'}
+                  </button>
+                </div>
+              </header>
 
-            <article className="panel command-status-panel">
-              <GlobalOverview
-                activeLayerCount={activeLayerIds.length}
-                briefItems={worldBrief}
-                defensiveSummary={defensiveSummary}
-                engineSnapshot={engineSnapshot}
-                hasRealtimeAttentionSource={hasRealtimeAttentionSource}
-                pinnedSignals={pinnedSignals}
-                selectedEvent={selectedEvent}
-                selectedMarket={selectedMarket}
-                selectedSignal={selectedSignal}
-                sourceStatusCounts={sourceStatusCounts}
-                sourceItemCount={worldRawSourceItems.length}
-                socialPressure={socialPressure}
-                socialVelocity={socialVelocity.velocity}
-                worldSnapshot={worldSnapshot}
-              />
-            </article>
+              <div className="worldwatch-command-grid">
+                <aside className="worldwatch-rail worldwatch-left-rail">
+                  <WhatChangedTodayPanel events={worldSnapshot.worldEvents} profile={worldwatch.activeProfile} />
+                  <WorldIntelStatusStrip
+                    loading={worldIntelLoading}
+                    onRefresh={refreshWorldIntel}
+                    snapshot={worldSnapshot}
+                  />
+                </aside>
+
+                <article className="worldwatch-globe-panel">
+                  <div className="worldwatch-map-title">
+                    <div>
+                      <span>Command Globe</span>
+                      <strong>{worldwatch.activeProfile?.name ?? 'All evidence'}</strong>
+                    </div>
+                    <div className="worldwatch-map-metrics">
+                      <span>{worldEvents.length} events</span>
+                      <span>{sourceStatusCounts.online}/{sourceStatusCounts.total} sources online</span>
+                      <span>{sourceStatusCounts.stale + sourceStatusCounts.failed} needs attention</span>
+                    </div>
+                  </div>
+                  <GlobalPulseScene
+                    activeLayerIds={activeLayerIds}
+                    events={filteredPulseEvents}
+                    onSelectEvent={(eventId) => selectEvent(eventId)}
+                    onSelectTicker={(ticker) => selectTicker(ticker, 'command')}
+                    selectedEventId={selectedEvent.id}
+                    signals={worldSignals}
+                  />
+                  <TimelineControl
+                    events={filteredPulseEvents}
+                    onSelectEvent={(eventId) => selectEvent(eventId)}
+                    selectedEventId={selectedEvent.id}
+                    selectedTimeWindow={selectedTimeWindow}
+                    setSelectedTimeWindow={setSelectedTimeWindow}
+                  />
+                </article>
+
+                <aside className="worldwatch-rail worldwatch-right-rail">
+                  <IntelDossier
+                    graphNode={selectedGraphNode}
+                    market={selectedMarket}
+                    marketExplanation={selectedMarketExplanation}
+                    onAskAnalyst={() => submitQuestion('Explain selected signal')}
+                    onSelectTicker={(ticker) => selectTicker(ticker, 'command')}
+                    selectedEvent={selectedEvent}
+                    signal={selectedSignal}
+                  />
+                  {selectedWorldEvent && <EventResolutionPanel event={selectedWorldEvent} />}
+                </aside>
+              </div>
+
+              <div className="worldwatch-bottom-dock">
+                <section className="worldwatch-dock-card">
+                  <WhatToWatchPanel
+                    events={worldSnapshot.worldEvents}
+                    now={worldSnapshot.updatedAt}
+                    profile={worldwatch.activeProfile}
+                  />
+                </section>
+                <section className="worldwatch-dock-card">
+                  <GlobalOverview
+                    activeLayerCount={activeLayerIds.length}
+                    briefItems={worldBrief}
+                    defensiveSummary={defensiveSummary}
+                    engineSnapshot={engineSnapshot}
+                    hasRealtimeAttentionSource={hasRealtimeAttentionSource}
+                    pinnedSignals={pinnedSignals}
+                    selectedEvent={selectedEvent}
+                    selectedMarket={selectedMarket}
+                    selectedSignal={selectedSignal}
+                    sourceStatusCounts={sourceStatusCounts}
+                    sourceItemCount={worldRawSourceItems.length}
+                    socialPressure={socialPressure}
+                    socialVelocity={socialVelocity.velocity}
+                    worldSnapshot={worldSnapshot}
+                  />
+                </section>
+              </div>
+            </section>
 
             <article className="panel connector-dashboard-panel">
               <ConnectorDashboardPanel sources={worldSnapshot.sources} events={worldSnapshot.worldEvents} />
