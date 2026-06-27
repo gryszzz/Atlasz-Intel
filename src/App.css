@@ -324,6 +324,10 @@
   grid-column: span 12;
 }
 
+.sources-grid .wide-panel {
+  grid-column: span 12;
+}
+
 .panel {
   min-width: 0;
   border: 1px solid var(--line);

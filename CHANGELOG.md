@@ -6,6 +6,13 @@ only, no simulated production data.
 ## v0.2.0 — Real-Source Intelligence Terminal
 
 Highlights:
+- Aegis Worldwatch relevance profiles: profile-aware Watchlists for tickers,
+  companies/CIKs, ETFs, commodities, regions, facilities, ports, grid regions,
+  minerals, CVEs, connectors, and themes. Worldwatch ranks visibility only; it
+  never creates evidence or raises truth confidence.
+- API activation workflow: `docs/local-api-setup.md`, safe
+  `scripts/checkRuntimeConfig.mts`, and a Connector Activation Panel that shows
+  missing-key/configured/online/failing states without exposing secret values.
 - Intelligence synthesis: "What To Watch Next" briefs (observed change → proof →
   resolved entities → curated systems → corroboration → conflicts → unknowns →
   what it does NOT prove → confirmation-seeking watch items, every line basis-labeled).
@@ -47,6 +54,8 @@ Contracts & boundaries:
   no fabricated causality, no AI-generated evidence.
 - Every claim traces to live/source-backed evidence, curated-reference structure,
   explicitly labeled inference/rule, or unknown.
+- Hermes delivers evidence, Aegis evaluates trust/freshness/conflict, and Worldwatch
+  ranks relevance. Watchlists affect ranking, chips, and filters only.
 - NOT financial, legal, sanctions, or trading advice. No price prediction, no trade
   execution. Curated structure is reference, never live impact. Media observation is
   never verified fact.

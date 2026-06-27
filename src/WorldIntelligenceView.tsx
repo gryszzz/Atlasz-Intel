@@ -6,6 +6,12 @@ import {
   QuantStripSkeleton,
   SourceHealthSkeleton,
 } from './components/ui/Skeletons'
+import { WorldwatchProfilePanel } from './components/intel/WorldwatchProfilePanel'
+import {
+  relevantEventsForProfile,
+  type WatchedEntity,
+  type WorldwatchProfile,
+} from './engine/worldwatchProfiles'
 import type { UserFavorite, WorldIntelEvent, WorldIntelSnapshot } from './worldIntel'
 import './WorldIntelligenceView.css'
 
@@ -118,6 +124,10 @@ export function WorldIntelligenceView({
   onSelectEvent,
   onSelectTicker,
   onToggleFavorite,
+  onActiveWorldwatchProfileChange,
+  onAddEntityToWorldwatchProfile,
+  activeWorldwatchProfileId,
+  worldwatchProfiles,
   snapshot,
 }: {
   loading: boolean
@@ -125,6 +135,10 @@ export function WorldIntelligenceView({
   onSelectEvent: (eventId: string) => void
   onSelectTicker: (ticker: string) => void
   onToggleFavorite: (kind: UserFavorite['kind'], targetId: string, label: string) => Promise<void>
+  onActiveWorldwatchProfileChange: (profileId: string) => void
+  onAddEntityToWorldwatchProfile: (entity: WatchedEntity) => void
+  activeWorldwatchProfileId: string
+  worldwatchProfiles: WorldwatchProfile[]
   snapshot: WorldIntelSnapshot
 }) {
   const [windowId, setWindowId] = useState<WorldWindowId>('24h')
@@ -143,13 +157,32 @@ export function WorldIntelligenceView({
         .sort((left, right) => right.timestamp - left.timestamp),
     [activeWindow.durationMs, now, snapshot.worldEvents],
   )
+  const activeWorldwatchProfile = useMemo(
+    () =>
+      activeWorldwatchProfileId === 'all'
+        ? undefined
+        : worldwatchProfiles.find((profile) => profile.id === activeWorldwatchProfileId),
+    [activeWorldwatchProfileId, worldwatchProfiles],
+  )
+  const rankedProfileEvents = useMemo(
+    () =>
+      activeWorldwatchProfile
+        ? relevantEventsForProfile(events, activeWorldwatchProfile, { now })
+        : [],
+    [activeWorldwatchProfile, events, now],
+  )
+  const relevanceByEvent = useMemo(
+    () => new Map(rankedProfileEvents.map((ranked) => [ranked.event.id, ranked] as const)),
+    [rankedProfileEvents],
+  )
+  const profileEvents = activeWorldwatchProfile ? rankedProfileEvents.map((ranked) => ranked.event) : events
   const searchResults = useMemo(
-    () => buildSearchResults(query, snapshot, events),
-    [events, query, snapshot],
+    () => buildSearchResults(query, snapshot, profileEvents),
+    [profileEvents, query, snapshot],
   )
   const visibleEvents = query.trim()
-    ? events.filter((event) => searchResults.events.some((result) => result.id === event.id)).slice(0, 18)
-    : events.slice(0, 18)
+    ? profileEvents.filter((event) => searchResults.events.some((result) => result.id === event.id)).slice(0, 18)
+    : profileEvents.slice(0, 18)
   const visibleCountries = query.trim()
     ? snapshot.countries.filter((country) => searchResults.countries.some((result) => result.countryCode === country.countryCode)).slice(0, 8)
     : snapshot.countries.slice(0, 8)
@@ -200,6 +233,16 @@ export function WorldIntelligenceView({
         <WorldQuantStrip metrics={quantMetrics} />
       </Suspense>
 
+      <WorldwatchProfilePanel
+        activeProfile={activeWorldwatchProfile}
+        activeProfileId={activeWorldwatchProfileId}
+        profiles={worldwatchProfiles}
+        relevantEventCount={rankedProfileEvents.length}
+        totalEventCount={events.length}
+        onActiveProfileChange={onActiveWorldwatchProfileChange}
+        onAddEntity={onAddEntityToWorldwatchProfile}
+      />
+
       <section className="world-grid">
         <Suspense fallback={<div className="world-panel world-map-panel"><GlobeSkeleton /></div>}>
           <WorldGlobeCanvas
@@ -221,6 +264,8 @@ export function WorldIntelligenceView({
             favoriteIds={favoriteIds}
             now={now}
             sourceTrust={snapshot.sourceTrust}
+            activeProfile={activeWorldwatchProfile}
+            relevanceByEvent={relevanceByEvent}
             onToggleFavorite={onToggleFavorite}
             onSelectEvent={onSelectEvent}
             onSelectTicker={onSelectTicker}
@@ -276,7 +321,12 @@ export function WorldIntelligenceView({
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading what to watch next" /></div>}>
-          <WhatToWatchPanel events={visibleEvents} now={now} />
+          <WhatToWatchPanel
+            events={visibleEvents}
+            now={now}
+            profile={activeWorldwatchProfile}
+            relevanceByEvent={relevanceByEvent}
+          />
         </Suspense>
 
         <Suspense fallback={<div className="world-panel"><PanelSkeleton rows={3} label="Loading SEC Form 13F holdings" /></div>}>
@@ -331,6 +381,8 @@ export function WorldIntelligenceView({
             favoriteIds={favoriteIds}
             onToggleFavorite={onToggleFavorite}
             onSelectTicker={onSelectTicker}
+            onAddToWatchlist={onAddEntityToWorldwatchProfile}
+            watchlistEnabled={Boolean(activeWorldwatchProfile)}
           />
         </Suspense>
 

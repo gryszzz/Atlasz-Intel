@@ -6,6 +6,12 @@ import { Link2, Radar, Star } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
 import { EventResolutionPanel } from '../intel/EventResolutionPanel'
 import { filterEventsByResolution, isEventResolvable, type ResolutionFilterMode } from '../../engine/entityResolver'
+import {
+  explainTopMatches,
+  relevanceChipLabel,
+  type RankedWorldwatchEvent,
+  type WorldwatchProfile,
+} from '../../engine/worldwatchProfiles'
 import type { UserFavorite, WorldIntelEvent } from '../../worldIntel'
 import { WorldPanelHeader } from './WorldPanelHeader'
 
@@ -14,6 +20,8 @@ export function WorldEventTimeline({
   favoriteIds,
   now,
   sourceTrust,
+  activeProfile,
+  relevanceByEvent,
   onToggleFavorite,
   onSelectEvent,
   onSelectTicker,
@@ -22,6 +30,8 @@ export function WorldEventTimeline({
   favoriteIds: Set<string>
   now: number
   sourceTrust: string
+  activeProfile?: WorldwatchProfile
+  relevanceByEvent?: Map<string, RankedWorldwatchEvent>
   onToggleFavorite: (kind: UserFavorite['kind'], targetId: string, label: string) => Promise<void>
   onSelectEvent: (eventId: string) => void
   onSelectTicker: (ticker: string) => void
@@ -51,6 +61,8 @@ export function WorldEventTimeline({
             favorite={favoriteIds.has(event.id)}
             key={event.id}
             now={now}
+            profile={activeProfile}
+            relevance={relevanceByEvent?.get(event.id)}
             onFavorite={() => onToggleFavorite('event', event.id, event.title)}
             onSelectEvent={onSelectEvent}
             onSelectTicker={onSelectTicker}
@@ -74,6 +86,8 @@ function WorldEventCard({
   event,
   favorite,
   now,
+  profile,
+  relevance,
   onFavorite,
   onSelectEvent,
   onSelectTicker,
@@ -81,6 +95,8 @@ function WorldEventCard({
   event: WorldIntelEvent
   favorite: boolean
   now: number
+  profile?: WorldwatchProfile
+  relevance?: RankedWorldwatchEvent
   onFavorite: () => Promise<void>
   onSelectEvent: (eventId: string) => void
   onSelectTicker: (ticker: string) => void
@@ -100,6 +116,20 @@ function WorldEventCard({
           <Star size={13} />
         </button>
       </header>
+      {profile && relevance && (
+        <div className="world-relevance-row" title={explainTopMatches(relevance.matches, 4)}>
+          <span>Relevant to your watchlist</span>
+          <strong>{profile.name}</strong>
+          <em>{relevanceChipLabel(relevance)}</em>
+        </div>
+      )}
+      {profile && relevance && relevance.matches.length > 0 && (
+        <div className="world-relevance-explain">
+          {relevance.matches.slice(0, 2).map((match) => (
+            <span key={`${match.kind}:${match.label}`}>{match.explanation}</span>
+          ))}
+        </div>
+      )}
       <button className="world-event-title" type="button" onClick={() => onSelectEvent(event.id)}>
         {event.title}
       </button>

@@ -57,6 +57,20 @@ This is the core of the product, not a footnote. Atlasz is *allowed to be incomp
 
 The terminal grew from a connector dashboard into a full reasoning surface. Highlights since the last README:
 
+### Aegis Worldwatch Profiles
+Profile-aware watchlists rank intelligence by the systems you care about: tickers,
+companies/CIKs, ETFs, commodities, regions, facilities, ports, grid regions,
+minerals, CVEs, connectors, and themes. Hermes delivers evidence, Aegis evaluates
+trust/freshness/conflict, and Worldwatch only ranks relevance. Watchlists never
+create evidence or raise truth confidence.
+
+### Local API Activation
+`docs/local-api-setup.md` and `scripts/checkRuntimeConfig.mts` give operators a
+safe key activation path: env-name presence only, official-host validation for
+configured URLs, and locked connector summaries. The UI now includes a Connector
+Activation Panel for missing-key, configured, online, failed, rate-limited, and
+stale states without rendering key values.
+
 ### Intelligence Synthesis — "What To Watch Next"
 The forward end of the evidence chain. Atlasz composes briefs that walk:
 `observed change → proof → resolved entities → curated systems → corroboration → conflicts → unknowns → what it does NOT prove → confirmation-seeking watch items` — **every line basis-labeled** so you always know whether you're reading evidence, structure, or inference.
@@ -150,8 +164,10 @@ SEC EDGAR · SEC Company Facts · SEC Form 4 · SEC Form 13F *(SEC User-Agent)* 
 
 - **High-density local command center** — a desktop workspace, not a web tab.
 - **Connector Dashboard** — source health, trust tier, freshness state, record counts, persistence, and source-trail coverage.
+- **Connector Activation Panel** — local key/config presence and what each connector unlocks, without exposing values.
 - **Exposure Dashboard** — resolved events, unresolved gaps, media-observation boundaries, and curated-reference exposure counts.
 - **Market Coverage Dashboard + Market Data Reality panel** — honest gaps where real quotes don't exist yet.
+- **Aegis Worldwatch Profiles** — relevance profiles and watchlist chips for what matters to your systems without changing proof or confidence.
 - **What Changed Today** — ranked change across filings, macro, weather, policy, cyber, research, fiscal, patents, OSS releases, and trade layers.
 - **What To Watch Next** — forward-looking, basis-labeled intelligence briefs.
 - **Evidence Graph + Entity Dossiers** — timelines, proof rows, unknowns, source links, freshness, confidence, and curated exposure chains.

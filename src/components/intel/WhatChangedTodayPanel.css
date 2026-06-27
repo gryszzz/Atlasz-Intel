@@ -15,19 +15,27 @@
   gap: var(--space-2);
 }
 
+.wct-head > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
 .wct-head h2 {
   margin: 0;
   font-size: var(--fs-lg);
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   color: var(--text);
 }
 
-.wct-head span {
+.wct-head span,
+.wct-head em {
   font-family: var(--mono);
   font-size: var(--fs-2xs);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--muted);
+  font-style: normal;
 }
 
 .wct-list {
@@ -137,6 +145,14 @@
 
 .wct-entities {
   color: var(--muted);
+}
+
+.wct-relevance {
+  border: 1px solid rgba(94, 234, 212, 0.18);
+  border-radius: 999px;
+  background: rgba(94, 234, 212, 0.06);
+  color: var(--green);
+  padding: 1px 7px;
 }
 
 .wct-evidence {

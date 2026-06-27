@@ -10,15 +10,43 @@ import { useMemo } from 'react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
 import { synthesizeBriefs, type IntelligenceBrief } from '../../engine/watchSynthesis'
 import type { BriefConfidence, CorroborationSummary } from '../../engine/watchSynthesis'
+import {
+  explainTopMatches,
+  relevanceChipLabel,
+  relevantEventsForProfile,
+  type RankedWorldwatchEvent,
+  type WorldwatchProfile,
+} from '../../engine/worldwatchProfiles'
 import type { WorldIntelEvent } from '../../worldIntel'
 import './MarketCoverageDashboard.css'
 
 const UNAVAILABLE = 'DATA_UNAVAILABLE'
 
-export function WhatToWatchPanel({ events, now, limit = 10 }: { events: WorldIntelEvent[]; now?: number; limit?: number }) {
+export function WhatToWatchPanel({
+  events,
+  now,
+  limit = 10,
+  profile,
+  relevanceByEvent,
+}: {
+  events: WorldIntelEvent[]
+  now?: number
+  limit?: number
+  profile?: WorldwatchProfile
+  relevanceByEvent?: Map<string, RankedWorldwatchEvent>
+}) {
+  const rankedEvents = useMemo(
+    () => (profile ? relevantEventsForProfile(events, profile, { now, limit: events.length }) : []),
+    [events, now, profile],
+  )
+  const profileEvents = profile ? rankedEvents.map((ranked) => ranked.event) : events
+  const localRelevanceByEvent = useMemo(
+    () => relevanceByEvent ?? new Map(rankedEvents.map((ranked) => [ranked.event.id, ranked] as const)),
+    [rankedEvents, relevanceByEvent],
+  )
   const briefs = useMemo(
-    () => synthesizeBriefs(events, { now, limit: limit * 3 }).filter((b) => b.watchNext.length > 0 || b.systemsConnected.length > 0).slice(0, limit),
-    [events, now, limit],
+    () => synthesizeBriefs(profileEvents, { now, limit: limit * 3 }).filter((b) => b.watchNext.length > 0 || b.systemsConnected.length > 0).slice(0, limit),
+    [profileEvents, now, limit],
   )
   return (
     <section className="cov-dash world-panel">
@@ -27,12 +55,21 @@ export function WhatToWatchPanel({ events, now, limit = 10 }: { events: WorldInt
           <span className="cov-eyebrow">Intelligence Synthesis</span>
           <h2>What To Watch Next</h2>
         </div>
-        <p className="cov-sub">Confirmation-seeking, not prediction. Every watch item is a labeled rule that traces to evidence, structure, or the unknown.</p>
+        <p className="cov-sub">
+          {profile
+            ? `Filtered by ${profile.name}. Confirmation-seeking, not prediction; proof and confidence stay source-bound.`
+            : 'Confirmation-seeking, not prediction. Every watch item traces to evidence, structure, or the unknown.'}
+        </p>
       </header>
       {briefs.length > 0 ? (
         <div className="cov-sections">
           {briefs.map((brief) => (
-            <BriefCard key={brief.eventId} brief={brief} />
+            <BriefCard
+              key={brief.eventId}
+              brief={brief}
+              profile={profile}
+              relevance={localRelevanceByEvent.get(brief.eventId)}
+            />
           ))}
         </div>
       ) : (
@@ -77,7 +114,15 @@ function ConfidenceChip({ confidence }: { confidence: BriefConfidence }) {
   )
 }
 
-function BriefCard({ brief }: { brief: IntelligenceBrief }) {
+function BriefCard({
+  brief,
+  profile,
+  relevance,
+}: {
+  brief: IntelligenceBrief
+  profile?: WorldwatchProfile
+  relevance?: RankedWorldwatchEvent
+}) {
   return (
     <div className="cov-section cov-tone-periodic">
       <div className="cov-section-head">
@@ -91,6 +136,11 @@ function BriefCard({ brief }: { brief: IntelligenceBrief }) {
           {brief.proof.sourceBacked ? <span className="cov-rel cov-rel-low">source-backed</span> : <span className="cov-rel cov-rel-high">unconfirmed</span>}
           {brief.proof.payloadHash ? <span className="cov-conn">#{brief.proof.payloadHash.slice(0, 8)}</span> : null}
           <span className={corroborationTone(brief.corroboration.confidenceEffect)}>{corroborationLabel(brief)}</span>
+          {profile && relevance ? (
+            <span className="cov-rel cov-rel-low" title={explainTopMatches(relevance.matches, 4)}>
+              Relevant to your watchlist · {relevanceChipLabel(relevance)}
+            </span>
+          ) : null}
         </div>
 
         <div className="cov-row-detail">

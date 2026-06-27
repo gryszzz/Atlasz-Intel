@@ -246,6 +246,164 @@
   overflow: auto;
 }
 
+.worldwatch-profile-panel {
+  gap: 9px;
+}
+
+.worldwatch-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.worldwatch-head span {
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.worldwatch-head h3 {
+  margin: 3px 0 0;
+  color: var(--white);
+  font-size: 15px;
+}
+
+.worldwatch-head strong,
+.worldwatch-foot {
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.worldwatch-profile-tabs,
+.worldwatch-chip-grid,
+.worldwatch-add-form,
+.world-relevance-explain {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.worldwatch-profile-tabs button,
+.worldwatch-add-form button,
+.worldwatch-add-form select,
+.worldwatch-add-form input,
+.world-add-watch {
+  border: 1px solid rgba(94, 234, 212, 0.16);
+  border-radius: 7px;
+  background: #0c1110;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.worldwatch-profile-tabs button,
+.worldwatch-add-form button,
+.world-add-watch {
+  cursor: pointer;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.worldwatch-profile-tabs button {
+  padding: 6px 9px;
+}
+
+.worldwatch-profile-tabs button.active {
+  border-color: rgba(94, 234, 212, 0.52);
+  background: #10211d;
+  color: var(--green);
+}
+
+.worldwatch-rule,
+.world-relevance-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  border: 1px solid rgba(94, 234, 212, 0.13);
+  border-radius: 7px;
+  background: #08110f;
+  padding: 7px;
+}
+
+.worldwatch-rule span,
+.worldwatch-empty p,
+.world-relevance-explain span {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.worldwatch-chip-grid span,
+.world-relevance-row span,
+.world-relevance-row strong,
+.world-relevance-row em,
+.world-relevance-explain span {
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 999px;
+  background: #0d1412;
+  padding: 3px 7px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-style: normal;
+}
+
+.world-relevance-row span,
+.world-relevance-row em {
+  color: var(--green);
+}
+
+.world-relevance-row strong {
+  color: var(--white);
+}
+
+.worldwatch-add-form {
+  display: grid;
+  grid-template-columns: minmax(110px, auto) minmax(0, 1fr) auto;
+}
+
+.worldwatch-add-form select,
+.worldwatch-add-form input {
+  min-width: 0;
+  padding: 7px 8px;
+}
+
+.worldwatch-add-form button,
+.world-add-watch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 9px;
+}
+
+.worldwatch-add-form button:disabled,
+.world-add-watch:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.worldwatch-foot {
+  margin: 0;
+  color: var(--faint);
+}
+
+.worldwatch-empty {
+  border: 1px dashed rgba(148, 163, 184, 0.2);
+  border-radius: 7px;
+  padding: 10px;
+}
+
+.worldwatch-empty strong {
+  color: var(--white);
+  font-size: 12px;
+}
+
 .source-registry-stack,
 .world-event-stack,
 .country-card-grid,
@@ -343,6 +501,15 @@
   text-transform: uppercase;
 }
 
+.world-relevance-row {
+  margin: 7px 0;
+  padding: 6px;
+}
+
+.world-relevance-explain {
+  margin: 0 0 7px;
+}
+
 .world-severity-critical {
   border-left: 2px solid var(--red);
 }
@@ -431,6 +598,7 @@
 
 .asset-identity-card p,
 .asset-identity-card .world-chip-row,
+.asset-identity-card .world-add-watch,
 .sec-filing-trail {
   grid-column: 1 / -1;
 }

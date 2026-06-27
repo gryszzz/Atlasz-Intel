@@ -19,31 +19,53 @@ import {
   type MaterialityChangeType,
   type MaterialityOptions,
 } from '../../engine/materialityEngine'
+import {
+  explainTopMatches,
+  rankMaterialItemsForProfile,
+  type RankedWorldwatchMaterialItem,
+  type WorldwatchProfile,
+} from '../../engine/worldwatchProfiles'
 import type { WorldIntelEvent } from '../../worldIntel'
 import './WhatChangedTodayPanel.css'
 
 export function WhatChangedTodayPanel({
   events,
   options,
+  profile,
 }: {
   events: WorldIntelEvent[]
   options?: MaterialityOptions
+  profile?: WorldwatchProfile
 }) {
   const result = useMemo(() => assessWhatChangedToday(events, options), [events, options])
-  const changeTypeSummary = useMemo(() => summarizeChangeTypes(result.items), [result.items])
+  const rankedProfileItems = useMemo(
+    () =>
+      profile
+        ? rankMaterialItemsForProfile(result.items, profile, events, {
+            now: options?.now ?? result.generatedAt,
+            limit: result.items.length,
+          })
+        : [],
+    [events, options?.now, profile, result.generatedAt, result.items],
+  )
+  const visibleItems = profile ? rankedProfileItems.map((ranked) => ranked.item) : result.items
+  const relevanceByItem = useMemo(
+    () => new Map(rankedProfileItems.map((ranked) => [ranked.item.id, ranked] as const)),
+    [rankedProfileItems],
+  )
+  const changeTypeSummary = useMemo(() => summarizeChangeTypes(visibleItems), [visibleItems])
 
   return (
     <section className="wct">
       <header className="wct-head">
-        <h2>What Changed Today</h2>
-        <span>
-          {result.status === 'ok'
-            ? `${result.items.length} ranked · ${result.consideredEventCount} events considered`
-            : 'DATA_UNAVAILABLE'}
-        </span>
+        <div>
+          <h2>What Changed Today</h2>
+          {profile ? <em>Filtered by {profile.name}</em> : null}
+        </div>
+        <span>{result.status === 'ok' ? `${visibleItems.length} ranked · ${result.consideredEventCount} events considered` : 'DATA_UNAVAILABLE'}</span>
       </header>
 
-      {result.status === 'ok' && result.items.length > 0 ? (
+      {result.status === 'ok' && visibleItems.length > 0 ? (
         <>
           <div className="wct-type-strip" aria-label="Change type summary">
             {changeTypeSummary.map(({ changeType, count }) => (
@@ -53,8 +75,13 @@ export function WhatChangedTodayPanel({
             ))}
           </div>
           <ol className="wct-list">
-            {result.items.map((item, index) => (
-              <WhatChangedRow key={item.id} item={item} rank={index + 1} />
+            {visibleItems.map((item, index) => (
+              <WhatChangedRow
+                key={item.id}
+                item={item}
+                rank={index + 1}
+                relevance={relevanceByItem.get(item.id)}
+              />
             ))}
           </ol>
         </>
@@ -71,7 +98,15 @@ export function WhatChangedTodayPanel({
   )
 }
 
-function WhatChangedRow({ item, rank }: { item: MaterialItem; rank: number }) {
+function WhatChangedRow({
+  item,
+  rank,
+  relevance,
+}: {
+  item: MaterialItem
+  rank: number
+  relevance?: RankedWorldwatchMaterialItem
+}) {
   return (
     <li className="wct-row">
       <div className="wct-rank">{rank}</div>
@@ -88,6 +123,11 @@ function WhatChangedRow({ item, rank }: { item: MaterialItem; rank: number }) {
           <ProvenanceBadge value={item.provenance} size="sm" />
           <span>{item.confidence}% confidence</span>
           {item.entities.length > 0 && <span className="wct-entities">{item.entities.slice(0, 3).join(' · ')}</span>}
+          {relevance ? (
+            <span className="wct-relevance" title={explainTopMatches(relevance.matches, 4)}>
+              Relevant to your watchlist · relevance {Math.round(relevance.relevanceScore)}
+            </span>
+          ) : null}
         </div>
         <div className="wct-evidence">
           <span className="wct-evidence-label">Evidence</span>

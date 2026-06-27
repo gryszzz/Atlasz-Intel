@@ -66,9 +66,11 @@ import { resolveAssetQuery, type AssetUniverseItem } from './assetUniverse'
 import { CANDLE_HISTORY_UNAVAILABLE, PRICE_UNAVAILABLE, priceTruthFromAsset } from './marketDataTruth'
 import type { LiveAssetSnapshot, SourceTrust } from './realtime'
 import { useWorldIntelSnapshot } from './worldIntelStore'
+import { useWorldwatchProfiles } from './worldwatchStore'
 import { WhatChangedTodayPanel } from './components/intel/WhatChangedTodayPanel'
 import { EntityEvidenceGraphPanel } from './components/intel/EntityEvidenceGraphPanel'
 import { EventResolutionPanel } from './components/intel/EventResolutionPanel'
+import { ConnectorActivationPanel } from './components/intel/ConnectorActivationPanel'
 import { ConnectorDashboardPanel } from './components/intel/ConnectorDashboardPanel'
 import { MarketCoverageDashboard } from './components/intel/MarketCoverageDashboard'
 import { MissingMarketDataPanel } from './components/intel/MissingMarketDataPanel'
@@ -199,7 +201,7 @@ const views: Array<{ id: ViewId; label: string; icon: typeof MonitorDot }> = [
   { id: 'radar', label: 'Event Timelines', icon: RadioTower },
   { id: 'terminal', label: 'Market / Infra', icon: LineChart },
   { id: 'cyber', label: 'Cyber / OPSEC', icon: ShieldAlert },
-  { id: 'sources', label: 'Source Trails', icon: Database },
+  { id: 'sources', label: 'Source Ops', icon: Database },
   { id: 'quant', label: 'Quant Context', icon: Crosshair },
   { id: 'social', label: 'Attention Pulse', icon: Activity },
   { id: 'analyst', label: 'Analysis Desk', icon: BrainCircuit },
@@ -1049,6 +1051,7 @@ function App() {
     toggleFavorite: toggleWorldFavorite,
     loading: worldIntelLoading,
   } = useWorldIntelSnapshot()
+  const worldwatch = useWorldwatchProfiles()
   const engineSnapshot = useEngineSnapshot()
   const liveAssetBySymbol = useMemo(
     () => new Map((engineSnapshot.frame?.assets ?? []).map((asset) => [asset.symbol, asset])),
@@ -1478,7 +1481,7 @@ function App() {
           <section className="dashboard-grid command-grid">
             {/* First impression: what matters, above raw feeds and evidence cards. */}
             <article className="wct-panel">
-              <WhatChangedTodayPanel events={worldSnapshot.worldEvents} />
+              <WhatChangedTodayPanel events={worldSnapshot.worldEvents} profile={worldwatch.activeProfile} />
             </article>
 
             <article className="panel command-status-panel">
@@ -1689,6 +1692,10 @@ function App() {
               onSelectEvent={(eventId) => selectEvent(eventId)}
               onSelectTicker={(ticker) => selectTicker(ticker, 'terminal')}
               onToggleFavorite={toggleWorldFavorite}
+              activeWorldwatchProfileId={worldwatch.activeProfileId}
+              worldwatchProfiles={worldwatch.profiles}
+              onActiveWorldwatchProfileChange={worldwatch.setActiveProfileId}
+              onAddEntityToWorldwatchProfile={worldwatch.addEntityToActiveProfile}
               snapshot={worldSnapshot}
             />
           </Suspense>
@@ -1759,13 +1766,20 @@ function App() {
         )}
 
         {activeView === 'sources' && (
-          <Suspense fallback={<div className="panel"><PanelSkeleton rows={4} label="Loading source health" /></div>}>
-            <SourceHealthView
-              sources={worldSnapshot.sources}
-              worldStatus={worldSnapshot.status}
-              onRefresh={refreshWorldIntel}
-            />
-          </Suspense>
+          <section className="dashboard-grid sources-grid">
+            <article className="panel wide-panel">
+              <ConnectorActivationPanel sources={worldSnapshot.sources} events={worldSnapshot.worldEvents} />
+            </article>
+            <article className="panel wide-panel">
+              <Suspense fallback={<div><PanelSkeleton rows={4} label="Loading source health" /></div>}>
+                <SourceHealthView
+                  sources={worldSnapshot.sources}
+                  worldStatus={worldSnapshot.status}
+                  onRefresh={refreshWorldIntel}
+                />
+              </Suspense>
+            </article>
+          </section>
         )}
 
         {activeView === 'radar' && (

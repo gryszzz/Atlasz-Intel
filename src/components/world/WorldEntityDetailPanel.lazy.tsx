@@ -2,8 +2,9 @@
  * Country + asset entity detail surfaces (lazy). Provenance badges preserved
  * on asset coverage. Presentational only.
  */
-import { Globe2, Link2, Star, Zap } from 'lucide-react'
+import { Globe2, Link2, Plus, Star, Zap } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
+import type { WatchedEntity } from '../../engine/worldwatchProfiles'
 import type { AssetIdentity, CountryIntelState, SecCompanyFiling, UserFavorite } from '../../worldIntel'
 import { WorldPanelHeader } from './WorldPanelHeader'
 
@@ -14,6 +15,8 @@ export function WorldEntityDetailPanel({
   favoriteIds,
   onToggleFavorite,
   onSelectTicker,
+  onAddToWatchlist,
+  watchlistEnabled = true,
 }: {
   countries: CountryIntelState[]
   assets: AssetIdentity[]
@@ -21,6 +24,8 @@ export function WorldEntityDetailPanel({
   favoriteIds: Set<string>
   onToggleFavorite: (kind: UserFavorite['kind'], targetId: string, label: string) => Promise<void>
   onSelectTicker: (ticker: string) => void
+  onAddToWatchlist?: (entity: WatchedEntity) => void
+  watchlistEnabled?: boolean
 }) {
   const filingsByTicker = groupFilingsByTicker(secFilings ?? [])
   return (
@@ -35,6 +40,8 @@ export function WorldEntityDetailPanel({
               key={country.countryCode}
               onFavorite={() => onToggleFavorite('country', country.countryCode, country.countryName)}
               onSelectTicker={onSelectTicker}
+              onAddToWatchlist={onAddToWatchlist}
+              watchlistEnabled={watchlistEnabled}
             />
           ))}
         </div>
@@ -51,6 +58,8 @@ export function WorldEntityDetailPanel({
               key={asset.symbol}
               onFavorite={() => onToggleFavorite('asset', asset.symbol, asset.symbol)}
               onSelectTicker={onSelectTicker}
+              onAddToWatchlist={onAddToWatchlist}
+              watchlistEnabled={watchlistEnabled}
             />
           ))}
         </div>
@@ -64,11 +73,15 @@ function CountryIntelCard({
   favorite,
   onFavorite,
   onSelectTicker,
+  onAddToWatchlist,
+  watchlistEnabled,
 }: {
   country: CountryIntelState
   favorite: boolean
   onFavorite: () => Promise<void>
   onSelectTicker: (ticker: string) => void
+  onAddToWatchlist?: (entity: WatchedEntity) => void
+  watchlistEnabled: boolean
 }) {
   return (
     <article className="country-intel-card">
@@ -82,6 +95,17 @@ function CountryIntelCard({
           <Star size={13} />
         </button>
       </header>
+      {onAddToWatchlist ? (
+        <button
+          className="world-add-watch"
+          type="button"
+          disabled={!watchlistEnabled}
+          onClick={() => onAddToWatchlist({ kind: 'country', value: country.countryCode, label: country.countryName })}
+        >
+          <Plus size={12} />
+          Add to watchlist
+        </button>
+      ) : null}
       <div className="country-risk-meter">
         <span style={{ width: `${country.riskScore}%` }} />
       </div>
@@ -117,12 +141,16 @@ function AssetIdentityCard({
   favorite,
   onFavorite,
   onSelectTicker,
+  onAddToWatchlist,
+  watchlistEnabled,
 }: {
   asset: AssetIdentity
   latestFilings: SecCompanyFiling[]
   favorite: boolean
   onFavorite: () => Promise<void>
   onSelectTicker: (ticker: string) => void
+  onAddToWatchlist?: (entity: WatchedEntity) => void
+  watchlistEnabled: boolean
 }) {
   return (
     <article className="asset-identity-card">
@@ -139,6 +167,17 @@ function AssetIdentityCard({
       <button className={favorite ? 'favorite-button active' : 'favorite-button'} type="button" onClick={() => void onFavorite()}>
         <Star size={13} />
       </button>
+      {onAddToWatchlist ? (
+        <button
+          className="world-add-watch"
+          type="button"
+          disabled={!watchlistEnabled}
+          onClick={() => onAddToWatchlist(assetWatchEntity(asset))}
+        >
+          <Plus size={12} />
+          Add to watchlist
+        </button>
+      ) : null}
       <p>{asset.dataAvailabilityStatus}</p>
       <div className="world-chip-row">
         {asset.provenanceCoverage.map((item) => (
@@ -148,6 +187,12 @@ function AssetIdentityCard({
       <SecFilingSourceTrail filings={latestFilings} />
     </article>
   )
+}
+
+function assetWatchEntity(asset: AssetIdentity): WatchedEntity {
+  if (asset.type === 'ETF') return { kind: 'etf', value: asset.symbol, label: asset.name, aliases: asset.aliases }
+  if (asset.type === 'commodity') return { kind: 'commodity', value: asset.symbol, label: asset.name, aliases: asset.aliases }
+  return { kind: 'ticker', value: asset.symbol, label: asset.name, aliases: asset.aliases }
 }
 
 function SecFilingSourceTrail({ filings }: { filings: SecCompanyFiling[] }) {
