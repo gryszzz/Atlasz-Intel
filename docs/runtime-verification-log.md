@@ -1,6 +1,6 @@
 # Runtime Verification Log
 
-**Generated:** 2026-06-28T12:40:29.799Z
+**Generated:** 2026-06-28T14:39:27.691Z
 **Command:** `npx tsx scripts/runtimeVerification.mts`
 **Result:** 13/13 checks passed
 **Persistence:** node:sqlite (with JSON fallback)
@@ -30,7 +30,7 @@
 | etf-holdings | impl | public | - | public | online | 266 | yes | yes | n/a | partial | yes |
 | fred | impl | key-gated | ATLASZ_FRED_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
 | treasury-fiscal | impl | public | - | public | online | 3 | yes | yes | n/a | partial | yes |
-| bls | impl | public | - | public | online | 5 | yes | yes | n/a | partial | yes |
+| bls | impl | public | - | public | configured (empty) | 0 | n/a | n/a | n/a | partial | yes |
 | fed-press-rss | impl | public | - | public | online | 20 | yes | yes | n/a | no | no |
 | ecb-press-rss | impl | public | - | public | online | 15 | yes | yes | n/a | no | no |
 | bea | impl | key-gated | ATLASZ_BEA_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |

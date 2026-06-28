@@ -18,6 +18,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { loadRuntimeEnv } from './checkRuntimeConfig.mts'
 import { createPersistence } from '../electron/persistence'
 import { resolveAdapter } from '../electron/osint/adapterRegistry'
 import { BUILTIN_PROVIDERS, type ProviderDefinition } from '../electron/providers/providerConfig'
@@ -83,11 +84,11 @@ function providerFor(def: ConnectorAuditDefinition): ProviderDefinition | undefi
   return BUILTIN_PROVIDERS.find((p) => def.sourceIds.includes(p.providerId))
 }
 
-async function driveConnector(def: ConnectorAuditDefinition): Promise<ConnectorRow> {
+async function driveConnector(def: ConnectorAuditDefinition, env: NodeJS.ProcessEnv): Promise<ConnectorRow> {
   const provider = providerFor(def)
   const gating: 'public' | 'key-gated' = provider && provider.authType !== 'none' ? 'key-gated' : 'public'
   const keyPresent: ConnectorRow['keyPresent'] =
-    gating === 'public' ? 'public' : def.requiredEnv.every((e) => Boolean(process.env[e])) ? 'yes' : 'no'
+    gating === 'public' ? 'public' : def.requiredEnv.every((e) => Boolean(env[e])) ? 'yes' : 'no'
 
   const row: ConnectorRow = {
     id: def.id,
@@ -112,7 +113,7 @@ async function driveConnector(def: ConnectorAuditDefinition): Promise<ConnectorR
     row.status = 'no-provider'
     return row
   }
-  const resolved = resolveAdapter(provider, process.env)
+  const resolved = resolveAdapter(provider, env)
   if (resolved.managed && !resolved.fetcher) {
     row.status = gating === 'key-gated' && keyPresent === 'no' ? 'missing-key' : 'managed-ingest'
     return row
@@ -150,11 +151,12 @@ function truncateError(message: string): string {
 
 async function main() {
   console.log('\n=== Atlasz Operator Verification Pass ===\n')
+  const runtimeEnv: NodeJS.ProcessEnv = loadRuntimeEnv()
 
   // --- 1. Env key presence (names only, never values) ---
   const keyEnvNames = [...new Set(CONNECTOR_AUDIT_DEFINITIONS.flatMap((d) => d.requiredEnv))].sort()
-  const presentKeys = keyEnvNames.filter((k) => Boolean(process.env[k]))
-  const missingKeys = keyEnvNames.filter((k) => !process.env[k])
+  const presentKeys = keyEnvNames.filter((k) => Boolean(runtimeEnv[k]))
+  const missingKeys = keyEnvNames.filter((k) => !runtimeEnv[k])
   console.log('Env keys (names only):')
   console.log('  present:', presentKeys.length ? presentKeys.join(', ') : '(none)')
   console.log('  missing:', missingKeys.join(', ') || '(none)')
@@ -162,7 +164,7 @@ async function main() {
 
   // --- 2. Drive every connector (live where configured) ---
   console.log(`Driving ${CONNECTOR_AUDIT_DEFINITIONS.length} connectors (public + keyed-with-keys fetched live; bounded ${PER_FETCH_TIMEOUT_MS}ms)…\n`)
-  const rows = await Promise.all(CONNECTOR_AUDIT_DEFINITIONS.map(driveConnector))
+  const rows = await Promise.all(CONNECTOR_AUDIT_DEFINITIONS.map((definition) => driveConnector(definition, runtimeEnv)))
 
   // Persistence round-trip + key-redaction scan over everything fetched this run.
   const dir = mkdtempSync(join(tmpdir(), 'atlasz-operator-'))
@@ -185,7 +187,7 @@ async function main() {
       // printed) must not appear in the persisted JSON.
       if (row.gating === 'key-gated' && row.keyPresent === 'yes') {
         const leaked = CONNECTOR_AUDIT_DEFINITIONS.find((d) => d.id === row.id)!.requiredEnv
-          .map((k) => process.env[k])
+          .map((k) => runtimeEnv[k])
           .some((val) => Boolean(val) && persistedJson.includes(val as string))
         row.keyRedaction = leaked ? 'no' : 'yes'
       }
@@ -246,7 +248,7 @@ async function main() {
 
   // Cold-start dashboard sanity (no live keys needed for baseline).
   const cold = buildConnectorAudit({ sources: [], events: [], now: Date.now() })
-  check('every keyed connector without a key reports missing-key (or deferred)', cold.filter((r) => r.requiredEnv.length > 0 && !r.requiredEnv.every((e) => process.env[e])).every((r) => r.status === 'missing-key' || r.status === 'deferred'), 'cold-start keyed rows')
+  check('every keyed connector without a key reports missing-key (or deferred)', cold.filter((r) => r.requiredEnv.length > 0 && !r.requiredEnv.every((e) => runtimeEnv[e])).every((r) => r.status === 'missing-key' || r.status === 'deferred'), 'cold-start keyed rows')
   check('no connector is implemented:false but claims a trust tier other than catalog-only', CONNECTOR_AUDIT_DEFINITIONS.every((d) => d.implemented || d.trust === 'catalog-only'), 'implemented/trust consistency')
 
   // No simulated / fake fallback events among real connector output.
@@ -254,7 +256,7 @@ async function main() {
   check('no fake fallback records (every live event has a real payload hash + real tier)', liveEvents.every((e) => Boolean(e.rawPayloadHash) && e.provenance !== 'local-derived' && e.provenance !== 'model-inferred'), 'payload-hash + tier')
 
   // No key leakage in persisted JSON (covers any key present).
-  const anyLeak = presentKeys.some((k) => { const v = process.env[k]; return Boolean(v) && persistedJson.includes(v as string) })
+  const anyLeak = presentKeys.some((k) => { const v = runtimeEnv[k]; return Boolean(v) && persistedJson.includes(v as string) })
   check('no key leakage in persisted JSON', !anyLeak, presentKeys.length ? `scanned ${presentKeys.length} present key(s)` : 'no keys present to leak')
 
   // Media observations excluded from exposure (logic guarantee + live if present).
