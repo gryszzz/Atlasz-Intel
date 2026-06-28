@@ -26,6 +26,17 @@ export type WorldwatchLayerStatus = 'online' | 'attention' | 'missing-config' | 
 export type WorldwatchGeometryKind = 'point' | 'region' | 'arc' | 'context'
 export type WorldwatchVisualTrust = 'official' | 'public' | 'media' | 'structural' | 'unavailable'
 export type WorldwatchRenderMode = 'cesium-3d' | 'webgl-unavailable-fallback' | 'atlasz-2d-fallback'
+export type WorldwatchLayerCadence =
+  | 'near-realtime'
+  | 'daily'
+  | 'weekly'
+  | 'monthly'
+  | 'quarterly'
+  | 'annual'
+  | 'static-reference'
+  | 'configured-only'
+export type WorldwatchMarkerRenderer = 'point-marker' | 'region-overlay' | 'arc-path' | 'context-row'
+export type WorldwatchStaleRenderer = 'dimmed-marker' | 'dashed-region' | 'stale-context-row'
 
 export type WorldwatchLayerDefinition = {
   id: WorldwatchLayerId
@@ -33,11 +44,27 @@ export type WorldwatchLayerDefinition = {
   kind: WorldwatchLayerKind
   description: string
   sourceIds: string[]
+  trustTier: ProvenanceId | 'mixed' | 'curated-reference'
+  cadence: WorldwatchLayerCadence
+  proofRequirements: string[]
   geometry: WorldwatchGeometryKind
+  markerRenderer: WorldwatchMarkerRenderer
+  staleRenderer: WorldwatchStaleRenderer
+  sourceTrailHandler: string
   defaultEnabled: boolean
   maxEntities: number
   nonClaims: string[]
 }
+
+type WorldwatchLayerDefinitionInput = Omit<
+  WorldwatchLayerDefinition,
+  'trustTier' | 'cadence' | 'proofRequirements' | 'markerRenderer' | 'staleRenderer' | 'sourceTrailHandler'
+>
+
+type WorldwatchLayerMetadata = Pick<
+  WorldwatchLayerDefinition,
+  'trustTier' | 'cadence' | 'proofRequirements' | 'markerRenderer' | 'staleRenderer' | 'sourceTrailHandler'
+>
 
 export type WorldwatchLayerState = WorldwatchLayerDefinition & {
   status: WorldwatchLayerStatus
@@ -45,6 +72,8 @@ export type WorldwatchLayerState = WorldwatchLayerDefinition & {
   entityCount: number
   sourceCount: number
   onlineSourceCount: number
+  staleEntityCount: number
+  freshnessHeat: 'fresh' | 'mixed' | 'stale' | 'empty'
 }
 
 export type WorldwatchProofTrail = {
@@ -105,7 +134,47 @@ export type BuildWorldwatchLayersOptions = {
   events?: WorldIntelEvent[]
 }
 
-export const WORLDWATCH_LAYER_DEFINITIONS: WorldwatchLayerDefinition[] = [
+const DEFAULT_PROOF_REQUIREMENTS = ['sourceUrl', 'retrievedAt', 'rawPayloadHash', 'confidence', 'provenance']
+
+function metadata(
+  trustTier: WorldwatchLayerMetadata['trustTier'],
+  cadence: WorldwatchLayerCadence,
+  markerRenderer: WorldwatchMarkerRenderer,
+  staleRenderer: WorldwatchStaleRenderer,
+  sourceTrailHandler: string,
+): WorldwatchLayerMetadata {
+  return {
+    trustTier,
+    cadence,
+    proofRequirements: DEFAULT_PROOF_REQUIREMENTS,
+    markerRenderer,
+    staleRenderer,
+    sourceTrailHandler,
+  }
+}
+
+const LAYER_METADATA: Record<WorldwatchLayerId, WorldwatchLayerMetadata> = {
+  'weather-alerts': metadata('official-api', 'near-realtime', 'region-overlay', 'dashed-region', 'WeatherAlertSourceTrail'),
+  earthquakes: metadata('official-api', 'near-realtime', 'point-marker', 'dimmed-marker', 'WorldEventTimeline'),
+  'power-plants': metadata('official-api', 'monthly', 'point-marker', 'dimmed-marker', 'EiaFacilitySourceTrail'),
+  refineries: metadata('official-api', 'static-reference', 'point-marker', 'dimmed-marker', 'EiaRefinerySourceTrail'),
+  'lng-terminals': metadata('official-api', 'static-reference', 'point-marker', 'dimmed-marker', 'LngTerminalSourceTrail'),
+  'nuclear-plants': metadata('official-api', 'monthly', 'point-marker', 'dimmed-marker', 'NuclearPlantSourceTrail'),
+  'reactor-status': metadata('official-api', 'daily', 'context-row', 'stale-context-row', 'NrcReactorStatusSourceTrail'),
+  'grid-regions': metadata('official-api', 'static-reference', 'region-overlay', 'dashed-region', 'GridRegionSourceTrail'),
+  'ports-locode': metadata('official-api', 'static-reference', 'point-marker', 'dimmed-marker', 'PortLocodeSourceTrail'),
+  'ports-world-index': metadata('official-api', 'static-reference', 'point-marker', 'dimmed-marker', 'WorldPortIndexSourceTrail'),
+  minerals: metadata('official-api', 'static-reference', 'point-marker', 'dimmed-marker', 'MineralSiteSourceTrail'),
+  sanctions: metadata('official-api', 'daily', 'region-overlay', 'dashed-region', 'OfacSourceTrail'),
+  policy: metadata('official-api', 'daily', 'region-overlay', 'dashed-region', 'RegulatorySourceTrail/CongressSourceTrail'),
+  'market-evidence': metadata('public-disclosure', 'daily', 'context-row', 'stale-context-row', 'MarketIdentitySourceTrail/SECSourceTrails'),
+  'etf-holdings': metadata('public-disclosure', 'daily', 'context-row', 'stale-context-row', 'EtfHoldingsSourceTrail'),
+  'trade-flows': metadata('official-api', 'annual', 'arc-path', 'stale-context-row', 'ComtradeSourceTrail'),
+  vulnerabilities: metadata('mixed', 'daily', 'context-row', 'stale-context-row', 'CveSourceTrailPanel'),
+  'media-observations': metadata('media-observation', 'near-realtime', 'region-overlay', 'dashed-region', 'GdeltSourceTrail'),
+}
+
+const WORLDWATCH_LAYER_BASE_DEFINITIONS: WorldwatchLayerDefinitionInput[] = [
   {
     id: 'weather-alerts',
     label: 'NOAA alerts',
@@ -306,6 +375,11 @@ export const WORLDWATCH_LAYER_DEFINITIONS: WorldwatchLayerDefinition[] = [
   },
 ]
 
+export const WORLDWATCH_LAYER_DEFINITIONS: WorldwatchLayerDefinition[] = WORLDWATCH_LAYER_BASE_DEFINITIONS.map((layer) => ({
+  ...layer,
+  ...LAYER_METADATA[layer.id],
+}))
+
 export const DEFAULT_WORLDWATCH_LAYER_IDS = WORLDWATCH_LAYER_DEFINITIONS.filter((layer) => layer.defaultEnabled).map(
   (layer) => layer.id,
 )
@@ -359,9 +433,7 @@ export function buildWorldwatchLayerSnapshot(
     entitiesByLayer[entity.layerId].push(entity)
   }
 
-  const layers = definitions.map((definition) =>
-    buildLayerState(definition, sourceById, entitiesByLayer[definition.id]?.length ?? 0),
-  )
+  const layers = definitions.map((definition) => buildLayerState(definition, sourceById, entitiesByLayer[definition.id] ?? []))
 
   return {
     layers,
@@ -435,10 +507,12 @@ export function resolveWorldwatchRenderMode({
 function buildLayerState(
   definition: WorldwatchLayerDefinition,
   sourceById: Map<string, OsintSourceSnapshot>,
-  entityCount: number,
+  entities: WorldwatchEntity[],
 ): WorldwatchLayerState {
   const sources = definition.sourceIds.map((sourceId) => sourceById.get(sourceId)).filter((source): source is OsintSourceSnapshot => Boolean(source))
   const onlineSourceCount = sources.filter((source) => source.status === 'online').length
+  const entityCount = entities.length
+  const staleEntityCount = entities.filter((entity) => entity.stale).length
   const missingConfig = sources.some((source) => source.configured === false || source.status === 'disabled')
   const attention = sources.some((source) => source.status === 'failed' || source.status === 'rate-limited' || source.status === 'offline')
   const status: WorldwatchLayerStatus =
@@ -451,7 +525,16 @@ function buildLayerState(
     entityCount,
     sourceCount: sources.length,
     onlineSourceCount,
+    staleEntityCount,
+    freshnessHeat: freshnessHeat(entityCount, staleEntityCount),
   }
+}
+
+function freshnessHeat(entityCount: number, staleEntityCount: number): WorldwatchLayerState['freshnessHeat'] {
+  if (entityCount === 0) return 'empty'
+  if (staleEntityCount === 0) return 'fresh'
+  if (staleEntityCount === entityCount) return 'stale'
+  return 'mixed'
 }
 
 function disabledReason(

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  WORLDWATCH_LAYER_DEFINITIONS,
   WorldwatchLayerRegistry,
   adaptWorldwatchEventsToEntities,
   buildWorldwatchSelectionDossier,
@@ -104,6 +105,17 @@ function snapshot(events: WorldIntelEvent[], sources: OsintSourceSnapshot[]): Wo
 }
 
 describe('Worldwatch layer registry', () => {
+  it('gives every layer cadence, proof, renderer, and source-trail metadata', () => {
+    for (const layer of WORLDWATCH_LAYER_DEFINITIONS) {
+      expect(layer.trustTier).toBeTruthy()
+      expect(layer.cadence).toBeTruthy()
+      expect(layer.proofRequirements).toEqual(expect.arrayContaining(['sourceUrl', 'retrievedAt', 'rawPayloadHash']))
+      expect(layer.markerRenderer).toBeTruthy()
+      expect(layer.staleRenderer).toBeTruthy()
+      expect(layer.sourceTrailHandler).toBeTruthy()
+    }
+  })
+
   it('accepts only proof-backed records', () => {
     const good = ev({ id: 'good', sourceId: 'eia-power-plants', eiaFacility: powerPlant(), sourceUrl: undefined })
     const noProof = ev({

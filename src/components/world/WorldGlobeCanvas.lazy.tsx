@@ -113,7 +113,11 @@ export function WorldGlobeCanvas({
               >
                 <span>{layer.label}</span>
                 <strong>{layer.entityCount}</strong>
-                <em>{layer.status}</em>
+                <em>{layer.status} | {layer.cadence}</em>
+                <small className={`worldwatch-layer-heat heat-${layer.freshnessHeat}`}>
+                  {layer.freshnessHeat === 'empty' ? 'no records' : `${layer.freshnessHeat} freshness`}
+                </small>
+                <small>{layer.sourceTrailHandler}</small>
               </button>
             )
           })}
@@ -241,6 +245,10 @@ function WorldwatchEntityDrawer({ dossier, now }: { dossier: WorldwatchSelection
         {dossier.nonClaims.map((claim) => (
           <p key={claim}>{claim}</p>
         ))}
+      </div>
+      <div className="worldwatch-drawer-section">
+        <span>Source handler</span>
+        <p>{dossier.entity.layerId} uses the layer registry source-trail handler for proof expansion.</p>
       </div>
       <a href={dossier.sourceTrail.sourceUrl} target="_blank" rel="noreferrer">
         <Link2 size={12} />

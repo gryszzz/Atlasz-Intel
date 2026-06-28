@@ -19,6 +19,7 @@ The current Worldwatch Globe implementation is intentionally original:
 - `WorldwatchLayerRegistry` turns existing `WorldIntelEvent` records into map
   layers only after proof checks pass.
 - `WorldwatchLayerDefinition` describes source IDs, visual behavior, layer caps,
+  proof requirements, cadence, trust tier, source-trail handler, stale renderer,
   and non-claims.
 - `WorldwatchEntityRenderer` projects proof-backed entities for the fallback map.
 - `WorldwatchDataBus` provides typed in-app events.

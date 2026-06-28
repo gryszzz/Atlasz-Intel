@@ -121,6 +121,7 @@ export const COVERAGE_REGISTRY: WatchedThing[] = [
   // 2. Price / market data
   covered('price-equities', 'price-market-data', 'Equity/ETF quotes (key-gated)', ['equities-prices'], 'realtime', 'auth-gated', ['ticker', 'company', 'etf'], 'high', 15 * 60_000, 'Key-gated Alpaca quote provider; fail-closed -> PRICE_UNAVAILABLE until ATLASZ_ALPACA_API_KEY is configured. No seeded/default price rendered as real.'),
   covered('price-options', 'price-market-data', 'Options chain / open interest (key-gated)', ['options-oi'], 'realtime', 'auth-gated', ['ticker', 'company'], 'high', 15 * 60_000, 'Key-gated Alpaca options snapshots; fail-closed -> unavailable until keys + ATLASZ_OPTIONS_UNDERLYINGS. No flow inference.'),
+  missing('price-crypto', 'price-market-data', 'Crypto market data', ['ticker'], 'medium', 'No official/provider-backed crypto market data source wired.'),
   missing('price-forex', 'price-market-data', 'Forex', ['ticker'], 'high', 'No FX feed wired.'),
   missing('price-futures', 'price-market-data', 'Commodity futures', ['commodity'], 'high', 'No commodity futures feed wired.'),
   missing('price-rates-vol', 'price-market-data', 'Rates / yields / volatility', ['macro-series'], 'high', 'Rates available via FRED (macro), but no realtime yield-curve/vol surface.'),
@@ -166,6 +167,7 @@ export const COVERAGE_REGISTRY: WatchedThing[] = [
 
   // 12. Media / narrative
   covered('media-gdelt', 'media-narrative', 'GDELT (media observation)', ['gdelt-doc'], 'near-realtime', 'media-observation', ['event'], 'low', 6 * HOUR, 'Media observation only — never verified fact, never counted as coverage.'),
+  missing('alt-sentiment-provider', 'media-narrative', 'Provider-backed sentiment / alternative data', ['event', 'company'], 'medium', 'No licensed/provider-backed sentiment or alternative data source wired. GDELT remains media observation only.'),
 
   // 13. Geospatial / infrastructure
   covered('infra-power', 'geospatial-infrastructure', 'Power plants', ['eia-power-plants'], 'monthly', 'official-api', ['facility', 'place'], 'high', 45 * DAY, 'EIA-860M plant facilities; location/capacity context only.'),

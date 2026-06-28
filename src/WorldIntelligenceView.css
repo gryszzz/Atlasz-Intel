@@ -271,6 +271,29 @@
   text-transform: uppercase;
 }
 
+.worldwatch-layer-toggle small {
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.worldwatch-layer-heat {
+  grid-column: 1 / -1;
+}
+
+.heat-fresh {
+  color: var(--green) !important;
+}
+
+.heat-mixed {
+  color: var(--yellow) !important;
+}
+
+.heat-stale {
+  color: var(--red) !important;
+}
+
 .layer-status-attention {
   border-color: rgba(250, 204, 21, 0.24);
 }

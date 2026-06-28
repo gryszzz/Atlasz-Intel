@@ -23,6 +23,9 @@ The Worldwatch Globe architecture lives in
 plugin-driven geospatial systems such as WorldWideView, but Atlasz remains an
 original proof-first market/economic/world intelligence terminal.
 
+The OpenBB / awesome-quant / WorldWideView study pass lives in
+[`docs/openbb-quant-worldwatch-study.md`](openbb-quant-worldwatch-study.md).
+
 ## Worldwatch Profiles
 
 Profiles can watch:
