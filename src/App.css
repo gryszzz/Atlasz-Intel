@@ -3368,3 +3368,314 @@ textarea {
     min-height: auto;
   }
 }
+
+/* Full-app Worldwatch language: apply the cockpit discipline beyond the first screen. */
+.atlasz-workbench {
+  align-items: start;
+  gap: 10px;
+}
+
+.atlasz-workbench .panel,
+.atlasz-workbench .quant-terminal,
+.atlasz-workbench .source-health-view,
+.atlasz-workbench .connector-activation-panel {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #090c0b;
+  box-shadow: none;
+}
+
+.atlasz-workbench .panel {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 10px;
+}
+
+.atlasz-workbench .panel-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: start;
+  margin: 0;
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: 9px;
+}
+
+.atlasz-workbench .panel-header div {
+  min-width: 0;
+}
+
+.atlasz-workbench .panel-header h2 {
+  grid-column: 1 / -1;
+  color: var(--white);
+  font-size: 15px;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+.atlasz-workbench .panel-header span,
+.atlasz-workbench .world-intel-strip span,
+.atlasz-workbench .status-metric-grid span,
+.atlasz-workbench .dossier-metric-grid span,
+.atlasz-workbench .sidecar-metrics span,
+.atlasz-workbench .pulse-toolbar span,
+.atlasz-workbench .source-item em,
+.atlasz-workbench .evidence-meta span,
+.atlasz-workbench .quant-macro-strip span,
+.atlasz-workbench .quant-asset span {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.atlasz-workbench .chart-frame,
+.atlasz-workbench .bar-frame,
+.atlasz-workbench .graph-frame,
+.atlasz-workbench .globe-viewport,
+.atlasz-workbench .pulse-grid,
+.atlasz-workbench .map-scene,
+.atlasz-workbench .analyst-thread,
+.atlasz-workbench .daily-brief,
+.atlasz-workbench textarea,
+.atlasz-workbench .quant-body,
+.atlasz-workbench .quant-macro-strip {
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: #070908;
+  box-shadow: none;
+}
+
+.atlasz-workbench .globe-sphere,
+.atlasz-workbench .pulse-node,
+.atlasz-workbench .node-core {
+  background: #101412;
+  box-shadow: none;
+}
+
+.atlasz-workbench .pulse-grid,
+.atlasz-workbench .globe-sphere {
+  background-image: none;
+}
+
+.atlasz-workbench .chart-frame,
+.atlasz-workbench .bar-frame,
+.atlasz-workbench .graph-frame,
+.atlasz-workbench .globe-viewport {
+  min-height: 440px;
+  padding: 10px;
+}
+
+.atlasz-workbench .panel-source-row,
+.atlasz-workbench .chart-stat-row,
+.atlasz-workbench .explanation-lead,
+.atlasz-workbench .relationship-block,
+.atlasz-workbench .source-item,
+.atlasz-workbench .brief-row,
+.atlasz-workbench .status-kicker,
+.atlasz-workbench .status-tile,
+.atlasz-workbench .dossier-lead,
+.atlasz-workbench .selected-node-card,
+.atlasz-workbench .analyst-context-banner,
+.atlasz-workbench .signal-card,
+.atlasz-workbench .event-card,
+.atlasz-workbench .market-row,
+.atlasz-workbench .timeline-event,
+.atlasz-workbench .universe-search,
+.atlasz-workbench .universe-chip-row button,
+.atlasz-workbench .risk-row,
+.atlasz-workbench .pipeline-stage,
+.atlasz-workbench .layer-chip {
+  border-color: var(--line-soft);
+  border-radius: 7px;
+  background: #101412;
+  box-shadow: none;
+}
+
+.atlasz-workbench .empty-state,
+.atlasz-workbench .quant-empty,
+.atlasz-workbench .fred-context-unavailable,
+.atlasz-workbench .treasury-context-unavailable,
+.atlasz-workbench .bea-context-unavailable,
+.atlasz-workbench .eia-context-unavailable {
+  display: grid;
+  gap: 7px;
+  border: 1px dashed var(--line);
+  border-radius: 7px;
+  background: #0b0e0d;
+  color: var(--muted);
+  padding: 14px;
+}
+
+.atlasz-workbench .filter-button,
+.atlasz-workbench .tag-stack button,
+.atlasz-workbench .inspect-button,
+.atlasz-workbench .pin-button,
+.atlasz-workbench .ask-analyst-button,
+.atlasz-workbench .market-link-row button,
+.atlasz-workbench .prompt-chip-stack button,
+.atlasz-workbench .quant-refresh,
+.atlasz-workbench .quant-asset,
+.atlasz-workbench .universe-search button,
+.atlasz-workbench .world-intel-strip button {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #111614;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.atlasz-workbench .filter-button.active,
+.atlasz-workbench .filter-button:hover,
+.atlasz-workbench .quant-asset.active,
+.atlasz-workbench .quant-asset:hover,
+.atlasz-workbench .market-row.active,
+.atlasz-workbench .market-row:hover,
+.atlasz-workbench .timeline-event.active,
+.atlasz-workbench .timeline-event:hover,
+.atlasz-workbench .event-card.active,
+.atlasz-workbench .event-card:hover {
+  border-color: rgba(94, 234, 212, 0.45);
+  background: #14201c;
+}
+
+.atlasz-workbench .source-badge,
+.atlasz-workbench .tag-stack span,
+.atlasz-workbench .evidence-meta span,
+.atlasz-workbench .signal-score-grid span,
+.atlasz-workbench .severity,
+.atlasz-workbench .storage-pill {
+  border-color: var(--line);
+  background: #101412;
+}
+
+.atlasz-workbench .risk-meter span {
+  background: var(--green);
+}
+
+.market-workbench .terminal-chart-panel,
+.radar-workbench .radar-pulse-panel,
+.graph-workbench .graph-panel,
+.dossier-workbench .analyst-panel {
+  grid-column: span 8;
+}
+
+.market-workbench .panel:not(.terminal-chart-panel):not(.wide-panel),
+.radar-workbench .dossier-panel,
+.graph-workbench .panel:not(.wide-panel):not(.graph-panel) {
+  grid-column: span 4;
+}
+
+.market-workbench .wide-panel,
+.radar-workbench .wide-panel:last-child,
+.graph-workbench .evidence-graph-panel,
+.dossier-workbench .wide-panel,
+.sourceops-workbench .wide-panel {
+  grid-column: span 12;
+}
+
+.sourceops-workbench {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+.sourceops-workbench .wide-panel:first-child {
+  grid-column: span 5;
+  max-height: calc(100dvh - 138px);
+  overflow: auto;
+}
+
+.sourceops-workbench .wide-panel:last-child {
+  grid-column: span 7;
+}
+
+.quant-workbench .quant-terminal {
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+}
+
+.quant-workbench .quant-macro-strip {
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+}
+
+.quant-workbench .quant-body {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.28fr) minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px;
+}
+
+.quant-workbench .quant-asset-rail {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+}
+
+.quant-workbench .quant-asset {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px;
+  text-align: left;
+}
+
+.quant-workbench .quant-detail {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.atlasz-workbench .analyst-input {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: #070908;
+  padding: 8px;
+}
+
+.atlasz-workbench .analyst-input input,
+.atlasz-workbench textarea {
+  color: var(--text);
+}
+
+.atlasz-workbench .analyst-input button {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #111614;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  padding: 7px 9px;
+  text-transform: uppercase;
+}
+
+@media (max-width: 1180px) {
+  .market-workbench .terminal-chart-panel,
+  .market-workbench .panel,
+  .market-workbench .wide-panel,
+  .radar-workbench .radar-pulse-panel,
+  .radar-workbench .panel,
+  .graph-workbench .panel,
+  .dossier-workbench .panel,
+  .sourceops-workbench .wide-panel:first-child,
+  .sourceops-workbench .wide-panel:last-child {
+    grid-column: 1 / -1;
+    max-height: none;
+  }
+
+  .quant-workbench .quant-body {
+    grid-template-columns: 1fr;
+  }
+}

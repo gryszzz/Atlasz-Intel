@@ -1807,7 +1807,7 @@ function App() {
         )}
 
         {activeView === 'terminal' && (
-          <section className="dashboard-grid terminal-grid">
+          <section className="dashboard-grid terminal-grid atlasz-workbench market-workbench">
             <article className="panel terminal-chart-panel">
               <PanelHeader icon={LineChart} label="Market / Infrastructure" title={`${selectedMarket.ticker} source-backed movement context`} />
               <div className="chart-stat-row">
@@ -1865,13 +1865,15 @@ function App() {
         )}
 
         {activeView === 'quant' && (
-          <Suspense fallback={<div className="panel"><ChartSkeleton /></div>}>
-            <QuantTerminalView />
-          </Suspense>
+          <section className="atlasz-workbench quant-workbench">
+            <Suspense fallback={<div className="panel"><ChartSkeleton /></div>}>
+              <QuantTerminalView />
+            </Suspense>
+          </section>
         )}
 
         {activeView === 'sources' && (
-          <section className="dashboard-grid sources-grid">
+          <section className="dashboard-grid sources-grid atlasz-workbench sourceops-workbench">
             <article className="panel wide-panel">
               <ConnectorActivationPanel sources={worldSnapshot.sources} events={worldSnapshot.worldEvents} />
             </article>
@@ -1888,7 +1890,7 @@ function App() {
         )}
 
         {activeView === 'radar' && (
-          <section className="dashboard-grid radar-grid">
+          <section className="dashboard-grid radar-grid atlasz-workbench radar-workbench">
             <article className="panel radar-pulse-panel wide-panel">
               <PanelHeader icon={RadioTower} label="Global Pulse" title="Mission feed mapped to markets" />
               <GlobalPulseScene
@@ -1951,7 +1953,7 @@ function App() {
         )}
 
         {activeView === 'social' && (
-          <section className="dashboard-grid social-grid">
+          <section className="dashboard-grid social-grid atlasz-workbench attention-workbench">
             <article className="panel social-main-panel">
               <PanelHeader icon={Activity} label="Attention Pulse" title="Social pressure requires source-backed attention data" />
               <SocialPulseModule
@@ -1978,7 +1980,7 @@ function App() {
         )}
 
         {activeView === 'graph' && (
-          <section className="dashboard-grid graph-grid">
+          <section className="dashboard-grid graph-grid atlasz-workbench graph-workbench">
             {/* Evidence graph: clickable entity nodes with proving events, separate
                 from the risk-BFS RelationshipGraph below. */}
             <article className="panel wide-panel evidence-graph-panel">
@@ -2021,7 +2023,7 @@ function App() {
         )}
 
         {activeView === 'cyber' && (
-          <section className="dashboard-grid cyber-grid">
+          <section className="dashboard-grid cyber-grid atlasz-workbench dossier-workbench">
             <article className="panel wide-panel">
               <PanelHeader icon={ShieldAlert} label="Cyber / OPSEC" title="Defensive intelligence, source trust, and gated capabilities" />
               <CyberOpsecPanel defensiveSummary={defensiveSummary} sourceStatusCounts={sourceStatusCounts} />
@@ -2038,7 +2040,7 @@ function App() {
         )}
 
         {activeView === 'analyst' && (
-          <section className="dashboard-grid analyst-grid">
+          <section className="dashboard-grid analyst-grid atlasz-workbench dossier-workbench">
             <article className="panel analyst-panel">
               <PanelHeader icon={BrainCircuit} label="Analysis Desk" title="Evidence-constrained local reasoning surface" />
               <AnalystContextBanner
@@ -2085,7 +2087,7 @@ function App() {
         )}
 
         {activeView === 'brief' && (
-          <section className="dashboard-grid brief-grid">
+          <section className="dashboard-grid brief-grid atlasz-workbench dossier-workbench">
             <article className="panel wide-panel">
               <PanelHeader icon={FileText} label="Daily Brief" title="Private morning intelligence report" />
               <WorldIntelStatusStrip
@@ -2137,7 +2139,7 @@ function App() {
         )}
 
         {activeView === 'decision' && (
-          <section className="dashboard-grid brief-grid">
+          <section className="dashboard-grid brief-grid atlasz-workbench dossier-workbench">
             <article className="panel wide-panel">
               <PanelHeader icon={BookOpen} label="Research Notes" title="Observation, evidence, follow-up, and outcome context" />
               <DecisionJournal />
