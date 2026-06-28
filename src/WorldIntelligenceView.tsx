@@ -37,6 +37,9 @@ const WorldEntityDetailPanel = lazy(() =>
 const WorldQuantStrip = lazy(() =>
   import('./components/world/WorldQuantStrip.lazy').then((m) => ({ default: m.WorldQuantStrip })),
 )
+const WorldTradeMarketOverview = lazy(() =>
+  import('./components/world/WorldTradeMarketOverview.lazy').then((m) => ({ default: m.WorldTradeMarketOverview })),
+)
 const HistoricalPlaybookPanel = lazy(() =>
   import('./components/intel/HistoricalPlaybookPanel').then((m) => ({ default: m.HistoricalPlaybookPanel })),
 )
@@ -258,6 +261,10 @@ export function WorldIntelligenceView({
         onActiveProfileChange={onActiveWorldwatchProfileChange}
         onAddEntity={onAddEntityToWorldwatchProfile}
       />
+
+      <Suspense fallback={<div className="world-panel world-trade-overview"><PanelSkeleton rows={5} label="Loading trade market overview" /></div>}>
+        <WorldTradeMarketOverview events={visibleEvents} sources={snapshot.sources} now={now} />
+      </Suspense>
 
       <section className="world-grid">
         <Suspense fallback={<div className="world-panel world-map-panel"><GlobeSkeleton /></div>}>

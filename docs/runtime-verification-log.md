@@ -1,6 +1,6 @@
 # Runtime Verification Log
 
-**Generated:** 2026-06-28T00:29:49.709Z
+**Generated:** 2026-06-28T00:38:36.497Z
 **Command:** `npx tsx scripts/runtimeVerification.mts`
 **Result:** 13/13 checks passed
 **Persistence:** node:sqlite (with JSON fallback)
@@ -19,7 +19,7 @@
 
 | connector | impl | gating | env required | key? | status | recs | persist | trail | redact | resolver | expose |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| gdelt-doc | impl | public | - | public | rate-limited | 0 | n/a | n/a | n/a | no | no |
+| gdelt-doc | impl | public | - | public | failed | 0 | n/a | n/a | n/a | no | no |
 | sec-edgar | impl | key-gated | ATLASZ_SEC_USER_AGENT | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
 | market-reference-master | impl | public | - | public | online | 8021 | yes | yes | n/a | yes | yes |
 | sec-company-facts | impl | key-gated | ATLASZ_SEC_USER_AGENT | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
@@ -27,7 +27,7 @@
 | sec-form13f | impl | key-gated | ATLASZ_SEC_USER_AGENT | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
 | etf-holdings | impl | public | - | public | online | 266 | yes | yes | n/a | partial | yes |
 | fred | impl | key-gated | ATLASZ_FRED_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
-| treasury-fiscal | impl | public | - | public | failed | 0 | n/a | n/a | n/a | partial | yes |
+| treasury-fiscal | impl | public | - | public | online | 3 | yes | yes | n/a | partial | yes |
 | bls | impl | public | - | public | online | 5 | yes | yes | n/a | partial | yes |
 | bea | impl | key-gated | ATLASZ_BEA_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
 | eia | impl | key-gated | ATLASZ_EIA_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
@@ -42,7 +42,7 @@
 | uspto | impl | key-gated | ATLASZ_PATENTSVIEW_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
 | github-releases | impl | public | - | public | online | 15 | yes | yes | n/a | yes | yes |
 | cisa-kev | impl | public | - | public | online | 25 | yes | yes | n/a | partial | yes |
-| nvd | impl | public | - | public | unavailable | 0 | n/a | n/a | n/a | partial | yes |
+| nvd | impl | public | - | public | online | 25 | yes | yes | n/a | partial | yes |
 | ghsa | impl | public | - | public | online | 30 | yes | yes | n/a | partial | yes |
 | osv | impl | public | - | public | online | 34 | yes | yes | n/a | partial | yes |
 | cisa-advisories | impl | public | - | public | online | 24 | yes | yes | n/a | partial | yes |
