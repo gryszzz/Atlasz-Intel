@@ -1,7 +1,7 @@
 .app-shell {
   display: grid;
   grid-template-columns: 292px minmax(0, 1fr);
-  min-height: 100vh;
+  min-height: 100dvh;
   color: var(--text);
 }
 
@@ -9,12 +9,12 @@
   position: sticky;
   top: 0;
   display: flex;
-  height: 100vh;
+  height: 100dvh;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
   border-right: 1px solid var(--line);
-  background: rgba(5, 6, 7, 0.92);
-  padding: 22px 18px;
+  background: #060807;
+  padding: 14px;
 }
 
 .brand-lockup {
@@ -27,8 +27,11 @@
 .brand-lockup-banner {
   align-items: flex-start;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px 8px 10px;
+  gap: 6px;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: #0b0e0d;
+  padding: 10px;
 }
 
 .brand-banner {
@@ -36,7 +39,6 @@
   width: min(100%, 238px);
   height: auto;
   object-fit: contain;
-  filter: drop-shadow(0 0 18px rgba(94, 234, 212, 0.14));
 }
 
 .eyebrow,
@@ -52,7 +54,7 @@
 
 .nav-stack {
   display: grid;
-  gap: 7px;
+  gap: 5px;
 }
 
 .nav-item,
@@ -71,8 +73,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 42px;
-  padding: 10px 11px;
+  min-height: 36px;
+  padding: 8px 10px;
   text-align: left;
   transition:
     background 160ms ease,
@@ -98,11 +100,11 @@
 
 .sidebar-module {
   display: grid;
-  gap: 12px;
+  gap: 9px;
   border: 1px solid var(--line-soft);
-  border-radius: 8px;
-  background: rgba(13, 17, 16, 0.76);
-  padding: 14px;
+  border-radius: 7px;
+  background: #0b0e0d;
+  padding: 10px;
 }
 
 .sidebar-module p {
@@ -147,8 +149,8 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 12px;
-  padding: 18px 22px 22px;
+  gap: 10px;
+  padding: 12px;
 }
 
 .topbar {
@@ -156,18 +158,18 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  min-height: 66px;
+  min-height: 56px;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: rgba(13, 17, 16, 0.88);
-  box-shadow: var(--shadow);
-  padding: 14px 18px 14px 20px;
+  border-radius: 7px;
+  background: #0b0e0d;
+  box-shadow: none;
+  padding: 10px 12px;
 }
 
 .topbar h2 {
   max-width: 850px;
   margin: 4px 0 0;
-  font-size: 21px;
+  font-size: 18px;
   font-weight: 650;
   line-height: 1.2;
 }

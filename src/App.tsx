@@ -196,8 +196,8 @@ type DefensiveReferenceEntry = {
 }
 
 const views: Array<{ id: ViewId; label: string; icon: typeof MonitorDot }> = [
-  { id: 'command', label: 'Command', icon: MonitorDot },
-  { id: 'world', label: 'Worldwatch', icon: Globe2 },
+  { id: 'command', label: 'Worldwatch Command', icon: MonitorDot },
+  { id: 'world', label: 'Globe / Layers', icon: Globe2 },
   { id: 'graph', label: 'Intelligence Graph', icon: Network },
   { id: 'radar', label: 'Event Timelines', icon: RadioTower },
   { id: 'terminal', label: 'Market / Infra', icon: LineChart },
@@ -1367,6 +1367,8 @@ function App() {
       perform: resetWorkspace,
     },
   ]
+  const worldwatchSurfaceActive = activeView === 'command' || activeView === 'world'
+  const legacyCommandSurfaceEnabled = typeof window !== 'undefined' && window.location.search.includes('legacy-command=1')
 
   return (
     <main className="app-shell">
@@ -1440,8 +1442,14 @@ function App() {
       <section className="workspace">
         <header className="topbar">
           <div>
-            <span className="eyebrow">Evidence-first local intelligence terminal</span>
-            <h2>Understand what changed, why it matters, what proves it, and which entities connect.</h2>
+            <span className="eyebrow">
+              {worldwatchSurfaceActive ? 'Aegis Worldwatch workstation' : 'Evidence-first local intelligence terminal'}
+            </span>
+            <h2>
+              {worldwatchSurfaceActive
+                ? 'Source layers, map context, exposure paths, and proof trails without fake urgency.'
+                : 'Understand what changed, why it matters, what proves it, and which entities connect.'}
+            </h2>
           </div>
           <div className="topbar-actions">
             <CommandMenuButton />
@@ -1459,26 +1467,45 @@ function App() {
           </div>
         </header>
 
-        <section className="ticker-tape" aria-label="Market tape">
-          {tickerTapeItems.map((item) => (
-            <button
-              className={selectedTicker === item.ticker ? 'ticker-tile active' : 'ticker-tile'}
-              key={item.ticker}
-              type="button"
-              onClick={() => selectTicker(item.ticker)}
-            >
-              <span>{item.ticker}</span>
-              <strong>{item.price}</strong>
-              <em className={changeClass(item.change)}>
-                {item.change >= 0 ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
-                {formatChange(item.change)}
-              </em>
-            </button>
-          ))}
-        </section>
+        {!worldwatchSurfaceActive && (
+          <section className="ticker-tape" aria-label="Market tape">
+            {tickerTapeItems.map((item) => (
+              <button
+                className={selectedTicker === item.ticker ? 'ticker-tile active' : 'ticker-tile'}
+                key={item.ticker}
+                type="button"
+                onClick={() => selectTicker(item.ticker)}
+              >
+                <span>{item.ticker}</span>
+                <strong>{item.price}</strong>
+                <em className={changeClass(item.change)}>
+                  {item.change >= 0 ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
+                  {formatChange(item.change)}
+                </em>
+              </button>
+            ))}
+          </section>
+        )}
 
         <ViewErrorBoundary key={activeView}>
-        {activeView === 'command' && (
+        {activeView === 'command' && !legacyCommandSurfaceEnabled && (
+          <Suspense fallback={<div className="world-panel world-map-panel"><GlobeSkeleton /></div>}>
+            <WorldIntelligenceView
+              loading={worldIntelLoading}
+              onRefresh={refreshWorldIntel}
+              onSelectEvent={(eventId) => selectEvent(eventId)}
+              onSelectTicker={(ticker) => selectTicker(ticker, 'terminal')}
+              onToggleFavorite={toggleWorldFavorite}
+              activeWorldwatchProfileId={worldwatch.activeProfileId}
+              worldwatchProfiles={worldwatch.profiles}
+              onActiveWorldwatchProfileChange={worldwatch.setActiveProfileId}
+              onAddEntityToWorldwatchProfile={worldwatch.addEntityToActiveProfile}
+              snapshot={worldSnapshot}
+            />
+          </Suspense>
+        )}
+
+        {legacyCommandSurfaceEnabled && activeView === 'command' && (
           <section className="dashboard-grid command-grid">
             <section className="worldwatch-command-surface" aria-label="Atlasz Worldwatch command surface">
               <header className="worldwatch-command-head">

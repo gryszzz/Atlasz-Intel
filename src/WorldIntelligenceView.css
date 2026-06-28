@@ -1614,3 +1614,577 @@
     min-height: 430px;
   }
 }
+
+/* Worldwatch v2 shell: no scroll-wall; one command surface with mode-based evidence desks. */
+.atlasz-worldwatch-workstation {
+  gap: 10px;
+}
+
+.worldwatch-command-deck {
+  border-color: var(--line);
+  background: #0b0e0d;
+}
+
+.worldwatch-workstation-grid {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.68fr) minmax(620px, 1.55fr) minmax(310px, 0.78fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.worldwatch-command-rail,
+.worldwatch-intel-rail,
+.worldwatch-map-core {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.worldwatch-command-rail,
+.worldwatch-intel-rail {
+  align-content: start;
+  max-height: calc(100dvh - 148px);
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #090c0b;
+  padding: 8px;
+}
+
+.worldwatch-map-core {
+  align-content: start;
+}
+
+.worldwatch-map-core .worldwatch-globe-shell {
+  grid-column: auto;
+}
+
+.worldwatch-map-core .worldwatch-globe-layout {
+  grid-template-columns: minmax(176px, 0.3fr) minmax(420px, 1fr) minmax(260px, 0.38fr);
+  min-height: 560px;
+}
+
+.worldwatch-map-core .worldwatch-proof-map {
+  min-height: 560px;
+}
+
+.worldwatch-map-core .worldwatch-entity-drawer {
+  max-height: 560px;
+}
+
+.worldwatch-command-rail .worldwatch-profile-panel,
+.worldwatch-command-rail .world-status-panel,
+.worldwatch-intel-rail .world-events-panel,
+.worldwatch-intel-rail .world-panel {
+  grid-column: auto;
+  border-color: var(--line-soft);
+  background: #0f1312;
+}
+
+.worldwatch-intel-rail .world-events-panel {
+  max-height: 410px;
+  overflow: auto;
+}
+
+.worldwatch-desk {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #090c0b;
+  padding: 10px;
+}
+
+.atlasz-cockpit {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #070908;
+  padding: 10px;
+}
+
+.cockpit-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: 10px;
+}
+
+.cockpit-header span,
+.cockpit-layer-console span,
+.cockpit-dossier header span,
+.cockpit-map-toolbar span,
+.cockpit-metric span,
+.cockpit-nonclaim strong {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.cockpit-header h3,
+.cockpit-dossier h4 {
+  margin: 3px 0 0;
+  color: var(--white);
+  line-height: 1.25;
+}
+
+.cockpit-header h3 {
+  font-size: 17px;
+}
+
+.cockpit-metric-strip,
+.cockpit-proof-strip,
+.cockpit-map-toolbar,
+.cockpit-window-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cockpit-metric {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 2px 6px;
+  align-items: center;
+  min-width: 118px;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: #101412;
+  padding: 7px 8px;
+}
+
+.cockpit-metric svg {
+  color: var(--green);
+}
+
+.cockpit-metric strong {
+  grid-column: 1 / -1;
+  color: var(--white);
+  font-family: var(--mono);
+  font-size: 14px;
+}
+
+.cockpit-body {
+  display: grid;
+  grid-template-columns: 178px minmax(420px, 1fr) 278px;
+  gap: 8px;
+  min-height: 570px;
+}
+
+.cockpit-layer-console,
+.cockpit-dossier,
+.cockpit-map-stage {
+  min-width: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: #0d100f;
+}
+
+.cockpit-layer-console,
+.cockpit-dossier {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  overflow: auto;
+  padding: 8px;
+}
+
+.cockpit-map-stage {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px;
+}
+
+.cockpit-window-row button,
+.cockpit-layer-stack button,
+.worldwatch-desk-tabs button {
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
+}
+
+.cockpit-window-row button {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #111614;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  padding: 6px 8px;
+  text-transform: uppercase;
+}
+
+.cockpit-window-row button.active,
+.cockpit-window-row button:hover {
+  border-color: rgba(94, 234, 212, 0.45);
+  background: #14201c;
+  color: var(--white);
+}
+
+.cockpit-layer-stack {
+  display: grid;
+  gap: 6px;
+}
+
+.cockpit-layer-stack button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 3px 7px;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: #101412;
+  color: var(--text);
+  padding: 7px;
+  text-align: left;
+}
+
+.cockpit-layer-stack button.active {
+  border-color: rgba(94, 234, 212, 0.45);
+  background: #14201c;
+}
+
+.cockpit-layer-stack button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.cockpit-layer-stack strong {
+  color: var(--white);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.cockpit-layer-stack em {
+  grid-column: 1 / -1;
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-style: normal;
+  text-transform: uppercase;
+}
+
+.cockpit-map-toolbar {
+  justify-content: space-between;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: #101412;
+  padding: 8px;
+}
+
+.cockpit-map-toolbar div {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cockpit-map-toolbar svg {
+  color: var(--green);
+}
+
+.cockpit-map-plane {
+  position: relative;
+  min-height: 500px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #070908;
+}
+
+.cockpit-map-plane::before,
+.cockpit-map-plane::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+}
+
+.cockpit-map-plane::before {
+  border-top: 1px solid rgba(94, 234, 212, 0.12);
+  border-bottom: 1px solid rgba(94, 234, 212, 0.1);
+  transform: translateY(50%);
+}
+
+.cockpit-map-plane::after {
+  border-left: 1px solid rgba(94, 234, 212, 0.1);
+  transform: translateX(50%);
+}
+
+.cockpit-region {
+  position: absolute;
+  color: rgba(217, 230, 224, 0.24);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.region-americas {
+  left: 16%;
+  top: 20%;
+}
+
+.region-emea {
+  left: 47%;
+  top: 22%;
+}
+
+.region-apac {
+  right: 12%;
+  top: 34%;
+}
+
+.cockpit-marker {
+  position: absolute;
+  display: grid;
+  gap: 4px;
+  width: 112px;
+  transform: translate(-10px, -10px);
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  padding: 0;
+  text-align: left;
+}
+
+.cockpit-marker > span {
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--green);
+  border-radius: 999px;
+  background: #050706;
+}
+
+.cockpit-marker.severity-critical > span {
+  border-color: var(--red);
+}
+
+.cockpit-marker.severity-elevated > span {
+  border-color: var(--yellow);
+}
+
+.cockpit-marker.marker-official > span {
+  border-color: var(--green);
+}
+
+.cockpit-marker.marker-public > span {
+  border-color: var(--cyan);
+}
+
+.cockpit-marker.marker-media > span,
+.cockpit-marker.marker-structural > span {
+  border-style: dashed;
+}
+
+.cockpit-marker.marker-media > span {
+  border-color: var(--yellow);
+}
+
+.cockpit-marker.marker-structural > span,
+.cockpit-marker.marker-unavailable > span {
+  border-color: var(--faint);
+}
+
+.cockpit-marker.stale {
+  opacity: 0.58;
+}
+
+.cockpit-marker.active > span {
+  outline: 7px solid rgba(94, 234, 212, 0.12);
+}
+
+.cockpit-marker strong {
+  overflow: hidden;
+  color: var(--white);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cockpit-dossier h4 {
+  font-size: 15px;
+}
+
+.cockpit-dossier p,
+.cockpit-empty-map p,
+.cockpit-nonclaim p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.cockpit-proof-strip span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #101412;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 3px 7px;
+}
+
+.cockpit-tag-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.cockpit-tag-grid span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #101412;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 3px 7px;
+}
+
+.cockpit-nonclaim {
+  display: grid;
+  gap: 5px;
+  border-top: 1px solid var(--line-soft);
+  padding-top: 8px;
+}
+
+.cockpit-dossier a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.cockpit-empty-map {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+}
+
+.cockpit-empty-map svg {
+  color: var(--green);
+}
+
+.worldwatch-desk-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: 10px;
+}
+
+.worldwatch-desk-head span {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.worldwatch-desk-head h4 {
+  margin: 3px 0 0;
+  color: var(--white);
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.worldwatch-desk-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.worldwatch-desk-tabs button {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #111614;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  padding: 7px 9px;
+  text-transform: uppercase;
+}
+
+.worldwatch-desk-tabs button.active,
+.worldwatch-desk-tabs button:hover {
+  border-color: rgba(94, 234, 212, 0.45);
+  background: #14201c;
+  color: var(--white);
+}
+
+.worldwatch-desk-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  align-items: start;
+}
+
+.worldwatch-desk-grid > .world-trade-overview {
+  grid-column: span 2;
+}
+
+.worldwatch-desk-grid > .world-panel {
+  grid-column: span 1;
+  min-height: 100%;
+}
+
+.worldwatch-desk-grid > .world-panel:nth-child(1):last-child {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 1440px) {
+  .worldwatch-workstation-grid {
+    grid-template-columns: minmax(240px, 0.6fr) minmax(560px, 1.4fr);
+  }
+
+  .worldwatch-intel-rail {
+    grid-column: 1 / -1;
+    max-height: none;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.65fr);
+  }
+
+  .worldwatch-intel-rail .world-events-panel {
+    max-height: 520px;
+  }
+}
+
+@media (max-width: 1180px) {
+  .worldwatch-workstation-grid,
+  .worldwatch-intel-rail,
+  .worldwatch-map-core .worldwatch-globe-layout,
+  .worldwatch-desk-head,
+  .worldwatch-desk-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .worldwatch-command-rail,
+  .worldwatch-intel-rail {
+    max-height: none;
+  }
+
+  .worldwatch-desk-grid > .world-trade-overview,
+  .worldwatch-desk-grid > .world-panel {
+    grid-column: span 1;
+  }
+
+  .worldwatch-desk-tabs {
+    justify-content: flex-start;
+  }
+}
