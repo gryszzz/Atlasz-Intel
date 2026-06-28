@@ -1,6 +1,6 @@
 # Runtime Verification Log
 
-**Generated:** 2026-06-28T14:39:27.691Z
+**Generated:** 2026-06-28T19:10:48.884Z
 **Command:** `npx tsx scripts/runtimeVerification.mts`
 **Result:** 13/13 checks passed
 **Persistence:** node:sqlite (with JSON fallback)
@@ -12,8 +12,8 @@
 
 ## Env keys (names only)
 
-- **present:** (none)
-- **missing:** ATLASZ_ALPACA_API_KEY, ATLASZ_ALPACA_SECRET_KEY, ATLASZ_BEA_API_KEY, ATLASZ_CONGRESS_API_KEY, ATLASZ_EIA_API_KEY, ATLASZ_EIA_REFINERIES_URL, ATLASZ_FRED_API_KEY, ATLASZ_LNG_TERMINALS_URL, ATLASZ_OPENALEX_API_KEY, ATLASZ_OPTIONS_UNDERLYINGS, ATLASZ_PATENTSVIEW_API_KEY, ATLASZ_SEC_USER_AGENT, ATLASZ_UNLOCODE_URL, ATLASZ_UN_COMTRADE_API_KEY, ATLASZ_USGS_USMIN_URL
+- **present:** ATLASZ_SEC_USER_AGENT
+- **missing:** ATLASZ_ALPACA_API_KEY, ATLASZ_ALPACA_SECRET_KEY, ATLASZ_BEA_API_KEY, ATLASZ_CONGRESS_API_KEY, ATLASZ_EIA_API_KEY, ATLASZ_EIA_REFINERIES_URL, ATLASZ_FRED_API_KEY, ATLASZ_LNG_TERMINALS_URL, ATLASZ_OPENALEX_API_KEY, ATLASZ_OPTIONS_UNDERLYINGS, ATLASZ_PATENTSVIEW_API_KEY, ATLASZ_UNLOCODE_URL, ATLASZ_UN_COMTRADE_API_KEY, ATLASZ_USGS_USMIN_URL
 
 ## Connector truth table
 
@@ -21,12 +21,12 @@
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | gdelt-doc | impl | public | - | public | failed | 0 | n/a | n/a | n/a | no | no |
 | wsj-markets-rss | impl | public | - | public | online | 20 | yes | yes | n/a | no | no |
-| sec-edgar | impl | key-gated | ATLASZ_SEC_USER_AGENT | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
+| sec-edgar | impl | key-gated | ATLASZ_SEC_USER_AGENT | yes | online | 6 | yes | yes | yes | yes | yes |
 | sec-press-rss | impl | public | - | public | online | 25 | yes | yes | n/a | no | no |
 | market-reference-master | impl | public | - | public | online | 8021 | yes | yes | n/a | yes | yes |
-| sec-company-facts | impl | key-gated | ATLASZ_SEC_USER_AGENT | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
-| sec-form4 | impl | key-gated | ATLASZ_SEC_USER_AGENT | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
-| sec-form13f | impl | key-gated | ATLASZ_SEC_USER_AGENT | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
+| sec-company-facts | impl | key-gated | ATLASZ_SEC_USER_AGENT | yes | online | 72 | yes | yes | yes | yes | yes |
+| sec-form4 | impl | key-gated | ATLASZ_SEC_USER_AGENT | yes | online | 149 | yes | yes | yes | yes | yes |
+| sec-form13f | impl | key-gated | ATLASZ_SEC_USER_AGENT | yes | online | 400 | yes | yes | yes | partial | yes |
 | etf-holdings | impl | public | - | public | online | 266 | yes | yes | n/a | partial | yes |
 | fred | impl | key-gated | ATLASZ_FRED_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
 | treasury-fiscal | impl | public | - | public | online | 3 | yes | yes | n/a | partial | yes |
@@ -95,7 +95,6 @@ _None — all checks passed._
 - `ATLASZ_OPENALEX_API_KEY`
 - `ATLASZ_OPTIONS_UNDERLYINGS`
 - `ATLASZ_PATENTSVIEW_API_KEY`
-- `ATLASZ_SEC_USER_AGENT`
 - `ATLASZ_UNLOCODE_URL`
 - `ATLASZ_UN_COMTRADE_API_KEY`
 - `ATLASZ_USGS_USMIN_URL`
