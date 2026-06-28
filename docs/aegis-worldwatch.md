@@ -18,6 +18,11 @@ Atlasz Intel
 - Curated seeds are structural context only.
 - Private agent skills are builder knowledge only, never product truth.
 
+The Worldwatch Globe architecture lives in
+[`docs/worldwatch-globe-pass.md`](worldwatch-globe-pass.md). It is inspired by
+plugin-driven geospatial systems such as WorldWideView, but Atlasz remains an
+original proof-first market/economic/world intelligence terminal.
+
 ## Worldwatch Profiles
 
 Profiles can watch:

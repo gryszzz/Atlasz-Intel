@@ -12,6 +12,11 @@ import {
   type WatchedEntity,
   type WorldwatchProfile,
 } from './engine/worldwatchProfiles'
+import {
+  DEFAULT_WORLDWATCH_LAYER_IDS,
+  WorldwatchLayerRegistry,
+  type WorldwatchLayerId,
+} from './engine/worldwatchLayerRegistry'
 import type { UserFavorite, WorldIntelEvent, WorldIntelSnapshot } from './worldIntel'
 import './WorldIntelligenceView.css'
 
@@ -144,10 +149,12 @@ export function WorldIntelligenceView({
   const [windowId, setWindowId] = useState<WorldWindowId>('24h')
   const [query, setQuery] = useState('')
   const [now, setNow] = useState(() => Date.now())
+  const [activeLayerIds, setActiveLayerIds] = useState<WorldwatchLayerId[]>(() => DEFAULT_WORLDWATCH_LAYER_IDS)
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 30_000)
     return () => clearInterval(timer)
   }, [])
+  const layerRegistry = useMemo(() => new WorldwatchLayerRegistry(), [])
   const activeWindow = worldWindows.find((item) => item.id === windowId) ?? worldWindows[3]
   const favoriteIds = useMemo(() => new Set(snapshot.favorites.map((favorite) => favorite.targetId)), [snapshot.favorites])
   const events = useMemo(
@@ -189,6 +196,15 @@ export function WorldIntelligenceView({
   const visibleAssets = query.trim()
     ? snapshot.assetIdentities.filter((asset) => searchResults.assets.some((result) => result.symbol === asset.symbol)).slice(0, 12)
     : snapshot.assetIdentities.slice(0, 12)
+  const layerSnapshot = useMemo(
+    () => layerRegistry.materialize(snapshot, { events: visibleEvents, now }),
+    [layerRegistry, now, snapshot, visibleEvents],
+  )
+  const toggleWorldwatchLayer = (layerId: WorldwatchLayerId) => {
+    setActiveLayerIds((current) =>
+      current.includes(layerId) ? current.filter((currentLayerId) => currentLayerId !== layerId) : [...current, layerId],
+    )
+  }
 
   const quantMetrics = useMemo(() => {
     const countries = snapshot.countries
@@ -210,7 +226,7 @@ export function WorldIntelligenceView({
     <div className="world-intel-view">
       <section className="world-command-band">
         <div>
-          <span>World Intelligence Terminal</span>
+          <span>Worldwatch Globe Terminal</span>
           <h3>Global events, countries, markets, narratives, and source trust in one local matrix.</h3>
         </div>
         <div className="world-command-actions">
@@ -246,9 +262,12 @@ export function WorldIntelligenceView({
       <section className="world-grid">
         <Suspense fallback={<div className="world-panel world-map-panel"><GlobeSkeleton /></div>}>
           <WorldGlobeCanvas
-            events={visibleEvents}
+            activeLayerIds={activeLayerIds}
+            layerSnapshot={layerSnapshot}
             windows={worldWindows}
             windowId={windowId}
+            now={now}
+            onToggleLayer={toggleWorldwatchLayer}
             onWindowChange={(id) => setWindowId(id as WorldWindowId)}
             onSelectEvent={onSelectEvent}
           />

@@ -197,7 +197,7 @@ type DefensiveReferenceEntry = {
 
 const views: Array<{ id: ViewId; label: string; icon: typeof MonitorDot }> = [
   { id: 'command', label: 'Worldwatch', icon: MonitorDot },
-  { id: 'world', label: 'World Intel', icon: Globe2 },
+  { id: 'world', label: 'Worldwatch Globe', icon: Globe2 },
   { id: 'graph', label: 'Intelligence Graph', icon: Network },
   { id: 'radar', label: 'Event Timelines', icon: RadioTower },
   { id: 'terminal', label: 'Market / Infra', icon: LineChart },
@@ -1488,7 +1488,7 @@ function App() {
                 </div>
                 <div className="worldwatch-command-actions">
                   <button type="button" onClick={() => setActiveView('world')}>
-                    Open world map
+                    Open Worldwatch Globe
                   </button>
                   <button type="button" onClick={() => setActiveView('sources')}>
                     Source ops
