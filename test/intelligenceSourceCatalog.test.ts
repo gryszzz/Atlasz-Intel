@@ -129,10 +129,10 @@ describe('intelligence source catalog', () => {
       provenance: 'official-api',
     })
     expect(lookupIntelligenceSource('congress-gov')).toMatchObject({
-      accessModel: 'public-requires-key',
+      accessModel: 'public-no-auth',
       integrationMode: 'runtime-wired',
       provenance: 'official-api',
-      envKeysRequired: ['ATLASZ_CONGRESS_API_KEY'],
+      envKeysRequired: [],
     })
     expect(lookupIntelligenceSource('arxiv-api')).toMatchObject({
       integrationMode: 'candidate-public-adapter',
@@ -147,10 +147,10 @@ describe('intelligence source catalog', () => {
       accessModel: 'public-no-auth',
     })
     expect(lookupIntelligenceSource('openalex-api')).toMatchObject({
-      accessModel: 'public-requires-key',
+      accessModel: 'public-no-auth',
       integrationMode: 'runtime-wired',
       provenance: 'official-api',
-      envKeysRequired: ['ATLASZ_OPENALEX_API_KEY'],
+      envKeysRequired: [],
     })
     expect(lookupIntelligenceSource('crossref-rest-api')).toMatchObject({
       accessModel: 'public-no-auth',

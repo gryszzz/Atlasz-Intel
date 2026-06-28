@@ -297,8 +297,8 @@ export class ProviderDiscoveryService {
           ? withQueryParam(url, 'UserID', this.env.ATLASZ_BEA_API_KEY)
         : provider?.providerId === 'eia_energy_public' && this.env.ATLASZ_EIA_API_KEY
           ? withQueryParam(url, 'api_key', this.env.ATLASZ_EIA_API_KEY)
-        : provider?.providerId === 'congress_gov_public' && this.env.ATLASZ_CONGRESS_API_KEY
-          ? withQueryParam(url, 'api_key', this.env.ATLASZ_CONGRESS_API_KEY)
+        : provider?.providerId === 'congress_gov_public'
+          ? withQueryParam(url, 'api_key', this.env.ATLASZ_CONGRESS_API_KEY || 'DEMO_KEY')
         : provider?.providerId === 'openalex_works_public' && this.env.ATLASZ_OPENALEX_API_KEY
           ? withQueryParam(url, 'api_key', this.env.ATLASZ_OPENALEX_API_KEY)
         : provider?.providerId === 'crossref_works_public' && this.env.ATLASZ_CROSSREF_MAILTO

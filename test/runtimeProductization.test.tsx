@@ -93,9 +93,9 @@ describe('runtime productization audit', () => {
     expect(rows.find((row) => row.id === 'eia')?.status).toBe('missing-key')
     expect(rows.find((row) => row.id === 'nvd')?.status).toBe('stale')
     expect(rows.find((row) => row.id === 'cisa-kev')?.status).toBe('rate-limited')
-    // UN Comtrade + OpenAlex are implemented + key-gated -> missing-key without keys.
+    // UN Comtrade is key-gated. OpenAlex is public and has no snapshot yet -> pending-first-fetch.
     expect(rows.find((row) => row.id === 'un-comtrade')?.status).toBe('missing-key')
-    expect(rows.find((row) => row.id === 'openalex-works')?.status).toBe('missing-key')
+    expect(rows.find((row) => row.id === 'openalex-works')?.status).toBe('pending-first-fetch')
   })
 
   it('distinguishes pending-first-fetch (public, implemented, no snapshot yet) from missing-key', () => {
@@ -109,9 +109,12 @@ describe('runtime productization audit', () => {
       expect(row?.missingReason, id).toMatch(/waiting for first poll/i)
     }
 
-    // Key-gated with no env key -> missing-key (incl. UN Comtrade + OpenAlex).
-    for (const id of ['eia', 'bea', 'uspto', 'fred', 'congress-gov', 'un-comtrade', 'openalex-works', 'sec-form13f']) {
+    // Key-gated with no env key -> missing-key.
+    for (const id of ['eia', 'bea', 'uspto', 'fred', 'un-comtrade', 'sec-form13f']) {
       expect(rows.find((r) => r.id === id)?.status, id).toBe('missing-key')
+    }
+    for (const id of ['congress-gov', 'openalex-works']) {
+      expect(rows.find((r) => r.id === id)?.status, id).toBe('pending-first-fetch')
     }
   })
 

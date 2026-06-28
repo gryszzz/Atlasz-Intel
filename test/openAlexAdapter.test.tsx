@@ -89,8 +89,8 @@ function records() {
 }
 
 describe('OpenAlex Works adapter', () => {
-  it('is key-gated and refuses non-official endpoint overrides', () => {
-    expect(readOpenAlexConfig({})).toBeNull()
+  it('runs without a key and refuses non-official endpoint overrides', () => {
+    expect(readOpenAlexConfig({})).not.toBeNull()
     expect(readOpenAlexConfig({ ATLASZ_OPENALEX_API_KEY: 'k', ATLASZ_OPENALEX_DISABLE: '1' })).toBeNull()
     expect(readOpenAlexConfig({ ATLASZ_OPENALEX_API_KEY: 'k', ATLASZ_OPENALEX_API_BASE: 'http://api.openalex.org/works' })).toBeNull()
     expect(readOpenAlexConfig({ ATLASZ_OPENALEX_API_KEY: 'k', ATLASZ_OPENALEX_API_BASE: 'https://example.com/works' })).toBeNull()
@@ -195,6 +195,22 @@ describe('OpenAlex Works adapter', () => {
     expect(events).toHaveLength(1)
     expect(JSON.stringify(events)).not.toContain('SECRET-OPENALEX-KEY')
     expect(events[0].openAlexWork?.sourceApiUrl).toContain('api.openalex.org/works')
+  })
+
+  it('omits api_key entirely in public no-key mode', async () => {
+    let requestedUrl = ''
+    vi.stubGlobal('fetch', async (url: string) => {
+      requestedUrl = url
+      return { ok: true, status: 200, headers: { get: () => null }, json: async () => WORKS_FIXTURE }
+    })
+
+    const config = { ...CONFIG }
+    delete config.apiKey
+    const events = await fetchOpenAlexWorks(new AbortController().signal, config)
+    expect(requestedUrl).toContain('api.openalex.org/works')
+    expect(requestedUrl).not.toContain('api_key=')
+    expect(events).toHaveLength(1)
+    expect(JSON.stringify(events)).not.toContain('api_key')
   })
 
   it('fails closed on rate limits through fetchPolicy', async () => {

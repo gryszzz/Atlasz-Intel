@@ -107,7 +107,7 @@ export function OpenAlexSourceTrail({ events, limit = 8, now }: { events: WorldI
       ) : (
         <div className="openalex-trail-empty">
           <strong>{OPENALEX_UNAVAILABLE}</strong>
-          <p>No OpenAlex research metadata available. The official API key is missing, the source returned nothing, failed, or hit rate limits. Nothing is fabricated.</p>
+          <p>No OpenAlex research metadata available. The public source returned nothing, failed, or hit rate limits. Nothing is fabricated.</p>
         </div>
       )}
     </section>

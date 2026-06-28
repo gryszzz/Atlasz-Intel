@@ -1,10 +1,11 @@
 /*
  * OpenAlex research-intelligence adapter (Works endpoint, catalog-narrow).
  *
- * Official OpenAlex API. Requires ATLASZ_OPENALEX_API_KEY and fails closed without
- * it. The key travels as the `api_key` query param on the request only and is
- * stripped from every persisted/displayed URL. Metadata only - NOT a validation of
- * any technical claim, breakthrough, or market signal. Authors are kept minimal and
+ * Official OpenAlex API. Public no-key mode runs by default; an optional
+ * ATLASZ_OPENALEX_API_KEY can be used for higher quota. The key travels as the
+ * `api_key` query param on the request only and is stripped from every
+ * persisted/displayed URL. Metadata only - NOT a validation of any technical
+ * claim, breakthrough, or market signal. Authors are kept minimal and
  * source-bounded (no person enrichment). citedByCount is metadata, not quality.
  *
  * Start narrow: an explicit topic-bucket allowlist, recent works only, bounded per
@@ -46,7 +47,7 @@ const DEFAULT_TOPIC_BUCKETS = [
 
 export type OpenAlexConfig = {
   apiBase: string
-  apiKey: string
+  apiKey?: string
   topicBuckets: string[]
   perBucket: number
   maxAuthors: number
@@ -61,9 +62,6 @@ export function readOpenAlexConfig(env: NodeJS.ProcessEnv = process.env): OpenAl
     return null
   }
   const apiKey = asString(env.ATLASZ_OPENALEX_API_KEY)
-  if (!apiKey) {
-    return null // key-gated: fail closed
-  }
   const apiBase = asString(env.ATLASZ_OPENALEX_API_BASE) || DEFAULT_API_BASE
   if (!isOfficialOpenAlexWorksUrl(apiBase)) {
     return null
@@ -266,7 +264,9 @@ function buildRequestUrl(config: OpenAlexConfig, bucket: string): string {
   url.searchParams.set('per-page', String(config.perBucket))
   // Select only the fields we normalize (bounded payload, no extra author surface).
   url.searchParams.set('select', 'id,doi,title,display_name,publication_year,publication_date,type,primary_location,authorships,topics,primary_topic,cited_by_count,is_retracted,ids')
-  url.searchParams.set('api_key', config.apiKey) // stripped from sourceApiUrl
+  if (config.apiKey) {
+    url.searchParams.set('api_key', config.apiKey) // stripped from sourceApiUrl
+  }
   return url.toString()
 }
 

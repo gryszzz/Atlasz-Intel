@@ -4,11 +4,12 @@
  * Uses the official Congress.gov API:
  * https://api.congress.gov/
  *
- * Real bills/actions only. Requires ATLASZ_CONGRESS_API_KEY and fails closed
- * without it. The key is used only on the request URL and is never persisted in
- * source trails or raw payload JSON. No political interpretation, no inferred
- * company exposure, and no person enrichment beyond source-published sponsor
- * names retained for bill provenance context.
+ * Real bills/actions only. Uses the official api.data.gov DEMO_KEY by default;
+ * ATLASZ_CONGRESS_API_KEY is an optional quota upgrade. The key is used only on
+ * the request URL and is never persisted in source trails or raw payload JSON.
+ * No political interpretation, no inferred company exposure, and no person
+ * enrichment beyond source-published sponsor names retained for bill provenance
+ * context.
  *
  * provenance: official-api   category: legislation
  */
@@ -31,6 +32,7 @@ const MAX_RECORDS_CAP = 100
 const DEFAULT_TIMEOUT_MS = 20_000
 const DEFAULT_MAX_RETRIES = 1
 const DEFAULT_BACKOFF_MS = 1_000
+const DEFAULT_API_KEY = 'DEMO_KEY'
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const OFFICIAL_API_PATTERN = /^https:\/\/api\.congress\.gov\/v3\/bill\//
 const OFFICIAL_WEB_PATTERN = /^https:\/\/www\.congress\.gov\/bill\//
@@ -48,10 +50,7 @@ export function readCongressGovConfig(env: NodeJS.ProcessEnv = process.env): Con
   if (env.ATLASZ_CONGRESS_DISABLE === '1') {
     return null
   }
-  const apiKey = asString(env.ATLASZ_CONGRESS_API_KEY)
-  if (!apiKey) {
-    return null
-  }
+  const apiKey = asString(env.ATLASZ_CONGRESS_API_KEY) || DEFAULT_API_KEY
   const billUrl = asString(env.ATLASZ_CONGRESS_BILL_URL) || DEFAULT_BILL_URL
   if (!/^https:\/\//i.test(billUrl)) {
     return null

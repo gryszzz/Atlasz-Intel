@@ -219,8 +219,11 @@ Runtime status rules:
 - Runtime-wired means a provider/adapter path exists and is validated; it does
   not mean a local machine has credentials or that the upstream source is
   currently reachable.
-- Config-required providers such as SEC, FRED, BEA, EIA, and OpenAlex show
+- Config-required providers such as SEC, FRED, BEA, and EIA show
   `missing-config` until the operator supplies the required key/User-Agent.
+- Optional quota providers such as Congress.gov and OpenAlex run in official
+  public/demo modes first; personal keys only raise quota and must not change
+  truth confidence.
 - Corpus/reference material and private agent skills are not app runtime.
 - Future sources such as shipping, aviation, OpenCTI,
   MISP, and premium news stay candidate/auth-gated/reference-only until they

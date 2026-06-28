@@ -134,7 +134,7 @@ Current runtime-capable paths remain public/official/local and fail-closed:
 - NOAA/NWS active alerts and USGS earthquake events
 - CISA KEV, NVD, GHSA, OSV, and CISA advisory defensive feeds
 - GitHub Releases for configured public repositories
-- OpenAlex Works when `ATLASZ_OPENALEX_API_KEY` is configured
+- OpenAlex Works in public no-key mode; optional `ATLASZ_OPENALEX_API_KEY` raises quota
 - Crossref DOI metadata via the official REST API
 - SQLite WAL / JSON fallback
 - local deterministic graph/source analysis

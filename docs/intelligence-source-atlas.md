@@ -53,7 +53,7 @@ because it is listed here.
 | Macro time series | FRED | `ATLASZ_FRED_API_KEY` | `missing-config`; no synthetic macro observations. |
 | National accounts/GDP | BEA NIPA GDP | `ATLASZ_BEA_API_KEY` | `missing-config`; no synthetic GDP observations. |
 | Energy/commodities | EIA official energy series | `ATLASZ_EIA_API_KEY` | `missing-config`; no synthetic energy observations. |
-| Research metadata | OpenAlex Works API | `ATLASZ_OPENALEX_API_KEY` | `missing-config`; no fake papers, no breakthrough or market inference. |
+| Research metadata | OpenAlex Works API | optional `ATLASZ_OPENALEX_API_KEY` | Public no-key mode by default; optional key raises quota. No fake papers, no breakthrough or market inference. |
 | Public disclosures | Operator-owned public disclosure JSON | `ATLASZ_POLITICIAN_DISCLOSURE_URL` | `missing-config`; no guessed provider. |
 | Local model parsing | Ollama | explicit local enable/config flags | disabled/missing-config; model output stays local/model-inferred. |
 

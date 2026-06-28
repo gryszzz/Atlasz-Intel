@@ -1,6 +1,6 @@
 # Runtime Verification Log
 
-**Generated:** 2026-06-28T19:10:48.884Z
+**Generated:** 2026-06-28T21:36:09.677Z
 **Command:** `npx tsx scripts/runtimeVerification.mts`
 **Result:** 13/13 checks passed
 **Persistence:** node:sqlite (with JSON fallback)
@@ -13,13 +13,13 @@
 ## Env keys (names only)
 
 - **present:** ATLASZ_SEC_USER_AGENT
-- **missing:** ATLASZ_ALPACA_API_KEY, ATLASZ_ALPACA_SECRET_KEY, ATLASZ_BEA_API_KEY, ATLASZ_CONGRESS_API_KEY, ATLASZ_EIA_API_KEY, ATLASZ_EIA_REFINERIES_URL, ATLASZ_FRED_API_KEY, ATLASZ_LNG_TERMINALS_URL, ATLASZ_OPENALEX_API_KEY, ATLASZ_OPTIONS_UNDERLYINGS, ATLASZ_PATENTSVIEW_API_KEY, ATLASZ_UNLOCODE_URL, ATLASZ_UN_COMTRADE_API_KEY, ATLASZ_USGS_USMIN_URL
+- **missing:** ATLASZ_ALPACA_API_KEY, ATLASZ_ALPACA_SECRET_KEY, ATLASZ_BEA_API_KEY, ATLASZ_EIA_API_KEY, ATLASZ_EIA_REFINERIES_URL, ATLASZ_FRED_API_KEY, ATLASZ_LNG_TERMINALS_URL, ATLASZ_OPTIONS_UNDERLYINGS, ATLASZ_PATENTSVIEW_API_KEY, ATLASZ_UNLOCODE_URL, ATLASZ_UN_COMTRADE_API_KEY, ATLASZ_USGS_USMIN_URL
 
 ## Connector truth table
 
 | connector | impl | gating | env required | key? | status | recs | persist | trail | redact | resolver | expose |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| gdelt-doc | impl | public | - | public | failed | 0 | n/a | n/a | n/a | no | no |
+| gdelt-doc | impl | public | - | public | rate-limited | 0 | n/a | n/a | n/a | no | no |
 | wsj-markets-rss | impl | public | - | public | online | 20 | yes | yes | n/a | no | no |
 | sec-edgar | impl | key-gated | ATLASZ_SEC_USER_AGENT | yes | online | 6 | yes | yes | yes | yes | yes |
 | sec-press-rss | impl | public | - | public | online | 25 | yes | yes | n/a | no | no |
@@ -38,10 +38,10 @@
 | noaa-alerts | impl | public | - | public | online | 30 | yes | yes | n/a | partial | yes |
 | federal-register | impl | public | - | public | online | 25 | yes | yes | n/a | partial | yes |
 | ofac-sdn | impl | public | - | public | online | 40 | yes | yes | n/a | identifier-only | yes |
-| congress-gov | impl | key-gated | ATLASZ_CONGRESS_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | identifier-only | yes |
+| congress-gov | impl | public | - | public | online | 20 | yes | yes | n/a | identifier-only | yes |
 | usgs-earthquakes | impl | public | - | public | online | 19 | yes | yes | n/a | partial | yes |
 | un-comtrade | impl | key-gated | ATLASZ_UN_COMTRADE_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | no | no |
-| openalex-works | impl | key-gated | ATLASZ_OPENALEX_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | no | no |
+| openalex-works | impl | public | - | public | online | 100 | yes | yes | n/a | no | no |
 | crossref-works | impl | public | - | public | online | 22 | yes | yes | n/a | no | no |
 | uspto | impl | key-gated | ATLASZ_PATENTSVIEW_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
 | github-releases | impl | public | - | public | online | 15 | yes | yes | n/a | yes | yes |
@@ -87,12 +87,10 @@ _None — all checks passed._
 - `ATLASZ_ALPACA_API_KEY`
 - `ATLASZ_ALPACA_SECRET_KEY`
 - `ATLASZ_BEA_API_KEY`
-- `ATLASZ_CONGRESS_API_KEY`
 - `ATLASZ_EIA_API_KEY`
 - `ATLASZ_EIA_REFINERIES_URL`
 - `ATLASZ_FRED_API_KEY`
 - `ATLASZ_LNG_TERMINALS_URL`
-- `ATLASZ_OPENALEX_API_KEY`
 - `ATLASZ_OPTIONS_UNDERLYINGS`
 - `ATLASZ_PATENTSVIEW_API_KEY`
 - `ATLASZ_UNLOCODE_URL`

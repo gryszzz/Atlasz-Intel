@@ -20,8 +20,8 @@ The checker prints env-name presence only. It never prints secret values.
 | `ATLASZ_BEA_API_KEY` | BEA national accounts | <https://apps.bea.gov/API/signup/> | free public key | `missing-key` | online or honest failure |
 | `ATLASZ_EIA_API_KEY` | EIA energy, power plants, nuclear, grid/BAs | <https://www.eia.gov/opendata/register.php> | free public key | `missing-key` | online or honest failure |
 | `ATLASZ_PATENTSVIEW_API_KEY` | USPTO PatentsView | <https://patentsview.org/apis> | free public key | `missing-key` | online or honest failure |
-| `ATLASZ_OPENALEX_API_KEY` | OpenAlex works | <https://openalex.org> | free public key | `missing-key` | online or honest failure |
-| `ATLASZ_CONGRESS_API_KEY` | Congress.gov bill actions | <https://api.congress.gov/sign-up/> | free public key | `missing-key` | online or honest failure |
+| `ATLASZ_OPENALEX_API_KEY` | OpenAlex works higher quota | <https://openalex.org> | optional quota key | public no-key mode | online or honest failure |
+| `ATLASZ_CONGRESS_API_KEY` | Congress.gov bill actions higher quota | <https://api.congress.gov/sign-up/> | optional quota key | public `DEMO_KEY` mode | online or honest failure |
 | `ATLASZ_UN_COMTRADE_API_KEY` | UN Comtrade trade flows | <https://comtradeplus.un.org/> | key-gated | `missing-key` | online or honest failure |
 | `ATLASZ_ALPACA_API_KEY` + `ATLASZ_ALPACA_SECRET_KEY` | Equity/ETF quotes | <https://alpaca.markets/data> | key-gated | `PRICE_UNAVAILABLE` / `missing-key` | online or honest auth/rate failure |
 | `ATLASZ_OPTIONS_UNDERLYINGS` | Options chain scope | <https://alpaca.markets/options> | local allowlist | deferred / missing scope | configured scope |

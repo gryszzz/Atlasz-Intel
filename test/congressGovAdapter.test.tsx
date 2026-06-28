@@ -63,8 +63,8 @@ afterEach(() => {
 })
 
 describe('Congress.gov adapter', () => {
-  it('requires an API key and refuses insecure overrides', () => {
-    expect(readCongressGovConfig({})).toBeNull()
+  it('uses DEMO_KEY without a personal key and refuses insecure overrides', () => {
+    expect(readCongressGovConfig({})?.apiKey).toBe('DEMO_KEY')
     expect(readCongressGovConfig({ ATLASZ_CONGRESS_API_KEY: 'secret' })).not.toBeNull()
     expect(readCongressGovConfig({ ATLASZ_CONGRESS_API_KEY: 'secret', ATLASZ_CONGRESS_DISABLE: '1' })).toBeNull()
     expect(readCongressGovConfig({ ATLASZ_CONGRESS_API_KEY: 'secret', ATLASZ_CONGRESS_BILL_URL: 'http://insecure' })).toBeNull()
@@ -206,6 +206,24 @@ describe('Congress.gov adapter', () => {
         backoffMs: 0,
       }),
     ).rejects.toMatchObject({ status: 429, retryAfterMs: 5_000 })
+  })
+
+  it('uses official DEMO_KEY mode without persisting the demo key', async () => {
+    let requestedUrl = ''
+    vi.stubGlobal('fetch', async (url: string) => {
+      requestedUrl = url
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        json: async () => FIXTURE,
+      }
+    })
+
+    const events = await fetchCongressGovBills(new AbortController().signal, readCongressGovConfig({})!)
+    expect(requestedUrl).toContain('api_key=DEMO_KEY')
+    expect(JSON.stringify(events)).not.toContain('DEMO_KEY')
+    expect(events[0]?.congressBillAction?.sourceApiUrl).not.toContain('api_key')
   })
 
   it('never resolves a bill into curated company/sector exposure (no political/exposure inference)', () => {

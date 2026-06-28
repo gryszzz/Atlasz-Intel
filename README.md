@@ -135,13 +135,16 @@ Repo-owned previews of the public-facing surfaces and the evidence boundaries th
 
 ## Connector Matrix
 
-**38 runtime-wired connectors.** *Runtime-wired* means there is an adapter/provider path, tests, source-health behavior, and UI/persistence wiring — not that every source is reachable without keys on every machine. The live, generated table lives in [`docs/connector-hardening-audit.md`](docs/connector-hardening-audit.md) (average hardening score **100/100**).
+**47 runtime-driven connectors.** *Runtime-wired* means there is an adapter/provider path, tests, source-health behavior, and UI/persistence wiring — not that every source is reachable without keys on every machine. The live, generated table lives in [`docs/runtime-verification-log.md`](docs/runtime-verification-log.md).
 
 ### Live public — fetch live, no key required
-SEC Market Reference Master · ETF Holdings · Treasury Fiscal Data · BLS · Federal Register · OFAC SDN · NOAA/NWS Alerts · USGS Earthquakes · CISA KEV · CISA Advisories · NVD · GHSA · OSV · GitHub Releases · Crossref DOI · EIA Refineries · NRC Reactor Status · World Port Index · GDELT *(media observation)* · Yahoo/CoinGecko public market paths · optional public crypto websockets
+SEC Market Reference Master · ETF Holdings · Treasury Fiscal Data · BLS · Federal Register · Congress.gov *(DEMO_KEY mode)* · OFAC SDN · NOAA/NWS Alerts · USGS Earthquakes · CISA KEV · CISA Advisories · NVD · GHSA · OSV · GitHub Releases · OpenAlex Works · Crossref DOI · NRC Reactor Status · World Port Index · arXiv/GitHub/NASA/Space public feeds · GDELT *(media observation)* · Yahoo/CoinGecko public market paths · optional public crypto websockets
 
 ### Key-gated — require `.env`, fail closed to `missing-key`
-SEC EDGAR · SEC Company Facts · SEC Form 4 · SEC Form 13F *(SEC User-Agent)* · FRED · BEA · EIA *(+ power plants / nuclear / grid / LNG)* · Congress.gov · UN Comtrade · UN/LOCODE · USPTO PatentsView · OpenAlex Works · Alpaca equity/ETF quotes · Alpaca options chain/open-interest
+SEC EDGAR · SEC Company Facts · SEC Form 4 · SEC Form 13F *(SEC User-Agent)* · FRED · BEA · EIA *(+ power plants / nuclear / grid)* · UN Comtrade · UN/LOCODE · USPTO PatentsView · Alpaca equity/ETF quotes · Alpaca options chain/open-interest
+
+### Configured official URLs — no fake facility layers
+LNG terminals · EIA refineries · USGS minerals require pinned official URLs unless a trusted default is configured. Missing URLs render as configured-only / missing-key states, not fabricated map markers.
 
 ### Domain coverage at a glance
 
@@ -216,7 +219,9 @@ ATLASZ_ENABLE_PUBLIC_WORLD=1
 ATLASZ_SEC_USER_AGENT="Atlasz Intel research (you@example.com)"
 ATLASZ_FRED_API_KEY="..."
 ATLASZ_EIA_API_KEY="..."
+# Optional quota upgrades, not required for baseline:
 ATLASZ_OPENALEX_API_KEY="..."
+ATLASZ_CONGRESS_API_KEY="..."
 ATLASZ_CROSSREF_MAILTO="you@example.com"
 # Real market data (no fake prices):
 ATLASZ_ALPACA_API_KEY="..."

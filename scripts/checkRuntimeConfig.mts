@@ -14,7 +14,7 @@ export type RuntimeConfigItem = {
   envNames: string[]
   label: string
   unlocks: string
-  kind: 'public-free-key' | 'key-gated' | 'contact-user-agent' | 'configured-url' | 'optional-politeness' | 'allowlist'
+  kind: 'public-free-key' | 'key-gated' | 'contact-user-agent' | 'configured-url' | 'optional-politeness' | 'optional-quota-key' | 'allowlist'
   signupUrl: string
   expectedBefore: string
   expectedAfter: string
@@ -94,23 +94,23 @@ export const RUNTIME_CONFIG_ITEMS: RuntimeConfigItem[] = [
   },
   {
     envNames: ['ATLASZ_OPENALEX_API_KEY'],
-    label: 'OpenAlex API key',
-    unlocks: 'OpenAlex research metadata',
-    kind: 'public-free-key',
+    label: 'OpenAlex optional API key',
+    unlocks: 'higher-quota OpenAlex research metadata; public no-key mode runs by default',
+    kind: 'optional-quota-key',
     signupUrl: 'https://openalex.org',
-    expectedBefore: 'missing-key',
+    expectedBefore: 'public no-key mode',
     expectedAfter: 'online or rate-limited/failed',
-    required: true,
+    required: false,
   },
   {
     envNames: ['ATLASZ_CONGRESS_API_KEY'],
-    label: 'Congress.gov API key',
-    unlocks: 'Congress.gov bill actions',
-    kind: 'public-free-key',
+    label: 'Congress.gov optional API key',
+    unlocks: 'higher-quota Congress.gov bill actions; DEMO_KEY mode runs by default',
+    kind: 'optional-quota-key',
     signupUrl: 'https://api.congress.gov/sign-up/',
-    expectedBefore: 'missing-key',
+    expectedBefore: 'public DEMO_KEY mode',
     expectedAfter: 'online or rate-limited/failed',
-    required: true,
+    required: false,
   },
   {
     envNames: ['ATLASZ_UN_COMTRADE_API_KEY'],

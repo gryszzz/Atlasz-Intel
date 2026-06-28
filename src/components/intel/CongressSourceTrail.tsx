@@ -80,7 +80,7 @@ export function CongressSourceTrail({ events, limit = 8 }: { events: WorldIntelE
       ) : (
         <div className="congress-trail-empty">
           <strong>{CONGRESS_UNAVAILABLE}</strong>
-          <p>No Congress.gov bill actions available. The API key is missing, the official API failed, or no proof-bearing records were returned. Nothing is fabricated.</p>
+          <p>No Congress.gov bill actions available. The official API failed, rate-limited, or returned no proof-bearing records. Nothing is fabricated.</p>
         </div>
       )}
     </section>
