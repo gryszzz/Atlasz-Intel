@@ -53,7 +53,7 @@ describe('EIA refinery adapter', () => {
     expect(readEiaRefineryConfig({ ATLASZ_EIA_REFINERIES_URL: 'http://insecure/x' })).toBeNull()
     expect(readEiaRefineryConfig({ ATLASZ_EIA_REFINERIES_URL: 'https://evil.com/refineries' })).toBeNull()
     expect(readEiaRefineryConfig({ ATLASZ_EIA_REFINERIES_DISABLE: '1' })).toBeNull()
-    expect(readEiaRefineryConfig({})?.apiUrl).toMatch(/arcgis\.com/)
+    expect(readEiaRefineryConfig({})).toBeNull()
     expect(readEiaRefineryConfig({ ATLASZ_EIA_REFINERIES_URL: API_URL })?.apiUrl).toBe(API_URL)
   })
 

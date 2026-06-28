@@ -194,12 +194,12 @@ export const RUNTIME_CONFIG_ITEMS: RuntimeConfigItem[] = [
   },
   {
     envNames: ['ATLASZ_EIA_REFINERIES_URL'],
-    label: 'EIA refinery override',
-    unlocks: 'EIA refineries if default changes/fails',
+    label: 'EIA refinery source URL',
+    unlocks: 'EIA refineries from a pinned official source',
     kind: 'configured-url',
     signupUrl: 'https://atlas.eia.gov/datasets/petroleum-refineries',
-    expectedBefore: 'default EIA/ArcGIS URL used',
-    expectedAfter: 'override host/path validated',
+    expectedBefore: 'missing-key / configured-only URL missing',
+    expectedAfter: 'online or honest endpoint failure',
     required: false,
   },
 ]

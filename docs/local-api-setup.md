@@ -36,7 +36,7 @@ The checker prints env-name presence only. It never prints secret values.
 | `ATLASZ_USGS_USMIN_URL` | USGS USMIN minerals | `usgs.gov` | configured-only URL missing | online or honest failure |
 | `ATLASZ_USGS_MRDS_URL` | USGS MRDS minerals | `usgs.gov` | optional companion missing | online or honest failure |
 | `ATLASZ_WPI_URL` | World Port Index override | `nga.mil` | default NGA route used | override accepted |
-| `ATLASZ_EIA_REFINERIES_URL` | EIA refinery override | `eia.gov` or ArcGIS refinery FeatureServer | default EIA route used | override accepted |
+| `ATLASZ_EIA_REFINERIES_URL` | EIA refinery source URL | `eia.gov` or ArcGIS refinery FeatureServer | configured-only URL missing | online or honest endpoint failure |
 
 ## First Run
 

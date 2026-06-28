@@ -71,6 +71,7 @@ export const BUILTIN_PROVIDERS: ProviderDefinition[] = [
     pollIntervalMs: 5 * 60_000,
     rateLimitGuardMs: 20_000,
     timeoutMs: 12_000,
+    maxRetries: 0,
     provenance: 'media-observation',
     legalSafetyNote: 'Documented public GDELT DOC API; article metadata is a media observation, not a verified event.',
   },
@@ -276,7 +277,8 @@ export const BUILTIN_PROVIDERS: ProviderDefinition[] = [
     adapter: 'eia-refineries',
     enabled: true,
     endpoint: 'https://atlas.eia.gov/datasets/petroleum-refineries',
-    authType: 'none',
+    authType: 'env',
+    envKey: 'ATLASZ_EIA_REFINERIES_URL',
     pollIntervalMs: 7 * 24 * 60 * 60_000,
     rateLimitGuardMs: 300_000,
     timeoutMs: 25_000,
@@ -284,7 +286,7 @@ export const BUILTIN_PROVIDERS: ProviderDefinition[] = [
     backoffMs: 1_000,
     provenance: 'official-api',
     legalSafetyNote:
-      'Official EIA U.S. Energy Atlas Petroleum Refineries layer (EIA-820). Public GeoJSON, no key. Location/capacity context only — never an outage/disruption/vulnerability claim. Override the data URL via ATLASZ_EIA_REFINERIES_URL (must be an EIA/ArcGIS refinery FeatureServer).',
+      'Official EIA U.S. Energy Atlas Petroleum Refineries layer (EIA-820). FAIL-CLOSED: requires ATLASZ_EIA_REFINERIES_URL pinned to a current official EIA/ArcGIS refinery FeatureServer. Location/capacity context only — never an outage/disruption/vulnerability claim. No third-party mirrors or stale defaults.',
   },
   {
     providerId: 'lng_terminals_public',

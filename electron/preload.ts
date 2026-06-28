@@ -1,5 +1,4 @@
-import { createRequire } from 'node:module'
-import type * as Electron from 'electron'
+import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import type { DailyBriefRecord, DecisionRecord, WorldHeadlineRecord } from './persistence'
 import type { ConnectorId, LiveEngineSnapshot, ReplayState } from '../src/realtime'
 import type { WorldIntelSnapshot } from '../src/worldIntel'
@@ -7,9 +6,6 @@ import type { QuantTerminalSnapshot } from '../src/quant'
 import type { HistoricalPlaybook } from '../src/intel'
 import type { ThesisDashboard, ThesisDraft } from '../src/engine/decisionJournal'
 import type { ProviderDiscoverySnapshot } from '../src/providerDiscovery'
-
-const electronRequire = createRequire(import.meta.url)
-const { contextBridge, ipcRenderer } = electronRequire('electron') as typeof Electron
 
 contextBridge.exposeInMainWorld('atlaszDesktop', {
   getAppMeta: () => ipcRenderer.invoke('atlasz:app-meta'),
@@ -43,7 +39,7 @@ contextBridge.exposeInMainWorld('atlaszDesktop', {
     replaySetSpeed: (speed: ReplayState['speed']) => ipcRenderer.invoke('atlasz:realtime:replay:speed', speed),
     replaySeek: (cursor: number) => ipcRenderer.invoke('atlasz:realtime:replay:seek', cursor),
     onFrame: (listener: (snapshot: LiveEngineSnapshot) => void) => {
-      const wrapped = (_event: Electron.IpcRendererEvent, snapshot: LiveEngineSnapshot) => listener(snapshot)
+      const wrapped = (_event: IpcRendererEvent, snapshot: LiveEngineSnapshot) => listener(snapshot)
       ipcRenderer.on('atlasz:realtime:frame', wrapped)
       return () => ipcRenderer.off('atlasz:realtime:frame', wrapped)
     },

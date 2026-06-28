@@ -1,6 +1,6 @@
 # Runtime Verification Log
 
-**Generated:** 2026-06-28T01:02:03.161Z
+**Generated:** 2026-06-28T12:40:29.799Z
 **Command:** `npx tsx scripts/runtimeVerification.mts`
 **Result:** 13/13 checks passed
 **Persistence:** node:sqlite (with JSON fallback)
@@ -13,7 +13,7 @@
 ## Env keys (names only)
 
 - **present:** (none)
-- **missing:** ATLASZ_ALPACA_API_KEY, ATLASZ_ALPACA_SECRET_KEY, ATLASZ_BEA_API_KEY, ATLASZ_CONGRESS_API_KEY, ATLASZ_EIA_API_KEY, ATLASZ_FRED_API_KEY, ATLASZ_LNG_TERMINALS_URL, ATLASZ_OPENALEX_API_KEY, ATLASZ_OPTIONS_UNDERLYINGS, ATLASZ_PATENTSVIEW_API_KEY, ATLASZ_SEC_USER_AGENT, ATLASZ_UNLOCODE_URL, ATLASZ_UN_COMTRADE_API_KEY, ATLASZ_USGS_USMIN_URL
+- **missing:** ATLASZ_ALPACA_API_KEY, ATLASZ_ALPACA_SECRET_KEY, ATLASZ_BEA_API_KEY, ATLASZ_CONGRESS_API_KEY, ATLASZ_EIA_API_KEY, ATLASZ_EIA_REFINERIES_URL, ATLASZ_FRED_API_KEY, ATLASZ_LNG_TERMINALS_URL, ATLASZ_OPENALEX_API_KEY, ATLASZ_OPTIONS_UNDERLYINGS, ATLASZ_PATENTSVIEW_API_KEY, ATLASZ_SEC_USER_AGENT, ATLASZ_UNLOCODE_URL, ATLASZ_UN_COMTRADE_API_KEY, ATLASZ_USGS_USMIN_URL
 
 ## Connector truth table
 
@@ -55,7 +55,7 @@
 | osv | impl | public | - | public | online | 34 | yes | yes | n/a | partial | yes |
 | cisa-advisories | impl | public | - | public | online | 24 | yes | yes | n/a | partial | yes |
 | eia-power-plants | impl | key-gated | ATLASZ_EIA_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
-| eia-refineries | impl | public | - | public | failed | 0 | n/a | n/a | n/a | partial | yes |
+| eia-refineries | impl | key-gated | ATLASZ_EIA_REFINERIES_URL | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
 | lng-terminals | impl | key-gated | ATLASZ_LNG_TERMINALS_URL | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
 | eia-nuclear | impl | key-gated | ATLASZ_EIA_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
 | nrc-reactor-status | impl | public | - | public | online | 95 | yes | yes | n/a | no | no |
@@ -89,6 +89,7 @@ _None — all checks passed._
 - `ATLASZ_BEA_API_KEY`
 - `ATLASZ_CONGRESS_API_KEY`
 - `ATLASZ_EIA_API_KEY`
+- `ATLASZ_EIA_REFINERIES_URL`
 - `ATLASZ_FRED_API_KEY`
 - `ATLASZ_LNG_TERMINALS_URL`
 - `ATLASZ_OPENALEX_API_KEY`

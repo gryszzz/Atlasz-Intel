@@ -3,9 +3,9 @@
  *
  * First slice of the Energy Infra Pack on the Shared Geospatial Core. Uses the
  * official EIA U.S. Energy Atlas "Petroleum Refineries" layer (EIA-820 Refinery
- * Capacity Report), a public GeoJSON FeatureCollection exposing company/operator,
- * site name, state, atmospheric crude distillation capacity, status, and (per
- * feature) latitude/longitude.
+ * Capacity Report), but only when an operator pins a current official data URL.
+ * The former public ArcGIS URL is no longer a reliable default, so this adapter
+ * is configured-only instead of pretending that stale endpoint is live.
  *
  * Discipline (identical to the power-plant slice):
  *   - official EIA source only; real refinery records only; no simulated sites
@@ -33,7 +33,7 @@ const SOURCE_ID = 'eia_refineries_public'
 const EIA_SOURCE_NAME = 'U.S. Energy Information Administration'
 const SOURCE_DATASET = 'EIA U.S. Energy Atlas — Petroleum Refineries (EIA-820)'
 const HUMAN_SOURCE_URL = 'https://atlas.eia.gov/datasets/petroleum-refineries'
-const DEFAULT_API_URL =
+const LEGACY_ATLAS_API_URL =
   'https://services7.arcgis.com/FGr1D95XCGALKXqM/arcgis/rest/services/PetroleumRefineries_US_EIA/FeatureServer/0/query?where=1%3D1&outFields=*&f=geojson'
 const DEFAULT_TIMEOUT_MS = 25_000
 const DEFAULT_MAX_RETRIES = 2
@@ -73,7 +73,8 @@ export type EiaRefineryConfig = {
 
 export function readEiaRefineryConfig(env: NodeJS.ProcessEnv = process.env): EiaRefineryConfig | null {
   if (env.ATLASZ_EIA_REFINERIES_DISABLE === '1') return null
-  const apiUrl = asString(env.ATLASZ_EIA_REFINERIES_URL) || DEFAULT_API_URL
+  const apiUrl = asString(env.ATLASZ_EIA_REFINERIES_URL)
+  if (!apiUrl) return null
   if (!isOfficialRefineryApiUrl(apiUrl)) return null
   return {
     apiUrl,
@@ -108,7 +109,7 @@ export function parseEiaRefineries(
   if (!Array.isArray(features) || features.length === 0) return []
 
   const retrievedAt = options.retrievedAt ?? Date.now()
-  const sourceApiUrl = options.sourceApiUrl ?? DEFAULT_API_URL
+  const sourceApiUrl = options.sourceApiUrl ?? LEGACY_ATLAS_API_URL
   const maxRefineries = options.maxRefineries ?? DEFAULT_MAX_REFINERIES
   const out: EiaRefineryFacility[] = []
   const seen = new Set<string>()

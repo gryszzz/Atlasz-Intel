@@ -1,5 +1,4 @@
-import { createRequire } from 'node:module'
-import type * as Electron from 'electron'
+import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createPersistence } from './persistence'
@@ -19,8 +18,6 @@ import type {
 import type { ConnectorId } from '../src/realtime'
 import type { ThesisDraft } from '../src/engine/decisionJournal'
 
-const electronRequire = createRequire(import.meta.url)
-const { app, BrowserWindow, ipcMain, shell } = electronRequire('electron') as typeof Electron
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 let persistence: IntelPersistence | null = null

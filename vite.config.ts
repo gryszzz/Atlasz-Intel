@@ -4,6 +4,12 @@ import tailwindcss from '@tailwindcss/vite'
 import electron from 'vite-plugin-electron/simple'
 
 // https://vite.dev/config/
+function electronRuntimeEnv(): NodeJS.ProcessEnv {
+  const env = { ...process.env }
+  delete env.ELECTRON_RUN_AS_NODE
+  return env
+}
+
 export default defineConfig(async ({ mode }) => ({
   plugins: [
     react(),
@@ -15,6 +21,9 @@ export default defineConfig(async ({ mode }) => ({
           entry: {
             main: 'electron/main.ts',
             marketIngestionWorker: 'electron/workers/marketIngestionWorker.ts',
+          },
+          async onstart({ startup }) {
+            await startup(undefined, { env: electronRuntimeEnv() })
           },
         },
         preload: {
