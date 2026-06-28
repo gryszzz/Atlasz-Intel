@@ -5003,6 +5003,36 @@ var $n = class {
 	ir("polymarket_gamma_public", "Polymarket Gamma public markets", "market-data", "public-unauthenticated"),
 	ir("coinbase_public_ws", "Coinbase public crypto websocket", "crypto-realtime", "public-unauthenticated"),
 	ir("binance_public_ws", "Binance public crypto websocket", "crypto-realtime", "public-unauthenticated"),
+	{
+		providerId: "alpaca_equity_quotes",
+		providerName: "Alpaca equity/ETF quotes",
+		category: "market-data",
+		adapter: "managed-ingest",
+		enabled: !0,
+		endpoint: "https://data.alpaca.markets/v2/stocks/trades/latest",
+		authType: "api-key",
+		envKey: "ATLASZ_ALPACA_API_KEY",
+		envKeys: ["ATLASZ_ALPACA_API_KEY", "ATLASZ_ALPACA_SECRET_KEY"],
+		provenance: "auth-gated",
+		legalSafetyNote: "Registered key-gated market-data boundary for the Alpaca quote provider. Keys travel only in headers; fail-closed without both key and secret. No simulated prices, recommendations, predictions, or trading advice."
+	},
+	{
+		providerId: "alpaca_options",
+		providerName: "Alpaca options snapshots",
+		category: "market-data",
+		adapter: "managed-ingest",
+		enabled: !0,
+		endpoint: "https://data.alpaca.markets/v1beta1/options/snapshots",
+		authType: "api-key",
+		envKey: "ATLASZ_ALPACA_API_KEY",
+		envKeys: [
+			"ATLASZ_ALPACA_API_KEY",
+			"ATLASZ_ALPACA_SECRET_KEY",
+			"ATLASZ_OPTIONS_UNDERLYINGS"
+		],
+		provenance: "auth-gated",
+		legalSafetyNote: "Registered key-gated options-data boundary for Alpaca snapshots. Requires keys plus an explicit underlyings allowlist. No flow inference, unusual-activity claim, prediction, or trading advice."
+	},
 	ar("fed_press_rss", "Federal Reserve press releases", "macro", "https://www.federalreserve.gov/feeds/press_all.xml", "Official Federal Reserve public press RSS (policy/FOMC). Public headlines only; no scraping."),
 	ar("sec_press_rss", "SEC press releases", "filings", "https://www.sec.gov/news/pressreleases.rss", "Official SEC public press RSS. Public headlines only; no scraping."),
 	ar("ecb_press_rss", "ECB press releases", "macro", "https://www.ecb.europa.eu/rss/press.xml", "Official ECB public press RSS (global rates). Public headlines only; no scraping."),
@@ -5256,10 +5286,16 @@ function or(e = {}) {
 	};
 }
 function sr(e, t = process.env) {
-	return e.adapter === "disabled" ? !1 : e.authType === "none" ? !0 : !!(e.envKey && ur(t[e.envKey]));
+	if (e.adapter === "disabled") return !1;
+	if (e.authType === "none") return !0;
+	let n = e.envKeys ?? (e.envKey ? [e.envKey] : []);
+	return n.length > 0 && n.every((e) => !!ur(t[e]));
 }
-function cr(e) {
-	if (!sr(e)) return e.adapter === "disabled" ? "Disabled scaffold — no public adapter available." : e.envKey ? `Set ${e.envKey} to enable this provider.` : "Provider requires configuration.";
+function cr(e, t = process.env) {
+	if (sr(e, t)) return;
+	if (e.adapter === "disabled") return "Disabled scaffold — no public adapter available.";
+	let n = e.envKeys ?? (e.envKey ? [e.envKey] : []);
+	return n.length > 0 ? `Set ${n.join(", ")} to enable this provider.` : "Provider requires configuration.";
 }
 function lr(e) {
 	if (!e || typeof e != "object") return { error: "Provider entry is not an object." };
@@ -5284,6 +5320,7 @@ function lr(e) {
 			"env"
 		].includes(s) ? s : "none",
 		envKey: ur(t.envKey) || void 0,
+		envKeys: Array.isArray(t.envKeys) ? t.envKeys.map((e) => ur(e)).filter(Boolean) : void 0,
 		pollIntervalMs: dr(t.pollIntervalMs),
 		rateLimitGuardMs: dr(t.rateLimitGuardMs),
 		timeoutMs: dr(t.timeoutMs),
@@ -5422,6 +5459,24 @@ var fr = {
 		envKeysRequired: [],
 		symbolDiscovery: "binance",
 		realtimeFeedType: "WebSocket"
+	},
+	alpaca_equity_quotes: {
+		feedTypes: ["REST"],
+		envKeysRequired: ["ATLASZ_ALPACA_API_KEY", "ATLASZ_ALPACA_SECRET_KEY"],
+		realtimeFeedType: "REST",
+		supportedEventTypes: ["quote"],
+		supportedRegions: ["US"]
+	},
+	alpaca_options: {
+		feedTypes: ["REST"],
+		envKeysRequired: [
+			"ATLASZ_ALPACA_API_KEY",
+			"ATLASZ_ALPACA_SECRET_KEY",
+			"ATLASZ_OPTIONS_UNDERLYINGS"
+		],
+		realtimeFeedType: "REST",
+		supportedEventTypes: ["option-snapshot"],
+		supportedRegions: ["US"]
 	},
 	x_explore_placeholder: {
 		feedTypes: ["REST"],
@@ -5703,18 +5758,21 @@ async function jr(e, n = Ar()) {
 		query: n.query
 	}));
 }
-async function Mr(t, n) {
-	let r = await fetch(t, {
-		signal: n,
+async function Mr(t, r) {
+	let i = await fetch(t, {
+		signal: r,
 		headers: {
 			accept: "application/json",
 			"user-agent": "AtlaszIntel/0.4 (local-first world-intel; media observation)"
 		}
 	});
-	e(r, "GDELT DOC");
-	let i = await r.text();
-	if (!i.trim().startsWith("{")) throw Error(`GDELT DOC non-JSON response: ${i.trim().slice(0, 120) || "empty body"}`);
-	return JSON.parse(i);
+	e(i, "GDELT DOC");
+	let a = await i.text();
+	if (!a.trim().startsWith("{")) {
+		let e = a.trim();
+		throw /limit requests|rate limit|too many requests/i.test(e) ? new n(`GDELT DOC rate-limited: ${e.slice(0, 120)}`, 429) : Error(`GDELT DOC non-JSON response: ${e.slice(0, 120) || "empty body"}`);
+	}
+	return JSON.parse(a);
 }
 function Nr(e, t = {}) {
 	if (!e || typeof e != "object") return [];
@@ -15154,7 +15212,7 @@ function pC(e) {
 	return n.map((e) => mC(e, t));
 }
 function mC(e, t) {
-	let n = oC(e, t), r = t.ATLASZ_ENABLE_PUBLIC_WORLD !== "0", i = n.managed ? !0 : n.configured, a = e.enabled && (n.managed ? !0 : r && i);
+	let n = oC(e, t), r = t.ATLASZ_ENABLE_PUBLIC_WORLD !== "0", i = n.managed ? sr(e, t) : n.configured, a = e.enabled && (n.managed ? !0 : r && i);
 	return {
 		sourceId: e.providerId,
 		sourceName: e.providerName,
@@ -15170,7 +15228,7 @@ function mC(e, t) {
 		enabled: a,
 		authType: e.authType,
 		configured: i,
-		configHint: i ? void 0 : cr(e),
+		configHint: i ? void 0 : cr(e, t),
 		provenance: e.provenance,
 		legalSafetyNote: e.legalSafetyNote,
 		parserAdapter: e.adapter,

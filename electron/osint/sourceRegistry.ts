@@ -8,6 +8,7 @@ import { join } from 'node:path'
 import type { OsintSourceSnapshot, WorldIntelEvent } from '../../src/worldIntel'
 import {
   loadProviderConfig,
+  isProviderConfigured,
   providerConfigHint,
   type ProviderDefinition,
 } from '../providers/providerConfig'
@@ -180,7 +181,7 @@ function buildSourceDefinitions(options: { configPath?: string; env?: NodeJS.Pro
 function providerToDefinition(provider: ProviderDefinition, env: NodeJS.ProcessEnv): SourceDefinition {
   const resolved = resolveAdapter(provider, env)
   const worldEnabled = env.ATLASZ_ENABLE_PUBLIC_WORLD !== '0'
-  const configured = resolved.managed ? true : resolved.configured
+  const configured = resolved.managed ? isProviderConfigured(provider, env) : resolved.configured
   const enabled = provider.enabled && (resolved.managed ? true : worldEnabled && configured)
   return {
     sourceId: provider.providerId,
@@ -197,7 +198,7 @@ function providerToDefinition(provider: ProviderDefinition, env: NodeJS.ProcessE
     enabled,
     authType: provider.authType,
     configured,
-    configHint: configured ? undefined : providerConfigHint(provider),
+    configHint: configured ? undefined : providerConfigHint(provider, env),
     provenance: provider.provenance,
     legalSafetyNote: provider.legalSafetyNote,
     parserAdapter: provider.adapter,

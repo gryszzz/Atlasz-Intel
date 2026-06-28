@@ -58,9 +58,35 @@ describe('market coverage audit', () => {
 
   it('flags the known high-impact gaps', () => {
     const missingIds = new Set(audit().items.filter((i) => i.bucket === 'missing').map((i) => i.id))
-    for (const id of ['price-forex', 'ownership-short-options', 'trade-movement', 'infra-tech-plants', 'risk-fire-drought-flood', 'macro-central-banks']) {
+    for (const id of ['price-forex', 'ownership-short-options', 'trade-movement', 'infra-tech-plants', 'risk-fire-drought-flood', 'macro-global-series']) {
       expect(missingIds.has(id)).toBe(true)
     }
+  })
+
+  it('promotes no-key public crypto into coverage without inventing recommendations', () => {
+    const crypto = audit([source({ sourceId: 'coingecko_public_rest', status: 'online', provenance: 'public-unauthenticated' })]).items.find((i) => i.id === 'price-crypto')
+    expect(crypto?.provider).toBe('connector')
+    expect(crypto?.bucket).toBe('realtime')
+    expect(crypto?.liveCovered).toBe(true)
+    expect(crypto?.trustTier).toBe('public-unauthenticated')
+    expect(crypto?.notes).toMatch(/no trading signal/i)
+  })
+
+  it('keeps public RSS market headlines in the media-observation bucket', () => {
+    const media = audit([source({ sourceId: 'wsj_markets_rss', status: 'online', provenance: 'rss-public' })]).items.find((i) => i.id === 'media-market-rss')
+    expect(media?.provider).toBe('connector')
+    expect(media?.bucket).toBe('media-observation')
+    expect(media?.liveCovered).toBe(false)
+    expect(media?.notes).toMatch(/never become verified/i)
+  })
+
+  it('adds Fed/ECB release feeds without pretending global macro series are solved', () => {
+    const a = audit([source({ sourceId: 'fed_press_rss', status: 'online', provenance: 'rss-public' })])
+    const releases = a.items.find((i) => i.id === 'macro-central-bank-policy')
+    const structuredGap = a.items.find((i) => i.id === 'macro-global-series')
+    expect(releases?.bucket).toBe('daily')
+    expect(releases?.trustTier).toBe('rss-public')
+    expect(structuredGap?.bucket).toBe('missing')
   })
 
   it('is never "live" unless a realtime/near-realtime source is actually online', () => {

@@ -22,7 +22,7 @@
  * provenance: media-observation   category: media
  */
 import { adapterEventId, asString, sha256, stableStringify, unique } from './adapterShared'
-import { assertOk, fetchWithRetry } from '../fetchPolicy'
+import { HttpError, assertOk, fetchWithRetry } from '../fetchPolicy'
 import type { GdeltArticle, WorldIntelEvent } from '../../../src/worldIntel'
 import type { Severity } from '../../../src/data/intel'
 
@@ -115,7 +115,11 @@ async function fetchGdeltJson(url: string, signal: AbortSignal): Promise<unknown
   // GDELT returns plain-text bodies (e.g. "query too broad", rate-limit notices)
   // with HTTP 200. Treat anything that is not a JSON object as DATA_UNAVAILABLE.
   if (!text.trim().startsWith('{')) {
-    throw new Error(`GDELT DOC non-JSON response: ${text.trim().slice(0, 120) || 'empty body'}`)
+    const body = text.trim()
+    if (/limit requests|rate limit|too many requests/i.test(body)) {
+      throw new HttpError(`GDELT DOC rate-limited: ${body.slice(0, 120)}`, 429)
+    }
+    throw new Error(`GDELT DOC non-JSON response: ${body.slice(0, 120) || 'empty body'}`)
   }
   return JSON.parse(text) as unknown
 }

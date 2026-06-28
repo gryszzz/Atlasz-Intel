@@ -73,7 +73,7 @@ export type WatchedThing = {
   /** Connector audit ids backing this (runtimeAudit.CONNECTOR_AUDIT_DEFINITIONS). */
   connectors: string[]
   cadence: Cadence
-  trustTier: 'official-api' | 'auth-gated' | 'public-disclosure' | 'public-unauthenticated' | 'curated-reference' | 'media-observation' | 'none'
+  trustTier: 'official-api' | 'auth-gated' | 'public-disclosure' | 'public-unauthenticated' | 'rss-public' | 'curated-reference' | 'media-observation' | 'none'
   freshnessWindowMs: number
   expectedProofFields: string[]
   marketRelevance: MarketRelevance
@@ -121,7 +121,7 @@ export const COVERAGE_REGISTRY: WatchedThing[] = [
   // 2. Price / market data
   covered('price-equities', 'price-market-data', 'Equity/ETF quotes (key-gated)', ['equities-prices'], 'realtime', 'auth-gated', ['ticker', 'company', 'etf'], 'high', 15 * 60_000, 'Key-gated Alpaca quote provider; fail-closed -> PRICE_UNAVAILABLE until ATLASZ_ALPACA_API_KEY is configured. No seeded/default price rendered as real.'),
   covered('price-options', 'price-market-data', 'Options chain / open interest (key-gated)', ['options-oi'], 'realtime', 'auth-gated', ['ticker', 'company'], 'high', 15 * 60_000, 'Key-gated Alpaca options snapshots; fail-closed -> unavailable until keys + ATLASZ_OPTIONS_UNDERLYINGS. No flow inference.'),
-  missing('price-crypto', 'price-market-data', 'Crypto market data', ['ticker'], 'medium', 'No official/provider-backed crypto market data source wired.'),
+  covered('price-crypto', 'price-market-data', 'Crypto market data (public)', ['crypto-public-realtime'], 'realtime', 'public-unauthenticated', ['ticker'], 'medium', 5 * 60_000, 'No-key public crypto ticks from CoinGecko/Coinbase/Binance runtime paths. Public unauthenticated price context only; no trading signal, prediction, or equity/ETF claim.'),
   missing('price-forex', 'price-market-data', 'Forex', ['ticker'], 'high', 'No FX feed wired.'),
   missing('price-futures', 'price-market-data', 'Commodity futures', ['commodity'], 'high', 'No commodity futures feed wired.'),
   missing('price-rates-vol', 'price-market-data', 'Rates / yields / volatility', ['macro-series'], 'high', 'Rates available via FRED (macro), but no realtime yield-curve/vol surface.'),
@@ -138,10 +138,12 @@ export const COVERAGE_REGISTRY: WatchedThing[] = [
 
   // 5. Macro / rates / fiscal
   covered('macro-us', 'macro-rates-fiscal', 'US macro (FRED/Treasury/BLS/BEA)', ['fred', 'treasury-fiscal', 'bls', 'bea'], 'monthly', 'official-api', ['macro-series', 'fiscal-series', 'institution'], 'high', 35 * DAY, 'Official US macro/fiscal/labor/national-accounts series.'),
-  missing('macro-central-banks', 'macro-rates-fiscal', 'Central banks ex-US / global bodies', ['institution', 'macro-series'], 'high', 'No ECB/BOJ/BOE/IMF/World Bank/OECD source wired.'),
+  covered('macro-central-bank-policy', 'macro-rates-fiscal', 'Central bank policy releases', ['fed-press-rss', 'ecb-press-rss'], 'daily', 'rss-public', ['institution', 'event'], 'high', 3 * DAY, 'Official Fed/ECB public RSS releases. Release context only; not a structured macro series, forecast, or rate decision parser.'),
+  missing('macro-global-series', 'macro-rates-fiscal', 'Global macro series / central banks ex-Fed/ECB', ['institution', 'macro-series'], 'high', 'Fed/ECB release RSS is wired, but no BOJ/BOE/IMF/World Bank/OECD structured macro-series source is wired.'),
 
   // 6. Policy / regulation / state action
   covered('policy-us', 'policy-regulation', 'US regulation / legislation / sanctions', ['federal-register', 'congress-gov', 'ofac-sdn'], 'daily', 'official-api', ['regulatory-document', 'legislation', 'sanctions-record'], 'high', 3 * DAY, 'Federal Register + Congress.gov + OFAC SDN. Tariffs/export-controls only via these documents.'),
+  covered('policy-sec-press', 'policy-regulation', 'SEC press releases', ['sec-press-rss'], 'daily', 'rss-public', ['institution', 'event', 'regulatory-document'], 'medium', 3 * DAY, 'Official SEC press RSS release context. Does not replace EDGAR filings and does not create company exposure without filing evidence.'),
 
   // 7. Energy / commodities
   covered('energy-series', 'energy-commodities', 'EIA energy/commodity series', ['eia'], 'monthly', 'official-api', ['commodity', 'macro-series'], 'high', 14 * DAY, 'Official EIA energy series (oil/gas/electricity).'),
@@ -160,13 +162,15 @@ export const COVERAGE_REGISTRY: WatchedThing[] = [
   missing('risk-fire-drought-flood', 'physical-risk', 'Wildfire / drought / hurricane track / flood gauges', ['event', 'place'], 'high', 'No wildfire/drought/hurricane-track/flood-gauge source wired.'),
 
   // 10. Technology / innovation
-  covered('tech-research', 'technology-innovation', 'Patents / research / open-source', ['uspto', 'openalex-works', 'crossref-works', 'github-releases'], 'weekly', 'official-api', ['patent', 'research-work', 'repository', 'technology'], 'medium', 30 * DAY, 'USPTO + OpenAlex + Crossref + GitHub releases. Metadata only.'),
+  covered('tech-research', 'technology-innovation', 'Patents / research / open-source', ['uspto', 'openalex-works', 'crossref-works', 'github-releases', 'arxiv-ai', 'github-high-signal-repos'], 'weekly', 'official-api', ['patent', 'research-work', 'repository', 'technology'], 'medium', 30 * DAY, 'USPTO + OpenAlex + Crossref + arXiv + GitHub metadata. Metadata only; no validation of technical claims or market impact.'),
+  covered('tech-space-context', 'technology-innovation', 'Space / launch context', ['nasa-news', 'space-launch-library'], 'daily', 'rss-public', ['technology', 'event'], 'low', 7 * DAY, 'NASA public releases and Launch Library schedule context. No launch outcome, payload valuation, company exposure, or disruption claim.'),
 
   // 11. Cyber / operational risk
   covered('cyber-vulns', 'cyber-operational-risk', 'Vulnerabilities & advisories', ['cisa-kev', 'nvd', 'ghsa', 'osv', 'cisa-advisories'], 'daily', 'official-api', ['vulnerability', 'technology'], 'medium', 2 * DAY, 'KEV+NVD+GHSA+OSV+CISA advisories converging on CVE nodes. Defensive only.'),
 
   // 12. Media / narrative
   covered('media-gdelt', 'media-narrative', 'GDELT (media observation)', ['gdelt-doc'], 'near-realtime', 'media-observation', ['event'], 'low', 6 * HOUR, 'Media observation only — never verified fact, never counted as coverage.'),
+  covered('media-market-rss', 'media-narrative', 'Public market-news RSS', ['wsj-markets-rss'], 'daily', 'media-observation', ['event'], 'low', 2 * DAY, 'Public market headline observation only. Full articles are not fetched; headlines never become verified fact or trading advice.'),
   missing('alt-sentiment-provider', 'media-narrative', 'Provider-backed sentiment / alternative data', ['event', 'company'], 'medium', 'No licensed/provider-backed sentiment or alternative data source wired. GDELT remains media observation only.'),
 
   // 13. Geospatial / infrastructure

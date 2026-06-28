@@ -113,6 +113,10 @@ async function driveConnector(def: ConnectorAuditDefinition): Promise<ConnectorR
     return row
   }
   const resolved = resolveAdapter(provider, process.env)
+  if (resolved.managed && !resolved.fetcher) {
+    row.status = gating === 'key-gated' && keyPresent === 'no' ? 'missing-key' : 'managed-ingest'
+    return row
+  }
   if (!resolved.configured || !resolved.fetcher) {
     // Key-gated with no key -> honest missing-key, no fetch, no fabrication.
     row.status = gating === 'key-gated' ? 'missing-key' : 'unavailable'
@@ -229,7 +233,7 @@ async function main() {
     const tier = row.implemented ? row.trust : 'not-wired'
     tierCounts.set(tier, [...(tierCounts.get(tier) ?? []), row.id])
   }
-  const TIER_ORDER = ['official-api', 'public-disclosure', 'public-unauthenticated', 'media-observation', 'curated-reference', 'catalog-only', 'not-wired']
+  const TIER_ORDER = ['official-api', 'public-disclosure', 'public-unauthenticated', 'rss-public', 'media-observation', 'curated-reference', 'catalog-only', 'not-wired']
   for (const tier of [...TIER_ORDER, ...[...tierCounts.keys()].filter((t) => !TIER_ORDER.includes(t))]) {
     const ids = tierCounts.get(tier)
     if (!ids) continue

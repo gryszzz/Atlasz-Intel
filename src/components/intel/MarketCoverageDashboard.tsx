@@ -29,7 +29,7 @@ const SECTIONS: Array<{ title: string; buckets: CoverageBucket[]; tone: string }
 
 const QUANT_CATEGORY_MATRIX: Array<{ label: string; itemIds: string[]; nonClaim: string }> = [
   { label: 'equities / ETFs', itemIds: ['price-equities', 'ownership-etf', 'identity-master'], nonClaim: 'No recommendation, ranking, valuation, or price prediction.' },
-  { label: 'crypto', itemIds: ['price-crypto'], nonClaim: 'No crypto market-data source is wired yet.' },
+  { label: 'crypto', itemIds: ['price-crypto'], nonClaim: 'Public unauthenticated price context only; no recommendation or signal.' },
   { label: 'forex', itemIds: ['price-forex'], nonClaim: 'No FX quote source is wired yet.' },
   { label: 'futures / commodities', itemIds: ['price-futures', 'energy-series'], nonClaim: 'Energy series are official context, not futures pricing.' },
   { label: 'options / OI', itemIds: ['price-options'], nonClaim: 'Open interest is not flow, intent, or direction.' },
@@ -38,16 +38,16 @@ const QUANT_CATEGORY_MATRIX: Array<{ label: string; itemIds: string[]; nonClaim:
   { label: 'fundamentals', itemIds: ['fundamentals-facts'], nonClaim: 'Historical reported facts only; no estimates.' },
   { label: 'ownership / 13F', itemIds: ['ownership-institutions'], nonClaim: 'Delayed quarterly snapshot, not current positioning.' },
   { label: 'ETF/index holdings', itemIds: ['ownership-etf'], nonClaim: 'Dated issuer holdings only.' },
-  { label: 'macro', itemIds: ['macro-us', 'macro-central-banks'], nonClaim: 'Official observations, not forecasts.' },
+  { label: 'macro', itemIds: ['macro-us', 'macro-central-bank-policy', 'macro-global-series'], nonClaim: 'Official observations and release feeds, not forecasts.' },
   { label: 'rates', itemIds: ['price-rates-vol', 'macro-us'], nonClaim: 'No realtime rate/vol surface yet.' },
   { label: 'policy', itemIds: ['policy-us'], nonClaim: 'No legal outcome or market impact prediction.' },
   { label: 'calendar / earnings', itemIds: ['fundamentals-earnings'], nonClaim: 'No earnings calendar/transcript source is wired yet.' },
-  { label: 'sentiment / media observation', itemIds: ['media-gdelt'], nonClaim: 'Media observation is not verified fact.' },
+  { label: 'sentiment / media observation', itemIds: ['media-gdelt', 'media-market-rss'], nonClaim: 'Media observation is not verified fact.' },
   { label: 'alternative data', itemIds: ['alt-sentiment-provider', 'trade-movement', 'risk-fire-drought-flood'], nonClaim: 'No unofficial scraping or fragile source is accepted.' },
   { label: 'physical infrastructure', itemIds: ['infra-power', 'infra-refineries', 'infra-lng', 'infra-nuclear', 'infra-mines'], nonClaim: 'Facility context only; no outage/damage claim.' },
   { label: 'geospatial hazards', itemIds: ['risk-weather', 'risk-quakes', 'risk-fire-drought-flood'], nonClaim: 'Hazards do not prove asset damage.' },
   { label: 'supply chain / trade', itemIds: ['trade-flows', 'trade-port-codes', 'trade-ports-physical', 'trade-movement'], nonClaim: 'Country/port context only unless a source proves a company path.' },
-  { label: 'research / patents', itemIds: ['tech-research'], nonClaim: 'Metadata only; no validation of claims or quality.' },
+  { label: 'research / patents', itemIds: ['tech-research', 'tech-space-context'], nonClaim: 'Metadata only; no validation of claims or quality.' },
 ]
 
 export function MarketCoverageDashboard({

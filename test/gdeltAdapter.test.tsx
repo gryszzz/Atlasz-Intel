@@ -144,7 +144,7 @@ describe('GDELT DOC adapter (media observation)', () => {
     expect(markup).toContain('DATA_UNAVAILABLE')
   })
 
-  it('fails closed on a non-JSON (rate-limit) body', async () => {
+  it('classifies a non-JSON rate-limit body as HttpError 429', async () => {
     vi.stubGlobal('fetch', async () => ({
       ok: true,
       status: 200,
@@ -161,7 +161,7 @@ describe('GDELT DOC adapter (media observation)', () => {
         maxRetries: 0,
         backoffMs: 0,
       }),
-    ).rejects.toThrow(/non-JSON/i)
+    ).rejects.toMatchObject({ status: 429 })
   })
 
   it('surfaces HttpError via fetchPolicy on rate limits', async () => {

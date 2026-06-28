@@ -46,6 +46,11 @@ describe('provider config layer', () => {
     expect(isProviderConfigured(find(providers, 'openalex_works_public'), {})).toBe(false)
     expect(isProviderConfigured(find(providers, 'openalex_works_public'), { ATLASZ_OPENALEX_API_KEY: 'x' })).toBe(true)
     expect(isProviderConfigured(find(providers, 'crossref_works_public'), {})).toBe(true)
+    expect(isProviderConfigured(find(providers, 'alpaca_equity_quotes'), {})).toBe(false)
+    expect(isProviderConfigured(find(providers, 'alpaca_equity_quotes'), { ATLASZ_ALPACA_API_KEY: 'x' })).toBe(false)
+    expect(isProviderConfigured(find(providers, 'alpaca_equity_quotes'), { ATLASZ_ALPACA_API_KEY: 'x', ATLASZ_ALPACA_SECRET_KEY: 'y' })).toBe(true)
+    expect(isProviderConfigured(find(providers, 'alpaca_options'), { ATLASZ_ALPACA_API_KEY: 'x', ATLASZ_ALPACA_SECRET_KEY: 'y' })).toBe(false)
+    expect(isProviderConfigured(find(providers, 'alpaca_options'), { ATLASZ_ALPACA_API_KEY: 'x', ATLASZ_ALPACA_SECRET_KEY: 'y', ATLASZ_OPTIONS_UNDERLYINGS: 'AAPL' })).toBe(true)
     expect(isProviderConfigured(find(providers, 'x_explore_placeholder'), { ATLASZ_X_AUTH_TOKEN: 'x' })).toBe(false)
   })
 
@@ -95,14 +100,27 @@ describe('adapter registry', () => {
     expect(resolveAdapter(find(providers, 'openalex_works_public'), { ATLASZ_OPENALEX_API_KEY: 'secret' }).fetcher).toBeTypeOf('function')
     expect(resolveAdapter(find(providers, 'crossref_works_public'), {}).fetcher).toBeTypeOf('function')
     expect(resolveAdapter(find(providers, 'rss_public_radar'), {}).managed).toBe(true)
+    expect(resolveAdapter(find(providers, 'alpaca_equity_quotes'), {}).managed).toBe(true)
+    expect(resolveAdapter(find(providers, 'alpaca_options'), {}).managed).toBe(true)
     expect(resolveAdapter(find(providers, 'x_explore_placeholder'), {}).configured).toBe(false)
   })
 
   it('wires verified built-in public RSS feeds to live fetchers (no auth)', () => {
     const providers = loadProviderConfig().providers
-    for (const id of ['fed_press_rss', 'sec_press_rss', 'ecb_press_rss', 'wsj_markets_rss']) {
+    for (const id of ['fed_press_rss', 'sec_press_rss', 'ecb_press_rss', 'wsj_markets_rss', 'arxiv_cs_ai', 'nasa_news']) {
       const provider = find(providers, id)
       expect(provider.adapter).toBe('rss')
+      expect(provider.authType).toBe('none')
+      expect(/^https:\/\//.test(provider.endpoint ?? '')).toBe(true)
+      expect(resolveAdapter(provider, {}).fetcher).toBeTypeOf('function')
+    }
+  })
+
+  it('wires verified built-in public JSON feeds to live fetchers (no auth)', () => {
+    const providers = loadProviderConfig().providers
+    for (const id of ['space_launch_library', 'github_trending_repos']) {
+      const provider = find(providers, id)
+      expect(provider.adapter).toBe('custom-json')
       expect(provider.authType).toBe('none')
       expect(/^https:\/\//.test(provider.endpoint ?? '')).toBe(true)
       expect(resolveAdapter(provider, {}).fetcher).toBeTypeOf('function')

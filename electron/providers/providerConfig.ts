@@ -31,6 +31,7 @@ export type ProviderDefinition = {
   endpoint?: string
   authType: ProviderAuthType
   envKey?: string
+  envKeys?: string[]
   pollIntervalMs?: number
   rateLimitGuardMs?: number
   timeoutMs?: number
@@ -515,6 +516,32 @@ export const BUILTIN_PROVIDERS: ProviderDefinition[] = [
   managedProvider('polymarket_gamma_public', 'Polymarket Gamma public markets', 'market-data', 'public-unauthenticated'),
   managedProvider('coinbase_public_ws', 'Coinbase public crypto websocket', 'crypto-realtime', 'public-unauthenticated'),
   managedProvider('binance_public_ws', 'Binance public crypto websocket', 'crypto-realtime', 'public-unauthenticated'),
+  {
+    providerId: 'alpaca_equity_quotes',
+    providerName: 'Alpaca equity/ETF quotes',
+    category: 'market-data',
+    adapter: 'managed-ingest',
+    enabled: true,
+    endpoint: 'https://data.alpaca.markets/v2/stocks/trades/latest',
+    authType: 'api-key',
+    envKey: 'ATLASZ_ALPACA_API_KEY',
+    envKeys: ['ATLASZ_ALPACA_API_KEY', 'ATLASZ_ALPACA_SECRET_KEY'],
+    provenance: 'auth-gated',
+    legalSafetyNote: 'Registered key-gated market-data boundary for the Alpaca quote provider. Keys travel only in headers; fail-closed without both key and secret. No simulated prices, recommendations, predictions, or trading advice.',
+  },
+  {
+    providerId: 'alpaca_options',
+    providerName: 'Alpaca options snapshots',
+    category: 'market-data',
+    adapter: 'managed-ingest',
+    enabled: true,
+    endpoint: 'https://data.alpaca.markets/v1beta1/options/snapshots',
+    authType: 'api-key',
+    envKey: 'ATLASZ_ALPACA_API_KEY',
+    envKeys: ['ATLASZ_ALPACA_API_KEY', 'ATLASZ_ALPACA_SECRET_KEY', 'ATLASZ_OPTIONS_UNDERLYINGS'],
+    provenance: 'auth-gated',
+    legalSafetyNote: 'Registered key-gated options-data boundary for Alpaca snapshots. Requires keys plus an explicit underlyings allowlist. No flow inference, unusual-activity claim, prediction, or trading advice.',
+  },
   rssProvider('fed_press_rss', 'Federal Reserve press releases', 'macro', 'https://www.federalreserve.gov/feeds/press_all.xml', 'Official Federal Reserve public press RSS (policy/FOMC). Public headlines only; no scraping.'),
   rssProvider('sec_press_rss', 'SEC press releases', 'filings', 'https://www.sec.gov/news/pressreleases.rss', 'Official SEC public press RSS. Public headlines only; no scraping.'),
   rssProvider('ecb_press_rss', 'ECB press releases', 'macro', 'https://www.ecb.europa.eu/rss/press.xml', 'Official ECB public press RSS (global rates). Public headlines only; no scraping.'),
@@ -813,17 +840,19 @@ export function isProviderConfigured(provider: ProviderDefinition, env: NodeJS.P
   if (provider.authType === 'none') {
     return true
   }
-  return Boolean(provider.envKey && asTrimmed(env[provider.envKey]))
+  const required = provider.envKeys ?? (provider.envKey ? [provider.envKey] : [])
+  return required.length > 0 && required.every((key) => Boolean(asTrimmed(env[key])))
 }
 
-export function providerConfigHint(provider: ProviderDefinition): string | undefined {
-  if (isProviderConfigured(provider)) {
+export function providerConfigHint(provider: ProviderDefinition, env: NodeJS.ProcessEnv = process.env): string | undefined {
+  if (isProviderConfigured(provider, env)) {
     return undefined
   }
   if (provider.adapter === 'disabled') {
     return 'Disabled scaffold — no public adapter available.'
   }
-  return provider.envKey ? `Set ${provider.envKey} to enable this provider.` : 'Provider requires configuration.'
+  const required = provider.envKeys ?? (provider.envKey ? [provider.envKey] : [])
+  return required.length > 0 ? `Set ${required.join(', ')} to enable this provider.` : 'Provider requires configuration.'
 }
 
 type ValidationOk = { provider: ProviderDefinition }
@@ -864,6 +893,7 @@ function validateCustomProvider(entry: unknown): ValidationOk | ValidationErr {
       endpoint,
       authType: ['none', 'api-key', 'bearer-token', 'env'].includes(authType) ? authType : 'none',
       envKey: asTrimmed(raw.envKey) || undefined,
+      envKeys: Array.isArray(raw.envKeys) ? raw.envKeys.map((key) => asTrimmed(key)).filter(Boolean) : undefined,
       pollIntervalMs: asPositiveInt(raw.pollIntervalMs),
       rateLimitGuardMs: asPositiveInt(raw.rateLimitGuardMs),
       timeoutMs: asPositiveInt(raw.timeoutMs),

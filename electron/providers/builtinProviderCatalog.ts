@@ -41,6 +41,8 @@ export const PROVIDER_CAPABILITY_META: Record<string, ProviderCapabilityMeta> = 
   polymarket_gamma_public: { feedTypes: ['REST'], envKeysRequired: [] },
   coinbase_public_ws: { feedTypes: ['WebSocket', 'REST'], envKeysRequired: [], symbolDiscovery: 'coinbase', realtimeFeedType: 'WebSocket' },
   binance_public_ws: { feedTypes: ['WebSocket', 'REST'], envKeysRequired: [], symbolDiscovery: 'binance', realtimeFeedType: 'WebSocket' },
+  alpaca_equity_quotes: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_ALPACA_API_KEY', 'ATLASZ_ALPACA_SECRET_KEY'], realtimeFeedType: 'REST', supportedEventTypes: ['quote'], supportedRegions: ['US'] },
+  alpaca_options: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_ALPACA_API_KEY', 'ATLASZ_ALPACA_SECRET_KEY', 'ATLASZ_OPTIONS_UNDERLYINGS'], realtimeFeedType: 'REST', supportedEventTypes: ['option-snapshot'], supportedRegions: ['US'] },
   x_explore_placeholder: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_X_AUTH_TOKEN'] },
   fed_press_rss: { feedTypes: ['RSS'], envKeysRequired: [], supportedEventTypes: ['macro-event', 'news'], supportedRegions: ['US'] },
   sec_press_rss: { feedTypes: ['RSS'], envKeysRequired: [], supportedEventTypes: ['filing', 'news'], supportedRegions: ['US'] },

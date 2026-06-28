@@ -88,6 +88,18 @@ describe('provider auto-discovery', () => {
       envKeysRequired: ['ATLASZ_OPENALEX_API_KEY'],
       envKeysPresent: [],
     })
+    expect(snapshot.providers.find((provider) => provider.providerId === 'alpaca_equity_quotes')).toMatchObject({
+      status: 'missing-config',
+      autoWired: false,
+      envKeysRequired: ['ATLASZ_ALPACA_API_KEY', 'ATLASZ_ALPACA_SECRET_KEY'],
+      envKeysPresent: [],
+    })
+    expect(snapshot.providers.find((provider) => provider.providerId === 'alpaca_options')).toMatchObject({
+      status: 'missing-config',
+      autoWired: false,
+      envKeysRequired: ['ATLASZ_ALPACA_API_KEY', 'ATLASZ_ALPACA_SECRET_KEY', 'ATLASZ_OPTIONS_UNDERLYINGS'],
+      envKeysPresent: [],
+    })
     expect(snapshot.providers.find((provider) => provider.providerId === 'x_explore_placeholder')).toMatchObject({
       status: 'auth-gated',
       autoWired: false,
