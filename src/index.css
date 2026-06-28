@@ -3,22 +3,22 @@
 @import "./styles/effects.css";
 
 :root {
-  --bg: #050607;
-  --panel: #0d1110;
-  --panel-2: #121715;
-  --panel-3: #171d1a;
-  --line: #26322f;
-  --line-soft: #18211f;
-  --text: #dce8e3;
-  --muted: #8ca19a;
-  --faint: #61736e;
+  --bg: #070807;
+  --panel: #0c0f0e;
+  --panel-2: #111614;
+  --panel-3: #171d1b;
+  --line: #25312e;
+  --line-soft: #1a2421;
+  --text: #d9e6e0;
+  --muted: #92a39d;
+  --faint: #687a74;
   --green: #5eead4;
   --green-strong: #2dd4bf;
   --yellow: #facc15;
   --red: #ef4444;
   --cyan: #67e8f9;
   --white: #f7fffb;
-  --shadow: rgba(0, 0, 0, 0.28) 0 18px 70px;
+  --shadow: rgba(0, 0, 0, 0.22) 0 10px 28px;
   --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 
@@ -41,12 +41,8 @@
 body {
   margin: 0;
   min-width: 320px;
-  min-height: 100vh;
-  background:
-    linear-gradient(90deg, rgba(94, 234, 212, 0.04) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(94, 234, 212, 0.035) 1px, transparent 1px),
-    var(--bg);
-  background-size: 38px 38px;
+  min-height: 100dvh;
+  background: var(--bg);
 }
 
 button,

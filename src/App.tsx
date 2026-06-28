@@ -196,8 +196,8 @@ type DefensiveReferenceEntry = {
 }
 
 const views: Array<{ id: ViewId; label: string; icon: typeof MonitorDot }> = [
-  { id: 'command', label: 'Worldwatch', icon: MonitorDot },
-  { id: 'world', label: 'Worldwatch Globe', icon: Globe2 },
+  { id: 'command', label: 'Command', icon: MonitorDot },
+  { id: 'world', label: 'Worldwatch', icon: Globe2 },
   { id: 'graph', label: 'Intelligence Graph', icon: Network },
   { id: 'radar', label: 'Event Timelines', icon: RadioTower },
   { id: 'terminal', label: 'Market / Infra', icon: LineChart },
@@ -989,7 +989,7 @@ function pickAnalystContext(question: string): AnalystAnswer {
 }
 
 function App() {
-  const [activeView, setActiveView] = useState<ViewId>('command')
+  const [activeView, setActiveView] = useState<ViewId>('world')
   const [selectedTicker, setSelectedTicker] = useState('KAS')
   const [selectedEventId, setSelectedEventId] = useState(unavailableEvent.id)
   const [selectedGraphNodeId, setSelectedGraphNodeId] = useState<string | null>(null)

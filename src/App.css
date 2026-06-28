@@ -3054,3 +3054,315 @@ textarea {
 .error-state svg {
   color: var(--red);
 }
+
+/* Atlasz workstation rewrite: flat, dense, proof-first command interface. */
+.app-shell {
+  grid-template-columns: 248px minmax(0, 1fr);
+  min-height: 100dvh;
+  background: var(--bg);
+}
+
+.sidebar {
+  height: 100dvh;
+  gap: 14px;
+  background: #080a09;
+  padding: 16px 12px;
+}
+
+.brand-lockup {
+  padding: 6px 6px 10px;
+}
+
+.brand-banner {
+  width: min(100%, 184px);
+  filter: none;
+}
+
+.eyebrow,
+.module-label,
+.panel-header span {
+  color: var(--muted);
+}
+
+.nav-stack {
+  gap: 4px;
+}
+
+.nav-item {
+  min-height: 36px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+  padding: 8px 9px;
+}
+
+.nav-item svg {
+  color: var(--faint);
+}
+
+.nav-item.active,
+.nav-item:hover {
+  border-color: var(--line);
+  background: var(--panel-2);
+  color: var(--white);
+}
+
+.nav-item.active svg,
+.nav-item:hover svg {
+  color: var(--green);
+}
+
+.sidebar-module {
+  gap: 10px;
+  border-radius: 7px;
+  background: #0b0e0d;
+  padding: 11px;
+}
+
+.storage-pill,
+.source-badge {
+  border-color: var(--line);
+  background: #0f1412;
+  color: var(--text);
+}
+
+.workspace {
+  gap: 10px;
+  padding: 12px;
+}
+
+.topbar {
+  min-height: 58px;
+  border-color: var(--line);
+  border-radius: 7px;
+  background: #0b0e0d;
+  box-shadow: none;
+  padding: 11px 12px;
+}
+
+.topbar h2 {
+  max-width: 940px;
+  font-size: 18px;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+.topbar-actions {
+  gap: 7px;
+}
+
+.ghost-button {
+  min-height: 32px;
+  border-color: var(--line);
+  background: #101513;
+  padding: 6px 9px;
+}
+
+.ticker-tape {
+  grid-template-columns: repeat(9, minmax(104px, 1fr));
+  gap: 6px;
+}
+
+.ticker-tile {
+  min-width: 104px;
+  border-color: var(--line-soft);
+  background: #0b0e0d;
+  padding: 8px;
+}
+
+.ticker-tile.active,
+.ticker-tile:hover {
+  border-color: rgba(94, 234, 212, 0.45);
+  background: #101714;
+}
+
+.dashboard-grid {
+  gap: 10px;
+}
+
+.panel {
+  border-color: var(--line);
+  border-radius: 7px;
+  background: #0d100f;
+  box-shadow: none;
+  padding: 12px;
+}
+
+.panel-header {
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.panel-header h2 {
+  font-size: 16px;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+.brief-card,
+.event-card,
+.signal-card,
+.status-kicker,
+.status-tile,
+.dossier-lead,
+.selected-node-card,
+.analyst-context-banner,
+.source-registry-row,
+.world-event-card,
+.country-intel-card,
+.asset-identity-card,
+.trade-corridor-row,
+.trade-port-card,
+.trade-signal-row,
+.trade-empty {
+  border-color: var(--line-soft);
+  border-radius: 7px;
+  background: #101412;
+  box-shadow: none;
+}
+
+.worldwatch-command-surface {
+  min-height: calc(100dvh - 146px);
+  border-color: var(--line);
+  border-radius: 7px;
+  background: #090b0a;
+  box-shadow: none;
+  padding: 10px;
+}
+
+.worldwatch-command-surface::before {
+  content: none;
+}
+
+.worldwatch-command-head,
+.worldwatch-rail,
+.worldwatch-globe-panel,
+.worldwatch-dock-card {
+  border-color: var(--line);
+  border-radius: 7px;
+  background: #0d100f;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.worldwatch-command-head {
+  padding: 10px 11px;
+}
+
+.worldwatch-command-head h2 {
+  font-size: 18px;
+  text-wrap: balance;
+}
+
+.worldwatch-command-actions button {
+  border-color: var(--line);
+  background: #111614;
+  color: var(--text);
+  padding: 7px 9px;
+}
+
+.worldwatch-command-actions button:hover {
+  border-color: rgba(94, 234, 212, 0.45);
+  background: #14201c;
+}
+
+.worldwatch-command-grid {
+  grid-template-columns: minmax(250px, 0.68fr) minmax(560px, 1.62fr) minmax(292px, 0.72fr);
+  gap: 10px;
+  min-height: 650px;
+}
+
+.worldwatch-rail {
+  max-height: 720px;
+  padding: 8px;
+}
+
+.worldwatch-globe-panel {
+  gap: 10px;
+  padding: 10px;
+}
+
+.worldwatch-map-title,
+.worldwatch-source-strip,
+.worldwatch-dock-card .global-overview,
+.world-intel-strip,
+.universe-search,
+.timeline-event,
+.risk-meter,
+.pulse-sidecar article,
+.dossier-head,
+.status-metric-grid div {
+  border-color: var(--line-soft);
+  background: #101412;
+}
+
+.worldwatch-map-title strong {
+  font-size: 13px;
+}
+
+.worldwatch-map-metrics span {
+  border-color: var(--line);
+  background: #0d100f;
+}
+
+.worldwatch-globe-panel .globe-viewport,
+.pulse-grid,
+.map-scene,
+.graph-frame {
+  border-color: var(--line);
+  background: #080b0a;
+  box-shadow: none;
+}
+
+.worldwatch-globe-panel .globe-sphere,
+.pulse-node {
+  background: #0f1513;
+  box-shadow: none;
+}
+
+.pulse-node {
+  border-color: rgba(94, 234, 212, 0.42);
+}
+
+.pulse-node.active {
+  border-color: var(--yellow);
+  box-shadow: none;
+}
+
+.risk-meter span {
+  background: var(--green);
+}
+
+.worldwatch-bottom-dock {
+  gap: 10px;
+}
+
+.empty-state {
+  border-color: var(--line);
+  border-radius: 7px;
+  background: #101412;
+}
+
+@media (max-width: 1280px) {
+  .app-shell {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 820px) {
+  .sidebar {
+    height: auto;
+  }
+
+  .workspace {
+    padding: 10px;
+  }
+
+  .ticker-tape {
+    grid-template-columns: repeat(9, minmax(112px, 1fr));
+  }
+
+  .worldwatch-command-surface {
+    min-height: auto;
+  }
+}

@@ -1379,3 +1379,238 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Atlasz Worldwatch rewrite: OpenBB density, WorldWideView-style layers, Atlasz proof rails. */
+.world-intel-view {
+  gap: 10px;
+}
+
+.world-command-band,
+.world-panel {
+  border-color: var(--line);
+  border-radius: 7px;
+  background: #0d100f;
+}
+
+.world-command-band {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.62fr);
+  padding: 10px 11px;
+}
+
+.world-command-band h3 {
+  font-size: 17px;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+.world-command-actions {
+  gap: 7px;
+}
+
+.world-search {
+  border-color: var(--line);
+  background: #101412;
+}
+
+.world-command-actions button,
+.world-time-row button,
+.world-market-row button,
+.favorite-button,
+.worldwatch-profile-tabs button,
+.worldwatch-add-form button,
+.worldwatch-add-form select,
+.worldwatch-add-form input,
+.world-add-watch {
+  border-color: var(--line);
+  background: #111614;
+  color: var(--text);
+}
+
+.world-command-actions button:hover,
+.world-time-row button.active,
+.worldwatch-profile-tabs button.active,
+.world-add-watch:hover {
+  border-color: rgba(94, 234, 212, 0.45);
+  background: #14201c;
+  color: var(--white);
+}
+
+.world-grid {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.worldwatch-globe-shell,
+.world-trade-overview,
+.worldwatch-profile-panel {
+  grid-column: 1 / -1;
+}
+
+.world-status-panel {
+  grid-column: span 4;
+}
+
+.world-events-panel {
+  grid-column: span 8;
+}
+
+.world-panel:not(.worldwatch-globe-shell):not(.world-trade-overview):not(.world-status-panel):not(.world-events-panel) {
+  grid-column: span 4;
+}
+
+.world-panel {
+  gap: 9px;
+  padding: 10px;
+}
+
+.world-panel-header strong {
+  color: var(--text);
+}
+
+.atlasz-world-map,
+.worldwatch-proof-map {
+  border-color: var(--line);
+  background: #080b0a;
+}
+
+.worldwatch-proof-map {
+  min-height: 610px;
+}
+
+.worldwatch-globe-layout {
+  grid-template-columns: minmax(190px, 0.31fr) minmax(520px, 1fr) minmax(292px, 0.38fr);
+  gap: 8px;
+  min-height: 610px;
+}
+
+.worldwatch-layer-rail,
+.worldwatch-entity-drawer {
+  border-color: var(--line);
+  border-radius: 7px;
+  background: #0a0d0c;
+  padding: 8px;
+}
+
+.worldwatch-layer-toggle {
+  border-color: var(--line-soft);
+  border-radius: 7px;
+  background: #101412;
+  padding: 7px;
+}
+
+.worldwatch-layer-toggle.active {
+  border-color: rgba(94, 234, 212, 0.45);
+  background: #14201c;
+}
+
+.worldwatch-source-strip,
+.worldwatch-render-mode,
+.worldwatch-source-strip span,
+.worldwatch-proof-row span,
+.worldwatch-context-row,
+.worldwatch-rule,
+.world-relevance-row,
+.source-registry-row,
+.world-event-card,
+.country-intel-card,
+.asset-identity-card,
+.trade-metric,
+.trade-layer,
+.trade-route-board,
+.trade-signal-column,
+.trade-boundary-grid section {
+  border-color: var(--line-soft);
+  background: #101412;
+}
+
+.worldwatch-globe-orbit {
+  border-color: rgba(94, 234, 212, 0.16);
+}
+
+.worldwatch-marker > span,
+.world-marker > span {
+  box-shadow: none;
+}
+
+.worldwatch-marker.active > span {
+  transform: scale(1.12);
+  box-shadow: none;
+}
+
+.worldwatch-context-band {
+  max-height: 168px;
+}
+
+.worldwatch-entity-drawer {
+  max-height: 610px;
+}
+
+.worldwatch-drawer-section {
+  border-top-color: var(--line-soft);
+}
+
+.map-grid-line {
+  background: rgba(94, 234, 212, 0.14);
+}
+
+.map-region-label {
+  color: rgba(217, 230, 224, 0.34);
+}
+
+.worldwatch-profile-tabs,
+.worldwatch-chip-grid,
+.worldwatch-add-form,
+.world-relevance-explain {
+  gap: 5px;
+}
+
+.worldwatch-chip-grid span,
+.world-relevance-row span,
+.world-relevance-row strong,
+.world-relevance-row em,
+.world-relevance-explain span,
+.trade-signal-row span {
+  border-color: var(--line);
+  background: #0d100f;
+}
+
+.trade-overview-hero,
+.trade-layer,
+.trade-route-board,
+.trade-signal-column,
+.trade-boundary-grid section {
+  border-radius: 7px;
+}
+
+.trade-metric strong {
+  font-size: 18px;
+}
+
+@media (max-width: 1280px) {
+  .world-status-panel,
+  .world-events-panel,
+  .world-panel:not(.worldwatch-globe-shell):not(.world-trade-overview):not(.world-status-panel):not(.world-events-panel) {
+    grid-column: span 12;
+  }
+
+  .worldwatch-globe-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .worldwatch-entity-drawer {
+    max-height: none;
+  }
+}
+
+@media (max-width: 820px) {
+  .world-command-band,
+  .world-command-actions,
+  .worldwatch-add-form,
+  .trade-boundary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .worldwatch-proof-map {
+    min-height: 430px;
+  }
+}
