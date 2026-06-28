@@ -412,8 +412,11 @@ function endpointFor(provider: ProviderDefinition, env: NodeJS.ProcessEnv): stri
     return 'https://api.gdeltproject.org/api/v2/doc/doc?query=markets&mode=ArtList&format=json&maxrecords=1'
   }
   if (provider.providerId === 'macro_calendar_fred') {
-    const base = env.ATLASZ_FRED_BASE_URL || 'https://api.stlouisfed.org/fred'
-    return `${base.replace(/\/$/, '')}/series?series_id=CPIAUCSL&file_type=json`
+    if (env.ATLASZ_FRED_API_KEY) {
+      const base = env.ATLASZ_FRED_BASE_URL || 'https://api.stlouisfed.org/fred'
+      return `${base.replace(/\/$/, '')}/series?series_id=CPIAUCSL&file_type=json`
+    }
+    return 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCSL'
   }
   if (provider.providerId === 'treasury_fiscal_public') {
     return 'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/debt_to_penny?sort=-record_date&page[size]=1&fields=record_date,tot_pub_debt_out_amt'

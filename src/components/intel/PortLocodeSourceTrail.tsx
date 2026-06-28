@@ -47,9 +47,9 @@ export function PortLocodeSourceTrail({ events, limit = 30, now }: { events: Wor
         <div className="eia-fac-empty">
           <strong>{UNAVAILABLE}</strong>
           <p>
-            No official UN/LOCODE records are available. This connector is fail-closed: it stays inert until an official
-            UNECE source URL is pinned (ATLASZ_UNLOCODE_URL), or the source may be unavailable/rate-limited. Atlasz does
-            not fabricate locations or coordinates.
+            No official UN/LOCODE records are available. The public UNECE/UNICC package runs by default; optional
+            ATLASZ_UNLOCODE_URL can pin another official package/CSV. The source may be unavailable/rate-limited.
+            Atlasz does not fabricate locations or coordinates.
           </p>
         </div>
       )}

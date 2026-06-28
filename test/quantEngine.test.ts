@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   correlation,
   currentDrawdownPct,
@@ -7,9 +7,13 @@ import {
   zScore,
 } from '../electron/quant/quantMath'
 import { QuantComputeService, benchmarkFor, type QuantBarSource, type MarketTickRow } from '../electron/quant/quantComputeService'
-import { computeMacroSnapshot } from '../electron/quant/macroComputeService'
+import { computeMacroSnapshot, fetchMacroSeriesInputs } from '../electron/quant/macroComputeService'
 import { buildEventOverlay } from '../electron/quant/eventOverlayService'
 import type { WorldIntelEvent } from '../src/worldIntel'
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
 
 function makeEvent(partial: Partial<WorldIntelEvent>): WorldIntelEvent {
   return {
@@ -140,6 +144,21 @@ describe('macro compute service', () => {
   it('fails closed to unavailable regime with no series', () => {
     const snapshot = computeMacroSnapshot({})
     expect(snapshot.regime).toBe('unavailable')
+  })
+
+  it('fetches quant macro inputs from public FRED CSV without an API key', async () => {
+    vi.stubGlobal('fetch', async (url: URL | string) => {
+      const id = new URL(String(url)).searchParams.get('id') ?? ''
+      const value = id === 'DTWEXBGS'
+        ? 'observation_date,DTWEXBGS\n2026-01-01,100\n2026-01-02,101\n'
+        : `observation_date,${id}\n2026-01-01,1.25\n2026-01-02,1.50\n`
+      return { ok: true, status: 200, text: async () => value }
+    })
+
+    const inputs = await fetchMacroSeriesInputs(new AbortController().signal, {})
+    expect(inputs?.t10y2y).toBe(1.5)
+    expect(inputs?.dgs10).toBe(1.5)
+    expect(inputs?.dxySeries).toEqual([100, 101])
   })
 })
 

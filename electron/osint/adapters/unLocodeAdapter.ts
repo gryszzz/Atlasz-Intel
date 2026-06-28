@@ -6,10 +6,10 @@
  * crossings, etc. This is a LOCATION CODE REGISTRY, NOT proof of live port
  * operations — no vessel traffic, congestion, or disruption is ever implied.
  *
- * SOURCE DISCIPLINE (like LNG): ships FAIL-CLOSED with NO default endpoint.
- * UNECE files are release-versioned, so the operator pins the official UNECE CSV
- * via ATLASZ_UNLOCODE_URL (host validated to unece.org); inert without it. The
- * parser is the tested core and accepts the official 12-column CSV layout
+ * SOURCE DISCIPLINE (like LNG): UNECE files are release-versioned. By default
+ * Atlasz uses the official UN/LOCODE 2025-1 package published by UNECE/UNICC;
+ * an operator can override ATLASZ_UNLOCODE_URL with an official CSV/package URL.
+ * The parser is the tested core and accepts the official 12-column CSV layout
  * (Change, Country, Location, Name, NameWoDiacritics, Subdivision, Status,
  * Function, Date, IATA, Coordinates, Remarks) or a header-labelled variant.
  *
@@ -18,6 +18,7 @@
  *
  * provenance: official-api   category: trade-logistics
  */
+import { inflateRawSync } from 'node:zlib'
 import { adapterEventId, asString, buildAdapterEvent, sha256, stableStringify, unique } from './adapterShared'
 import { assertOk, fetchWithRetry } from '../fetchPolicy'
 import { coordinatesAreValid, isValidPrecision, precisionForCoordinates } from '../../../src/engine/geo/geoCore'
@@ -27,6 +28,7 @@ const SOURCE_ID = 'un_locode_public'
 const SOURCE_NAME = 'UNECE UN/LOCODE'
 const SOURCE_DATASET = 'UNECE UN/LOCODE Code List'
 const HUMAN_SOURCE_URL = 'https://unece.org/trade/cefact/UNLOCODE-Download'
+const DEFAULT_UNLOCODE_PACKAGE_URL = 'https://opensource.unicc.org/un/unece/uncefact/vocab-locode/-/jobs/artifacts/2025-1/download?job=package-release'
 const DEFAULT_TIMEOUT_MS = 30_000
 const DEFAULT_MAX_RETRIES = 2
 const DEFAULT_BACKOFF_MS = 1_000
@@ -48,7 +50,7 @@ export type UnLocodeConfig = {
 
 export function readUnLocodeConfig(env: NodeJS.ProcessEnv = process.env): UnLocodeConfig | null {
   if (env.ATLASZ_UNLOCODE_DISABLE === '1') return null
-  const url = asString(env.ATLASZ_UNLOCODE_URL)
+  const url = asString(env.ATLASZ_UNLOCODE_URL) || DEFAULT_UNLOCODE_PACKAGE_URL
   if (!url || !isOfficialUnLocodeUrl(url)) return null
   return {
     url,
@@ -102,10 +104,10 @@ export function parseUnLocodes(
     if (seen.has(locode)) continue
     seen.add(locode)
 
-    const functionCode = asString(cells[cols.function])
+    const functionCode = functionCell(cells, cols)
     const functions = parseFunctions(functionCode)
     const subdivision = asString(cells[cols.subdivision]) || undefined
-    const status = asString(cells[cols.status]) || undefined
+    const status = statusCell(cells, cols) || undefined
     const iata = cols.iata >= 0 ? asString(cells[cols.iata]) || undefined : undefined
     const coords = cols.coordinates >= 0 ? parseCoordinates(asString(cells[cols.coordinates])) : null
     const geospatialPrecision = precisionForCoordinates(coords?.lat, coords?.lon, Boolean(countryCode || subdivision))
@@ -291,6 +293,22 @@ function at(value: number, fallback: number): number {
   return value >= 0 ? value : fallback
 }
 
+function functionCell(cells: string[], cols: Columns): string {
+  const preferred = asString(cells[cols.function])
+  const alternate = asString(cells[6])
+  return looksLikeFunctionCode(preferred) || !looksLikeFunctionCode(alternate) ? preferred : alternate
+}
+
+function statusCell(cells: string[], cols: Columns): string {
+  const preferred = asString(cells[cols.status])
+  const alternate = asString(cells[7])
+  return looksLikeFunctionCode(preferred) && alternate ? alternate : preferred
+}
+
+function looksLikeFunctionCode(value: string): boolean {
+  return /^[0-9B-]{3,}$/.test(value)
+}
+
 function parseCsvLine(line: string): string[] {
   const out: string[] = []
   let cur = ''
@@ -316,29 +334,78 @@ function parseCsvLine(line: string): string[] {
 }
 
 function isOfficialUnLocodeSourceUrl(url: string): boolean {
-  return hostEndsWith(url, 'unece.org')
+  return isOfficialUnLocodeUrl(url)
 }
 
 function isOfficialUnLocodeUrl(url: string): boolean {
-  return hostEndsWith(url, 'unece.org')
-}
-
-function hostEndsWith(url: string, suffix: string): boolean {
   try {
     const parsed = new URL(url)
-    return parsed.protocol === 'https:' && new RegExp(`(^|\\.)${suffix.replace('.', '\\.')}$`, 'i').test(parsed.hostname)
+    if (parsed.protocol !== 'https:') return false
+    if (hostEndsWith(parsed.hostname, 'unece.org')) return true
+    return parsed.hostname.toLowerCase() === 'opensource.unicc.org' && /\/un\/unece\/uncefact\/vocab-locode\//i.test(parsed.pathname)
   } catch {
     return false
   }
 }
 
+function hostEndsWith(hostname: string, suffix: string): boolean {
+  return new RegExp(`(^|\\.)${suffix.replace('.', '\\.')}$`, 'i').test(hostname)
+}
+
 async function fetchCsv(url: string, signal: AbortSignal): Promise<string> {
   const response = await fetch(url, {
     signal,
-    headers: { accept: 'text/csv, text/plain, */*', 'user-agent': 'AtlaszIntel/0.4 (local-first trade/logistics intelligence; official UNECE UN/LOCODE)' },
+    headers: { accept: 'application/zip, text/csv, text/plain, */*', 'user-agent': 'AtlaszIntel/0.4 (local-first trade/logistics intelligence; official UNECE UN/LOCODE)' },
   })
   assertOk(response, 'UN/LOCODE')
+  const contentType = response.headers.get('content-type') ?? ''
+  if (/zip|octet-stream/i.test(contentType) || /\.zip(?:$|\?)/i.test(url) || /artifacts\/[^/]+\/download/i.test(url)) {
+    return unLocodeCsvFromZip(Buffer.from(await response.arrayBuffer()))
+  }
   return await response.text()
+}
+
+function unLocodeCsvFromZip(buffer: Buffer): string {
+  const entries = unzipEntries(buffer)
+  return [...entries.entries()]
+    .filter(([name]) => /release\/csv\/UNLOCODE CodeListPart\d+\.csv$/i.test(name))
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, data]) => data.toString('utf8'))
+    .join('\n')
+}
+
+function unzipEntries(buffer: Buffer): Map<string, Buffer> {
+  const eocd = findEndOfCentralDirectory(buffer)
+  const centralDirOffset = buffer.readUInt32LE(eocd + 16)
+  const entryCount = buffer.readUInt16LE(eocd + 10)
+  const out = new Map<string, Buffer>()
+  let ptr = centralDirOffset
+  for (let i = 0; i < entryCount; i += 1) {
+    if (buffer.readUInt32LE(ptr) !== 0x02014b50) break
+    const method = buffer.readUInt16LE(ptr + 10)
+    const compressedSize = buffer.readUInt32LE(ptr + 20)
+    const nameLength = buffer.readUInt16LE(ptr + 28)
+    const extraLength = buffer.readUInt16LE(ptr + 30)
+    const commentLength = buffer.readUInt16LE(ptr + 32)
+    const localHeaderOffset = buffer.readUInt32LE(ptr + 42)
+    const name = buffer.subarray(ptr + 46, ptr + 46 + nameLength).toString('utf8')
+    const localNameLength = buffer.readUInt16LE(localHeaderOffset + 26)
+    const localExtraLength = buffer.readUInt16LE(localHeaderOffset + 28)
+    const dataStart = localHeaderOffset + 30 + localNameLength + localExtraLength
+    const compressed = buffer.subarray(dataStart, dataStart + compressedSize)
+    const data = method === 0 ? Buffer.from(compressed) : method === 8 ? inflateRawSync(compressed) : Buffer.alloc(0)
+    if (data.length > 0) out.set(name, data)
+    ptr += 46 + nameLength + extraLength + commentLength
+  }
+  return out
+}
+
+function findEndOfCentralDirectory(buffer: Buffer): number {
+  const min = Math.max(0, buffer.length - 66_000)
+  for (let i = buffer.length - 22; i >= min; i -= 1) {
+    if (buffer.readUInt32LE(i) === 0x06054b50) return i
+  }
+  throw new Error('Invalid ZIP: central directory not found')
 }
 
 function round(value: number): number {

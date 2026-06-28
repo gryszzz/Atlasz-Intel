@@ -36,7 +36,7 @@ afterEach(() => {
 
 describe('USGS minerals adapter (two-source)', () => {
   it('is fail-closed and accepts only official usgs.gov sources', () => {
-    expect(readUsgsMineralConfig({})).toBeNull()
+    expect(readUsgsMineralConfig({})?.sources).toEqual([{ database: 'MRDS', url: MRDS_URL }])
     expect(readUsgsMineralConfig({ ATLASZ_USGS_MRDS_URL: 'https://evil.com/mrds.csv' })).toBeNull()
     expect(readUsgsMineralConfig({ ATLASZ_USGS_MINERALS_DISABLE: '1', ATLASZ_USGS_MRDS_URL: MRDS_URL })).toBeNull()
     expect(readUsgsMineralConfig({ ATLASZ_USGS_MRDS_URL: MRDS_URL })?.sources).toHaveLength(1)

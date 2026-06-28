@@ -34,11 +34,12 @@ afterEach(() => {
 
 describe('UN/LOCODE adapter (Layer 1)', () => {
   it('is fail-closed and guards the official UNECE host', () => {
-    expect(readUnLocodeConfig({})).toBeNull()
+    expect(readUnLocodeConfig({})?.url).toContain('opensource.unicc.org')
     expect(readUnLocodeConfig({ ATLASZ_UNLOCODE_URL: 'https://evil.com/loc.csv' })).toBeNull()
     expect(readUnLocodeConfig({ ATLASZ_UNLOCODE_URL: 'http://unece.org/loc.csv' })).toBeNull()
     expect(readUnLocodeConfig({ ATLASZ_UNLOCODE_DISABLE: '1', ATLASZ_UNLOCODE_URL: URL_OK })).toBeNull()
     expect(readUnLocodeConfig({ ATLASZ_UNLOCODE_URL: URL_OK })?.portsOnly).toBe(true)
+    expect(readUnLocodeConfig({ ATLASZ_UNLOCODE_URL: 'https://opensource.unicc.org/un/unece/uncefact/vocab-locode/-/jobs/artifacts/2025-1/download?job=package-release' })?.url).toContain('opensource.unicc.org')
     expect(readUnLocodeConfig({ ATLASZ_UNLOCODE_URL: URL_OK, ATLASZ_UNLOCODE_PORTS_ONLY: '0' })?.portsOnly).toBe(false)
   })
 

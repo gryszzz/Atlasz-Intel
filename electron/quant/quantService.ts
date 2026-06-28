@@ -44,7 +44,7 @@ export class QuantService {
       const inputs = await fetchMacroSeriesInputs(controller.signal)
       if (!inputs) {
         return {
-          ...emptyMacroSnapshot('Macro series unavailable: configure ATLASZ_FRED_API_KEY (fail-closed).', now),
+          ...emptyMacroSnapshot('Macro series unavailable: public FRED CSV returned no usable series.', now),
           fredObservations: this.persistence.listFredMacroObservations(undefined, 12),
           treasuryFiscalRecords: this.persistence.listTreasuryFiscalRecords(undefined, 12),
           beaObservations: this.persistence.listBeaObservations(undefined, 12),

@@ -50,7 +50,7 @@ because it is listed here.
 | --- | --- | --- | --- |
 | Company disclosure | SEC EDGAR company submissions | `ATLASZ_SEC_USER_AGENT` | `missing-config`; no simulated filings. |
 | Institutional holdings | SEC Form 13F-HR / 13F-HR/A information-table XML | `ATLASZ_SEC_USER_AGENT` | `missing-config`; no fake holdings or current-position claims. |
-| Macro time series | FRED | `ATLASZ_FRED_API_KEY` | `missing-config`; no synthetic macro observations. |
+| Macro time series | FRED | optional `ATLASZ_FRED_API_KEY` | Public FRED CSV mode by default; optional key upgrades REST metadata. No synthetic macro observations. |
 | National accounts/GDP | BEA NIPA GDP | `ATLASZ_BEA_API_KEY` | `missing-config`; no synthetic GDP observations. |
 | Energy/commodities | EIA official energy series | `ATLASZ_EIA_API_KEY` | `missing-config`; no synthetic energy observations. |
 | Research metadata | OpenAlex Works API | optional `ATLASZ_OPENALEX_API_KEY` | Public no-key mode by default; optional key raises quota. No fake papers, no breakthrough or market inference. |

@@ -336,6 +336,27 @@ describe('macro calendar adapter', () => {
     expect(events[0].fredObservation?.sourceApiUrl).not.toContain('api_key=')
   })
 
+  it('fetches official FRED graph CSV without an API key', async () => {
+    const fetchSpy = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      text: async () => 'observation_date,CPIAUCSL\n2026-04-01,319.2\n2026-05-01,320.1\n',
+    }))
+    vi.stubGlobal('fetch', fetchSpy)
+
+    const events = await fetchMacroCalendar(new AbortController().signal, {
+      baseUrl: 'https://api.stlouisfed.org/fred',
+      series: [cpi],
+      rateLimitMs: 0,
+    })
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
+    expect(String(fetchSpy.mock.calls[0][0])).toContain('fredgraph.csv')
+    expect(String(fetchSpy.mock.calls[0][0])).not.toContain('api_key=')
+    expect(events).toHaveLength(1)
+    expect(events[0].fredObservation).toMatchObject({ seriesId: 'CPIAUCSL', observationDate: '2026-05-01', value: 320.1 })
+  })
+
   it('fails closed on missing FRED observation values', () => {
     expect(normalizeMacroObservation(cpi, { date: '2026-05-01', value: '.' })).toBeNull()
     expect(normalizeMacroObservation(cpi, undefined)).toBeNull()
@@ -348,7 +369,7 @@ describe('macro calendar adapter', () => {
       }),
     ).toBeNull()
     vi.stubEnv('ATLASZ_FRED_API_KEY', '')
-    expect(readMacroConfig()).toBeNull()
+    expect(readMacroConfig()).not.toBeNull()
   })
 })
 

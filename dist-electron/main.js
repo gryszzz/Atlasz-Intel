@@ -4676,14 +4676,13 @@ var rr = class {
 		category: "macro",
 		adapter: "fred-macro",
 		enabled: !0,
-		endpoint: "https://api.stlouisfed.org/fred/series/observations",
-		authType: "api-key",
-		envKey: "ATLASZ_FRED_API_KEY",
+		endpoint: "https://fred.stlouisfed.org/graph/fredgraph.csv",
+		authType: "none",
 		pollIntervalMs: 60 * 6e4,
 		rateLimitGuardMs: 12e4,
 		timeoutMs: 2e4,
 		provenance: "official-api",
-		legalSafetyNote: "Official FRED API for allowlisted macro series. API key from env only; fail-closed without it. Missing observations are skipped."
+		legalSafetyNote: "Official FRED macro observations. Public graph CSV runs by default; optional ATLASZ_FRED_API_KEY upgrades to REST metadata. Missing observations are skipped; no synthetic macro data."
 	},
 	{
 		providerId: "treasury_fiscal_public",
@@ -4856,16 +4855,15 @@ var rr = class {
 		category: "macro",
 		adapter: "un-locode",
 		enabled: !0,
-		endpoint: "https://unece.org/trade/cefact/UNLOCODE-Download",
-		authType: "env",
-		envKey: "ATLASZ_UNLOCODE_URL",
+		endpoint: "https://opensource.unicc.org/un/unece/uncefact/vocab-locode/-/jobs/artifacts/2025-1/download?job=package-release",
+		authType: "none",
 		pollIntervalMs: 720 * 60 * 6e4,
 		rateLimitGuardMs: 3e5,
 		timeoutMs: 3e4,
 		maxRetries: 2,
 		backoffMs: 1e3,
 		provenance: "official-api",
-		legalSafetyNote: "Official UNECE UN/LOCODE code list (trade/transport location codes). FAIL-CLOSED: requires ATLASZ_UNLOCODE_URL pinned to an official unece.org CSV; inert without it. Location-code registry only — never live port activity, vessel traffic, congestion, or disruption. Physical port geometry is a later World Port Index enrichment."
+		legalSafetyNote: "Official UNECE UN/LOCODE code list (trade/transport location codes). Uses the public UNECE/UNICC 2025-1 package by default; optional ATLASZ_UNLOCODE_URL can pin another official package/CSV. Location-code registry only — never live port activity, vessel traffic, congestion, or disruption. Physical port geometry is a later World Port Index enrichment."
 	},
 	{
 		providerId: "world_port_index_public",
@@ -4885,20 +4883,19 @@ var rr = class {
 	},
 	{
 		providerId: "usgs_minerals_public",
-		providerName: "USGS Mineral Resources (USMIN + MRDS)",
+		providerName: "USGS Mineral Resources (MRDS default, optional USMIN)",
 		category: "macro",
 		adapter: "usgs-minerals",
 		enabled: !0,
-		endpoint: "https://mrdata.usgs.gov/",
-		authType: "env",
-		envKey: "ATLASZ_USGS_USMIN_URL",
+		endpoint: "https://mrdata.usgs.gov/mrds/mrds.csv",
+		authType: "none",
 		pollIntervalMs: 720 * 60 * 6e4,
 		rateLimitGuardMs: 3e5,
 		timeoutMs: 3e4,
 		maxRetries: 2,
 		backoffMs: 1e3,
 		provenance: "official-api",
-		legalSafetyNote: "Official USGS Mineral Resources Online Spatial Data. Two-source-aware: USMIN (developing authoritative) + MRDS (legacy, not updated since 2011 — never current activity). Materials reference only — never current production, reserves, ownership, or investment signal. FAIL-CLOSED: pin ATLASZ_USGS_USMIN_URL and/or ATLASZ_USGS_MRDS_URL to official usgs.gov exports; inert without."
+		legalSafetyNote: "Official USGS Mineral Resources Online Spatial Data. MRDS public CSV runs by default as legacy reference (not updated since 2011 — never current activity); optional ATLASZ_USGS_USMIN_URL can add USMIN when a current official export is pinned. Materials reference only — never current production, reserves, ownership, or investment signal."
 	},
 	{
 		providerId: "cisa_kev_public",
@@ -5387,7 +5384,7 @@ var gr = {
 	},
 	macro_calendar_fred: {
 		feedTypes: ["REST"],
-		envKeysRequired: ["ATLASZ_FRED_API_KEY"],
+		envKeysRequired: [],
 		supportedEventTypes: ["macro-event"],
 		supportedRegions: ["US"]
 	},
@@ -6136,85 +6133,84 @@ function Si(e) {
 }
 //#endregion
 //#region electron/osint/adapters/macroCalendarAdapter.ts
-var Ci = "macro_calendar_fred", wi = "FRED (Federal Reserve Economic Data)", Ti = "https://api.stlouisfed.org/fred", Ei = "https://fred.stlouisfed.org/series", Di = 1, Oi = 1200, ki = [
+var Ci = "macro_calendar_fred", wi = "FRED (Federal Reserve Economic Data)", Ti = "https://api.stlouisfed.org/fred", Ei = "https://fred.stlouisfed.org/graph/fredgraph.csv", Di = "https://fred.stlouisfed.org/series", Oi = 1, ki = 1200, Ai = [
 	"DXY",
 	"TLT",
 	"SPY",
 	"QQQ",
 	"GLD",
 	"BTC"
-], Ai = [
+], ji = [
 	"SPY",
 	"QQQ",
 	"DXY"
-], ji = [
+], Mi = [
 	{
 		seriesId: "CPIAUCSL",
 		label: "CPI",
 		defaultUnits: "index",
-		proxies: ki
+		proxies: Ai
 	},
 	{
 		seriesId: "UNRATE",
 		label: "Unemployment rate",
 		defaultUnits: "%",
-		proxies: Ai
+		proxies: ji
 	},
 	{
 		seriesId: "FEDFUNDS",
 		label: "Federal funds rate",
 		defaultUnits: "%",
-		proxies: ki
+		proxies: Ai
 	},
 	{
 		seriesId: "DGS10",
 		label: "10-year Treasury yield",
 		defaultUnits: "%",
-		proxies: ki
+		proxies: Ai
 	},
 	{
 		seriesId: "GDP",
 		label: "Gross domestic product",
 		defaultUnits: "billions of dollars",
-		proxies: Ai
+		proxies: ji
 	},
 	{
 		seriesId: "PAYEMS",
 		label: "Nonfarm payrolls",
 		defaultUnits: "thousands",
-		proxies: ki
+		proxies: Ai
 	}
 ];
-function Mi(e = process.env) {
-	let t = V(e.ATLASZ_FRED_API_KEY);
-	return t ? {
-		apiKey: t,
+function Ni(e = process.env) {
+	return {
+		apiKey: V(e.ATLASZ_FRED_API_KEY),
 		baseUrl: V(e.ATLASZ_FRED_BASE_URL) || Ti,
-		series: qi(e.ATLASZ_FRED_SERIES_IDS) ?? ji,
-		rateLimitMs: Number.isFinite(Number(e.ATLASZ_FRED_RATE_LIMIT_MS)) ? Math.max(0, Number(e.ATLASZ_FRED_RATE_LIMIT_MS)) : Oi
-	} : null;
+		series: Qi(e.ATLASZ_FRED_SERIES_IDS) ?? Mi,
+		rateLimitMs: Number.isFinite(Number(e.ATLASZ_FRED_RATE_LIMIT_MS)) ? Math.max(0, Number(e.ATLASZ_FRED_RATE_LIMIT_MS)) : ki
+	};
 }
-async function Ni(e, t = Mi()) {
+async function Pi(e, t = Ni()) {
 	if (!t) return [];
 	let n = [];
 	for (let r of t.series) {
 		if (e.aborted) break;
-		let i = Pi({
+		let i = Fi({
 			requestedMeta: r,
-			seriesPayload: await Vi(Hi(t.baseUrl, r.seriesId, t.apiKey), e),
-			observationsPayload: await Vi(Ui(t.baseUrl, r.seriesId, t.apiKey, Di), e),
+			seriesPayload: t.apiKey ? await Hi(Ki(t.baseUrl, r.seriesId, t.apiKey), e) : Wi(r),
+			observationsPayload: t.apiKey ? await Hi(qi(t.baseUrl, r.seriesId, t.apiKey, Oi), e) : { observations: [Gi(await Ui(r.seriesId, e), r.seriesId)].filter(Boolean) },
 			retrievedAt: Date.now(),
-			sourceApiUrl: Wi(t.baseUrl, r.seriesId, Di)
+			sourceApiUrl: t.apiKey ? Ji(t.baseUrl, r.seriesId, Oi) : Yi(r.seriesId)
 		});
-		i && n.push(i), await Ji(t.rateLimitMs, e);
+		i && n.push(i), await $i(t.rateLimitMs, e);
 	}
-	return Fi(n);
+	return Ii(n);
 }
-function Pi(e) {
-	let t = Li(e.seriesPayload, e.requestedMeta), n = Ri(e.observationsPayload);
+function Fi(e) {
+	let t = Ri(e.seriesPayload, e.requestedMeta), n = zi(e.observationsPayload);
 	if (!t || !n) return null;
-	let r = V(n.value), i = Number(r), a = Date.parse(`${n.date}T00:00:00Z`), o = `${Ei}/${t.id}`, s = e.sourceApiUrl ?? Wi(Ti, t.id, Di);
-	if (!zi({
+	let r = V(n.value), i = Number(r), a = Date.parse(`${n.date}T00:00:00Z`), o = `${Di}/${t.id}`, s = e.sourceApiUrl ?? Ji(Ti, t.id, Oi);
+	if (!Bi({
 		seriesId: t.id,
 		title: t.title,
 		observationDate: n.date,
@@ -6230,7 +6226,7 @@ function Pi(e) {
 		retrievedAt: e.retrievedAt
 	});
 	return {
-		id: Ki(t.id, n.date),
+		id: Zi(t.id, n.date),
 		seriesId: t.id,
 		title: t.title,
 		units: t.units,
@@ -6245,7 +6241,7 @@ function Pi(e) {
 		sourceName: wi,
 		retrievedAt: e.retrievedAt,
 		provenance: "official-api",
-		confidence: Bi({
+		confidence: Vi({
 			seriesId: t.id,
 			title: t.title,
 			observationDate: n.date,
@@ -6257,11 +6253,11 @@ function Pi(e) {
 		rawPayloadJson: c
 	};
 }
-function Fi(e) {
-	return e.map(Ii);
-}
 function Ii(e) {
-	let t = `fred|${e.seriesId}|${e.observationDate}`.toLowerCase(), n = ji.find((t) => t.seriesId === e.seriesId)?.proxies ?? ki;
+	return e.map(Li);
+}
+function Li(e) {
+	let t = `fred|${e.seriesId}|${e.observationDate}`.toLowerCase(), n = Mi.find((t) => t.seriesId === e.seriesId)?.proxies ?? Ai;
 	return {
 		...U({
 			id: G(Ci, t),
@@ -6292,7 +6288,7 @@ function Ii(e) {
 		fredObservation: e
 	};
 }
-function Li(e, t) {
+function Ri(e, t) {
 	if (!e || typeof e != "object") return null;
 	let n = e.seriess?.[0];
 	if (!n || typeof n != "object") return null;
@@ -6305,7 +6301,7 @@ function Li(e, t) {
 		seasonalAdjustment: s
 	};
 }
-function Ri(e) {
+function zi(e) {
 	if (!e || typeof e != "object") return null;
 	let t = e;
 	for (let e of t.observations ?? []) {
@@ -6314,47 +6310,82 @@ function Ri(e) {
 	}
 	return null;
 }
-function zi(e) {
+function Bi(e) {
 	return !!(e.seriesId && e.title && /^\d{4}-\d{2}-\d{2}$/.test(e.observationDate) && Number.isFinite(e.value) && /^https:\/\/fred\.stlouisfed\.org\/series\/[A-Z0-9_]+$/.test(e.sourceUrl) && Number.isFinite(e.retrievedAt));
 }
-function Bi(e) {
-	return zi(e) ? 96 : 60;
+function Vi(e) {
+	return Bi(e) ? 96 : 60;
 }
-async function Vi(t, n) {
+async function Hi(t, n) {
 	let r = await fetch(t, {
 		signal: n,
 		headers: { accept: "application/json" }
 	});
 	return e(r, "FRED"), await r.json();
 }
-function Hi(e, t, n) {
-	let r = new URL(`${Gi(e)}/series`);
+async function Ui(t, n) {
+	let r = await fetch(Yi(t), {
+		signal: n,
+		headers: {
+			accept: "text/csv, text/plain, */*",
+			"user-agent": "AtlaszIntel/0.4 (local-first macro intelligence; official FRED graph CSV)"
+		}
+	});
+	return e(r, "FRED graph CSV"), await r.text();
+}
+function Wi(e) {
+	return { seriess: [{
+		id: e.seriesId,
+		title: e.label,
+		units: e.defaultUnits,
+		frequency: "unknown",
+		seasonal_adjustment: "unknown"
+	}] };
+}
+function Gi(e, t) {
+	let n = e.split(/\r?\n/).filter(Boolean);
+	if (n.length < 2) return;
+	let r = n[0].split(",").map((e) => e.trim()).findIndex((e) => e.toUpperCase() === t);
+	if (!(r < 1)) for (let e = n.length - 1; e >= 1; --e) {
+		let t = n[e].split(",").map((e) => e.trim()), i = t[0] ?? "", a = t[r] ?? "";
+		if (/^\d{4}-\d{2}-\d{2}$/.test(i) && a && a !== "." && Number.isFinite(Number(a))) return {
+			date: i,
+			value: a
+		};
+	}
+}
+function Ki(e, t, n) {
+	let r = new URL(`${Xi(e)}/series`);
 	return r.searchParams.set("series_id", t), r.searchParams.set("api_key", n), r.searchParams.set("file_type", "json"), r;
 }
-function Ui(e, t, n, r) {
-	let i = new URL(`${Gi(e)}/series/observations`);
+function qi(e, t, n, r) {
+	let i = new URL(`${Xi(e)}/series/observations`);
 	return i.searchParams.set("series_id", t), i.searchParams.set("api_key", n), i.searchParams.set("file_type", "json"), i.searchParams.set("sort_order", "desc"), i.searchParams.set("limit", String(r)), i;
 }
-function Wi(e, t, n) {
-	let r = new URL(`${Gi(e)}/series/observations`);
+function Ji(e, t, n) {
+	let r = new URL(`${Xi(e)}/series/observations`);
 	return r.searchParams.set("series_id", t), r.searchParams.set("file_type", "json"), r.searchParams.set("sort_order", "desc"), r.searchParams.set("limit", String(n)), r.toString();
 }
-function Gi(e) {
+function Yi(e) {
+	let t = new URL(Ei);
+	return t.searchParams.set("id", e), t.toString();
+}
+function Xi(e) {
 	return e.replace(/\/$/, "");
 }
-function Ki(e, t) {
+function Zi(e, t) {
 	return `${Ci}:${e}:${t}`;
 }
-function qi(e) {
+function Qi(e) {
 	let t = V(e).split(",").map((e) => e.trim().toUpperCase()).filter(Boolean);
-	return t.length === 0 ? null : t.map((e) => ji.find((t) => t.seriesId === e) ?? {
+	return t.length === 0 ? null : t.map((e) => Mi.find((t) => t.seriesId === e) ?? {
 		seriesId: e,
 		label: e,
 		defaultUnits: "",
-		proxies: ki
+		proxies: Ai
 	});
 }
-function Ji(e, t) {
+function $i(e, t) {
 	return new Promise((n, r) => {
 		if (t.aborted || e <= 0) {
 			n();
@@ -6368,33 +6399,33 @@ function Ji(e, t) {
 }
 //#endregion
 //#region electron/osint/adapters/noaaAlertAdapter.ts
-var Yi = "noaa_alerts_public", Xi = "NOAA / National Weather Service", Zi = "https://api.weather.gov/alerts/active", Qi = /^https:\/\/api\.weather\.gov\/alerts\//, $i = "Atlasz-Intel (github.com/gryszzz/Atlasz-Intel)", ea = 30, ta = 200, na = 2e4, ra = 2, ia = 1e3, aa = new Set([
+var ea = "noaa_alerts_public", ta = "NOAA / National Weather Service", na = "https://api.weather.gov/alerts/active", ra = /^https:\/\/api\.weather\.gov\/alerts\//, ia = "Atlasz-Intel (github.com/gryszzz/Atlasz-Intel)", aa = 30, oa = 200, sa = 2e4, ca = 2, la = 1e3, ua = new Set([
 	"Extreme",
 	"Severe",
 	"Moderate",
 	"Minor",
 	"Unknown"
-]), oa = {
+]), da = {
 	Extreme: 4,
 	Severe: 3,
 	Moderate: 2,
 	Minor: 1,
 	Unknown: 0
 };
-function sa(e = process.env) {
+function fa(e = process.env) {
 	if (e.ATLASZ_NOAA_DISABLE === "1") return null;
-	let t = V(e.ATLASZ_NOAA_ALERTS_URL) || Zi;
+	let t = V(e.ATLASZ_NOAA_ALERTS_URL) || na;
 	return /^https:\/\//i.test(t) ? {
 		alertsUrl: t,
-		userAgent: V(e.ATLASZ_NWS_USER_AGENT) || $i,
-		maxRecords: ya(Number(e.ATLASZ_NOAA_MAX_RECORDS ?? ea), 1, ta),
-		timeoutMs: ya(Number(e.ATLASZ_NOAA_TIMEOUT_MS ?? na), 1e3, 6e4),
-		maxRetries: ya(Number(e.ATLASZ_NOAA_MAX_RETRIES ?? ra), 0, 5),
-		backoffMs: ya(Number(e.ATLASZ_NOAA_BACKOFF_MS ?? ia), 0, 6e4)
+		userAgent: V(e.ATLASZ_NWS_USER_AGENT) || ia,
+		maxRecords: wa(Number(e.ATLASZ_NOAA_MAX_RECORDS ?? aa), 1, oa),
+		timeoutMs: wa(Number(e.ATLASZ_NOAA_TIMEOUT_MS ?? sa), 1e3, 6e4),
+		maxRetries: wa(Number(e.ATLASZ_NOAA_MAX_RETRIES ?? ca), 0, 5),
+		backoffMs: wa(Number(e.ATLASZ_NOAA_BACKOFF_MS ?? la), 0, 6e4)
 	} : null;
 }
-async function ca(e, n = sa()) {
-	return n ? da(ua(await t((t) => la(n.alertsUrl, n.userAgent, ba(e, t)), {
+async function pa(e, n = fa()) {
+	return n ? ga(ha(await t((t) => ma(n.alertsUrl, n.userAgent, Ta(e, t)), {
 		maxRetries: n.maxRetries,
 		backoffMs: n.backoffMs,
 		timeoutMs: n.timeoutMs
@@ -6403,7 +6434,7 @@ async function ca(e, n = sa()) {
 		config: n
 	})) : [];
 }
-async function la(t, n, r) {
+async function ma(t, n, r) {
 	let i = await fetch(t, {
 		signal: r,
 		headers: {
@@ -6413,16 +6444,16 @@ async function la(t, n, r) {
 	});
 	return e(i, "NOAA alerts"), i.json();
 }
-function ua(e, t = {}) {
+function ha(e, t = {}) {
 	if (!e || typeof e != "object") return [];
 	let n = e.features;
 	if (!Array.isArray(n) || n.length === 0) return [];
-	let r = t.retrievedAt ?? Date.now(), i = t.config?.maxRecords ?? ea, a = t.config?.alertsUrl ?? Zi, o = [];
+	let r = t.retrievedAt ?? Date.now(), i = t.config?.maxRecords ?? aa, a = t.config?.alertsUrl ?? na, o = [];
 	for (let e of n) {
 		let t = e?.properties;
 		if (!t) continue;
 		let n = V(t.id), i = V(t["@id"]) || V(e.id), s = V(t.event), c = V(t.severity), l = V(t.effective), u = V(t.onset), d = V(t.expires), f = Date.parse(l), p = Date.parse(u), m = Date.parse(d);
-		if (!ma({
+		if (!ya({
 			alertId: n,
 			eventType: s,
 			severity: c,
@@ -6432,12 +6463,12 @@ function ua(e, t = {}) {
 			expiresTimestamp: m,
 			retrievedAt: r
 		})) continue;
-		let h = t.geocode ?? {}, g = ga([
+		let h = t.geocode ?? {}, g = xa([
 			f,
 			p,
 			Date.parse(V(t.sent))
 		]) ?? r, _ = {
-			id: va(n),
+			id: Ca(n),
 			alertId: n,
 			event: s,
 			headline: V(t.headline),
@@ -6446,8 +6477,8 @@ function ua(e, t = {}) {
 			urgency: V(t.urgency) || "Unknown",
 			certainty: V(t.certainty) || "Unknown",
 			areaDesc: V(t.areaDesc),
-			sameCodes: _a(h.SAME),
-			ugcCodes: _a(h.UGC),
+			sameCodes: Sa(h.SAME),
+			ugcCodes: Sa(h.UGC),
 			effective: l,
 			effectiveTimestamp: Number.isFinite(f) ? f : void 0,
 			onset: u,
@@ -6458,10 +6489,10 @@ function ua(e, t = {}) {
 			senderName: V(t.senderName),
 			sourceUrl: i,
 			sourceApiUrl: a,
-			sourceName: Xi,
+			sourceName: ta,
 			retrievedAt: r,
 			provenance: "official-api",
-			confidence: ha({
+			confidence: ba({
 				alertId: n,
 				eventType: s,
 				severity: c,
@@ -6480,18 +6511,18 @@ function ua(e, t = {}) {
 		});
 		_.rawPayloadHash = z(v), _.rawPayloadJson = v, o.push(_);
 	}
-	return o.sort((e, t) => (oa[t.severity] ?? 0) - (oa[e.severity] ?? 0) || t.observedTimestamp - e.observedTimestamp), o.slice(0, i);
+	return o.sort((e, t) => (da[t.severity] ?? 0) - (da[e.severity] ?? 0) || t.observedTimestamp - e.observedTimestamp), o.slice(0, i);
 }
-function da(e) {
+function ga(e) {
 	let t = [];
-	for (let n of e) n.confidence < 90 || t.push(fa(n));
+	for (let n of e) n.confidence < 90 || t.push(_a(n));
 	return t;
 }
-function fa(e) {
+function _a(e) {
 	let t = `noaa|${e.alertId}`.toLowerCase(), n = `${e.event} (${e.severity}/${e.urgency}/${e.certainty}) for ${e.areaDesc}.${e.expires ? ` Expires ${e.expires.slice(0, 16)}.` : ""} ${e.headline} Source: ${e.sourceName}.`;
 	return {
 		...U({
-			id: G(Yi, t),
+			id: G(ea, t),
 			title: (e.headline || `${e.event} — ${e.areaDesc}`).slice(0, 140),
 			summary: n,
 			source: e.sourceName,
@@ -6499,7 +6530,7 @@ function fa(e) {
 			observedAt: e.observedTimestamp,
 			category: "weather-alert",
 			provenance: "official-api",
-			sourceId: Yi,
+			sourceId: ea,
 			dedupeKey: t,
 			rawPayload: e,
 			affectedAssets: [],
@@ -6512,12 +6543,12 @@ function fa(e) {
 			extractedEntities: B([e.event, e.areaDesc])
 		}),
 		countryCodes: ["US"],
-		severity: pa(e.severity),
+		severity: va(e.severity),
 		confidence: e.confidence,
 		weatherAlert: e
 	};
 }
-function pa(e) {
+function va(e) {
 	switch (e) {
 		case "Extreme": return "critical";
 		case "Severe": return "elevated";
@@ -6526,25 +6557,25 @@ function pa(e) {
 		default: return "watch";
 	}
 }
-function ma(e) {
-	return !!(e.alertId && e.eventType && aa.has(e.severity) && Qi.test(e.sourceUrl) && (Number.isFinite(e.effectiveTimestamp) || Number.isFinite(e.onsetTimestamp) || Number.isFinite(e.expiresTimestamp)) && Number.isFinite(e.retrievedAt));
+function ya(e) {
+	return !!(e.alertId && e.eventType && ua.has(e.severity) && ra.test(e.sourceUrl) && (Number.isFinite(e.effectiveTimestamp) || Number.isFinite(e.onsetTimestamp) || Number.isFinite(e.expiresTimestamp)) && Number.isFinite(e.retrievedAt));
 }
-function ha(e) {
-	return ma(e) ? 96 : 60;
+function ba(e) {
+	return ya(e) ? 96 : 60;
 }
-function ga(e) {
+function xa(e) {
 	return e.find((e) => Number.isFinite(e));
 }
-function _a(e) {
+function Sa(e) {
 	return Array.isArray(e) ? e.map((e) => V(e)).filter(Boolean) : [];
 }
-function va(e) {
-	return `${Yi}:${e.toLowerCase()}`;
+function Ca(e) {
+	return `${ea}:${e.toLowerCase()}`;
 }
-function ya(e, t, n) {
+function wa(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function ba(e, t) {
+function Ta(e, t) {
 	if (e.aborted) return e;
 	if (t.aborted) return t;
 	let n = new AbortController(), r = () => n.abort();
@@ -6552,7 +6583,7 @@ function ba(e, t) {
 }
 //#endregion
 //#region electron/osint/adapters/usptoPatentAdapter.ts
-var xa = "uspto_patentsview_public", Sa = "USPTO (PatentsView)", Ca = "https://search.patentsview.org/api/v1/patent/", wa = "https://patents.google.com/patent", Ta = /^https:\/\/patents\.google\.com\/patent\//, Ea = /^\d{4}-\d{2}-\d{2}$/, Da = 60, Oa = 25, ka = 100, Aa = [
+var Ea = "uspto_patentsview_public", Da = "USPTO (PatentsView)", Oa = "https://search.patentsview.org/api/v1/patent/", ka = "https://patents.google.com/patent", Aa = /^https:\/\/patents\.google\.com\/patent\//, ja = /^\d{4}-\d{2}-\d{2}$/, Ma = 60, Na = 25, Pa = 100, Fa = [
 	"NVIDIA Corporation",
 	"Taiwan Semiconductor Manufacturing Company, Ltd.",
 	"ASML Netherlands B.V.",
@@ -6563,48 +6594,48 @@ var xa = "uspto_patentsview_public", Sa = "USPTO (PatentsView)", Ca = "https://s
 	"Micron Technology, Inc.",
 	"Tesla, Inc."
 ];
-function ja(e = process.env) {
+function Ia(e = process.env) {
 	let t = V(e.ATLASZ_PATENTSVIEW_API_KEY);
 	if (!t) return null;
-	let n = V(e.ATLASZ_PATENTSVIEW_BASE_URL) || Ca;
+	let n = V(e.ATLASZ_PATENTSVIEW_BASE_URL) || Oa;
 	return /^https:\/\//i.test(n) ? {
 		apiBase: n,
 		apiKey: t,
-		assignees: Ua(e.ATLASZ_PATENTSVIEW_ASSIGNEES) ?? Aa,
-		lookbackDays: Ga(Number(e.ATLASZ_PATENTSVIEW_LOOKBACK_DAYS ?? Da), 1, 365),
-		maxRecords: Ga(Number(e.ATLASZ_PATENTSVIEW_MAX_RECORDS ?? Oa), 1, ka)
+		assignees: Ja(e.ATLASZ_PATENTSVIEW_ASSIGNEES) ?? Fa,
+		lookbackDays: Xa(Number(e.ATLASZ_PATENTSVIEW_LOOKBACK_DAYS ?? Ma), 1, 365),
+		maxRecords: Xa(Number(e.ATLASZ_PATENTSVIEW_MAX_RECORDS ?? Na), 1, Pa)
 	} : null;
 }
-async function Ma(t, n = ja()) {
+async function La(t, n = Ia()) {
 	if (!n || n.assignees.length === 0) return [];
-	let r = Date.now(), i = Va(n, r), a = await fetch(i, {
+	let r = Date.now(), i = Ka(n, r), a = await fetch(i, {
 		signal: t,
 		headers: {
 			accept: "application/json",
 			"x-api-key": n.apiKey
 		}
 	});
-	return e(a, "USPTO PatentsView"), Pa(Na(await a.json(), {
+	return e(a, "USPTO PatentsView"), za(Ra(await a.json(), {
 		retrievedAt: r,
-		sourceApiUrl: Ha(n)
+		sourceApiUrl: qa(n)
 	}));
 }
-function Na(e, t = {}) {
+function Ra(e, t = {}) {
 	if (!e || typeof e != "object") return [];
 	let n = e.patents;
 	if (!Array.isArray(n) || n.length === 0) return [];
-	let r = t.retrievedAt ?? Date.now(), i = t.sourceApiUrl ?? Ca, a = [];
+	let r = t.retrievedAt ?? Date.now(), i = t.sourceApiUrl ?? Oa, a = [];
 	for (let e of n) {
 		if (!e || typeof e != "object") continue;
-		let t = e, n = V(t.patent_id) || V(t.patent_number), o = V(t.patent_title), s = V(t.patent_date), c = Ra(n), l = Date.parse(`${s}T00:00:00Z`);
-		if (!za({
+		let t = e, n = V(t.patent_id) || V(t.patent_number), o = V(t.patent_title), s = V(t.patent_date), c = Ua(n), l = Date.parse(`${s}T00:00:00Z`);
+		if (!Wa({
 			patentId: n,
 			title: o,
 			patentDate: s,
 			sourceUrl: c,
 			retrievedAt: r
 		})) continue;
-		let u = Ia(t.assignees), d = La(t.cpc_current ?? t.cpcs), f = W({
+		let u = Va(t.assignees), d = Ha(t.cpc_current ?? t.cpcs), f = W({
 			patentId: n,
 			title: o,
 			abstract: V(t.patent_abstract).slice(0, 600),
@@ -6616,7 +6647,7 @@ function Na(e, t = {}) {
 			retrievedAt: r
 		});
 		a.push({
-			id: Wa(n),
+			id: Ya(n),
 			patentId: n,
 			title: o,
 			abstract: V(t.patent_abstract).slice(0, 600),
@@ -6626,10 +6657,10 @@ function Na(e, t = {}) {
 			cpcCodes: d,
 			sourceUrl: c,
 			sourceApiUrl: i,
-			sourceName: Sa,
+			sourceName: Da,
 			retrievedAt: r,
 			provenance: "official-api",
-			confidence: Ba({
+			confidence: Ga({
 				patentId: n,
 				title: o,
 				patentDate: s,
@@ -6642,16 +6673,16 @@ function Na(e, t = {}) {
 	}
 	return a.sort((e, t) => t.grantTimestamp - e.grantTimestamp), a;
 }
-function Pa(e) {
+function za(e) {
 	let t = [];
-	for (let n of e) n.confidence < 90 || t.push(Fa(n));
+	for (let n of e) n.confidence < 90 || t.push(Ba(n));
 	return t;
 }
-function Fa(e) {
+function Ba(e) {
 	let t = `uspto|${e.patentId}`.toLowerCase(), n = e.assignees.length > 0 ? ` Assignee: ${e.assignees.slice(0, 3).join(", ")}.` : " No assignee organization listed.", r = `USPTO patent ${e.patentId} granted ${e.patentDate}: ${e.title}.${n} Source: ${e.sourceName}.`;
 	return {
 		...U({
-			id: G(xa, t),
+			id: G(Ea, t),
 			title: `${e.patentId} — ${e.title}`.slice(0, 140),
 			summary: r,
 			source: e.sourceName,
@@ -6659,7 +6690,7 @@ function Fa(e) {
 			observedAt: e.grantTimestamp,
 			category: "patent",
 			provenance: "official-api",
-			sourceId: xa,
+			sourceId: Ea,
 			dedupeKey: t,
 			rawPayload: e,
 			affectedAssets: [],
@@ -6678,7 +6709,7 @@ function Fa(e) {
 		patentRecord: e
 	};
 }
-function Ia(e) {
+function Va(e) {
 	if (!Array.isArray(e)) return [];
 	let t = [];
 	for (let n of e) {
@@ -6687,7 +6718,7 @@ function Ia(e) {
 	}
 	return B(t).slice(0, 8);
 }
-function La(e) {
+function Ha(e) {
 	if (!Array.isArray(e)) return [];
 	let t = [];
 	for (let n of e) {
@@ -6696,16 +6727,16 @@ function La(e) {
 	}
 	return B(t).slice(0, 8);
 }
-function Ra(e) {
-	return e ? /^\d+$/.test(e) ? `${wa}/US${e}` : `${wa}/${encodeURIComponent(e)}` : "";
+function Ua(e) {
+	return e ? /^\d+$/.test(e) ? `${ka}/US${e}` : `${ka}/${encodeURIComponent(e)}` : "";
 }
-function za(e) {
-	return !!(e.patentId && e.title && Ea.test(e.patentDate) && Ta.test(e.sourceUrl) && Number.isFinite(e.retrievedAt));
+function Wa(e) {
+	return !!(e.patentId && e.title && ja.test(e.patentDate) && Aa.test(e.sourceUrl) && Number.isFinite(e.retrievedAt));
 }
-function Ba(e) {
-	return za(e) ? 96 : 60;
+function Ga(e) {
+	return Wa(e) ? 96 : 60;
 }
-function Va(e, t) {
+function Ka(e, t) {
 	let n = { _and: [{ _gte: { patent_date: (/* @__PURE__ */ new Date(t - e.lookbackDays * 24 * 60 * 60 * 1e3)).toISOString().slice(0, 10) } }, { _or: e.assignees.map((e) => ({ "assignees.assignee_organization": e })) }] }, r = [
 		"patent_id",
 		"patent_title",
@@ -6716,22 +6747,22 @@ function Va(e, t) {
 	], i = { size: e.maxRecords }, a = new URL(e.apiBase);
 	return a.searchParams.set("q", JSON.stringify(n)), a.searchParams.set("f", JSON.stringify(r)), a.searchParams.set("o", JSON.stringify(i)), a.toString();
 }
-function Ha(e) {
+function qa(e) {
 	return e.apiBase;
 }
-function Ua(e) {
+function Ja(e) {
 	let t = V(e).split("|").map((e) => e.trim()).filter(Boolean);
 	return t.length > 0 ? t : null;
 }
-function Wa(e) {
-	return `${xa}:${e.toLowerCase()}`;
+function Ya(e) {
+	return `${Ea}:${e.toLowerCase()}`;
 }
-function Ga(e, t, n) {
+function Xa(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
 //#endregion
 //#region electron/osint/adapters/federalRegisterAdapter.ts
-var Ka = "federal_register_public", qa = "Federal Register API", Ja = "https://www.federalregister.gov/api/v1/documents.json", Ya = "Atlasz-Intel (github.com/gryszzz/Atlasz-Intel)", Xa = 14, Za = 25, Qa = 100, $a = 2e4, eo = 2, to = 1e3, no = /^\d{4}-\d{2}-\d{2}$/, ro = /^https:\/\/www\.federalregister\.gov\/documents\//, io = /^https:\/\/www\.govinfo\.gov\/content\/pkg\/FR-\d{4}-\d{2}-\d{2}\/pdf\/[^/]+\.pdf$/, ao = [
+var Za = "federal_register_public", Qa = "Federal Register API", $a = "https://www.federalregister.gov/api/v1/documents.json", eo = "Atlasz-Intel (github.com/gryszzz/Atlasz-Intel)", to = 14, no = 25, ro = 100, io = 2e4, ao = 2, oo = 1e3, so = /^\d{4}-\d{2}-\d{2}$/, co = /^https:\/\/www\.federalregister\.gov\/documents\//, lo = /^https:\/\/www\.govinfo\.gov\/content\/pkg\/FR-\d{4}-\d{2}-\d{2}\/pdf\/[^/]+\.pdf$/, uo = [
 	"document_number",
 	"title",
 	"type",
@@ -6746,7 +6777,7 @@ var Ka = "federal_register_public", qa = "Federal Register API", Ja = "https://w
 	"body_html_url",
 	"citation",
 	"action"
-], oo = [
+], fo = [
 	"securities-and-exchange-commission",
 	"commodity-futures-trading-commission",
 	"treasury-department",
@@ -6758,41 +6789,41 @@ var Ka = "federal_register_public", qa = "Federal Register API", Ja = "https://w
 	"federal-communications-commission",
 	"food-and-drug-administration",
 	"homeland-security-department"
-], so = [
+], po = [
 	"RULE",
 	"PRORULE",
 	"NOTICE",
 	"PRESDOCU"
-], co = new Set(so);
-function lo(e = process.env) {
+], mo = new Set(po);
+function ho(e = process.env) {
 	if (e.ATLASZ_FEDERAL_REGISTER_DISABLE === "1") return null;
-	let t = V(e.ATLASZ_FEDERAL_REGISTER_URL) || Ja;
+	let t = V(e.ATLASZ_FEDERAL_REGISTER_URL) || $a;
 	return /^https:\/\//i.test(t) ? {
 		documentsUrl: t,
-		userAgent: V(e.ATLASZ_FEDERAL_REGISTER_USER_AGENT) || V(e.ATLASZ_HTTP_USER_AGENT) || Ya,
-		lookbackDays: To(Number(e.ATLASZ_FEDERAL_REGISTER_LOOKBACK_DAYS ?? Xa), 1, 90),
-		maxRecords: To(Number(e.ATLASZ_FEDERAL_REGISTER_MAX_RECORDS ?? Za), 1, Qa),
-		timeoutMs: To(Number(e.ATLASZ_FEDERAL_REGISTER_TIMEOUT_MS ?? $a), 1e3, 6e4),
-		maxRetries: To(Number(e.ATLASZ_FEDERAL_REGISTER_MAX_RETRIES ?? eo), 0, 5),
-		backoffMs: To(Number(e.ATLASZ_FEDERAL_REGISTER_BACKOFF_MS ?? to), 0, 6e4),
-		agencySlugs: uo(e.ATLASZ_FEDERAL_REGISTER_AGENCIES) ?? oo,
-		documentTypeCodes: fo(e.ATLASZ_FEDERAL_REGISTER_TYPES) ?? so
+		userAgent: V(e.ATLASZ_FEDERAL_REGISTER_USER_AGENT) || V(e.ATLASZ_HTTP_USER_AGENT) || eo,
+		lookbackDays: Ao(Number(e.ATLASZ_FEDERAL_REGISTER_LOOKBACK_DAYS ?? to), 1, 90),
+		maxRecords: Ao(Number(e.ATLASZ_FEDERAL_REGISTER_MAX_RECORDS ?? no), 1, ro),
+		timeoutMs: Ao(Number(e.ATLASZ_FEDERAL_REGISTER_TIMEOUT_MS ?? io), 1e3, 6e4),
+		maxRetries: Ao(Number(e.ATLASZ_FEDERAL_REGISTER_MAX_RETRIES ?? ao), 0, 5),
+		backoffMs: Ao(Number(e.ATLASZ_FEDERAL_REGISTER_BACKOFF_MS ?? oo), 0, 6e4),
+		agencySlugs: go(e.ATLASZ_FEDERAL_REGISTER_AGENCIES) ?? fo,
+		documentTypeCodes: _o(e.ATLASZ_FEDERAL_REGISTER_TYPES) ?? po
 	} : null;
 }
-function uo(e) {
+function go(e) {
 	if (typeof e != "string") return;
 	let t = e.split(",").map((e) => e.trim().toLowerCase()).filter((e) => /^[a-z0-9-]+$/.test(e));
 	return t.length > 0 ? B(t) : void 0;
 }
-function fo(e) {
+function _o(e) {
 	if (typeof e != "string") return;
-	let t = e.split(",").map((e) => e.trim().toUpperCase()).filter((e) => co.has(e));
+	let t = e.split(",").map((e) => e.trim().toUpperCase()).filter((e) => mo.has(e));
 	return t.length > 0 ? B(t) : void 0;
 }
-async function po(e, n = lo()) {
+async function vo(e, n = ho()) {
 	if (!n) return [];
-	let r = Date.now(), i = vo(n, r);
-	return go(ho(await t((t) => mo(i, n.userAgent, Eo(e, t)), {
+	let r = Date.now(), i = Co(n, r);
+	return xo(bo(await t((t) => yo(i, n.userAgent, jo(e, t)), {
 		maxRetries: n.maxRetries,
 		backoffMs: n.backoffMs,
 		timeoutMs: n.timeoutMs
@@ -6801,7 +6832,7 @@ async function po(e, n = lo()) {
 		sourceApiUrl: i
 	}));
 }
-async function mo(t, n, r) {
+async function yo(t, n, r) {
 	let i = await fetch(t, {
 		signal: r,
 		headers: {
@@ -6811,15 +6842,15 @@ async function mo(t, n, r) {
 	});
 	return e(i, "Federal Register"), i.json();
 }
-function ho(e, t = {}) {
+function bo(e, t = {}) {
 	if (!e || typeof e != "object") return [];
 	let n = e.results;
 	if (!Array.isArray(n) || n.length === 0) return [];
-	let r = t.retrievedAt ?? Date.now(), i = t.sourceApiUrl ?? Ja, a = [];
+	let r = t.retrievedAt ?? Date.now(), i = t.sourceApiUrl ?? $a, a = [];
 	for (let e of n) {
 		if (!e || typeof e != "object") continue;
-		let t = e, n = V(t.document_number), o = V(t.title), s = V(t.type), c = V(t.publication_date), l = Date.parse(`${c}T00:00:00Z`), u = V(t.html_url), d = Co(V(t.pdf_url));
-		if (!bo({
+		let t = e, n = V(t.document_number), o = V(t.title), s = V(t.type), c = V(t.publication_date), l = Date.parse(`${c}T00:00:00Z`), u = V(t.html_url), d = Oo(V(t.pdf_url));
+		if (!To({
 			documentNumber: n,
 			title: o,
 			documentType: s,
@@ -6829,25 +6860,25 @@ function ho(e, t = {}) {
 			sourceApiUrl: i,
 			retrievedAt: r
 		})) continue;
-		let f = yo(t.agencies), p = W(t);
+		let f = wo(t.agencies), p = W(t);
 		a.push({
-			id: wo(n),
+			id: ko(n),
 			documentNumber: n,
 			title: o,
 			documentType: s,
 			agencies: f,
 			publicationDate: c,
 			publicationTimestamp: l,
-			effectiveDate: So(V(t.effective_on)),
-			commentEndDate: So(V(t.comments_close_on)),
+			effectiveDate: Do(V(t.effective_on)),
+			commentEndDate: Do(V(t.comments_close_on)),
 			abstract: V(t.abstract).replace(/\s+/g, " ").slice(0, 800),
 			htmlUrl: u,
 			pdfUrl: d,
 			sourceApiUrl: i,
-			sourceName: qa,
+			sourceName: Qa,
 			retrievedAt: r,
 			provenance: "official-api",
-			confidence: xo({
+			confidence: Eo({
 				documentNumber: n,
 				title: o,
 				documentType: s,
@@ -6863,16 +6894,16 @@ function ho(e, t = {}) {
 	}
 	return a.sort((e, t) => t.publicationTimestamp - e.publicationTimestamp || e.documentNumber.localeCompare(t.documentNumber)), a;
 }
-function go(e) {
+function xo(e) {
 	let t = [];
-	for (let n of e) n.confidence < 90 || t.push(_o(n));
+	for (let n of e) n.confidence < 90 || t.push(So(n));
 	return t;
 }
-function _o(e) {
+function So(e) {
 	let t = `federal-register|${e.documentNumber}`.toLowerCase(), n = e.agencies.length > 0 ? ` Agency: ${e.agencies.slice(0, 3).join(", ")}.` : "", r = e.effectiveDate ? ` Effective ${e.effectiveDate}.` : "", i = e.commentEndDate ? ` Comments close ${e.commentEndDate}.` : "", a = e.pdfUrl ? " Official PDF is available via govinfo." : " Official PDF was not present in the API record.", o = `${e.documentType} ${e.documentNumber} published ${e.publicationDate}: ${e.title}.${n}${r}${i}${a}`;
 	return {
 		...U({
-			id: G(Ka, t),
+			id: G(Za, t),
 			title: `${e.documentType} — ${e.title}`.slice(0, 160),
 			summary: o,
 			source: e.sourceName,
@@ -6880,7 +6911,7 @@ function _o(e) {
 			observedAt: e.publicationTimestamp,
 			category: "regulatory-document",
 			provenance: "official-api",
-			sourceId: Ka,
+			sourceId: Za,
 			dedupeKey: t,
 			rawPayload: e,
 			affectedAssets: [],
@@ -6898,15 +6929,15 @@ function _o(e) {
 		regulatoryDocument: e
 	};
 }
-function vo(e, t) {
+function Co(e, t) {
 	let n = (/* @__PURE__ */ new Date(t - e.lookbackDays * 24 * 60 * 60 * 1e3)).toISOString().slice(0, 10), r = new URL(e.documentsUrl);
 	r.searchParams.set("per_page", String(e.maxRecords)), r.searchParams.set("order", "newest"), r.searchParams.set("conditions[publication_date][gte]", n);
 	for (let t of e.documentTypeCodes) r.searchParams.append("conditions[type][]", t);
 	for (let t of e.agencySlugs) r.searchParams.append("conditions[agencies][]", t);
-	for (let e of ao) r.searchParams.append("fields[]", e);
+	for (let e of uo) r.searchParams.append("fields[]", e);
 	return r.toString();
 }
-function yo(e) {
+function wo(e) {
 	if (!Array.isArray(e)) return [];
 	let t = [];
 	for (let n of e) {
@@ -6915,25 +6946,25 @@ function yo(e) {
 	}
 	return B(t).slice(0, 8);
 }
-function bo(e) {
-	return !!(e.documentNumber && e.title && e.documentType && no.test(e.publicationDate) && Number.isFinite(e.publicationTimestamp) && ro.test(e.htmlUrl) && /^https:\/\/www\.federalregister\.gov\/api\/v1\/documents\.json/.test(e.sourceApiUrl) && Number.isFinite(e.retrievedAt));
+function To(e) {
+	return !!(e.documentNumber && e.title && e.documentType && so.test(e.publicationDate) && Number.isFinite(e.publicationTimestamp) && co.test(e.htmlUrl) && /^https:\/\/www\.federalregister\.gov\/api\/v1\/documents\.json/.test(e.sourceApiUrl) && Number.isFinite(e.retrievedAt));
 }
-function xo(e) {
-	return bo(e) ? 96 : 60;
+function Eo(e) {
+	return To(e) ? 96 : 60;
 }
-function So(e) {
-	return no.test(e) ? e : void 0;
+function Do(e) {
+	return so.test(e) ? e : void 0;
 }
-function Co(e) {
-	if (e) return io.test(e) ? e : void 0;
+function Oo(e) {
+	if (e) return lo.test(e) ? e : void 0;
 }
-function wo(e) {
-	return `${Ka}:${e.toLowerCase()}`;
+function ko(e) {
+	return `${Za}:${e.toLowerCase()}`;
 }
-function To(e, t, n) {
+function Ao(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function Eo(e, t) {
+function jo(e, t) {
 	if (e.aborted) return e;
 	if (t.aborted) return t;
 	let n = new AbortController(), r = () => n.abort();
@@ -6941,23 +6972,23 @@ function Eo(e, t) {
 }
 //#endregion
 //#region electron/osint/adapters/ofacSanctionsAdapter.ts
-var Do = "ofac_sdn_public", Oo = "Treasury OFAC SDN List", ko = "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML", Ao = "https://sanctionslist.ofac.treas.gov/Home/SdnList", jo = "Atlasz-Intel (github.com/gryszzz/Atlasz-Intel)", Mo = 40, No = 250, Po = 3e4, Fo = 1, Io = 1e3, Lo = /^\d{4}-\d{2}-\d{2}$/;
-function Ro(e = process.env) {
+var Mo = "ofac_sdn_public", No = "Treasury OFAC SDN List", Po = "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML", Fo = "https://sanctionslist.ofac.treas.gov/Home/SdnList", Io = "Atlasz-Intel (github.com/gryszzz/Atlasz-Intel)", Lo = 40, Ro = 250, zo = 3e4, Bo = 1, Vo = 1e3, Ho = /^\d{4}-\d{2}-\d{2}$/;
+function Uo(e = process.env) {
 	if (e.ATLASZ_OFAC_DISABLE === "1") return null;
-	let t = ts(e.ATLASZ_OFAC_SDN_XML_URL) || ko;
+	let t = os(e.ATLASZ_OFAC_SDN_XML_URL) || Po;
 	return /^https:\/\//i.test(t) ? {
 		sdnXmlUrl: t,
-		userAgent: ts(e.ATLASZ_OFAC_USER_AGENT) || ts(e.ATLASZ_HTTP_USER_AGENT) || jo,
-		maxRecords: rs(Number(e.ATLASZ_OFAC_MAX_RECORDS ?? Mo), 1, No),
-		timeoutMs: rs(Number(e.ATLASZ_OFAC_TIMEOUT_MS ?? Po), 1e3, 6e4),
-		maxRetries: rs(Number(e.ATLASZ_OFAC_MAX_RETRIES ?? Fo), 0, 5),
-		backoffMs: rs(Number(e.ATLASZ_OFAC_BACKOFF_MS ?? Io), 0, 6e4)
+		userAgent: os(e.ATLASZ_OFAC_USER_AGENT) || os(e.ATLASZ_HTTP_USER_AGENT) || Io,
+		maxRecords: cs(Number(e.ATLASZ_OFAC_MAX_RECORDS ?? Lo), 1, Ro),
+		timeoutMs: cs(Number(e.ATLASZ_OFAC_TIMEOUT_MS ?? zo), 1e3, 6e4),
+		maxRetries: cs(Number(e.ATLASZ_OFAC_MAX_RETRIES ?? Bo), 0, 5),
+		backoffMs: cs(Number(e.ATLASZ_OFAC_BACKOFF_MS ?? Vo), 0, 6e4)
 	} : null;
 }
-async function zo(e, n = Ro()) {
+async function Wo(e, n = Uo()) {
 	if (!n) return [];
 	let r = Date.now();
-	return Ho(Vo(await t((t) => Bo(n.sdnXmlUrl, n.userAgent, is(e, t)), {
+	return qo(Ko(await t((t) => Go(n.sdnXmlUrl, n.userAgent, ls(e, t)), {
 		maxRetries: n.maxRetries,
 		backoffMs: n.backoffMs,
 		timeoutMs: n.timeoutMs
@@ -6967,7 +6998,7 @@ async function zo(e, n = Ro()) {
 		maxRecords: n.maxRecords
 	}).records);
 }
-async function Bo(t, n, r) {
+async function Go(t, n, r) {
 	let i = await fetch(t, {
 		signal: r,
 		headers: {
@@ -6977,16 +7008,16 @@ async function Bo(t, n, r) {
 	});
 	return e(i, "OFAC SDN"), i.text();
 }
-function Vo(e, t = {}) {
+function Ko(e, t = {}) {
 	if (!e || !/<sdnList\b/i.test(e)) return {
 		publishDate: "",
 		publishTimestamp: 0,
 		records: []
 	};
-	let n = t.retrievedAt ?? Date.now(), r = t.sourceDataUrl ?? ko, i = t.maxRecords ?? Mo, a = Yo(e, "publshInformation"), o = $o(Zo(a, "Publish_Date")), s = o ? Date.parse(`${o}T00:00:00Z`) : 0, c = es(Zo(a, "Record_Count")), l = [];
-	for (let t of Xo(e, "sdnEntry")) {
-		let e = Zo(t, "uid"), i = Zo(t, "sdnType"), a = Go(t), u = B(Xo(Yo(t, "programList"), "program").map((e) => Qo(e))), d = B(Xo(Yo(t, "addressList"), "address").map((e) => Zo(e, "country"))).slice(0, 12), f = Ko(t), p = W({ rawEntryXml: t }), m = z(t);
-		qo({
+	let n = t.retrievedAt ?? Date.now(), r = t.sourceDataUrl ?? Po, i = t.maxRecords ?? Lo, a = es(e, "publshInformation"), o = is(ns(a, "Publish_Date")), s = o ? Date.parse(`${o}T00:00:00Z`) : 0, c = as(ns(a, "Record_Count")), l = [];
+	for (let t of ts(e, "sdnEntry")) {
+		let e = ns(t, "uid"), i = ns(t, "sdnType"), a = Xo(t), u = B(ts(es(t, "programList"), "program").map((e) => rs(e))), d = B(ts(es(t, "addressList"), "address").map((e) => ns(e, "country"))).slice(0, 12), f = Zo(t), p = W({ rawEntryXml: t }), m = z(t);
+		Qo({
 			uid: e,
 			name: a,
 			entityType: i,
@@ -6996,7 +7027,7 @@ function Vo(e, t = {}) {
 			retrievedAt: n,
 			rawPayloadHash: m
 		}) && l.push({
-			id: ns(e),
+			id: ss(e),
 			uid: e,
 			listType: "SDN",
 			name: a,
@@ -7007,12 +7038,12 @@ function Vo(e, t = {}) {
 			publishDate: o,
 			publishTimestamp: s,
 			recordCount: c,
-			sourceUrl: Ao,
+			sourceUrl: Fo,
 			sourceDataUrl: r,
-			sourceName: Oo,
+			sourceName: No,
 			retrievedAt: n,
 			provenance: "official-api",
-			confidence: Jo({
+			confidence: $o({
 				uid: e,
 				name: a,
 				entityType: i,
@@ -7034,12 +7065,12 @@ function Vo(e, t = {}) {
 		records: l.slice(0, i)
 	};
 }
-function Ho(e) {
+function qo(e) {
 	let t = [];
-	for (let n of e) n.confidence < 90 || t.push(Wo(n));
+	for (let n of e) n.confidence < 90 || t.push(Yo(n));
 	return t;
 }
-function Uo(e, t) {
+function Jo(e, t) {
 	if (!e.ofacSanctionsRecord) return e;
 	let n = t?.ofacSanctionsRecord, r = n ? n.rawPayloadHash === e.ofacSanctionsRecord.rawPayloadHash ? "unchanged" : "updated" : "new", i = r === "unchanged" && t ? t.timestamp : e.timestamp;
 	return {
@@ -7051,11 +7082,11 @@ function Uo(e, t) {
 		}
 	};
 }
-function Wo(e) {
+function Yo(e) {
 	let t = `ofac-sdn|${e.uid}`.toLowerCase(), n = e.programs.length > 0 ? ` Programs: ${e.programs.slice(0, 5).join(", ")}.` : "", r = e.countries.length > 0 ? ` Countries listed: ${e.countries.slice(0, 5).join(", ")}.` : "", i = `OFAC SDN record ${e.uid} (${e.entityType}) published in the ${e.publishDate} SDN export: ${e.name}.${n}${r} This is source-published sanctions-list evidence, not a screening match or inferred guilt label.`;
 	return {
 		...U({
-			id: G(Do, t),
+			id: G(Mo, t),
 			title: `OFAC SDN — ${e.name}`.slice(0, 160),
 			summary: i,
 			source: e.sourceName,
@@ -7063,7 +7094,7 @@ function Wo(e) {
 			observedAt: e.publishTimestamp,
 			category: "sanctions",
 			provenance: "official-api",
-			sourceId: Do,
+			sourceId: Mo,
 			dedupeKey: t,
 			rawPayload: {
 				uid: e.uid,
@@ -7092,55 +7123,55 @@ function Wo(e) {
 		ofacSanctionsRecord: e
 	};
 }
-function Go(e) {
-	return B([Zo(e, "firstName"), Zo(e, "lastName")]).join(" ") || Zo(e, "lastName");
+function Xo(e) {
+	return B([ns(e, "firstName"), ns(e, "lastName")]).join(" ") || ns(e, "lastName");
 }
-function Ko(e) {
-	let t = Yo(e, "akaList"), n = [];
-	for (let e of Xo(t, "aka")) {
-		let t = B([Zo(e, "firstName"), Zo(e, "lastName")]).join(" ") || Zo(e, "lastName");
+function Zo(e) {
+	let t = es(e, "akaList"), n = [];
+	for (let e of ts(t, "aka")) {
+		let t = B([ns(e, "firstName"), ns(e, "lastName")]).join(" ") || ns(e, "lastName");
 		t && n.push(t);
 	}
 	return B(n).slice(0, 12);
 }
-function qo(e) {
-	return !!(/^\d+$/.test(e.uid) && e.name && e.entityType && Lo.test(e.publishDate) && Number.isFinite(e.publishTimestamp) && /^https:\/\/sanctionslistservice\.ofac\.treas\.gov\/api\/PublicationPreview\/exports\/SDN\.XML$/i.test(e.sourceDataUrl) && Number.isFinite(e.retrievedAt) && /^[a-f0-9]{64}$/.test(e.rawPayloadHash));
-}
-function Jo(e) {
-	return qo(e) ? 96 : 60;
-}
-function Yo(e, t) {
-	return RegExp(`<${t}\\b[^>]*>([\\s\\S]*?)<\\/${t}>`, "i").exec(e)?.[1] ?? "";
-}
-function Xo(e, t) {
-	return e ? [...e.matchAll(RegExp(`<${t}\\b[^>]*>([\\s\\S]*?)<\\/${t}>`, "gi"))].map((e) => e[1] ?? "") : [];
-}
-function Zo(e, t) {
-	return Qo(Yo(e, t)).trim();
-}
 function Qo(e) {
-	return e.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, "\"").replace(/&apos;/g, "'").replace(/\s+/g, " ").trim();
+	return !!(/^\d+$/.test(e.uid) && e.name && e.entityType && Ho.test(e.publishDate) && Number.isFinite(e.publishTimestamp) && /^https:\/\/sanctionslistservice\.ofac\.treas\.gov\/api\/PublicationPreview\/exports\/SDN\.XML$/i.test(e.sourceDataUrl) && Number.isFinite(e.retrievedAt) && /^[a-f0-9]{64}$/.test(e.rawPayloadHash));
 }
 function $o(e) {
+	return Qo(e) ? 96 : 60;
+}
+function es(e, t) {
+	return RegExp(`<${t}\\b[^>]*>([\\s\\S]*?)<\\/${t}>`, "i").exec(e)?.[1] ?? "";
+}
+function ts(e, t) {
+	return e ? [...e.matchAll(RegExp(`<${t}\\b[^>]*>([\\s\\S]*?)<\\/${t}>`, "gi"))].map((e) => e[1] ?? "") : [];
+}
+function ns(e, t) {
+	return rs(es(e, t)).trim();
+}
+function rs(e) {
+	return e.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, "\"").replace(/&apos;/g, "'").replace(/\s+/g, " ").trim();
+}
+function is(e) {
 	let t = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(e);
 	if (!t) return "";
 	let [, n, r, i] = t;
 	return `${i}-${n.padStart(2, "0")}-${r.padStart(2, "0")}`;
 }
-function es(e) {
+function as(e) {
 	let t = Number(e);
 	return Number.isFinite(t) ? t : void 0;
 }
-function ts(e) {
+function os(e) {
 	return typeof e == "string" ? e.trim() : "";
 }
-function ns(e) {
-	return `${Do}:${e}`;
+function ss(e) {
+	return `${Mo}:${e}`;
 }
-function rs(e, t, n) {
+function cs(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function is(e, t) {
+function ls(e, t) {
 	if (e.aborted) return e;
 	if (t.aborted) return t;
 	let n = new AbortController(), r = () => n.abort();
@@ -7148,23 +7179,23 @@ function is(e, t) {
 }
 //#endregion
 //#region electron/osint/adapters/congressGovAdapter.ts
-var as = "congress_gov_public", os = "Congress.gov API", ss = "https://api.congress.gov/v3/bill", cs = 20, ls = 100, us = 2e4, ds = 1, fs = 1e3, ps = "DEMO_KEY", ms = /^\d{4}-\d{2}-\d{2}$/, hs = /^https:\/\/api\.congress\.gov\/v3\/bill\//, gs = /^https:\/\/www\.congress\.gov\/bill\//;
-function _s(e = process.env) {
+var us = "congress_gov_public", ds = "Congress.gov API", fs = "https://api.congress.gov/v3/bill", ps = 20, ms = 100, hs = 2e4, gs = 1, _s = 1e3, vs = "DEMO_KEY", ys = /^\d{4}-\d{2}-\d{2}$/, bs = /^https:\/\/api\.congress\.gov\/v3\/bill\//, xs = /^https:\/\/www\.congress\.gov\/bill\//;
+function Ss(e = process.env) {
 	if (e.ATLASZ_CONGRESS_DISABLE === "1") return null;
-	let t = V(e.ATLASZ_CONGRESS_API_KEY) || ps, n = V(e.ATLASZ_CONGRESS_BILL_URL) || ss;
+	let t = V(e.ATLASZ_CONGRESS_API_KEY) || vs, n = V(e.ATLASZ_CONGRESS_BILL_URL) || fs;
 	return /^https:\/\//i.test(n) ? {
 		billUrl: n,
 		apiKey: t,
-		maxRecords: Vs(Number(e.ATLASZ_CONGRESS_MAX_RECORDS ?? cs), 1, ls),
-		timeoutMs: Vs(Number(e.ATLASZ_CONGRESS_TIMEOUT_MS ?? us), 1e3, 6e4),
-		maxRetries: Vs(Number(e.ATLASZ_CONGRESS_MAX_RETRIES ?? ds), 0, 5),
-		backoffMs: Vs(Number(e.ATLASZ_CONGRESS_BACKOFF_MS ?? fs), 0, 6e4)
+		maxRecords: Ks(Number(e.ATLASZ_CONGRESS_MAX_RECORDS ?? ps), 1, ms),
+		timeoutMs: Ks(Number(e.ATLASZ_CONGRESS_TIMEOUT_MS ?? hs), 1e3, 6e4),
+		maxRetries: Ks(Number(e.ATLASZ_CONGRESS_MAX_RETRIES ?? gs), 0, 5),
+		backoffMs: Ks(Number(e.ATLASZ_CONGRESS_BACKOFF_MS ?? _s), 0, 6e4)
 	} : null;
 }
-async function vs(e, n = _s()) {
+async function Cs(e, n = Ss()) {
 	if (!n) return [];
-	let r = Date.now(), i = ws(n), a = Ts(i);
-	return xs(bs(await t((t) => ys(i, Hs(e, t)), {
+	let r = Date.now(), i = ks(n), a = As(i);
+	return Es(Ts(await t((t) => ws(i, qs(e, t)), {
 		maxRetries: n.maxRetries,
 		backoffMs: n.backoffMs,
 		timeoutMs: n.timeoutMs
@@ -7173,21 +7204,21 @@ async function vs(e, n = _s()) {
 		sourceApiUrl: a
 	}));
 }
-async function ys(t, n) {
+async function ws(t, n) {
 	let r = await fetch(t, {
 		signal: n,
 		headers: { accept: "application/json" }
 	});
 	return e(r, "Congress.gov"), r.json();
 }
-function bs(e, t = {}) {
+function Ts(e, t = {}) {
 	if (!e || typeof e != "object") return [];
 	let n = e.bills;
 	if (!Array.isArray(n) || n.length === 0) return [];
-	let r = t.retrievedAt ?? Date.now(), i = Ts(t.sourceApiUrl ?? ss), a = [];
+	let r = t.retrievedAt ?? Date.now(), i = As(t.sourceApiUrl ?? fs), a = [];
 	for (let e of n) {
 		if (!e || typeof e != "object") continue;
-		let t = e, n = Fs(t.congress), o = Ls(V(t.type)), s = V(t.number), c = zs(V(t.title)).slice(0, 500), l = Is(t.latestAction), u = V(l?.actionDate), d = zs(V(l?.text)).slice(0, 800), f = Date.parse(`${u}T00:00:00Z`), p = Rs(V(t.introducedDate)), m = p ? Date.parse(`${p}T00:00:00Z`) : void 0, h = As(t.policyArea), g = js(t.sponsors), _ = Ms(t.committees), v = Es(n, o, s, i), y = Ds(n, o, s), b = z(W({
+		let t = e, n = Bs(t.congress), o = Hs(V(t.type)), s = V(t.number), c = Ws(V(t.title)).slice(0, 500), l = Vs(t.latestAction), u = V(l?.actionDate), d = Ws(V(l?.text)).slice(0, 800), f = Date.parse(`${u}T00:00:00Z`), p = Us(V(t.introducedDate)), m = p ? Date.parse(`${p}T00:00:00Z`) : void 0, h = Fs(t.policyArea), g = Is(t.sponsors), _ = Ls(t.committees), v = js(n, o, s, i), y = Ms(n, o, s), b = z(W({
 			congress: n,
 			billType: o,
 			billNumber: s,
@@ -7209,7 +7240,7 @@ function bs(e, t = {}) {
 			updateDate: V(t.updateDate),
 			updateDateIncludingText: V(t.updateDateIncludingText)
 		});
-		if (!Ns({
+		if (!Rs({
 			congress: n,
 			billType: o,
 			billNumber: s,
@@ -7224,7 +7255,7 @@ function bs(e, t = {}) {
 		})) continue;
 		let S = n;
 		a.push({
-			id: Bs(S, o, s),
+			id: Gs(S, o, s),
 			congress: S,
 			billType: o,
 			billNumber: s,
@@ -7239,10 +7270,10 @@ function bs(e, t = {}) {
 			committees: _,
 			officialUrl: y,
 			sourceApiUrl: v,
-			sourceName: os,
+			sourceName: ds,
 			retrievedAt: r,
 			provenance: "official-api",
-			confidence: Ps({
+			confidence: zs({
 				congress: n,
 				billType: o,
 				billNumber: s,
@@ -7262,12 +7293,12 @@ function bs(e, t = {}) {
 	}
 	return a.sort((e, t) => t.latestActionTimestamp - e.latestActionTimestamp || e.id.localeCompare(t.id)), a;
 }
-function xs(e) {
+function Es(e) {
 	let t = [];
-	for (let n of e) n.confidence < 90 || t.push(Cs(n));
+	for (let n of e) n.confidence < 90 || t.push(Os(n));
 	return t;
 }
-function Ss(e, t) {
+function Ds(e, t) {
 	if (!e.congressBillAction) return e;
 	let n = t?.congressBillAction, r = n ? n.rawPayloadHash === e.congressBillAction.rawPayloadHash ? "unchanged" : "updated" : "new", i = r === "unchanged" && t ? t.timestamp : e.timestamp;
 	return {
@@ -7279,11 +7310,11 @@ function Ss(e, t) {
 		}
 	};
 }
-function Cs(e) {
+function Os(e) {
 	let t = `congress|${e.congress}|${e.billType}|${e.billNumber}`.toLowerCase(), n = e.policyArea ? ` Policy area: ${e.policyArea}.` : "", r = e.committees.length > 0 ? ` Committee: ${e.committees.slice(0, 2).join(", ")}.` : "", i = `${e.billType} ${e.billNumber} latest action on ${e.latestActionDate}: ${e.latestActionText}.${n}${r} This is source-published legislative action metadata, not political interpretation or inferred company exposure.`;
 	return {
 		...U({
-			id: G(as, t),
+			id: G(us, t),
 			title: `${e.billType} ${e.billNumber} — ${e.title}`.slice(0, 160),
 			summary: i,
 			source: e.sourceName,
@@ -7291,7 +7322,7 @@ function Cs(e) {
 			observedAt: e.latestActionTimestamp,
 			category: "legislation",
 			provenance: "official-api",
-			sourceId: as,
+			sourceId: us,
 			dedupeKey: t,
 			rawPayload: {
 				congress: e.congress,
@@ -7322,11 +7353,11 @@ function Cs(e) {
 		congressBillAction: e
 	};
 }
-function ws(e) {
+function ks(e) {
 	let t = new URL(e.billUrl);
 	return t.searchParams.set("format", "json"), t.searchParams.set("limit", String(e.maxRecords)), t.searchParams.set("api_key", e.apiKey), t.toString();
 }
-function Ts(e) {
+function As(e) {
 	try {
 		let t = new URL(e);
 		return t.searchParams.delete("api_key"), t.toString();
@@ -7334,17 +7365,17 @@ function Ts(e) {
 		return e;
 	}
 }
-function Es(e, t, n, r) {
-	if (!Number.isFinite(e) || !t || !n) return Ts(r);
-	let i = new URL(`${ss}/${e}/${t.toLowerCase()}/${encodeURIComponent(n)}`);
+function js(e, t, n, r) {
+	if (!Number.isFinite(e) || !t || !n) return As(r);
+	let i = new URL(`${fs}/${e}/${t.toLowerCase()}/${encodeURIComponent(n)}`);
 	return i.searchParams.set("format", "json"), i.toString();
 }
-function Ds(e, t, n) {
+function Ms(e, t, n) {
 	if (typeof e != "number" || !Number.isFinite(e) || !t || !n) return "";
 	let r = e;
-	return `https://www.congress.gov/bill/${r}${ks(r)}-congress/${Os(t)}/${encodeURIComponent(n)}`;
+	return `https://www.congress.gov/bill/${r}${Ps(r)}-congress/${Ns(t)}/${encodeURIComponent(n)}`;
 }
-function Os(e) {
+function Ns(e) {
 	return {
 		HR: "house-bill",
 		S: "senate-bill",
@@ -7356,7 +7387,7 @@ function Os(e) {
 		SRES: "senate-resolution"
 	}[e] ?? `${e.toLowerCase()}-bill`;
 }
-function ks(e) {
+function Ps(e) {
 	let t = Math.abs(Math.trunc(e)), n = t % 100;
 	if (n >= 11 && n <= 13) return "th";
 	switch (t % 10) {
@@ -7366,59 +7397,59 @@ function ks(e) {
 		default: return "th";
 	}
 }
-function As(e) {
-	return V(Is(e)?.name) || V(e) || void 0;
+function Fs(e) {
+	return V(Vs(e)?.name) || V(e) || void 0;
 }
-function js(e) {
+function Is(e) {
 	if (!Array.isArray(e)) return [];
 	let t = [];
 	for (let n of e) {
-		let e = V(Is(n)?.fullName);
+		let e = V(Vs(n)?.fullName);
 		e && t.push(e);
 	}
 	return B(t).slice(0, 5);
 }
-function Ms(e) {
+function Ls(e) {
 	let t = [], n = (e) => {
-		let n = V(Is(e)?.name);
+		let n = V(Vs(e)?.name);
 		n && t.push(n);
 	};
 	if (Array.isArray(e)) e.forEach(n);
 	else {
-		let t = Is(e);
+		let t = Vs(e);
 		Array.isArray(t?.items) && t.items.forEach(n);
 	}
 	return B(t).slice(0, 8);
 }
-function Ns(e) {
-	return !!(Number.isInteger(e.congress) && (e.congress ?? 0) >= 1 && e.billType && e.billNumber && e.title && ms.test(e.latestActionDate) && Number.isFinite(e.latestActionTimestamp) && e.latestActionText && hs.test(e.sourceApiUrl) && !/api_key=/i.test(e.sourceApiUrl) && gs.test(e.officialUrl) && Number.isFinite(e.retrievedAt) && /^[a-f0-9]{64}$/.test(e.rawPayloadHash));
+function Rs(e) {
+	return !!(Number.isInteger(e.congress) && (e.congress ?? 0) >= 1 && e.billType && e.billNumber && e.title && ys.test(e.latestActionDate) && Number.isFinite(e.latestActionTimestamp) && e.latestActionText && bs.test(e.sourceApiUrl) && !/api_key=/i.test(e.sourceApiUrl) && xs.test(e.officialUrl) && Number.isFinite(e.retrievedAt) && /^[a-f0-9]{64}$/.test(e.rawPayloadHash));
 }
-function Ps(e) {
-	return Ns(e) ? 96 : 60;
+function zs(e) {
+	return Rs(e) ? 96 : 60;
 }
-function Fs(e) {
+function Bs(e) {
 	let t = typeof e == "number" ? e : typeof e == "string" ? Number(e) : NaN;
 	return Number.isFinite(t) ? t : void 0;
 }
-function Is(e) {
+function Vs(e) {
 	return e && typeof e == "object" ? e : null;
 }
-function Ls(e) {
+function Hs(e) {
 	return e.replace(/\./g, "").replace(/\s+/g, "").toUpperCase();
 }
-function Rs(e) {
-	return ms.test(e) ? e : void 0;
+function Us(e) {
+	return ys.test(e) ? e : void 0;
 }
-function zs(e) {
+function Ws(e) {
 	return e.replace(/\s+/g, " ").trim();
 }
-function Bs(e, t, n) {
-	return `${as}:${e}:${t.toLowerCase()}:${n.toLowerCase()}`;
+function Gs(e, t, n) {
+	return `${us}:${e}:${t.toLowerCase()}:${n.toLowerCase()}`;
 }
-function Vs(e, t, n) {
+function Ks(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function Hs(e, t) {
+function qs(e, t) {
 	if (e.aborted) return e;
 	if (t.aborted) return t;
 	let n = new AbortController(), r = () => n.abort();
@@ -7426,13 +7457,13 @@ function Hs(e, t) {
 }
 //#endregion
 //#region electron/osint/adapters/comtradeCatalog.ts
-var Us = "https://comtradeapi.un.org/files/v1/app/reference";
-function Ws(e, t = {}) {
-	let n = Xs(e), r = t.classification ?? (V(n?.classCode) || "HS"), i = Ys(e), a = [], o = /* @__PURE__ */ new Set();
+var Js = "https://comtradeapi.un.org/files/v1/app/reference";
+function Ys(e, t = {}) {
+	let n = tc(e), r = t.classification ?? (V(n?.classCode) || "HS"), i = ec(e), a = [], o = /* @__PURE__ */ new Set();
 	for (let e of i) {
-		let t = Xs(e);
+		let t = tc(e);
 		if (!t) continue;
-		let n = Zs(t.id), r = V(t.text);
+		let n = nc(t.id), r = V(t.text);
 		!n || !r || o.has(n) || (o.add(n), a.push({
 			code: n,
 			text: r,
@@ -7440,20 +7471,20 @@ function Ws(e, t = {}) {
 			isLeaf: t.isLeaf === "1" || t.isLeaf === 1 || t.isLeaf === !0
 		}));
 	}
-	return Js("commodities", r, a, `${Us}/${r}.json`, t.retrievedAt);
+	return $s("commodities", r, a, `${Js}/${r}.json`, t.retrievedAt);
 }
-async function Gs(e, t, n = {}) {
-	let r = Qs(e);
-	return Ws(await qs(`${Us}/${r}.json`, t), {
+async function Xs(e, t, n = {}) {
+	let r = rc(e);
+	return Ys(await Qs(`${Js}/${r}.json`, t), {
 		classification: r,
 		retrievedAt: n.now ?? Date.now()
 	});
 }
-function Ks(e, t = {}) {
+function Zs(e, t = {}) {
 	let n = t.leafOnly ?? !0;
 	return e.entries.filter((e) => e.code !== "TOTAL").filter((e) => t.aggrLevel === void 0 ? !0 : e.aggrLevel === t.aggrLevel).filter((e) => n ? e.isLeaf !== !1 : !0).map((e) => e.code);
 }
-async function qs(t, n) {
+async function Qs(t, n) {
 	let r = await fetch(t, {
 		signal: n,
 		headers: { accept: "application/json" }
@@ -7463,7 +7494,7 @@ async function qs(t, n) {
 	if (!i.trim().startsWith("{")) throw Error(`UN Comtrade reference non-JSON response from ${t}`);
 	return JSON.parse(i);
 }
-function Js(e, t, n, r, i = Date.now()) {
+function $s(e, t, n, r, i = Date.now()) {
 	return {
 		kind: e,
 		classification: t,
@@ -7473,24 +7504,24 @@ function Js(e, t, n, r, i = Date.now()) {
 		rawPayloadHash: z(W(n))
 	};
 }
-function Ys(e) {
-	let t = Xs(e)?.results;
+function ec(e) {
+	let t = tc(e)?.results;
 	return Array.isArray(t) ? t : [];
 }
-function Xs(e) {
+function tc(e) {
 	return e && typeof e == "object" ? e : null;
 }
-function Zs(e) {
+function nc(e) {
 	return typeof e == "number" && Number.isFinite(e) ? String(e) : typeof e == "string" ? e.trim() : "";
 }
-function Qs(e) {
+function rc(e) {
 	return /^[A-Za-z0-9]{1,6}$/.test(e) ? e : "HS";
 }
 //#endregion
 //#region electron/osint/adapters/comtradePlanner.ts
-var $s = 50, ec = 100, tc = 5, nc = 50;
-function rc(e, t = {}) {
-	let n = sc(t.batchSize ?? $s, 1, ec), r = sc(t.maxRequestsPerRun ?? tc, 1, nc), i = oc(e.commodityCodes.map((e) => e.trim()).filter(Boolean)), a = [];
+var ic = 50, ac = 100, oc = 5, sc = 50;
+function cc(e, t = {}) {
+	let n = fc(t.batchSize ?? ic, 1, ac), r = fc(t.maxRequestsPerRun ?? oc, 1, sc), i = dc(e.commodityCodes.map((e) => e.trim()).filter(Boolean)), a = [];
 	for (let t = 0; t < i.length; t += n) a.push({
 		index: a.length,
 		typeCode: e.typeCode,
@@ -7514,7 +7545,7 @@ function rc(e, t = {}) {
 		maxRequestsPerRun: r
 	};
 }
-function ic(e) {
+function lc(e) {
 	let t = e.filter;
 	return [
 		t.typeCode,
@@ -7528,8 +7559,8 @@ function ic(e) {
 		e.batchSize
 	].join("|");
 }
-function ac(e, t, n = Date.now()) {
-	let r = ic(e), i = t && t.planKey === r ? sc(t.nextBatchIndex, 0, e.totalBatches) : 0, a = Math.min(e.totalBatches, i + e.maxRequestsPerRun);
+function uc(e, t, n = Date.now()) {
+	let r = lc(e), i = t && t.planKey === r ? fc(t.nextBatchIndex, 0, e.totalBatches) : 0, a = Math.min(e.totalBatches, i + e.maxRequestsPerRun);
 	return {
 		batches: e.batches.slice(i, a),
 		nextCheckpoint: {
@@ -7542,20 +7573,20 @@ function ac(e, t, n = Date.now()) {
 		done: a >= e.totalBatches
 	};
 }
-function oc(e) {
+function dc(e) {
 	return [...new Set(e)];
 }
-function sc(e, t, n) {
+function fc(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
 //#endregion
 //#region electron/osint/adapters/comtradeAdapter.ts
-var cc = "un_comtrade_public", lc = "UN Comtrade", uc = "https://comtradeapi.un.org/data/v1/get", dc = "https://comtradeplus.un.org/", fc = 25e3, pc = 1, mc = 1500;
-function hc(e = process.env) {
+var pc = "un_comtrade_public", mc = "UN Comtrade", hc = "https://comtradeapi.un.org/data/v1/get", gc = "https://comtradeplus.un.org/", _c = 25e3, vc = 1, yc = 1500;
+function bc(e = process.env) {
 	if (e.ATLASZ_UN_COMTRADE_DISABLE === "1") return null;
 	let t = V(e.ATLASZ_UN_COMTRADE_API_KEY);
 	if (!t) return null;
-	let n = V(e.ATLASZ_UN_COMTRADE_API_BASE) || uc;
+	let n = V(e.ATLASZ_UN_COMTRADE_API_BASE) || hc;
 	if (!/^https:\/\//i.test(n)) return null;
 	let r = Number(e.ATLASZ_UN_COMTRADE_COMMODITY_LEVEL);
 	return {
@@ -7568,16 +7599,16 @@ function hc(e = process.env) {
 		partnerCode: V(e.ATLASZ_UN_COMTRADE_PARTNER) || "0",
 		flowCode: V(e.ATLASZ_UN_COMTRADE_FLOW) || "M,X",
 		period: V(e.ATLASZ_UN_COMTRADE_PERIOD) || String((/* @__PURE__ */ new Date()).getUTCFullYear() - 1),
-		batchSize: Fc(Number(e.ATLASZ_UN_COMTRADE_BATCH_SIZE ?? 50), 1, 100),
-		maxRequestsPerRun: Fc(Number(e.ATLASZ_UN_COMTRADE_MAX_REQUESTS ?? 5), 1, 50),
+		batchSize: Bc(Number(e.ATLASZ_UN_COMTRADE_BATCH_SIZE ?? 50), 1, 100),
+		maxRequestsPerRun: Bc(Number(e.ATLASZ_UN_COMTRADE_MAX_REQUESTS ?? 5), 1, 50),
 		commodityAggrLevel: Number.isFinite(r) && r > 0 ? r : void 0,
-		timeoutMs: Fc(Number(e.ATLASZ_UN_COMTRADE_TIMEOUT_MS ?? fc), 1e3, 6e4),
-		maxRetries: Fc(Number(e.ATLASZ_UN_COMTRADE_MAX_RETRIES ?? pc), 0, 5),
-		backoffMs: Fc(Number(e.ATLASZ_UN_COMTRADE_BACKOFF_MS ?? mc), 0, 6e4)
+		timeoutMs: Bc(Number(e.ATLASZ_UN_COMTRADE_TIMEOUT_MS ?? _c), 1e3, 6e4),
+		maxRetries: Bc(Number(e.ATLASZ_UN_COMTRADE_MAX_RETRIES ?? vc), 0, 5),
+		backoffMs: Bc(Number(e.ATLASZ_UN_COMTRADE_BACKOFF_MS ?? yc), 0, 6e4)
 	};
 }
-var gc = /* @__PURE__ */ new Map();
-function _c(e, t) {
+var xc = /* @__PURE__ */ new Map();
+function Sc(e, t) {
 	return {
 		typeCode: e.typeCode,
 		freqCode: e.freqCode,
@@ -7589,32 +7620,32 @@ function _c(e, t) {
 		commodityCodes: t
 	};
 }
-async function vc(e, t = hc()) {
+async function Cc(e, t = bc()) {
 	if (!t) return [];
-	let n = await Gs(t.classification, e), r = Ks(n, {
+	let n = await Xs(t.classification, e), r = Zs(n, {
 		aggrLevel: t.commodityAggrLevel,
 		leafOnly: !0
 	});
 	if (r.length === 0) return [];
-	let i = rc(_c(t, r), {
+	let i = cc(Sc(t, r), {
 		batchSize: t.batchSize,
 		maxRequestsPerRun: t.maxRequestsPerRun
-	}), a = ic(i), o = ac(i, gc.get(a) ?? null, Date.now());
-	gc.set(a, o.done ? {
+	}), a = lc(i), o = uc(i, xc.get(a) ?? null, Date.now());
+	xc.set(a, o.done ? {
 		...o.nextCheckpoint,
 		nextBatchIndex: 0,
 		completedBatches: 0
 	} : o.nextCheckpoint);
 	let s = [];
 	for (let r of o.batches) {
-		let i = await yc(r, t, e, n.rawPayloadHash);
+		let i = await wc(r, t, e, n.rawPayloadHash);
 		s.push(...i);
 	}
-	return Sc(s);
+	return Dc(s);
 }
-async function yc(e, n, r, i) {
-	let a = Tc(n, e), o = Date.now();
-	return xc(await t((e) => bc(a, n.apiKey, Ic(r, e)), {
+async function wc(e, n, r, i) {
+	let a = Ac(n, e), o = Date.now();
+	return Ec(await t((e) => Tc(a, n.apiKey, Vc(r, e)), {
 		maxRetries: n.maxRetries,
 		backoffMs: n.backoffMs,
 		timeoutMs: n.timeoutMs
@@ -7625,7 +7656,7 @@ async function yc(e, n, r, i) {
 		catalogHash: i
 	});
 }
-async function bc(t, n, r) {
+async function Tc(t, n, r) {
 	let i = await fetch(t, {
 		signal: r,
 		headers: {
@@ -7635,16 +7666,16 @@ async function bc(t, n, r) {
 	});
 	return e(i, "UN Comtrade"), i.json();
 }
-function xc(e, t = {}) {
+function Ec(e, t = {}) {
 	if (!e || typeof e != "object") return [];
 	let n = e.data;
 	if (!Array.isArray(n) || n.length === 0) return [];
-	let r = t.retrievedAt ?? Date.now(), i = Ec(t.sourceApiUrl ?? uc), a = V(t.config?.classification) || "HS", o = V(t.config?.typeCode) || "C", s = V(t.config?.freqCode) || "A", c = [];
+	let r = t.retrievedAt ?? Date.now(), i = jc(t.sourceApiUrl ?? hc), a = V(t.config?.classification) || "HS", o = V(t.config?.typeCode) || "C", s = V(t.config?.freqCode) || "A", c = [];
 	for (let e of n) {
-		let n = Nc(e);
+		let n = Rc(e);
 		if (!n) continue;
-		let l = Pc(n.reporterCode), u = Pc(n.partnerCode), d = Pc(n.cmdCode), f = V(n.flowCode) || Pc(n.flowCode), p = V(n.period) || Pc(n.period) || V(n.refPeriodId), m = Mc(n.refYear) ?? Mc(n.period), h = Mc(n.primaryValue), g = `${o}-${s}-${a}`;
-		if (!Dc({
+		let l = zc(n.reporterCode), u = zc(n.partnerCode), d = zc(n.cmdCode), f = V(n.flowCode) || zc(n.flowCode), p = V(n.period) || zc(n.period) || V(n.refPeriodId), m = Lc(n.refYear) ?? Lc(n.period), h = Lc(n.primaryValue), g = `${o}-${s}-${a}`;
+		if (!Mc({
 			reporterCode: l,
 			partnerCode: u,
 			commodityCode: d,
@@ -7670,12 +7701,12 @@ function xc(e, t = {}) {
 			period: p,
 			refYear: m,
 			primaryValue: h,
-			qty: Mc(n.qty),
+			qty: Lc(n.qty),
 			qtyUnitAbbr: V(n.qtyUnitAbbr),
-			netWgt: Mc(n.netWgt)
+			netWgt: Lc(n.netWgt)
 		});
 		c.push({
-			id: kc({
+			id: Pc({
 				datasetCode: g,
 				reporterCode: l,
 				partnerCode: u,
@@ -7700,16 +7731,16 @@ function xc(e, t = {}) {
 			period: p,
 			refYear: m,
 			tradeValue: h,
-			quantity: Mc(n.qty),
+			quantity: Lc(n.qty),
 			quantityUnit: V(n.qtyUnitAbbr) || void 0,
-			netWeight: Mc(n.netWgt),
-			sourceUrl: dc,
+			netWeight: Lc(n.netWgt),
+			sourceUrl: gc,
 			sourceApiUrl: i,
-			sourceName: lc,
+			sourceName: mc,
 			catalogHash: t.catalogHash,
 			retrievedAt: r,
 			provenance: "official-api",
-			confidence: Oc({
+			confidence: Nc({
 				reporterCode: l,
 				partnerCode: u,
 				commodityCode: d,
@@ -7727,12 +7758,12 @@ function xc(e, t = {}) {
 	}
 	return c;
 }
-function Sc(e) {
+function Dc(e) {
 	let t = [];
-	for (let n of e) n.confidence < 90 || t.push(wc(n));
+	for (let n of e) n.confidence < 90 || t.push(kc(n));
 	return t;
 }
-function Cc(e, t) {
+function Oc(e, t) {
 	if (!e.comtradeRecord) return e;
 	let n = t?.comtradeRecord, r = n ? n.rawPayloadHash === e.comtradeRecord.rawPayloadHash ? "unchanged" : "updated" : "first_seen", i = r === "unchanged" && t ? t.timestamp : e.timestamp;
 	return {
@@ -7744,19 +7775,19 @@ function Cc(e, t) {
 		}
 	};
 }
-function wc(e) {
-	let t = `comtrade|${e.id}`.toLowerCase(), n = Ac(e.tradeValue), r = e.quantity !== void 0 && e.quantityUnit ? ` Quantity: ${e.quantity} ${e.quantityUnit}.` : "", i = `UN Comtrade ${e.flowDesc.toLowerCase()} trade flow (${e.period}): ${e.reporterDesc} ${e.flowDesc.toLowerCase()} of ${e.commodityDescription} with ${e.partnerDesc} — ${n}.${r} Official country/commodity trade-flow data; not a company-level claim.`, a = Date.parse(`${e.refYear}-01-01T00:00:00Z`);
+function kc(e) {
+	let t = `comtrade|${e.id}`.toLowerCase(), n = Fc(e.tradeValue), r = e.quantity !== void 0 && e.quantityUnit ? ` Quantity: ${e.quantity} ${e.quantityUnit}.` : "", i = `UN Comtrade ${e.flowDesc.toLowerCase()} trade flow (${e.period}): ${e.reporterDesc} ${e.flowDesc.toLowerCase()} of ${e.commodityDescription} with ${e.partnerDesc} — ${n}.${r} Official country/commodity trade-flow data; not a company-level claim.`, a = Date.parse(`${e.refYear}-01-01T00:00:00Z`);
 	return {
-		id: G(cc, t),
+		id: G(pc, t),
 		timestamp: Number.isFinite(a) ? a : e.retrievedAt,
-		title: `${e.reporterDesc} ${e.flowDesc} · ${e.commodityCode} ${jc(e.commodityDescription, 60)}`.slice(0, 180),
+		title: `${e.reporterDesc} ${e.flowDesc} · ${e.commodityCode} ${Ic(e.commodityDescription, 60)}`.slice(0, 180),
 		summary: i,
 		countryCodes: B([e.reporterIso3, e.partnerIso3].filter((e) => !!(e && e !== "W00" && e.length === 3))),
 		region: "global",
 		category: "trade-flow",
 		severity: "stable",
 		confidence: e.confidence,
-		sourceId: cc,
+		sourceId: pc,
 		sourceUrl: e.sourceUrl,
 		provenance: "official-api",
 		affectedAssets: [],
@@ -7778,11 +7809,11 @@ function wc(e) {
 		comtradeRecord: e
 	};
 }
-function Tc(e, t) {
+function Ac(e, t) {
 	let n = e.apiBase.replace(/\/$/, ""), r = new URL(`${n}/${t.typeCode}/${t.freqCode}/${t.classification}`);
 	return r.searchParams.set("reporterCode", t.reporterCode), r.searchParams.set("period", t.period), r.searchParams.set("partnerCode", t.partnerCode), r.searchParams.set("flowCode", t.flowCode), r.searchParams.set("cmdCode", t.commodityCodes.join(",")), r.toString();
 }
-function Ec(e) {
+function jc(e) {
 	try {
 		let t = new URL(e);
 		return t.searchParams.delete("subscription-key"), t.searchParams.delete("Ocp-Apim-Subscription-Key"), t.toString();
@@ -7790,38 +7821,38 @@ function Ec(e) {
 		return e;
 	}
 }
-function Dc(e) {
+function Mc(e) {
 	return !!(/^\d+$/.test(e.reporterCode) && /^\d+$/.test(e.partnerCode) && e.commodityCode && e.flowCode && e.period && e.refYear !== void 0 && Number.isFinite(e.refYear) && e.tradeValue !== void 0 && Number.isFinite(e.tradeValue) && e.tradeValue >= 0 && !/subscription-key/i.test(e.sourceApiUrl) && Number.isFinite(e.retrievedAt));
 }
-function Oc(e) {
-	return Dc(e) ? 96 : 60;
+function Nc(e) {
+	return Mc(e) ? 96 : 60;
 }
-function kc(e) {
-	return `${cc}:${e.datasetCode}:${e.reporterCode}:${e.partnerCode}:${e.commodityCode}:${e.flowCode}:${e.period}`.toLowerCase();
+function Pc(e) {
+	return `${pc}:${e.datasetCode}:${e.reporterCode}:${e.partnerCode}:${e.commodityCode}:${e.flowCode}:${e.period}`.toLowerCase();
 }
-function Ac(e) {
+function Fc(e) {
 	return e >= 1e9 ? `$${(e / 1e9).toFixed(2)}B` : e >= 1e6 ? `$${(e / 1e6).toFixed(2)}M` : e >= 1e3 ? `$${(e / 1e3).toFixed(1)}K` : `$${e.toFixed(0)}`;
 }
-function jc(e, t) {
+function Ic(e, t) {
 	return e.length > t ? `${e.slice(0, t)}…` : e;
 }
-function Mc(e) {
+function Lc(e) {
 	if (typeof e == "number") return Number.isFinite(e) ? e : void 0;
 	if (typeof e == "string" && e.trim() !== "") {
 		let t = Number(e);
 		return Number.isFinite(t) ? t : void 0;
 	}
 }
-function Nc(e) {
+function Rc(e) {
 	return e && typeof e == "object" ? e : null;
 }
-function Pc(e) {
+function zc(e) {
 	return typeof e == "number" && Number.isFinite(e) ? String(e) : typeof e == "string" ? e.trim() : "";
 }
-function Fc(e, t, n) {
+function Bc(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function Ic(e, t) {
+function Vc(e, t) {
 	if (e.aborted) return e;
 	if (t.aborted) return t;
 	let n = new AbortController(), r = () => n.abort();
@@ -7829,7 +7860,7 @@ function Ic(e, t) {
 }
 //#endregion
 //#region electron/osint/adapters/openAlexAdapter.ts
-var Lc = "openalex_works_public", Rc = "OpenAlex", zc = "https://api.openalex.org/works", Bc = 4, Vc = 10, Hc = 50, Uc = 30, Wc = 2e4, Gc = 1, Kc = 1e3, qc = /^\d{4}-\d{2}-\d{2}$/, Jc = /^W\d+$/, Yc = /^https:\/\/openalex\.org\/W\d+$/, Xc = [
+var Hc = "openalex_works_public", Uc = "OpenAlex", Wc = "https://api.openalex.org/works", Gc = 4, Kc = 10, qc = 50, Jc = 30, Yc = 2e4, Xc = 1, Zc = 1e3, Qc = /^\d{4}-\d{2}-\d{2}$/, $c = /^W\d+$/, el = /^https:\/\/openalex\.org\/W\d+$/, tl = [
 	"semiconductors",
 	"EUV lithography",
 	"AI accelerators",
@@ -7841,56 +7872,56 @@ var Lc = "openalex_works_public", Rc = "OpenAlex", zc = "https://api.openalex.or
 	"cybersecurity",
 	"supply chain"
 ];
-function Zc(e = process.env) {
+function nl(e = process.env) {
 	if (e.ATLASZ_OPENALEX_DISABLE === "1") return null;
-	let t = V(e.ATLASZ_OPENALEX_API_KEY), n = V(e.ATLASZ_OPENALEX_API_BASE) || zc;
-	return hl(n) ? {
+	let t = V(e.ATLASZ_OPENALEX_API_KEY), n = V(e.ATLASZ_OPENALEX_API_BASE) || Wc;
+	return bl(n) ? {
 		apiBase: n,
 		apiKey: t,
-		topicBuckets: pl(e.ATLASZ_OPENALEX_TOPICS) ?? Xc,
-		perBucket: yl(Number(e.ATLASZ_OPENALEX_PER_BUCKET ?? Vc), 1, Hc),
-		maxAuthors: yl(Number(e.ATLASZ_OPENALEX_MAX_AUTHORS ?? Bc), 0, 25),
-		lookbackDays: yl(Number(e.ATLASZ_OPENALEX_LOOKBACK_DAYS ?? Uc), 1, 365),
-		timeoutMs: yl(Number(e.ATLASZ_OPENALEX_TIMEOUT_MS ?? Wc), 1e3, 6e4),
-		maxRetries: yl(Number(e.ATLASZ_OPENALEX_MAX_RETRIES ?? Gc), 0, 5),
-		backoffMs: yl(Number(e.ATLASZ_OPENALEX_BACKOFF_MS ?? Kc), 0, 6e4)
+		topicBuckets: vl(e.ATLASZ_OPENALEX_TOPICS) ?? tl,
+		perBucket: wl(Number(e.ATLASZ_OPENALEX_PER_BUCKET ?? Kc), 1, qc),
+		maxAuthors: wl(Number(e.ATLASZ_OPENALEX_MAX_AUTHORS ?? Gc), 0, 25),
+		lookbackDays: wl(Number(e.ATLASZ_OPENALEX_LOOKBACK_DAYS ?? Jc), 1, 365),
+		timeoutMs: wl(Number(e.ATLASZ_OPENALEX_TIMEOUT_MS ?? Yc), 1e3, 6e4),
+		maxRetries: wl(Number(e.ATLASZ_OPENALEX_MAX_RETRIES ?? Xc), 0, 5),
+		backoffMs: wl(Number(e.ATLASZ_OPENALEX_BACKOFF_MS ?? Zc), 0, 6e4)
 	} : null;
 }
-async function Qc(e, n = Zc()) {
+async function rl(e, n = nl()) {
 	if (!n) return [];
 	let r = [];
 	for (let i of n.topicBuckets) {
-		let a = Date.now(), o = il(n, i), s = al(o), c = await t((t) => $c(o, bl(e, t)), {
+		let a = Date.now(), o = ll(n, i), s = ul(o), c = await t((t) => il(o, Tl(e, t)), {
 			maxRetries: n.maxRetries,
 			backoffMs: n.backoffMs,
 			timeoutMs: n.timeoutMs
 		});
-		r.push(...el(c, {
+		r.push(...al(c, {
 			retrievedAt: a,
 			sourceApiUrl: s,
 			queryBucket: i,
 			maxAuthors: n.maxAuthors
 		}));
 	}
-	return tl(r);
+	return ol(r);
 }
-async function $c(t, n) {
+async function il(t, n) {
 	let r = await fetch(t, {
 		signal: n,
 		headers: { accept: "application/json" }
 	});
 	return e(r, "OpenAlex"), r.json();
 }
-function el(e, t = {}) {
+function al(e, t = {}) {
 	if (!e || typeof e != "object") return [];
 	let n = e.results;
 	if (!Array.isArray(n) || n.length === 0) return [];
-	let r = t.retrievedAt ?? Date.now(), i = al(t.sourceApiUrl ?? zc), a = (t.queryBucket ?? "").slice(0, 80), o = t.maxAuthors ?? Bc, s = /* @__PURE__ */ new Set(), c = [];
+	let r = t.retrievedAt ?? Date.now(), i = ul(t.sourceApiUrl ?? Wc), a = (t.queryBucket ?? "").slice(0, 80), o = t.maxAuthors ?? Gc, s = /* @__PURE__ */ new Set(), c = [];
 	for (let e of n) {
-		let t = vl(e);
+		let t = Cl(e);
 		if (!t) continue;
-		let n = ol(V(t.id) || V(vl(t.ids)?.openalex)), l = _l(V(t.title) || V(t.display_name)).slice(0, 400), u = n ? `https://openalex.org/${n}` : "", d = gl(V(t.publication_date)), f = H(t.publication_year);
-		if (!ul({
+		let n = dl(V(t.id) || V(Cl(t.ids)?.openalex)), l = Sl(V(t.title) || V(t.display_name)).slice(0, 400), u = n ? `https://openalex.org/${n}` : "", d = xl(V(t.publication_date)), f = H(t.publication_year);
+		if (!hl({
 			openAlexWorkId: n,
 			title: l,
 			openAlexUrl: u,
@@ -7898,7 +7929,7 @@ function el(e, t = {}) {
 			retrievedAt: r
 		}) || s.has(n)) continue;
 		s.add(n);
-		let p = vl(t.primary_location), m = V(vl(p?.source)?.display_name) || void 0, h = ml(V(p?.landing_page_url)), g = sl(V(t.doi)), { authors: _, institutions: v, institutionCountries: y } = cl(t.authorships, o), b = ll(t.topics, t.primary_topic), x = H(t.cited_by_count), S = t.is_retracted === !0, C = W({
+		let p = Cl(t.primary_location), m = V(Cl(p?.source)?.display_name) || void 0, h = yl(V(p?.landing_page_url)), g = fl(V(t.doi)), { authors: _, institutions: v, institutionCountries: y } = pl(t.authorships, o), b = ml(t.topics, t.primary_topic), x = H(t.cited_by_count), S = t.is_retracted === !0, C = W({
 			id: n,
 			doi: g,
 			title: l,
@@ -7914,7 +7945,7 @@ function el(e, t = {}) {
 			is_retracted: S
 		});
 		c.push({
-			id: fl(n),
+			id: _l(n),
 			openAlexWorkId: n,
 			doi: g,
 			title: l,
@@ -7933,10 +7964,10 @@ function el(e, t = {}) {
 			openAlexUrl: u,
 			queryBucket: a,
 			sourceApiUrl: i,
-			sourceName: Rc,
+			sourceName: Uc,
 			retrievedAt: r,
 			provenance: "official-api",
-			confidence: dl({
+			confidence: gl({
 				openAlexWorkId: n,
 				title: l,
 				openAlexUrl: u,
@@ -7950,12 +7981,12 @@ function el(e, t = {}) {
 	}
 	return c;
 }
-function tl(e) {
+function ol(e) {
 	let t = [];
-	for (let n of e) n.confidence < 90 || t.push(rl(n));
+	for (let n of e) n.confidence < 90 || t.push(cl(n));
 	return t;
 }
-function nl(e, t) {
+function sl(e, t) {
 	if (!e.openAlexWork) return e;
 	let n = t?.openAlexWork, r = n ? n.rawPayloadHash === e.openAlexWork.rawPayloadHash ? "unchanged" : "updated" : "new_today", i = r === "unchanged" && t ? t.timestamp : e.timestamp;
 	return {
@@ -7967,10 +7998,10 @@ function nl(e, t) {
 		}
 	};
 }
-function rl(e) {
+function cl(e) {
 	let t = `openalex|${e.openAlexWorkId}`.toLowerCase(), n = e.venue ? ` Venue: ${e.venue}.` : "", r = e.isRetracted ? " Flagged retracted by OpenAlex." : "", i = e.topics.length > 0 ? ` Topics: ${e.topics.slice(0, 3).join(", ")}.` : "", a = `OpenAlex research metadata (${e.publicationDate ?? e.publicationYear ?? "date unknown"}): "${e.title}".${n}${i}${r} Research metadata, not validation of technical claims, breakthroughs, or market impact.`, o = e.publicationDate ? Date.parse(`${e.publicationDate}T00:00:00Z`) : e.retrievedAt;
 	return {
-		id: G(Lc, t),
+		id: G(Hc, t),
 		timestamp: Number.isFinite(o) ? o : e.retrievedAt,
 		title: `Research: ${e.title}`.slice(0, 180),
 		summary: a,
@@ -7979,7 +8010,7 @@ function rl(e) {
 		category: "research",
 		severity: "stable",
 		confidence: e.confidence,
-		sourceId: Lc,
+		sourceId: Hc,
 		sourceUrl: e.openAlexUrl,
 		provenance: "official-api",
 		affectedAssets: [],
@@ -7997,11 +8028,11 @@ function rl(e) {
 		openAlexWork: e
 	};
 }
-function il(e, t) {
+function ll(e, t) {
 	let n = (/* @__PURE__ */ new Date(Date.now() - e.lookbackDays * 24 * 60 * 60 * 1e3)).toISOString().slice(0, 10), r = new URL(e.apiBase);
 	return r.searchParams.set("search", t), r.searchParams.set("filter", `from_publication_date:${n}`), r.searchParams.set("sort", "publication_date:desc"), r.searchParams.set("per-page", String(e.perBucket)), r.searchParams.set("select", "id,doi,title,display_name,publication_year,publication_date,type,primary_location,authorships,topics,primary_topic,cited_by_count,is_retracted,ids"), e.apiKey && r.searchParams.set("api_key", e.apiKey), r.toString();
 }
-function al(e) {
+function ul(e) {
 	try {
 		let t = new URL(e);
 		return t.searchParams.delete("api_key"), t.toString();
@@ -8009,23 +8040,23 @@ function al(e) {
 		return e;
 	}
 }
-function ol(e) {
+function dl(e) {
 	let t = e.match(/W\d+/);
 	return t ? t[0] : "";
 }
-function sl(e) {
+function fl(e) {
 	if (!e) return;
 	let t = e.replace(/^https?:\/\/(dx\.)?doi\.org\//i, "").trim();
 	return /^10\.\d{4,}\//.test(t) ? t : void 0;
 }
-function cl(e, t) {
+function pl(e, t) {
 	let n = [], r = [], i = [];
 	if (Array.isArray(e)) for (let t of e) {
-		let e = vl(t);
+		let e = Cl(t);
 		if (!e) continue;
-		let a = V(vl(e.author)?.display_name);
+		let a = V(Cl(e.author)?.display_name);
 		if (a && n.push(a), Array.isArray(e.institutions)) for (let t of e.institutions) {
-			let e = vl(t), n = V(e?.display_name), a = V(e?.country_code);
+			let e = Cl(t), n = V(e?.display_name), a = V(e?.country_code);
 			n && r.push(n), a && i.push(a.toUpperCase());
 		}
 	}
@@ -8035,32 +8066,32 @@ function cl(e, t) {
 		institutionCountries: B(i).slice(0, 8)
 	};
 }
-function ll(e, t) {
-	let n = [], r = V(vl(t)?.display_name);
+function ml(e, t) {
+	let n = [], r = V(Cl(t)?.display_name);
 	if (r && n.push(r), Array.isArray(e)) for (let t of e) {
-		let e = V(vl(t)?.display_name);
+		let e = V(Cl(t)?.display_name);
 		e && n.push(e);
 	}
 	return B(n).slice(0, 6);
 }
-function ul(e) {
-	return !!(Jc.test(e.openAlexWorkId) && e.title && Yc.test(e.openAlexUrl) && /^https:\/\/api\.openalex\.org\/works(?:\?|$)/i.test(e.sourceApiUrl) && !/api_key=/i.test(e.sourceApiUrl) && Number.isFinite(e.retrievedAt));
+function hl(e) {
+	return !!($c.test(e.openAlexWorkId) && e.title && el.test(e.openAlexUrl) && /^https:\/\/api\.openalex\.org\/works(?:\?|$)/i.test(e.sourceApiUrl) && !/api_key=/i.test(e.sourceApiUrl) && Number.isFinite(e.retrievedAt));
 }
-function dl(e) {
-	return ul(e) ? 96 : 60;
+function gl(e) {
+	return hl(e) ? 96 : 60;
 }
-function fl(e) {
-	return `${Lc}:${e.toLowerCase()}`;
+function _l(e) {
+	return `${Hc}:${e.toLowerCase()}`;
 }
-function pl(e) {
+function vl(e) {
 	if (typeof e != "string") return;
 	let t = e.split(",").map((e) => e.trim()).filter(Boolean);
 	return t.length > 0 ? B(t) : void 0;
 }
-function ml(e) {
+function yl(e) {
 	return /^https:\/\//i.test(e) ? e : void 0;
 }
-function hl(e) {
+function bl(e) {
 	try {
 		let t = new URL(e);
 		return t.protocol === "https:" && t.hostname === "api.openalex.org" && t.pathname.replace(/\/$/, "") === "/works";
@@ -8068,19 +8099,19 @@ function hl(e) {
 		return !1;
 	}
 }
-function gl(e) {
-	return qc.test(e) ? e : void 0;
+function xl(e) {
+	return Qc.test(e) ? e : void 0;
 }
-function _l(e) {
+function Sl(e) {
 	return e.replace(/\s+/g, " ").trim();
 }
-function vl(e) {
+function Cl(e) {
 	return e && typeof e == "object" ? e : null;
 }
-function yl(e, t, n) {
+function wl(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function bl(e, t) {
+function Tl(e, t) {
 	if (e.aborted) return e;
 	if (t.aborted) return t;
 	let n = new AbortController(), r = () => n.abort();
@@ -8088,18 +8119,18 @@ function bl(e, t) {
 }
 //#endregion
 //#region electron/osint/adapters/marketReferenceAdapter.ts
-var xl = "sec_company_tickers_public", Sl = "SEC company_tickers.json", Cl = "https://www.sec.gov/files/company_tickers.json", wl = 10080 * 60 * 1e3, Tl = 25e3;
-function El(e = process.env) {
+var El = "sec_company_tickers_public", Dl = "SEC company_tickers.json", Ol = "https://www.sec.gov/files/company_tickers.json", kl = 10080 * 60 * 1e3, Al = 25e3;
+function jl(e = process.env) {
 	if (e.ATLASZ_MARKET_REFERENCE_DISABLE === "1") return null;
-	let t = V(e.ATLASZ_SEC_COMPANY_TICKERS_URL) || Cl;
-	return Ml(t) ? {
+	let t = V(e.ATLASZ_SEC_COMPANY_TICKERS_URL) || Ol;
+	return Ll(t) ? {
 		sourceUrl: t,
 		userAgent: V(e.ATLASZ_SEC_COMPANY_TICKERS_USER_AGENT) || V(e.ATLASZ_SEC_USER_AGENT) || void 0,
-		staleAfterMs: Rl(Number(e.ATLASZ_MARKET_REFERENCE_STALE_AFTER_MS ?? wl), 6e4, 30 * wl),
-		maxRecords: Rl(Number(e.ATLASZ_MARKET_REFERENCE_MAX_RECORDS ?? Tl), 1, Tl)
+		staleAfterMs: Ul(Number(e.ATLASZ_MARKET_REFERENCE_STALE_AFTER_MS ?? kl), 6e4, 30 * kl),
+		maxRecords: Ul(Number(e.ATLASZ_MARKET_REFERENCE_MAX_RECORDS ?? Al), 1, Al)
 	} : null;
 }
-async function Dl(t, n = El()) {
+async function Ml(t, n = jl()) {
 	if (!n) return [];
 	let r = { accept: "application/json" };
 	n.userAgent && (r["user-agent"] = n.userAgent);
@@ -8107,26 +8138,26 @@ async function Dl(t, n = El()) {
 		signal: t,
 		headers: r
 	});
-	return e(i, "SEC company tickers"), kl(Ol(await i.json(), {
+	return e(i, "SEC company tickers"), Pl(Nl(await i.json(), {
 		sourceUrl: n.sourceUrl,
 		retrievedAt: Date.now(),
 		staleAfterMs: n.staleAfterMs,
 		maxRecords: n.maxRecords
 	}));
 }
-function Ol(e, t = {}) {
+function Nl(e, t = {}) {
 	if (!e || typeof e != "object") return [];
-	let n = t.retrievedAt ?? Date.now(), r = n + (t.staleAfterMs ?? wl), i = t.sourceUrl ?? Cl;
-	if (!Ml(i)) return [];
+	let n = t.retrievedAt ?? Date.now(), r = n + (t.staleAfterMs ?? kl), i = t.sourceUrl ?? Ol;
+	if (!Ll(i)) return [];
 	let a = Array.isArray(e) ? e : Object.entries(e).sort(([e], [t]) => Number(e) - Number(t)).map(([, e]) => e), o = /* @__PURE__ */ new Set(), s = /* @__PURE__ */ new Set(), c = [];
-	for (let e of a.slice(0, t.maxRecords ?? Tl)) {
-		let t = e, a = Nl(V(t.ticker)), l = Pl(H(t.cik_str) ?? V(t.cik_str)), u = Il(V(t.title));
+	for (let e of a.slice(0, t.maxRecords ?? Al)) {
+		let t = e, a = Rl(V(t.ticker)), l = zl(H(t.cik_str) ?? V(t.cik_str)), u = Vl(V(t.title));
 		if (!a || !l || !u || o.has(a) || s.has(l)) continue;
 		o.add(a), s.add(l);
 		let d = B([
 			a,
 			l,
-			Fl(l),
+			Bl(l),
 			u
 		]), f = W({
 			cik_str: Number(l),
@@ -8134,18 +8165,18 @@ function Ol(e, t = {}) {
 			title: u,
 			source_url: i
 		}), p = {
-			id: Ll(a),
+			id: Hl(a),
 			ticker: a,
 			cik: l,
-			cikPadded: Fl(l),
+			cikPadded: Bl(l),
 			legalName: u,
 			aliases: d,
 			sourceUrl: i,
-			sourceName: Sl,
+			sourceName: Dl,
 			retrievedAt: n,
 			staleAt: r,
 			provenance: "official-api",
-			confidence: jl({
+			confidence: Il({
 				ticker: a,
 				cik: l,
 				legalName: u,
@@ -8159,13 +8190,13 @@ function Ol(e, t = {}) {
 	}
 	return c;
 }
-function kl(e) {
-	return e.map(Al);
+function Pl(e) {
+	return e.map(Fl);
 }
-function Al(e) {
+function Fl(e) {
 	let t = `market-reference|sec-company-tickers|${e.ticker}|${e.cik}`.toLowerCase();
 	return {
-		id: G(xl, t),
+		id: G(El, t),
 		timestamp: e.retrievedAt,
 		title: `Market identity: ${e.ticker} -> CIK ${e.cik}`,
 		summary: `SEC company_tickers.json maps ticker ${e.ticker} to CIK ${e.cik} and legal title "${e.legalName}". Exchange, sector, industry, ETF weights, and price context are not provided by this source.`,
@@ -8174,7 +8205,7 @@ function Al(e) {
 		category: "market-reference",
 		severity: "stable",
 		confidence: e.confidence,
-		sourceId: xl,
+		sourceId: El,
 		sourceUrl: e.sourceUrl,
 		provenance: "official-api",
 		affectedAssets: [e.ticker],
@@ -8196,10 +8227,10 @@ function Al(e) {
 		marketIdentity: e
 	};
 }
-function jl(e) {
-	return e.ticker && e.cik && e.legalName && Ml(e.sourceUrl) && Number.isFinite(e.retrievedAt) ? 96 : 0;
+function Il(e) {
+	return e.ticker && e.cik && e.legalName && Ll(e.sourceUrl) && Number.isFinite(e.retrievedAt) ? 96 : 0;
 }
-function Ml(e) {
+function Ll(e) {
 	try {
 		let t = new URL(e);
 		return t.protocol === "https:" && t.hostname === "www.sec.gov" && t.pathname === "/files/company_tickers.json";
@@ -8207,27 +8238,27 @@ function Ml(e) {
 		return !1;
 	}
 }
-function Nl(e) {
+function Rl(e) {
 	return e.toUpperCase().replace(/[^A-Z0-9.-]/g, "").slice(0, 24);
 }
-function Pl(e) {
+function zl(e) {
 	return String(e ?? "").replace(/\D/g, "").replace(/^0+/, "");
 }
-function Fl(e) {
+function Bl(e) {
 	return e.padStart(10, "0");
 }
-function Il(e) {
+function Vl(e) {
 	return e.replace(/\s+/g, " ").trim().slice(0, 240);
 }
-function Ll(e) {
+function Hl(e) {
 	return `market-identity:${e.toLowerCase()}`;
 }
-function Rl(e, t, n) {
+function Ul(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.trunc(e))) : t;
 }
 //#endregion
 //#region electron/osint/adapters/secCompanyFactsAdapter.ts
-var zl = "sec_company_facts_public", Bl = "https://data.sec.gov/api/xbrl/companyfacts", Vl = "https://www.sec.gov/files/company_tickers.json", Hl = 100, Ul = 25e3, Wl = 1, Gl = 1500, Kl = /^\d{4}-\d{2}-\d{2}$/, ql = [
+var Wl = "sec_company_facts_public", Gl = "https://data.sec.gov/api/xbrl/companyfacts", Kl = "https://www.sec.gov/files/company_tickers.json", ql = 100, Jl = 25e3, Yl = 1, Xl = 1500, Zl = /^\d{4}-\d{2}-\d{2}$/, Ql = [
 	"NVDA",
 	"AMD",
 	"AAPL",
@@ -8239,7 +8270,7 @@ var zl = "sec_company_facts_public", Bl = "https://data.sec.gov/api/xbrl/company
 	"INTC",
 	"XOM",
 	"CVX"
-], Jl = [
+], $l = [
 	{
 		label: "Revenue",
 		candidates: [{
@@ -8296,25 +8327,25 @@ var zl = "sec_company_facts_public", Bl = "https://data.sec.gov/api/xbrl/company
 		}]
 	}
 ];
-function Yl(e = process.env) {
+function eu(e = process.env) {
 	if (e.ATLASZ_SEC_FACTS_DISABLE === "1") return null;
 	let t = V(e.ATLASZ_SEC_USER_AGENT);
 	if (!t || !/@|https?:\/\//.test(t)) return null;
-	let n = V(e.ATLASZ_SEC_FACTS_BASE) || Bl, r = V(e.ATLASZ_SEC_FACTS_IDENTITY_URL) || Vl;
-	if (!cu(n) || !cu(r)) return null;
-	let i = lu(Number(e.ATLASZ_SEC_FACTS_STALE_DAYS ?? Hl), 1, 400);
+	let n = V(e.ATLASZ_SEC_FACTS_BASE) || Gl, r = V(e.ATLASZ_SEC_FACTS_IDENTITY_URL) || Kl;
+	if (!pu(n) || !pu(r)) return null;
+	let i = mu(Number(e.ATLASZ_SEC_FACTS_STALE_DAYS ?? ql), 1, 400);
 	return {
 		factsBase: n,
 		identityUrl: r,
 		userAgent: t,
-		tickers: ou(e.ATLASZ_SEC_FACTS_TICKERS) ?? ql,
+		tickers: du(e.ATLASZ_SEC_FACTS_TICKERS) ?? Ql,
 		staleAfterMs: i * 24 * 60 * 60 * 1e3,
-		timeoutMs: lu(Number(e.ATLASZ_SEC_FACTS_TIMEOUT_MS ?? Ul), 1e3, 6e4),
-		maxRetries: lu(Number(e.ATLASZ_SEC_FACTS_MAX_RETRIES ?? Wl), 0, 5),
-		backoffMs: lu(Number(e.ATLASZ_SEC_FACTS_BACKOFF_MS ?? Gl), 0, 6e4)
+		timeoutMs: mu(Number(e.ATLASZ_SEC_FACTS_TIMEOUT_MS ?? Jl), 1e3, 6e4),
+		maxRetries: mu(Number(e.ATLASZ_SEC_FACTS_MAX_RETRIES ?? Yl), 0, 5),
+		backoffMs: mu(Number(e.ATLASZ_SEC_FACTS_BACKOFF_MS ?? Xl), 0, 6e4)
 	};
 }
-async function Xl(t, n) {
+async function tu(t, n) {
 	let r = await fetch(t.identityUrl, {
 		signal: n,
 		headers: {
@@ -8323,7 +8354,7 @@ async function Xl(t, n) {
 		}
 	});
 	e(r, "SEC company tickers");
-	let i = Ol(await r.json(), { retrievedAt: Date.now() }), a = new Set(t.tickers.map((e) => e.toUpperCase()));
+	let i = Nl(await r.json(), { retrievedAt: Date.now() }), a = new Set(t.tickers.map((e) => e.toUpperCase()));
 	return i.filter((e) => a.has(e.ticker.toUpperCase())).map((e) => ({
 		ticker: e.ticker,
 		cik: e.cik,
@@ -8331,25 +8362,25 @@ async function Xl(t, n) {
 		companyName: e.legalName
 	}));
 }
-async function Zl(e, n = Yl()) {
+async function nu(e, n = eu()) {
 	if (!n) return [];
-	let r = await Xl(n, e), i = [];
+	let r = await tu(n, e), i = [];
 	for (let a of r) {
-		let r = `${n.factsBase.replace(/\/$/, "")}/CIK${a.cikPadded}.json`, o = await t((t) => Ql(r, n.userAgent, uu(e, t)), {
+		let r = `${n.factsBase.replace(/\/$/, "")}/CIK${a.cikPadded}.json`, o = await t((t) => ru(r, n.userAgent, hu(e, t)), {
 			maxRetries: n.maxRetries,
 			backoffMs: n.backoffMs,
 			timeoutMs: n.timeoutMs
 		});
-		i.push(...$l(o, {
+		i.push(...iu(o, {
 			identity: a,
 			retrievedAt: Date.now(),
 			sourceUrl: r,
 			staleAfterMs: n.staleAfterMs
 		}));
 	}
-	return eu(i);
+	return au(i);
 }
-async function Ql(t, n, r) {
+async function ru(t, n, r) {
 	let i = await fetch(t, {
 		signal: r,
 		headers: {
@@ -8359,19 +8390,19 @@ async function Ql(t, n, r) {
 	});
 	return e(i, "SEC company facts"), i.json();
 }
-function $l(e, t) {
-	let n = su(e), r = su(n?.facts);
+function iu(e, t) {
+	let n = fu(e), r = fu(n?.facts);
 	if (!n || !r) return [];
-	let { identity: i } = t, a = t.retrievedAt ?? Date.now(), o = t.staleAfterMs ?? Hl * 24 * 60 * 60 * 1e3, s = t.sourceUrl ?? `${Bl}/CIK${i.cikPadded}.json`, c = V(n.entityName) || i.companyName, l = [];
-	for (let { label: e, candidates: t } of Jl) {
+	let { identity: i } = t, a = t.retrievedAt ?? Date.now(), o = t.staleAfterMs ?? ql * 24 * 60 * 60 * 1e3, s = t.sourceUrl ?? `${Gl}/CIK${i.cikPadded}.json`, c = V(n.entityName) || i.companyName, l = [];
+	for (let { label: e, candidates: t } of $l) {
 		let n = null;
 		for (let e of t) {
-			let t = su(su(r[e.taxonomy])?.[e.concept]);
+			let t = fu(fu(r[e.taxonomy])?.[e.concept]);
 			if (!t) continue;
-			let i = su(t.units);
+			let i = fu(t.units);
 			if (!i) continue;
-			let a = Object.keys(i)[0], o = ru(Array.isArray(i[a]) ? i[a] : []);
-			o && (!n || iu(o) > iu(n.latest)) && (n = {
+			let a = Object.keys(i)[0], o = cu(Array.isArray(i[a]) ? i[a] : []);
+			o && (!n || lu(o) > lu(n.latest)) && (n = {
 				taxonomy: e.taxonomy,
 				concept: e.concept,
 				conceptNode: t,
@@ -8385,7 +8416,7 @@ function $l(e, t) {
 				taxonomy: n.taxonomy,
 				concept: n.concept
 			}, r = n.conceptNode, u = n.unitKey, d = n.latest, f = H(d.val), p = V(d.end), m = V(d.form), h = V(d.filed);
-			if (f === void 0 || !Kl.test(p) || !m || !Kl.test(h)) continue;
+			if (f === void 0 || !Zl.test(p) || !m || !Zl.test(h)) continue;
 			let g = W({
 				cik: i.cik,
 				taxonomy: t.taxonomy,
@@ -8402,7 +8433,7 @@ function $l(e, t) {
 				frame: V(d.frame) || void 0
 			});
 			l.push({
-				id: `${zl}:${i.cikPadded}:${t.taxonomy}:${t.concept}:${p}`.toLowerCase(),
+				id: `${Wl}:${i.cikPadded}:${t.taxonomy}:${t.concept}:${p}`.toLowerCase(),
 				cik: i.cik,
 				cikPadded: i.cikPadded,
 				ticker: i.ticker,
@@ -8413,7 +8444,7 @@ function $l(e, t) {
 				factLabel: V(r.label) || t.concept,
 				unit: u,
 				value: f,
-				periodStart: Kl.test(V(d.start)) ? V(d.start) : void 0,
+				periodStart: Zl.test(V(d.start)) ? V(d.start) : void 0,
 				periodEnd: p,
 				fiscalYear: H(d.fy),
 				fiscalPeriod: V(d.fp) || void 0,
@@ -8434,12 +8465,12 @@ function $l(e, t) {
 	}
 	return l;
 }
-function eu(e) {
+function au(e) {
 	let t = [];
-	for (let n of e) n.confidence < 90 || t.push(nu(n));
+	for (let n of e) n.confidence < 90 || t.push(su(n));
 	return t;
 }
-function tu(e, t) {
+function ou(e, t) {
 	if (!e.companyFact) return e;
 	let n = t?.companyFact, r = n ? n.rawPayloadHash === e.companyFact.rawPayloadHash ? "unchanged" : "updated" : "first_seen", i = r === "unchanged" && t ? t.timestamp : e.timestamp;
 	return {
@@ -8451,10 +8482,10 @@ function tu(e, t) {
 		}
 	};
 }
-function nu(e) {
-	let t = `companyfact|${e.cik}|${e.concept}|${e.periodEnd}`.toLowerCase(), n = au(e.value, e.unit), r = e.fiscalYear ? ` ${e.fiscalPeriod ?? ""} FY${e.fiscalYear}`.trimEnd() : "", i = `SEC-reported ${e.conceptLabel.toLowerCase()} for ${e.companyName} (${e.ticker}): ${n} as of ${e.periodEnd}${r}, filed ${e.filedDate} on ${e.form}. Historical SEC-reported fact, not estimate or valuation.`, a = Date.parse(`${e.filedDate}T00:00:00Z`);
+function su(e) {
+	let t = `companyfact|${e.cik}|${e.concept}|${e.periodEnd}`.toLowerCase(), n = uu(e.value, e.unit), r = e.fiscalYear ? ` ${e.fiscalPeriod ?? ""} FY${e.fiscalYear}`.trimEnd() : "", i = `SEC-reported ${e.conceptLabel.toLowerCase()} for ${e.companyName} (${e.ticker}): ${n} as of ${e.periodEnd}${r}, filed ${e.filedDate} on ${e.form}. Historical SEC-reported fact, not estimate or valuation.`, a = Date.parse(`${e.filedDate}T00:00:00Z`);
 	return {
-		id: G(zl, t),
+		id: G(Wl, t),
 		timestamp: Number.isFinite(a) ? a : e.retrievedAt,
 		title: `${e.ticker} ${e.conceptLabel}: ${n} (${e.periodEnd})`.slice(0, 180),
 		summary: i,
@@ -8463,7 +8494,7 @@ function nu(e) {
 		category: "company-fact",
 		severity: "stable",
 		confidence: e.confidence,
-		sourceId: zl,
+		sourceId: Wl,
 		sourceUrl: e.sourceUrl,
 		provenance: "public-disclosure",
 		affectedAssets: [e.ticker],
@@ -8486,33 +8517,33 @@ function nu(e) {
 		companyFact: e
 	};
 }
-function ru(e) {
+function cu(e) {
 	let t = null;
 	for (let n of e) {
-		let e = su(n);
-		e && (!t || iu(e) > iu(t)) && (t = e);
+		let e = fu(n);
+		e && (!t || lu(e) > lu(t)) && (t = e);
 	}
 	return t;
 }
-function iu(e) {
+function lu(e) {
 	return `${V(e.end)}|${V(e.filed)}`;
 }
-function au(e, t) {
+function uu(e, t) {
 	if (t === "USD") {
 		let t = Math.abs(e);
 		return t >= 1e9 ? `$${(e / 1e9).toFixed(2)}B` : t >= 1e6 ? `$${(e / 1e6).toFixed(2)}M` : `$${e.toLocaleString("en-US")}`;
 	}
 	return t === "shares" ? `${e.toLocaleString("en-US")} shares` : `${e.toLocaleString("en-US")} ${t}`;
 }
-function ou(e) {
+function du(e) {
 	if (typeof e != "string") return;
 	let t = e.split(",").map((e) => e.trim().toUpperCase()).filter((e) => /^[A-Z.-]{1,12}$/.test(e));
 	return t.length > 0 ? B(t) : void 0;
 }
-function su(e) {
+function fu(e) {
 	return e && typeof e == "object" ? e : null;
 }
-function cu(e) {
+function pu(e) {
 	try {
 		let t = new URL(e);
 		return t.protocol === "https:" && /(^|\.)sec\.gov$/i.test(t.hostname);
@@ -8520,19 +8551,19 @@ function cu(e) {
 		return !1;
 	}
 }
-function lu(e, t, n) {
+function mu(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function uu(e, t) {
+function hu(e, t) {
 	if (e.aborted) return e;
 	if (t.aborted) return t;
 	let n = new AbortController(), r = () => n.abort();
 	return e.addEventListener("abort", r, { once: !0 }), t.addEventListener("abort", r, { once: !0 }), n.signal;
 }
-Jl.map((e) => e.label);
+$l.map((e) => e.label);
 //#endregion
 //#region electron/osint/adapters/secForm4Adapter.ts
-var du = "sec_form4_public", fu = "https://data.sec.gov/submissions", pu = "https://www.sec.gov/Archives/edgar/data", mu = "https://www.sec.gov/files/company_tickers.json", hu = [
+var gu = "sec_form4_public", _u = "https://data.sec.gov/submissions", vu = "https://www.sec.gov/Archives/edgar/data", yu = "https://www.sec.gov/files/company_tickers.json", bu = [
 	"NVDA",
 	"AMD",
 	"AAPL",
@@ -8544,7 +8575,7 @@ var du = "sec_form4_public", fu = "https://data.sec.gov/submissions", pu = "http
 	"INTC",
 	"XOM",
 	"CVX"
-], gu = 5, _u = 30, vu = 2e4, yu = 1, bu = 1500, xu = /^\d{4}-\d{2}-\d{2}$/, Su = {
+], xu = 5, Su = 30, Cu = 2e4, wu = 1, Tu = 1500, Eu = /^\d{4}-\d{2}-\d{2}$/, Du = {
 	P: "Open-market or private purchase",
 	S: "Open-market or private sale",
 	A: "Grant, award, or other acquisition",
@@ -8556,28 +8587,28 @@ var du = "sec_form4_public", fu = "https://data.sec.gov/submissions", pu = "http
 	X: "Exercise of in-the-money or at-the-money derivative",
 	J: "Other acquisition or disposition"
 };
-function Cu(e = process.env) {
+function Ou(e = process.env) {
 	if (e.ATLASZ_SEC_FORM4_DISABLE === "1") return null;
 	let t = V(e.ATLASZ_SEC_USER_AGENT);
 	if (!t || !/@|https?:\/\//.test(t)) return null;
-	let n = V(e.ATLASZ_SEC_FORM4_SUBMISSIONS_BASE) || fu, r = V(e.ATLASZ_SEC_FORM4_ARCHIVES_BASE) || pu, i = V(e.ATLASZ_SEC_FORM4_IDENTITY_URL) || mu;
+	let n = V(e.ATLASZ_SEC_FORM4_SUBMISSIONS_BASE) || _u, r = V(e.ATLASZ_SEC_FORM4_ARCHIVES_BASE) || vu, i = V(e.ATLASZ_SEC_FORM4_IDENTITY_URL) || yu;
 	return [
 		n,
 		r,
 		i
-	].every(Nu) ? {
+	].every(Ru) ? {
 		submissionsBase: n,
 		archivesBase: r,
 		identityUrl: i,
 		userAgent: t,
-		tickers: Hu(e.ATLASZ_SEC_FORM4_TICKERS) ?? hu,
-		filingsPerCompany: Gu(Number(e.ATLASZ_SEC_FORM4_PER_COMPANY ?? gu), 1, _u),
-		timeoutMs: Gu(Number(e.ATLASZ_SEC_FORM4_TIMEOUT_MS ?? vu), 1e3, 6e4),
-		maxRetries: Gu(Number(e.ATLASZ_SEC_FORM4_MAX_RETRIES ?? yu), 0, 5),
-		backoffMs: Gu(Number(e.ATLASZ_SEC_FORM4_BACKOFF_MS ?? bu), 0, 6e4)
+		tickers: qu(e.ATLASZ_SEC_FORM4_TICKERS) ?? bu,
+		filingsPerCompany: Xu(Number(e.ATLASZ_SEC_FORM4_PER_COMPANY ?? xu), 1, Su),
+		timeoutMs: Xu(Number(e.ATLASZ_SEC_FORM4_TIMEOUT_MS ?? Cu), 1e3, 6e4),
+		maxRetries: Xu(Number(e.ATLASZ_SEC_FORM4_MAX_RETRIES ?? wu), 0, 5),
+		backoffMs: Xu(Number(e.ATLASZ_SEC_FORM4_BACKOFF_MS ?? Tu), 0, 6e4)
 	} : null;
 }
-async function wu(t, n) {
+async function ku(t, n) {
 	let r = await fetch(t.identityUrl, {
 		signal: n,
 		headers: {
@@ -8586,7 +8617,7 @@ async function wu(t, n) {
 		}
 	});
 	e(r, "SEC company tickers");
-	let i = Ol(await r.json(), { retrievedAt: Date.now() }), a = new Set(t.tickers.map((e) => e.toUpperCase()));
+	let i = Nl(await r.json(), { retrievedAt: Date.now() }), a = new Set(t.tickers.map((e) => e.toUpperCase()));
 	return i.filter((e) => a.has(e.ticker.toUpperCase())).map((e) => ({
 		ticker: e.ticker,
 		cik: e.cik,
@@ -8594,14 +8625,14 @@ async function wu(t, n) {
 		companyName: e.legalName
 	}));
 }
-async function Tu(e, t = Cu()) {
+async function Au(e, t = Ou()) {
 	if (!t) return [];
-	let n = await wu(t, e), r = [];
+	let n = await ku(t, e), r = [];
 	for (let i of n) {
-		let n = await Eu(i, t, e);
+		let n = await ju(i, t, e);
 		for (let a of n.slice(0, t.filingsPerCompany)) {
-			let n = await Fu(a.xmlUrl, t, e);
-			r.push(...Du(n, {
+			let n = await Bu(a.xmlUrl, t, e);
+			r.push(...Mu(n, {
 				issuer: i,
 				accessionNumber: a.accessionNumber,
 				filingDate: a.filingDate,
@@ -8612,21 +8643,21 @@ async function Tu(e, t = Cu()) {
 			}));
 		}
 	}
-	return Ou(r);
+	return Nu(r);
 }
-async function Eu(e, n, r) {
-	let i = `${n.submissionsBase.replace(/\/$/, "")}/CIK${e.cikPadded}.json`, a = Uu(Uu(Uu(await t((e) => Pu(i, n, Ku(r, e)), {
+async function ju(e, n, r) {
+	let i = `${n.submissionsBase.replace(/\/$/, "")}/CIK${e.cikPadded}.json`, a = Ju(Ju(Ju(await t((e) => zu(i, n, Zu(r, e)), {
 		maxRetries: n.maxRetries,
 		backoffMs: n.backoffMs,
 		timeoutMs: n.timeoutMs
 	}))?.filings)?.recent);
 	if (!a) return [];
-	let o = Wu(a.form), s = Wu(a.accessionNumber), c = Wu(a.filingDate), l = Wu(a.primaryDocument), u = [];
+	let o = Yu(a.form), s = Yu(a.accessionNumber), c = Yu(a.filingDate), l = Yu(a.primaryDocument), u = [];
 	for (let t = 0; t < o.length; t += 1) {
 		let r = V(o[t]).toUpperCase();
 		if (r !== "4" && r !== "4/A") continue;
 		let i = V(s[t]), a = V(c[t]), d = V(l[t]);
-		if (!i || !xu.test(a) || !d) continue;
+		if (!i || !Eu.test(a) || !d) continue;
 		let f = i.replace(/-/g, ""), p = d.replace(/^xsl[^/]*\//i, "");
 		if (!/\.xml$/i.test(p)) continue;
 		let m = `${n.archivesBase.replace(/\/$/, "")}/${Number(e.cik)}/${f}`;
@@ -8640,14 +8671,14 @@ async function Eu(e, n, r) {
 	}
 	return u;
 }
-function Du(e, t) {
+function Mu(e, t) {
 	if (!e || !/<ownershipDocument/i.test(e)) return [];
-	let { issuer: n, accessionNumber: r, filingDate: i } = t, a = !!t.isAmendment || /<documentType>\s*4\/A\s*<\/documentType>/i.test(e), o = t.retrievedAt ?? Date.now(), s = t.sourceFilingUrl ?? "", c = t.sourceXmlUrl ?? "", l = Iu(e, "issuer"), u = Ru(l, "issuerCik").replace(/\D/g, "").replace(/^0+/, "") || n.cik;
+	let { issuer: n, accessionNumber: r, filingDate: i } = t, a = !!t.isAmendment || /<documentType>\s*4\/A\s*<\/documentType>/i.test(e), o = t.retrievedAt ?? Date.now(), s = t.sourceFilingUrl ?? "", c = t.sourceXmlUrl ?? "", l = Vu(e, "issuer"), u = Uu(l, "issuerCik").replace(/\D/g, "").replace(/^0+/, "") || n.cik;
 	if (u !== n.cik) return [];
-	let d = Iu(e, "reportingOwner"), f = Ru(d, "rptOwnerName"), p = Ru(d, "rptOwnerCik").replace(/\D/g, "").replace(/^0+/, "") || void 0, m = ju(Iu(d, "reportingOwnerRelationship")), h = [];
-	for (let t of Lu(e, "nonDerivativeTransaction")) {
-		let e = zu(t, "securityTitle"), d = zu(t, "transactionDate"), g = Ru(Iu(t, "transactionCoding"), "transactionCode").toUpperCase(), _ = Iu(t, "transactionAmounts"), v = Vu(zu(_, "transactionShares")), y = Vu(zu(_, "transactionPricePerShare")), b = zu(_, "transactionAcquiredDisposedCode").toUpperCase(), x = Vu(zu(Iu(t, "postTransactionAmounts"), "sharesOwnedFollowingTransaction")), S = zu(Iu(t, "ownershipNature"), "directOrIndirectOwnership").toUpperCase() || void 0;
-		if (!Mu({
+	let d = Vu(e, "reportingOwner"), f = Uu(d, "rptOwnerName"), p = Uu(d, "rptOwnerCik").replace(/\D/g, "").replace(/^0+/, "") || void 0, m = Iu(Vu(d, "reportingOwnerRelationship")), h = [];
+	for (let t of Hu(e, "nonDerivativeTransaction")) {
+		let e = Wu(t, "securityTitle"), d = Wu(t, "transactionDate"), g = Uu(Vu(t, "transactionCoding"), "transactionCode").toUpperCase(), _ = Vu(t, "transactionAmounts"), v = Ku(Wu(_, "transactionShares")), y = Ku(Wu(_, "transactionPricePerShare")), b = Wu(_, "transactionAcquiredDisposedCode").toUpperCase(), x = Ku(Wu(Vu(t, "postTransactionAmounts"), "sharesOwnedFollowingTransaction")), S = Wu(Vu(t, "ownershipNature"), "directOrIndirectOwnership").toUpperCase() || void 0;
+		if (!Lu({
 			ownerName: f,
 			transactionDate: d,
 			transactionCode: g,
@@ -8673,11 +8704,11 @@ function Du(e, t) {
 			sharesOwnedFollowing: x
 		});
 		h.push({
-			id: `${du}:${n.cikPadded}:${r}:${g}:${d}:${v ?? 0}`.toLowerCase(),
+			id: `${gu}:${n.cikPadded}:${r}:${g}:${d}:${v ?? 0}`.toLowerCase(),
 			issuerCik: u,
 			issuerCikPadded: n.cikPadded,
 			issuerTicker: n.ticker,
-			issuerName: Ru(l, "issuerName") || n.companyName,
+			issuerName: Uu(l, "issuerName") || n.companyName,
 			accessionNumber: r,
 			isAmendment: a,
 			filingDate: i,
@@ -8687,7 +8718,7 @@ function Du(e, t) {
 			ownerRelationship: m,
 			securityTitle: e,
 			transactionCode: g,
-			transactionCodeLabel: Su[g] ?? "Other transaction",
+			transactionCodeLabel: Du[g] ?? "Other transaction",
 			transactionShares: v,
 			transactionPricePerShare: y,
 			acquiredDisposedCode: b,
@@ -8705,12 +8736,12 @@ function Du(e, t) {
 	}
 	return h;
 }
-function Ou(e) {
+function Nu(e) {
 	let t = [];
-	for (let n of e) n.confidence < 90 || t.push(Au(n));
+	for (let n of e) n.confidence < 90 || t.push(Fu(n));
 	return t;
 }
-function ku(e, t) {
+function Pu(e, t) {
 	if (!e.form4Transaction) return e;
 	let n = t?.form4Transaction, r = n ? n.rawPayloadHash === e.form4Transaction.rawPayloadHash ? "unchanged" : "updated" : "first_seen", i = r === "unchanged" && t ? t.timestamp : e.timestamp;
 	return {
@@ -8722,10 +8753,10 @@ function ku(e, t) {
 		}
 	};
 }
-function Au(e) {
+function Fu(e) {
 	let t = `form4|${e.issuerCik}|${e.accessionNumber}|${e.transactionCode}|${e.transactionDate}|${e.transactionShares ?? 0}`.toLowerCase(), n = e.acquiredDisposedCode === "A" ? "acquired" : e.acquiredDisposedCode === "D" ? "disposed" : "reported", r = e.transactionShares === void 0 ? "shares" : `${e.transactionShares.toLocaleString("en-US")} shares`, i = e.transactionPricePerShare === void 0 ? "" : ` at $${e.transactionPricePerShare}`, a = e.ownerRelationship ? ` (${e.ownerRelationship})` : "", o = `${e.isAmendment ? "SEC Form 4/A (amendment)" : "SEC Form 4"}: ${e.ownerName}${a} ${n} ${r} of ${e.issuerName} (${e.issuerTicker})${i} on ${e.transactionDate} — code ${e.transactionCode} (${e.transactionCodeLabel}), filed ${e.filingDate}. Source-reported SEC ownership transaction; not sentiment, valuation, or trading advice.`, s = Date.parse(`${e.filingDate}T00:00:00Z`);
 	return {
-		id: G(du, t),
+		id: G(gu, t),
 		timestamp: Number.isFinite(s) ? s : e.retrievedAt,
 		title: `Form 4: ${e.issuerTicker} ${e.ownerName} ${e.transactionCode} ${e.transactionShares?.toLocaleString("en-US") ?? ""}`.slice(0, 180),
 		summary: o,
@@ -8734,7 +8765,7 @@ function Au(e) {
 		category: "insider-transaction",
 		severity: "stable",
 		confidence: e.confidence,
-		sourceId: du,
+		sourceId: gu,
 		sourceUrl: e.sourceFilingUrl || e.sourceXmlUrl,
 		provenance: "public-disclosure",
 		affectedAssets: [e.issuerTicker],
@@ -8758,23 +8789,23 @@ function Au(e) {
 		form4Transaction: e
 	};
 }
-function ju(e) {
+function Iu(e) {
 	if (!e) return "";
 	let t = [];
 	if (/<isDirector>\s*(1|true)\s*<\/isDirector>/i.test(e) && t.push("Director"), /<isTenPercentOwner>\s*(1|true)\s*<\/isTenPercentOwner>/i.test(e) && t.push("10% owner"), /<isOfficer>\s*(1|true)\s*<\/isOfficer>/i.test(e)) {
-		let n = Ru(e, "officerTitle");
+		let n = Uu(e, "officerTitle");
 		t.push(n ? `Officer: ${n}` : "Officer");
 	}
 	if (/<isOther>\s*(1|true)\s*<\/isOther>/i.test(e)) {
-		let n = Ru(e, "otherText");
+		let n = Uu(e, "otherText");
 		t.push(n ? `Other: ${n}` : "Other");
 	}
 	return t.join(", ");
 }
-function Mu(e) {
-	return !!(e.ownerName && xu.test(e.transactionDate) && /^[A-Z]$/.test(e.transactionCode) && e.accessionNumber && xu.test(e.filingDate));
+function Lu(e) {
+	return !!(e.ownerName && Eu.test(e.transactionDate) && /^[A-Z]$/.test(e.transactionCode) && e.accessionNumber && Eu.test(e.filingDate));
 }
-function Nu(e) {
+function Ru(e) {
 	try {
 		let t = new URL(e);
 		return t.protocol === "https:" && /(^|\.)sec\.gov$/i.test(t.hostname);
@@ -8782,7 +8813,7 @@ function Nu(e) {
 		return !1;
 	}
 }
-async function Pu(t, n, r) {
+async function zu(t, n, r) {
 	let i = await fetch(t, {
 		signal: r,
 		headers: {
@@ -8792,10 +8823,10 @@ async function Pu(t, n, r) {
 	});
 	return e(i, "SEC Form 4 submissions"), i.json();
 }
-async function Fu(n, r, i) {
+async function Bu(n, r, i) {
 	return t(async (t) => {
 		let a = await fetch(n, {
-			signal: Ku(i, t),
+			signal: Zu(i, t),
 			headers: {
 				accept: "application/xml, text/xml",
 				"user-agent": r.userAgent
@@ -8808,42 +8839,42 @@ async function Fu(n, r, i) {
 		timeoutMs: r.timeoutMs
 	});
 }
-function Iu(e, t) {
+function Vu(e, t) {
 	return RegExp(`<${t}\\b[^>]*>([\\s\\S]*?)<\\/${t}>`, "i").exec(e)?.[1] ?? "";
 }
-function Lu(e, t) {
+function Hu(e, t) {
 	return e ? [...e.matchAll(RegExp(`<${t}\\b[^>]*>([\\s\\S]*?)<\\/${t}>`, "gi"))].map((e) => e[1] ?? "") : [];
 }
-function Ru(e, t) {
-	return Bu(Iu(e, t)).trim();
+function Uu(e, t) {
+	return Gu(Vu(e, t)).trim();
 }
-function zu(e, t) {
-	let n = Iu(e, t);
-	return n ? Bu(Iu(n, "value") || n).trim() : "";
+function Wu(e, t) {
+	let n = Vu(e, t);
+	return n ? Gu(Vu(n, "value") || n).trim() : "";
 }
-function Bu(e) {
+function Gu(e) {
 	return e.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, "\"").replace(/&apos;/g, "'").replace(/\s+/g, " ").trim();
 }
-function Vu(e) {
+function Ku(e) {
 	if (!e) return;
 	let t = Number(e);
 	return Number.isFinite(t) ? t : void 0;
 }
-function Hu(e) {
+function qu(e) {
 	if (typeof e != "string") return;
 	let t = e.split(",").map((e) => e.trim().toUpperCase()).filter((e) => /^[A-Z.-]{1,12}$/.test(e));
 	return t.length > 0 ? B(t) : void 0;
 }
-function Uu(e) {
+function Ju(e) {
 	return e && typeof e == "object" ? e : null;
 }
-function Wu(e) {
+function Yu(e) {
 	return Array.isArray(e) ? e : [];
 }
-function Gu(e, t, n) {
+function Xu(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function Ku(e, t) {
+function Zu(e, t) {
 	if (e.aborted) return e;
 	if (t.aborted) return t;
 	let n = new AbortController(), r = () => n.abort();
@@ -8851,7 +8882,7 @@ function Ku(e, t) {
 }
 //#endregion
 //#region electron/osint/adapters/secForm13FAdapter.ts
-var qu = "sec_form13f_public", Ju = "https://data.sec.gov/submissions", Yu = "https://www.sec.gov/Archives/edgar/data", Xu = 1, Zu = 8, Qu = 50, $u = 500, ed = 25e3, td = 1, nd = 1500, rd = /^\d{4}-\d{2}-\d{2}$/, id = [
+var Qu = "sec_form13f_public", $u = "https://data.sec.gov/submissions", ed = "https://www.sec.gov/Archives/edgar/data", td = 1, nd = 8, rd = 50, id = 500, ad = 25e3, od = 1, sd = 1500, cd = /^\d{4}-\d{2}-\d{2}$/, ld = [
 	"1067983",
 	"1364742",
 	"102909",
@@ -8860,7 +8891,7 @@ var qu = "sec_form13f_public", Ju = "https://data.sec.gov/submissions", Yu = "ht
 	"1595888",
 	"1037389",
 	"1697748"
-], ad = {
+], ud = {
 	"037833100": "AAPL",
 	"67066G104": "NVDA",
 	594918104: "MSFT",
@@ -8874,35 +8905,35 @@ var qu = "sec_form13f_public", Ju = "https://data.sec.gov/submissions", Yu = "ht
 	"30231G102": "XOM",
 	166764100: "CVX"
 };
-function od(e = process.env) {
+function dd(e = process.env) {
 	if (e.ATLASZ_SEC_13F_DISABLE === "1") return null;
 	let t = V(e.ATLASZ_SEC_USER_AGENT);
 	if (!t || !/@|https?:\/\//.test(t)) return null;
-	let n = V(e.ATLASZ_SEC_13F_SUBMISSIONS_BASE) || Ju, r = V(e.ATLASZ_SEC_13F_ARCHIVES_BASE) || Yu;
-	if (![n, r].every(gd)) return null;
-	let i = Td(e.ATLASZ_SEC_13F_CIKS);
+	let n = V(e.ATLASZ_SEC_13F_SUBMISSIONS_BASE) || $u, r = V(e.ATLASZ_SEC_13F_ARCHIVES_BASE) || ed;
+	if (![n, r].every(xd)) return null;
+	let i = Ad(e.ATLASZ_SEC_13F_CIKS);
 	return {
 		submissionsBase: n,
 		archivesBase: r,
 		userAgent: t,
-		managerCiks: i ? i.filter((e) => id.includes(e)) : id,
-		perManagerFilings: Od(Number(e.ATLASZ_SEC_13F_PER_MANAGER ?? Xu), 1, Zu),
-		maxHoldingsPerFiling: Od(Number(e.ATLASZ_SEC_13F_MAX_HOLDINGS ?? Qu), 1, $u),
-		timeoutMs: Od(Number(e.ATLASZ_SEC_13F_TIMEOUT_MS ?? ed), 1e3, 6e4),
-		maxRetries: Od(Number(e.ATLASZ_SEC_13F_MAX_RETRIES ?? td), 0, 5),
-		backoffMs: Od(Number(e.ATLASZ_SEC_13F_BACKOFF_MS ?? nd), 0, 6e4)
+		managerCiks: i ? i.filter((e) => ld.includes(e)) : ld,
+		perManagerFilings: Nd(Number(e.ATLASZ_SEC_13F_PER_MANAGER ?? td), 1, nd),
+		maxHoldingsPerFiling: Nd(Number(e.ATLASZ_SEC_13F_MAX_HOLDINGS ?? rd), 1, id),
+		timeoutMs: Nd(Number(e.ATLASZ_SEC_13F_TIMEOUT_MS ?? ad), 1e3, 6e4),
+		maxRetries: Nd(Number(e.ATLASZ_SEC_13F_MAX_RETRIES ?? od), 0, 5),
+		backoffMs: Nd(Number(e.ATLASZ_SEC_13F_BACKOFF_MS ?? sd), 0, 6e4)
 	};
 }
-async function sd(e, t = od()) {
+async function fd(e, t = dd()) {
 	if (!t) return [];
 	let n = [];
 	for (let r of t.managerCiks) {
-		let i = await cd(r, t, e);
+		let i = await pd(r, t, e);
 		for (let r of i.slice(0, t.perManagerFilings)) {
-			let i = await ld(r.dir, t, e);
+			let i = await md(r.dir, t, e);
 			if (!i) continue;
-			let a = await vd(i, t, e);
-			n.push(...ud(a, {
+			let a = await Cd(i, t, e);
+			n.push(...hd(a, {
 				filer: r.filer,
 				accessionNumber: r.accessionNumber,
 				filingType: r.filingType,
@@ -8915,21 +8946,21 @@ async function sd(e, t = od()) {
 			}));
 		}
 	}
-	return dd(n);
+	return gd(n);
 }
-async function cd(e, n, r) {
-	let i = e.replace(/\D/g, "").replace(/^0+/, ""), a = i.padStart(10, "0"), o = `${n.submissionsBase.replace(/\/$/, "")}/CIK${a}.json`, s = Ed(await t((e) => _d(o, n, kd(r, e)), {
+async function pd(e, n, r) {
+	let i = e.replace(/\D/g, "").replace(/^0+/, ""), a = i.padStart(10, "0"), o = `${n.submissionsBase.replace(/\/$/, "")}/CIK${a}.json`, s = jd(await t((e) => Sd(o, n, Pd(r, e)), {
 		maxRetries: n.maxRetries,
 		backoffMs: n.backoffMs,
 		timeoutMs: n.timeoutMs
-	})), c = V(s?.name), l = Ed(Ed(s?.filings)?.recent);
+	})), c = V(s?.name), l = jd(jd(s?.filings)?.recent);
 	if (!l) return [];
-	let u = Dd(l.form), d = Dd(l.accessionNumber), f = Dd(l.filingDate), p = Dd(l.reportDate), m = [];
+	let u = Md(l.form), d = Md(l.accessionNumber), f = Md(l.filingDate), p = Md(l.reportDate), m = [];
 	for (let e = 0; e < u.length; e += 1) {
 		let t = V(u[e]).toUpperCase();
 		if (t !== "13F-HR" && t !== "13F-HR/A") continue;
 		let r = V(d[e]), o = V(f[e]);
-		if (!r || !rd.test(o)) continue;
+		if (!r || !cd.test(o)) continue;
 		let s = r.replace(/-/g, ""), l = `${n.archivesBase.replace(/\/$/, "")}/${i}/${s}`;
 		m.push({
 			filer: {
@@ -8947,25 +8978,25 @@ async function cd(e, n, r) {
 	}
 	return m;
 }
-async function ld(e, n, r) {
-	let i = Dd(Ed(Ed(await t((t) => _d(`${e}/index.json`, n, kd(r, t)), {
+async function md(e, n, r) {
+	let i = Md(jd(jd(await t((t) => Sd(`${e}/index.json`, n, Pd(r, t)), {
 		maxRetries: n.maxRetries,
 		backoffMs: n.backoffMs,
 		timeoutMs: n.timeoutMs
-	}))?.directory)?.item).map((e) => V(Ed(e)?.name)).filter((e) => /\.xml$/i.test(e) && !/^primary_doc\.xml$/i.test(e) && !/^xsl/i.test(e));
+	}))?.directory)?.item).map((e) => V(jd(e)?.name)).filter((e) => /\.xml$/i.test(e) && !/^primary_doc\.xml$/i.test(e) && !/^xsl/i.test(e));
 	for (let t of i) {
-		let i = `${e}/${t}`, a = await vd(i, n, r);
+		let i = `${e}/${t}`, a = await Cd(i, n, r);
 		if (/<(?:[\w-]+:)?informationTable\b/i.test(a)) return i;
 	}
 	return null;
 }
-function ud(e, t) {
+function hd(e, t) {
 	if (!e || !/<(?:[\w-]+:)?informationTable\b/i.test(e)) return [];
-	let { filer: n, accessionNumber: r, filingType: i, reportPeriod: a, filingDate: o } = t, s = t.retrievedAt ?? Date.now(), c = t.maxHoldings ?? Qu, l = /\/A$/i.test(i), u = [];
-	for (let d of bd(e, "infoTable")) {
+	let { filer: n, accessionNumber: r, filingType: i, reportPeriod: a, filingDate: o } = t, s = t.retrievedAt ?? Date.now(), c = t.maxHoldings ?? rd, l = /\/A$/i.test(i), u = [];
+	for (let d of Td(e, "infoTable")) {
 		if (u.length >= c) break;
-		let e = xd(d, "nameOfIssuer"), f = xd(d, "cusip").toUpperCase(), p = xd(d, "titleOfClass"), m = Cd(xd(d, "value")), h = yd(d, "shrsOrPrnAmt"), g = Cd(xd(h, "sshPrnamt")), _ = xd(h, "sshPrnamtType") || void 0, v = xd(d, "putCall") || void 0, y = xd(d, "investmentDiscretion") || void 0, b = yd(d, "votingAuthority");
-		if (!md({
+		let e = Ed(d, "nameOfIssuer"), f = Ed(d, "cusip").toUpperCase(), p = Ed(d, "titleOfClass"), m = Od(Ed(d, "value")), h = wd(d, "shrsOrPrnAmt"), g = Od(Ed(h, "sshPrnamt")), _ = Ed(h, "sshPrnamtType") || void 0, v = Ed(d, "putCall") || void 0, y = Ed(d, "investmentDiscretion") || void 0, b = wd(d, "votingAuthority");
+		if (!yd({
 			issuerName: e,
 			cusip: f,
 			value: m,
@@ -8974,7 +9005,7 @@ function ud(e, t) {
 			filingType: i,
 			filerName: n.name
 		})) continue;
-		let x = ad[f], S = t.sourceFilingUrl ?? "", C = t.sourceInfoTableUrl ?? "", w = W({
+		let x = ud[f], S = t.sourceFilingUrl ?? "", C = t.sourceInfoTableUrl ?? "", w = W({
 			filerCik: n.cik,
 			accessionNumber: r,
 			filingType: i,
@@ -8989,7 +9020,7 @@ function ud(e, t) {
 			investmentDiscretion: y,
 			sourceFilingUrl: S,
 			sourceInfoTableUrl: C
-		}), T = hd({
+		}), T = bd({
 			accessionNumber: r,
 			filingDate: o,
 			sourceFilingUrl: S,
@@ -8997,7 +9028,7 @@ function ud(e, t) {
 			rawPayloadJson: w
 		});
 		u.push({
-			id: `${qu}:${n.cikPadded}:${r}:${f}:${v ?? "none"}`.toLowerCase(),
+			id: `${Qu}:${n.cikPadded}:${r}:${f}:${v ?? "none"}`.toLowerCase(),
 			accessionNumber: r,
 			filingType: i,
 			isAmendment: l,
@@ -9015,9 +9046,9 @@ function ud(e, t) {
 			sharesPrincipalType: _,
 			putCall: v,
 			investmentDiscretion: y,
-			votingSole: Cd(xd(b, "Sole")),
-			votingShared: Cd(xd(b, "Shared")),
-			votingNone: Cd(xd(b, "None")),
+			votingSole: Od(Ed(b, "Sole")),
+			votingShared: Od(Ed(b, "Shared")),
+			votingNone: Od(Ed(b, "None")),
 			sourceFilingUrl: S,
 			sourceInfoTableUrl: C,
 			retrievedAt: s,
@@ -9030,12 +9061,12 @@ function ud(e, t) {
 	}
 	return u;
 }
-function dd(e) {
+function gd(e) {
 	let t = [];
-	for (let n of e) n.confidence < 90 || t.push(pd(n));
+	for (let n of e) n.confidence < 90 || t.push(vd(n));
 	return t;
 }
-function fd(e, t) {
+function _d(e, t) {
 	if (!e.form13fHolding) return e;
 	let n = t?.form13fHolding, r = n ? n.rawPayloadHash === e.form13fHolding.rawPayloadHash ? "unchanged" : "updated" : "first_seen", i = r === "unchanged" && t ? t.timestamp : e.timestamp;
 	return {
@@ -9047,10 +9078,10 @@ function fd(e, t) {
 		}
 	};
 }
-function pd(e) {
-	let t = `form13f|${e.filerCik}|${e.accessionNumber}|${e.cusip}|${e.putCall ?? ""}`.toLowerCase(), n = e.isAmendment ? "SEC Form 13F-HR/A (amendment)" : "SEC Form 13F-HR", r = e.sharesOrPrincipal === void 0 ? "a position" : `${e.sharesOrPrincipal.toLocaleString("en-US")} ${e.sharesPrincipalType ?? "shares"}`, i = `${n}: ${e.filerName} reported ${r} of ${e.issuerName} (value ${wd(e.value)} as reported) for the quarter ending ${e.reportPeriod || "n/a"}, filed ${e.filingDate}. Quarterly SEC-reported holding snapshot; not current position, conviction, or trading advice.`, a = rd.test(e.filingDate) ? Date.parse(`${e.filingDate}T00:00:00Z`) : e.retrievedAt;
+function vd(e) {
+	let t = `form13f|${e.filerCik}|${e.accessionNumber}|${e.cusip}|${e.putCall ?? ""}`.toLowerCase(), n = e.isAmendment ? "SEC Form 13F-HR/A (amendment)" : "SEC Form 13F-HR", r = e.sharesOrPrincipal === void 0 ? "a position" : `${e.sharesOrPrincipal.toLocaleString("en-US")} ${e.sharesPrincipalType ?? "shares"}`, i = `${n}: ${e.filerName} reported ${r} of ${e.issuerName} (value ${kd(e.value)} as reported) for the quarter ending ${e.reportPeriod || "n/a"}, filed ${e.filingDate}. Quarterly SEC-reported holding snapshot; not current position, conviction, or trading advice.`, a = cd.test(e.filingDate) ? Date.parse(`${e.filingDate}T00:00:00Z`) : e.retrievedAt;
 	return {
-		id: G(qu, t),
+		id: G(Qu, t),
 		timestamp: Number.isFinite(a) ? a : e.retrievedAt,
 		title: `13F: ${e.filerName} · ${e.issuerName}${e.issuerTicker ? ` (${e.issuerTicker})` : ""}`.slice(0, 180),
 		summary: i,
@@ -9059,7 +9090,7 @@ function pd(e) {
 		category: "institutional-holding",
 		severity: "stable",
 		confidence: e.confidence,
-		sourceId: qu,
+		sourceId: Qu,
 		sourceUrl: e.sourceFilingUrl || e.sourceInfoTableUrl,
 		provenance: "public-disclosure",
 		affectedAssets: e.issuerTicker ? [e.issuerTicker] : [],
@@ -9082,13 +9113,13 @@ function pd(e) {
 		form13fHolding: e
 	};
 }
-function md(e) {
-	return !!(e.filerName && (e.filingType === "13F-HR" || e.filingType === "13F-HR/A") && e.issuerName && /^[0-9A-Z]{9}$/.test(e.cusip) && e.value !== void 0 && Number.isFinite(e.value) && e.accessionNumber && rd.test(e.filingDate));
+function yd(e) {
+	return !!(e.filerName && (e.filingType === "13F-HR" || e.filingType === "13F-HR/A") && e.issuerName && /^[0-9A-Z]{9}$/.test(e.cusip) && e.value !== void 0 && Number.isFinite(e.value) && e.accessionNumber && cd.test(e.filingDate));
 }
-function hd(e) {
-	return e.accessionNumber && rd.test(e.filingDate) && gd(e.sourceFilingUrl) && gd(e.sourceInfoTableUrl) && e.rawPayloadJson.length > 2 ? 96 : 70;
+function bd(e) {
+	return e.accessionNumber && cd.test(e.filingDate) && xd(e.sourceFilingUrl) && xd(e.sourceInfoTableUrl) && e.rawPayloadJson.length > 2 ? 96 : 70;
 }
-function gd(e) {
+function xd(e) {
 	try {
 		let t = new URL(e);
 		return t.protocol === "https:" && /(^|\.)sec\.gov$/i.test(t.hostname);
@@ -9096,7 +9127,7 @@ function gd(e) {
 		return !1;
 	}
 }
-async function _d(t, n, r) {
+async function Sd(t, n, r) {
 	let i = await fetch(t, {
 		signal: r,
 		headers: {
@@ -9106,10 +9137,10 @@ async function _d(t, n, r) {
 	});
 	return e(i, "SEC 13F submissions"), i.json();
 }
-async function vd(n, r, i) {
+async function Cd(n, r, i) {
 	return t(async (t) => {
 		let a = await fetch(n, {
-			signal: kd(i, t),
+			signal: Pd(i, t),
 			headers: {
 				accept: "application/xml, text/xml, application/json",
 				"user-agent": r.userAgent
@@ -9122,42 +9153,42 @@ async function vd(n, r, i) {
 		timeoutMs: r.timeoutMs
 	});
 }
-function yd(e, t) {
+function wd(e, t) {
 	return RegExp(`<(?:[\\w-]+:)?${t}\\b[^>]*>([\\s\\S]*?)<\\/(?:[\\w-]+:)?${t}>`, "i").exec(e)?.[1] ?? "";
 }
-function bd(e, t) {
+function Td(e, t) {
 	return e ? [...e.matchAll(RegExp(`<(?:[\\w-]+:)?${t}\\b[^>]*>([\\s\\S]*?)<\\/(?:[\\w-]+:)?${t}>`, "gi"))].map((e) => e[1] ?? "") : [];
 }
-function xd(e, t) {
-	return Sd(yd(e, t)).trim();
+function Ed(e, t) {
+	return Dd(wd(e, t)).trim();
 }
-function Sd(e) {
+function Dd(e) {
 	return e.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, "\"").replace(/&apos;/g, "'").replace(/\s+/g, " ").trim();
 }
-function Cd(e) {
+function Od(e) {
 	if (!e) return;
 	let t = Number(e.replace(/,/g, ""));
 	return Number.isFinite(t) ? t : void 0;
 }
-function wd(e) {
+function kd(e) {
 	let t = Math.abs(e);
 	return t >= 1e9 ? `$${(e / 1e9).toFixed(2)}B` : t >= 1e6 ? `$${(e / 1e6).toFixed(2)}M` : t >= 1e3 ? `$${(e / 1e3).toFixed(1)}K` : `$${e.toLocaleString("en-US")}`;
 }
-function Td(e) {
+function Ad(e) {
 	if (typeof e != "string") return;
 	let t = e.split(",").map((e) => e.replace(/\D/g, "").replace(/^0+/, "")).filter(Boolean);
 	return t.length > 0 ? B(t) : void 0;
 }
-function Ed(e) {
+function jd(e) {
 	return e && typeof e == "object" ? e : null;
 }
-function Dd(e) {
+function Md(e) {
 	return Array.isArray(e) ? e : [];
 }
-function Od(e, t, n) {
+function Nd(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function kd(e, t) {
+function Pd(e, t) {
 	if (e.aborted) return e;
 	if (t.aborted) return t;
 	let n = new AbortController(), r = () => n.abort();
@@ -9165,7 +9196,7 @@ function kd(e, t) {
 }
 //#endregion
 //#region electron/osint/adapters/etfHoldingsAdapter.ts
-var Ad = "etf_holdings_public", jd = 25e3, Md = 1, Nd = 1500, Pd = 80, Fd = 500, Id = 1440 * 60 * 1e3 * 7, Ld = [
+var Fd = "etf_holdings_public", Id = 25e3, Ld = 1, Rd = 1500, zd = 80, Bd = 500, Vd = 1440 * 60 * 1e3 * 7, Hd = [
 	{
 		fundTicker: "SOXX",
 		fundName: "iShares Semiconductor ETF",
@@ -9174,12 +9205,12 @@ var Ad = "etf_holdings_public", jd = 25e3, Md = 1, Nd = 1500, Pd = 80, Fd = 500,
 		format: "ishares-spreadsheetml",
 		sourceUrl: "https://www.blackrock.com/varnish-api/blk-one01-product-data/product-data/api/v1/get-fund-document?appSubType=ISHARES&appType=PRODUCT_PAGE&component=fundDownload&locale=en_US&portfolioId=239705&targetSite=us-ishares&userType=individual"
 	},
-	Rd("SPY", "State Street® SPDR® S&P 500® ETF Trust"),
-	Rd("XLK", "State Street® Technology Select Sector SPDR® ETF"),
-	Rd("XLE", "State Street® Energy Select Sector SPDR® ETF"),
-	Rd("XLU", "State Street® Utilities Select Sector SPDR® ETF")
+	Ud("SPY", "State Street® SPDR® S&P 500® ETF Trust"),
+	Ud("XLK", "State Street® Technology Select Sector SPDR® ETF"),
+	Ud("XLE", "State Street® Energy Select Sector SPDR® ETF"),
+	Ud("XLU", "State Street® Utilities Select Sector SPDR® ETF")
 ];
-function Rd(e, t) {
+function Ud(e, t) {
 	return {
 		fundTicker: e,
 		fundName: t,
@@ -9189,23 +9220,23 @@ function Rd(e, t) {
 		sourceUrl: `https://www.ssga.com/library-content/products/fund-data/etfs/us/holdings-daily-us-en-${e.toLowerCase()}.xlsx`
 	};
 }
-function zd(e = process.env) {
+function Wd(e = process.env) {
 	if (e.ATLASZ_ETF_HOLDINGS_DISABLE === "1") return null;
-	let t = V(e.ATLASZ_ETF_HOLDINGS_FUNDS), n = t ? new Set(t.split(",").map((e) => e.trim().toUpperCase()).filter(Boolean)) : null, r = Ld.filter((e) => !n || n.has(e.fundTicker)).filter((e) => ff(e.sourceUrl));
+	let t = V(e.ATLASZ_ETF_HOLDINGS_FUNDS), n = t ? new Set(t.split(",").map((e) => e.trim().toUpperCase()).filter(Boolean)) : null, r = Hd.filter((e) => !n || n.has(e.fundTicker)).filter((e) => _f(e.sourceUrl));
 	return r.length === 0 ? null : {
 		funds: r,
-		timeoutMs: gf(Number(e.ATLASZ_ETF_HOLDINGS_TIMEOUT_MS ?? jd), 1e3, 6e4),
-		maxRetries: gf(Number(e.ATLASZ_ETF_HOLDINGS_MAX_RETRIES ?? Md), 0, 5),
-		backoffMs: gf(Number(e.ATLASZ_ETF_HOLDINGS_BACKOFF_MS ?? Nd), 0, 6e4),
-		maxHoldingsPerFund: gf(Number(e.ATLASZ_ETF_HOLDINGS_MAX_ROWS ?? Pd), 1, Fd)
+		timeoutMs: xf(Number(e.ATLASZ_ETF_HOLDINGS_TIMEOUT_MS ?? Id), 1e3, 6e4),
+		maxRetries: xf(Number(e.ATLASZ_ETF_HOLDINGS_MAX_RETRIES ?? Ld), 0, 5),
+		backoffMs: xf(Number(e.ATLASZ_ETF_HOLDINGS_BACKOFF_MS ?? Rd), 0, 6e4),
+		maxHoldingsPerFund: xf(Number(e.ATLASZ_ETF_HOLDINGS_MAX_ROWS ?? zd), 1, Bd)
 	};
 }
-async function Bd(e, t = zd()) {
+async function Gd(e, t = Wd()) {
 	if (!t) return [];
 	let n = [], r = [];
 	for (let i of t.funds) try {
-		let r = await Kd(i.sourceUrl, t, e);
-		n.push(...Vd(r, i, {
+		let r = await Zd(i.sourceUrl, t, e);
+		n.push(...Kd(r, i, {
 			retrievedAt: Date.now(),
 			maxRows: t.maxHoldingsPerFund
 		}));
@@ -9213,22 +9244,22 @@ async function Bd(e, t = zd()) {
 		r.push(e instanceof Error ? e : Error(String(e)));
 	}
 	if (n.length === 0 && r.length > 0) throw r[0];
-	return Ud(n);
+	return Jd(n);
 }
-function Vd(e, t, n = {}) {
-	return Hd(t.format === "ssga-xlsx" ? qd(e) : Jd(e.toString("utf8")), t, n);
+function Kd(e, t, n = {}) {
+	return qd(t.format === "ssga-xlsx" ? Qd(e) : $d(e.toString("utf8")), t, n);
 }
-function Hd(e, t, n = {}) {
-	if (!e.length || !ff(t.sourceUrl)) return [];
-	let r = n.retrievedAt ?? Date.now(), i = n.maxRows ?? Pd, a = t.format === "ssga-xlsx" ? nf(e, "Fund Name:") || t.fundName : rf(e) || t.fundName, o = (nf(e, "Ticker Symbol:") || t.fundTicker).toUpperCase();
+function qd(e, t, n = {}) {
+	if (!e.length || !_f(t.sourceUrl)) return [];
+	let r = n.retrievedAt ?? Date.now(), i = n.maxRows ?? zd, a = t.format === "ssga-xlsx" ? cf(e, "Fund Name:") || t.fundName : lf(e) || t.fundName, o = (cf(e, "Ticker Symbol:") || t.fundTicker).toUpperCase();
 	if (o !== t.fundTicker || !a) return [];
-	let s = t.format === "ssga-xlsx" ? of(nf(e, "Holdings:")) : of(nf(e, "Fund Holdings as of"));
+	let s = t.format === "ssga-xlsx" ? df(cf(e, "Holdings:")) : df(cf(e, "Fund Holdings as of"));
 	if (!s) return [];
 	let c = Date.parse(`${s}T00:00:00Z`);
 	if (!Number.isFinite(c)) return [];
-	let l = tf(e);
+	let l = sf(e);
 	if (l < 0) return [];
-	let u = e[l].map(af), d = (e) => u.indexOf(e), f = d("name"), p = d("ticker"), m = d("identifier"), h = d("sedol"), g = d("sector"), _ = d("asset_class"), v = d("weight"), y = d("weight_pct"), b = d("shares_held") >= 0 ? d("shares_held") : d("quantity"), x = d("market_value"), S = d("local_currency") >= 0 ? d("local_currency") : d("currency");
+	let u = e[l].map(uf), d = (e) => u.indexOf(e), f = d("name"), p = d("ticker"), m = d("identifier"), h = d("sedol"), g = d("sector"), _ = d("asset_class"), v = d("weight"), y = d("weight_pct"), b = d("shares_held") >= 0 ? d("shares_held") : d("quantity"), x = d("market_value"), S = d("local_currency") >= 0 ? d("local_currency") : d("currency");
 	if (f < 0) return [];
 	let C = [];
 	for (let n = l + 1; n < e.length && C.length < i; n += 1) {
@@ -9236,7 +9267,7 @@ function Hd(e, t, n = {}) {
 		if (/^as of$/i.test(l) || /^nav per share$/i.test(l)) break;
 		let u = K(i[f]);
 		if (!u || /^[-–—]$/.test(u)) continue;
-		let d = K(i[p]).toUpperCase(), w = K(i[_]) || void 0, T = uf(d, w), E = K(i[m]).toUpperCase(), D = {
+		let d = K(i[p]).toUpperCase(), w = K(i[_]) || void 0, T = hf(d, w), E = K(i[m]).toUpperCase(), D = {
 			fundTicker: o,
 			fundName: a,
 			issuer: t.issuer,
@@ -9246,13 +9277,13 @@ function Hd(e, t, n = {}) {
 			identifier: E,
 			sector: K(i[g]),
 			assetClass: w,
-			weight: pf(i[v >= 0 ? v : y]),
-			shares: pf(i[b]),
-			marketValue: pf(i[x]),
+			weight: vf(i[v >= 0 ? v : y]),
+			shares: vf(i[b]),
+			marketValue: vf(i[x]),
 			currency: K(i[S]),
 			sourceUrl: t.sourceUrl
 		}, ee = W(D), te = {
-			id: `${Ad}:${o}:${T ?? (E || hf(u))}`.toLowerCase(),
+			id: `${Fd}:${o}:${T ?? (E || bf(u))}`.toLowerCase(),
 			fundTicker: o,
 			fundName: a,
 			issuer: t.issuer,
@@ -9273,9 +9304,9 @@ function Hd(e, t, n = {}) {
 			sourceUrl: t.sourceUrl,
 			sourceName: t.sourceName,
 			retrievedAt: r,
-			staleAt: c + Id,
+			staleAt: c + Vd,
 			provenance: "public-disclosure",
-			confidence: df(t.sourceUrl, s, u, ee),
+			confidence: gf(t.sourceUrl, s, u, ee),
 			changeType: "first_seen",
 			rawPayloadHash: z(ee),
 			rawPayloadJson: ee
@@ -9284,10 +9315,10 @@ function Hd(e, t, n = {}) {
 	}
 	return C;
 }
-function Ud(e) {
-	return e.filter((e) => e.confidence >= 90).map(Gd);
+function Jd(e) {
+	return e.filter((e) => e.confidence >= 90).map(Xd);
 }
-function Wd(e, t) {
+function Yd(e, t) {
 	if (!e.etfHolding) return e;
 	let n = t?.etfHolding, r = n ? n.rawPayloadHash === e.etfHolding.rawPayloadHash ? "unchanged" : "updated" : "first_seen", i = r === "unchanged" && t ? t.timestamp : e.timestamp;
 	return {
@@ -9299,10 +9330,10 @@ function Wd(e, t) {
 		}
 	};
 }
-function Gd(e) {
+function Xd(e) {
 	let t = e.holdingTicker ? `${e.holdingName} (${e.holdingTicker})` : e.holdingName, n = e.weight === void 0 ? "weight unavailable" : `${e.weight.toFixed(3)}% source-provided weight`, r = `${e.issuer} published ${e.fundTicker} ETF holdings as of ${e.sourceDate}: ${t}, ${n}. Holdings snapshot only; not a current-position guarantee, recommendation, price signal, or trading advice.`, i = `etf-holding|${e.fundTicker}|${e.holdingTicker ?? e.cusip ?? e.isin ?? e.holdingName}`.toLowerCase();
 	return {
-		id: G(Ad, i),
+		id: G(Fd, i),
 		timestamp: e.sourceTimestamp,
 		title: `ETF holding: ${e.fundTicker} · ${t}`.slice(0, 180),
 		summary: r,
@@ -9311,7 +9342,7 @@ function Gd(e) {
 		category: "etf-holding",
 		severity: "stable",
 		confidence: e.confidence,
-		sourceId: Ad,
+		sourceId: Fd,
 		sourceUrl: e.sourceUrl,
 		provenance: "public-disclosure",
 		affectedAssets: e.holdingTicker ? [e.fundTicker, e.holdingTicker] : [e.fundTicker],
@@ -9337,11 +9368,11 @@ function Gd(e) {
 		etfHolding: e
 	};
 }
-async function Kd(n, r, i) {
-	if (!ff(n)) throw Error("ETF holdings source is not an approved official issuer URL");
+async function Zd(n, r, i) {
+	if (!_f(n)) throw Error("ETF holdings source is not an approved official issuer URL");
 	return t(async (t) => {
 		let r = await fetch(n, {
-			signal: _f(i, t),
+			signal: Sf(i, t),
 			headers: {
 				accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, application/xml, text/xml, */*",
 				"user-agent": "Atlasz Intel local-first connector (public ETF issuer holdings)"
@@ -9356,64 +9387,64 @@ async function Kd(n, r, i) {
 		timeoutMs: r.timeoutMs
 	});
 }
-function qd(e) {
-	let t = Yd(e), n = t.get("xl/sharedStrings.xml")?.toString("utf8") ?? "", r = t.get("xl/worksheets/sheet1.xml")?.toString("utf8") ?? "";
+function Qd(e) {
+	let t = ef(e), n = t.get("xl/sharedStrings.xml")?.toString("utf8") ?? "", r = t.get("xl/worksheets/sheet1.xml")?.toString("utf8") ?? "";
 	if (!r) return [];
-	let i = Zd(n), a = [];
+	let i = nf(n), a = [];
 	for (let e of r.matchAll(/<row\b[^>]*>([\s\S]*?)<\/row>/g)) {
 		let t = [];
 		for (let n of (e[1] ?? "").matchAll(/<c\b([^>]*)>([\s\S]*?)<\/c>/g)) {
-			let e = n[1] ?? "", r = n[2] ?? "", a = /r="([A-Z]+)\d+"/.exec(e)?.[1] ?? "", o = a ? ef(a) : t.length, s = /t="([^"]+)"/.exec(e)?.[1] ?? "", c = $d(r, "v");
-			s === "s" ? c = i[Number(c)] ?? "" : s === "inlineStr" && (c = Qd(r).join("")), t[o] = mf(c);
+			let e = n[1] ?? "", r = n[2] ?? "", a = /r="([A-Z]+)\d+"/.exec(e)?.[1] ?? "", o = a ? of(a) : t.length, s = /t="([^"]+)"/.exec(e)?.[1] ?? "", c = af(r, "v");
+			s === "s" ? c = i[Number(c)] ?? "" : s === "inlineStr" && (c = rf(r).join("")), t[o] = yf(c);
 		}
 		t.some((e) => K(e)) && a.push(t.map((e) => K(e)));
 	}
 	return a;
 }
-function Jd(e) {
+function $d(e) {
 	let t = [];
 	for (let n of e.matchAll(/<(?:[\w-]+:)?Row\b[^>]*>([\s\S]*?)<\/(?:[\w-]+:)?Row>/gi)) {
 		let e = [], r = 0;
 		for (let t of (n[1] ?? "").matchAll(/<(?:[\w-]+:)?Cell\b([^>]*)>([\s\S]*?)<\/(?:[\w-]+:)?Cell>/gi)) {
 			let n = t[1] ?? "", i = /(?:ss:)?Index="(\d+)"/i.exec(n)?.[1], a = i ? Number(i) - 1 : r;
-			e[a] = K(mf(Qd(t[2] ?? "").join(""))), r = a + 1;
+			e[a] = K(yf(rf(t[2] ?? "").join(""))), r = a + 1;
 		}
 		e.some((e) => K(e)) && t.push(e);
 	}
 	return t;
 }
-function Yd(e) {
-	let t = Xd(e), n = e.readUInt32LE(t + 16), r = e.readUInt16LE(t + 10), i = /* @__PURE__ */ new Map(), a = n;
+function ef(e) {
+	let t = tf(e), n = e.readUInt32LE(t + 16), r = e.readUInt16LE(t + 10), i = /* @__PURE__ */ new Map(), a = n;
 	for (let t = 0; t < r && e.readUInt32LE(a) === 33639248; t += 1) {
 		let t = e.readUInt16LE(a + 10), n = e.readUInt32LE(a + 20), r = e.readUInt16LE(a + 28), o = e.readUInt16LE(a + 30), s = e.readUInt16LE(a + 32), c = e.readUInt32LE(a + 42), l = e.subarray(a + 46, a + 46 + r).toString("utf8"), u = e.readUInt16LE(c + 26), d = e.readUInt16LE(c + 28), f = c + 30 + u + d, p = e.subarray(f, f + n), m = t === 0 ? Buffer.from(p) : t === 8 ? _(p) : Buffer.alloc(0);
 		m.length > 0 && i.set(l, m), a += 46 + r + o + s;
 	}
 	return i;
 }
-function Xd(e) {
+function tf(e) {
 	let t = Math.max(0, e.length - 66e3);
 	for (let n = e.length - 22; n >= t; --n) if (e.readUInt32LE(n) === 101010256) return n;
 	throw Error("Invalid XLSX: central directory not found");
 }
-function Zd(e) {
-	return e ? [...e.matchAll(/<si\b[^>]*>([\s\S]*?)<\/si>/g)].map((e) => mf(Qd(e[1] ?? "").join(""))) : [];
+function nf(e) {
+	return e ? [...e.matchAll(/<si\b[^>]*>([\s\S]*?)<\/si>/g)].map((e) => yf(rf(e[1] ?? "").join(""))) : [];
 }
-function Qd(e) {
+function rf(e) {
 	return [...e.matchAll(/<(?:[\w-]+:)?(?:t|Data)\b[^>]*>([\s\S]*?)<\/(?:[\w-]+:)?(?:t|Data)>/g)].map((e) => e[1] ?? "");
 }
-function $d(e, t) {
+function af(e, t) {
 	return RegExp(`<${t}\\b[^>]*>([\\s\\S]*?)<\\/${t}>`, "i").exec(e)?.[1] ?? "";
 }
-function ef(e) {
+function of(e) {
 	return e.split("").reduce((e, t) => e * 26 + (t.charCodeAt(0) - 64), 0) - 1;
 }
-function tf(e) {
+function sf(e) {
 	return e.findIndex((e) => {
-		let t = e.map(af);
+		let t = e.map(uf);
 		return t.includes("name") && t.includes("ticker") && (t.includes("weight") || t.includes("weight_pct"));
 	});
 }
-function nf(e, t) {
+function cf(e, t) {
 	let n = t.toLowerCase();
 	for (let t of e) {
 		let e = t.findIndex((e) => K(e).toLowerCase() === n);
@@ -9421,31 +9452,31 @@ function nf(e, t) {
 	}
 	return "";
 }
-function rf(e) {
+function lf(e) {
 	return e.flat().map(K).find((e) => /iShares .* ETF/i.test(e)) ?? "";
 }
-function af(e) {
+function uf(e) {
 	return K(e).toLowerCase().replace(/\(%\)/g, "pct").replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
 }
-function of(e) {
+function df(e) {
 	let t = K(e).replace(/^as of\s+/i, "");
 	if (!t) return null;
-	let n = sf(t) ?? cf(t);
+	let n = ff(t) ?? pf(t);
 	return n && /^\d{4}-\d{2}-\d{2}$/.test(n) ? n : null;
 }
-function sf(e) {
+function ff(e) {
 	let t = /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+(\d{1,2}),\s*(\d{4})$/i.exec(e);
 	if (!t) return null;
-	let n = lf(t[1]);
+	let n = mf(t[1]);
 	return n ? `${t[3]}-${n}-${t[2].padStart(2, "0")}` : null;
 }
-function cf(e) {
+function pf(e) {
 	let t = /^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/.exec(e);
 	if (!t) return null;
-	let n = lf(t[2]);
+	let n = mf(t[2]);
 	return n ? `${t[3]}-${n}-${t[1].padStart(2, "0")}` : null;
 }
-function lf(e) {
+function mf(e) {
 	return {
 		jan: "01",
 		feb: "02",
@@ -9461,14 +9492,14 @@ function lf(e) {
 		dec: "12"
 	}[e.slice(0, 3).toLowerCase()] ?? null;
 }
-function uf(e, t) {
+function hf(e, t) {
 	let n = K(e).toUpperCase();
 	if (!(!n || n === "-" || n === "USD") && !(t && /(cash|money market|futures|derivative|collateral|margin)/i.test(t))) return /^[A-Z][A-Z0-9.-]{0,9}$/.test(n) ? n : void 0;
 }
-function df(e, t, n, r) {
-	return ff(e) && /^\d{4}-\d{2}-\d{2}$/.test(t) && n && r.length > 2 ? 94 : 70;
+function gf(e, t, n, r) {
+	return _f(e) && /^\d{4}-\d{2}-\d{2}$/.test(t) && n && r.length > 2 ? 94 : 70;
 }
-function ff(e) {
+function _f(e) {
 	try {
 		let t = new URL(e);
 		return t.protocol === "https:" && (/(^|\.)blackrock\.com$/i.test(t.hostname) || /(^|\.)ishares\.com$/i.test(t.hostname) || /(^|\.)ssga\.com$/i.test(t.hostname));
@@ -9476,7 +9507,7 @@ function ff(e) {
 		return !1;
 	}
 }
-function pf(e) {
+function vf(e) {
 	if (typeof e != "string" && typeof e != "number") return;
 	let t = String(e).trim();
 	if (!t || t === "-" || t === "--") return;
@@ -9486,16 +9517,16 @@ function pf(e) {
 function K(e) {
 	return typeof e == "string" ? e.replace(/\s+/g, " ").trim() : "";
 }
-function mf(e) {
+function yf(e) {
 	return e.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").replace(/&#(\d+);/g, (e, t) => String.fromCodePoint(Number(t))).replace(/&#x([0-9a-f]+);/gi, (e, t) => String.fromCodePoint(Number.parseInt(t, 16))).replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, "\"").replace(/&apos;/g, "'");
 }
-function hf(e) {
+function bf(e) {
 	return e.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
 }
-function gf(e, t, n) {
+function xf(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function _f(e, t) {
+function Sf(e, t) {
 	if (e.aborted) return e;
 	if (t.aborted) return t;
 	let n = new AbortController(), r = () => n.abort();
@@ -9503,47 +9534,47 @@ function _f(e, t) {
 }
 //#endregion
 //#region electron/osint/adapters/crossrefAdapter.ts
-var vf = "crossref_works_public", yf = "Crossref", bf = "https://api.crossref.org/works", xf = 5, Sf = 50, Cf = 60, wf = 2e4, Tf = 1, Ef = 1e3, Df = [
+var Cf = "crossref_works_public", wf = "Crossref", Tf = "https://api.crossref.org/works", Ef = 5, Df = 50, Of = 60, kf = 2e4, Af = 1, jf = 1e3, Mf = [
 	"semiconductors",
 	"AI accelerators",
 	"batteries",
 	"cybersecurity",
 	"supply chain"
 ];
-function Of(e = process.env) {
+function Nf(e = process.env) {
 	if (e.ATLASZ_CROSSREF_DISABLE === "1") return null;
-	let t = V(e.ATLASZ_CROSSREF_API_BASE) || bf;
-	if (!Jf(t)) return null;
+	let t = V(e.ATLASZ_CROSSREF_API_BASE) || Tf;
+	if (!$f(t)) return null;
 	let n = V(e.ATLASZ_CROSSREF_MAILTO);
 	return {
 		apiBase: t,
-		mailto: Yf(n) ? n : void 0,
-		queryBuckets: Kf(e.ATLASZ_CROSSREF_TOPICS) ?? Df,
-		rowsPerBucket: Qf(Number(e.ATLASZ_CROSSREF_ROWS ?? xf), 1, Sf),
-		lookbackDays: Qf(Number(e.ATLASZ_CROSSREF_LOOKBACK_DAYS ?? Cf), 1, 365),
-		timeoutMs: Qf(Number(e.ATLASZ_CROSSREF_TIMEOUT_MS ?? wf), 1e3, 6e4),
-		maxRetries: Qf(Number(e.ATLASZ_CROSSREF_MAX_RETRIES ?? Tf), 0, 5),
-		backoffMs: Qf(Number(e.ATLASZ_CROSSREF_BACKOFF_MS ?? Ef), 0, 6e4)
+		mailto: ep(n) ? n : void 0,
+		queryBuckets: Zf(e.ATLASZ_CROSSREF_TOPICS) ?? Mf,
+		rowsPerBucket: rp(Number(e.ATLASZ_CROSSREF_ROWS ?? Ef), 1, Df),
+		lookbackDays: rp(Number(e.ATLASZ_CROSSREF_LOOKBACK_DAYS ?? Of), 1, 365),
+		timeoutMs: rp(Number(e.ATLASZ_CROSSREF_TIMEOUT_MS ?? kf), 1e3, 6e4),
+		maxRetries: rp(Number(e.ATLASZ_CROSSREF_MAX_RETRIES ?? Af), 0, 5),
+		backoffMs: rp(Number(e.ATLASZ_CROSSREF_BACKOFF_MS ?? jf), 0, 6e4)
 	};
 }
-async function kf(e, n = Of()) {
+async function Pf(e, n = Nf()) {
 	if (!n) return [];
 	let r = [];
 	for (let i of n.queryBuckets) {
-		let a = Date.now(), o = Pf(n, i), s = Ff(o), c = await t((t) => Af(o, $f(e, t)), {
+		let a = Date.now(), o = zf(n, i), s = Bf(o), c = await t((t) => Ff(o, ip(e, t)), {
 			maxRetries: n.maxRetries,
 			backoffMs: n.backoffMs,
 			timeoutMs: n.timeoutMs
 		});
-		r.push(...jf(c, {
+		r.push(...If(c, {
 			retrievedAt: a,
 			sourceApiUrl: s,
 			queryBucket: i
 		}));
 	}
-	return Mf(r);
+	return Lf(r);
 }
-async function Af(t, n) {
+async function Ff(t, n) {
 	let r = await fetch(t, {
 		signal: n,
 		headers: {
@@ -9553,24 +9584,24 @@ async function Af(t, n) {
 	});
 	return e(r, "Crossref"), r.json();
 }
-function jf(e, t = {}) {
-	let n = Zf(Zf(e)?.message);
+function If(e, t = {}) {
+	let n = np(np(e)?.message);
 	if (!n) return [];
 	let r = Array.isArray(n.items) ? n.items : n.DOI ? [n] : [];
 	if (r.length === 0) return [];
-	let i = t.retrievedAt ?? Date.now(), a = Ff(t.sourceApiUrl ?? bf), o = (t.queryBucket ?? "").slice(0, 80), s = /* @__PURE__ */ new Set(), c = [];
+	let i = t.retrievedAt ?? Date.now(), a = Bf(t.sourceApiUrl ?? Tf), o = (t.queryBucket ?? "").slice(0, 80), s = /* @__PURE__ */ new Set(), c = [];
 	for (let e of r) {
-		let t = Zf(e);
+		let t = np(e);
 		if (!t) continue;
-		let n = If(V(t.DOI)), r = Xf(Gf(t.title)).slice(0, 500);
-		if (!Lf({
+		let n = Vf(V(t.DOI)), r = tp(Xf(t.title)).slice(0, 500);
+		if (!Hf({
 			doi: n,
 			title: r,
 			sourceApiUrl: a,
 			retrievedAt: i
 		}) || s.has(n)) continue;
 		s.add(n);
-		let l = Xf(V(t.publisher)).slice(0, 180) || void 0, u = Xf(Gf(t["container-title"])).slice(0, 240) || void 0, d = Bf(Zf(t.issued)), f = Bf(Zf(t.published)) ?? Bf(Zf(t["published-online"])) ?? Bf(Zf(t["published-print"])), p = qf(V(t.URL)), m = Hf(t.license), h = Uf(t.funder), g = Wf(t.subject, 8), _ = H(t["reference-count"] ?? t["references-count"]), v = H(t["is-referenced-by-count"]), y = W({
+		let l = tp(V(t.publisher)).slice(0, 180) || void 0, u = tp(Xf(t["container-title"])).slice(0, 240) || void 0, d = Gf(np(t.issued)), f = Gf(np(t.published)) ?? Gf(np(t["published-online"])) ?? Gf(np(t["published-print"])), p = Qf(V(t.URL)), m = qf(t.license), h = Jf(t.funder), g = Yf(t.subject, 8), _ = H(t["reference-count"] ?? t["references-count"]), v = H(t["is-referenced-by-count"]), y = W({
 			DOI: n,
 			title: r,
 			type: V(t.type),
@@ -9587,7 +9618,7 @@ function jf(e, t = {}) {
 			source: V(t.source)
 		});
 		c.push({
-			id: zf(n),
+			id: Wf(n),
 			doi: n,
 			doiUrl: `https://doi.org/${n}`,
 			title: r,
@@ -9604,10 +9635,10 @@ function jf(e, t = {}) {
 			isReferencedByCount: v,
 			queryBucket: o,
 			sourceApiUrl: a,
-			sourceName: yf,
+			sourceName: wf,
 			retrievedAt: i,
 			provenance: "official-api",
-			confidence: Rf({
+			confidence: Uf({
 				doi: n,
 				title: r,
 				sourceApiUrl: a,
@@ -9619,15 +9650,15 @@ function jf(e, t = {}) {
 	}
 	return c;
 }
-function Mf(e) {
+function Lf(e) {
 	let t = [];
-	for (let n of e) n.confidence < 90 || t.push(Nf(n));
+	for (let n of e) n.confidence < 90 || t.push(Rf(n));
 	return t;
 }
-function Nf(e) {
-	let t = `crossref|${e.doi}`.toLowerCase(), n = e.containerTitle ? ` Venue: ${e.containerTitle}.` : "", r = e.publisher ? ` Publisher: ${e.publisher}.` : "", i = e.isReferencedByCount === void 0 ? "" : ` Referenced-by count: ${e.isReferencedByCount} (metadata, not quality).`, a = `Crossref DOI registry metadata (${e.issuedDate ?? e.publishedDate ?? "date unknown"}): "${e.title}".${r}${n}${i} DOI registry metadata, not validation of research claims, technical merit, citation quality, or market impact.`, o = Vf(e.issuedDate ?? e.publishedDate) ?? e.retrievedAt;
+function Rf(e) {
+	let t = `crossref|${e.doi}`.toLowerCase(), n = e.containerTitle ? ` Venue: ${e.containerTitle}.` : "", r = e.publisher ? ` Publisher: ${e.publisher}.` : "", i = e.isReferencedByCount === void 0 ? "" : ` Referenced-by count: ${e.isReferencedByCount} (metadata, not quality).`, a = `Crossref DOI registry metadata (${e.issuedDate ?? e.publishedDate ?? "date unknown"}): "${e.title}".${r}${n}${i} DOI registry metadata, not validation of research claims, technical merit, citation quality, or market impact.`, o = Kf(e.issuedDate ?? e.publishedDate) ?? e.retrievedAt;
 	return {
-		id: G(vf, t),
+		id: G(Cf, t),
 		timestamp: o,
 		title: `DOI metadata: ${e.title}`.slice(0, 180),
 		summary: a,
@@ -9636,7 +9667,7 @@ function Nf(e) {
 		category: "doi-metadata",
 		severity: "stable",
 		confidence: e.confidence,
-		sourceId: vf,
+		sourceId: Cf,
 		sourceUrl: e.sourceApiUrl,
 		provenance: "official-api",
 		affectedAssets: [],
@@ -9659,11 +9690,11 @@ function Nf(e) {
 		crossrefWork: e
 	};
 }
-function Pf(e, t) {
+function zf(e, t) {
 	let n = (/* @__PURE__ */ new Date(Date.now() - e.lookbackDays * 24 * 60 * 60 * 1e3)).toISOString().slice(0, 10), r = new URL(e.apiBase);
 	return r.searchParams.set("query", t), r.searchParams.set("filter", `from-pub-date:${n}`), r.searchParams.set("rows", String(e.rowsPerBucket)), e.mailto && r.searchParams.set("mailto", e.mailto), r.toString();
 }
-function Ff(e) {
+function Bf(e) {
 	try {
 		let t = new URL(e);
 		return t.searchParams.delete("mailto"), t.toString();
@@ -9671,21 +9702,21 @@ function Ff(e) {
 		return e;
 	}
 }
-function If(e) {
+function Vf(e) {
 	if (!e) return "";
 	let t = e.replace(/^https?:\/\/(dx\.)?doi\.org\//i, "").trim().toLowerCase();
 	return /^10\.\d{4,}\//.test(t) ? t : "";
 }
-function Lf(e) {
+function Hf(e) {
 	return !!(e.doi && e.title && /^https:\/\/api\.crossref\.org\/works(?:\?|$)/i.test(e.sourceApiUrl) && !/[?&]mailto=/i.test(e.sourceApiUrl) && Number.isFinite(e.retrievedAt));
 }
-function Rf(e) {
-	return Lf(e) ? 96 : 60;
+function Uf(e) {
+	return Hf(e) ? 96 : 60;
 }
-function zf(e) {
-	return `${vf}:${z(e).slice(0, 24)}`;
+function Wf(e) {
+	return `${Cf}:${z(e).slice(0, 24)}`;
 }
-function Bf(e) {
+function Gf(e) {
 	let t = Array.isArray(e?.["date-parts"]) ? (e?.["date-parts"])[0] : void 0;
 	if (!Array.isArray(t)) return;
 	let n = H(t[0]);
@@ -9695,44 +9726,44 @@ function Bf(e) {
 	let a = String(r).padStart(2, "0");
 	return !i || i < 1 || i > 31 ? `${n}-${a}` : `${n}-${a}-${String(i).padStart(2, "0")}`;
 }
-function Vf(e) {
+function Kf(e) {
 	if (!e) return;
 	let t = e.split("-"), n = t.length === 1 ? `${e}-01-01` : t.length === 2 ? `${e}-01` : e, r = Date.parse(`${n}T00:00:00Z`);
 	return Number.isFinite(r) ? r : void 0;
 }
-function Hf(e) {
+function qf(e) {
 	if (!Array.isArray(e)) return [];
 	let t = [];
 	for (let n of e) {
-		let e = qf(V(Zf(n)?.URL));
+		let e = Qf(V(np(n)?.URL));
 		e && t.push(e);
 	}
 	return B(t).slice(0, 6);
 }
-function Uf(e) {
+function Jf(e) {
 	if (!Array.isArray(e)) return [];
 	let t = [];
 	for (let n of e) {
-		let e = Xf(V(Zf(n)?.name));
+		let e = tp(V(np(n)?.name));
 		e && t.push(e);
 	}
 	return B(t).slice(0, 8);
 }
-function Wf(e, t) {
-	return Array.isArray(e) ? B(e.map((e) => Xf(V(e))).filter(Boolean)).slice(0, t) : [];
+function Yf(e, t) {
+	return Array.isArray(e) ? B(e.map((e) => tp(V(e))).filter(Boolean)).slice(0, t) : [];
 }
-function Gf(e) {
+function Xf(e) {
 	return V(Array.isArray(e) ? e[0] : e);
 }
-function Kf(e) {
+function Zf(e) {
 	if (typeof e != "string") return;
 	let t = e.split(",").map((e) => e.trim()).filter(Boolean);
 	return t.length > 0 ? B(t) : void 0;
 }
-function qf(e) {
+function Qf(e) {
 	return /^https:\/\//i.test(e) ? e : void 0;
 }
-function Jf(e) {
+function $f(e) {
 	try {
 		let t = new URL(e);
 		return t.protocol === "https:" && t.hostname === "api.crossref.org" && t.pathname.replace(/\/$/, "") === "/works";
@@ -9740,19 +9771,19 @@ function Jf(e) {
 		return !1;
 	}
 }
-function Yf(e) {
+function ep(e) {
 	return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e);
 }
-function Xf(e) {
+function tp(e) {
 	return e.replace(/\s+/g, " ").trim();
 }
-function Zf(e) {
+function np(e) {
 	return e && typeof e == "object" ? e : null;
 }
-function Qf(e, t, n) {
+function rp(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function $f(e, t) {
+function ip(e, t) {
 	if (e.aborted) return e;
 	if (t.aborted) return t;
 	let n = new AbortController(), r = () => n.abort();
@@ -9760,7 +9791,7 @@ function $f(e, t) {
 }
 //#endregion
 //#region electron/osint/adapters/treasuryFiscalAdapter.ts
-var ep = "treasury_fiscal_public", tp = "U.S. Treasury Fiscal Data", np = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service", rp = "/v2/accounting/od/debt_to_penny", ip = "https://fiscaldata.treasury.gov/datasets/debt-to-the-penny/", ap = 1, op = 15e3, sp = 2, cp = 1e3, lp = [
+var ap = "treasury_fiscal_public", op = "U.S. Treasury Fiscal Data", sp = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service", cp = "/v2/accounting/od/debt_to_penny", lp = "https://fiscaldata.treasury.gov/datasets/debt-to-the-penny/", up = 1, dp = 15e3, fp = 2, pp = 1e3, mp = [
 	{
 		field: "tot_pub_debt_out_amt",
 		metricName: "Total Public Debt Outstanding",
@@ -9777,20 +9808,20 @@ var ep = "treasury_fiscal_public", tp = "U.S. Treasury Fiscal Data", np = "https
 		units: "USD"
 	}
 ];
-function up(e = process.env) {
+function hp(e = process.env) {
 	return {
-		baseUrl: V(e.ATLASZ_TREASURY_BASE_URL) || np,
-		recordLimit: xp(Number(e.ATLASZ_TREASURY_RECORD_LIMIT ?? ap), 1, 30),
-		metrics: lp,
-		timeoutMs: xp(Number(e.ATLASZ_TREASURY_TIMEOUT_MS ?? op), 1e3, 6e4),
-		maxRetries: xp(Number(e.ATLASZ_TREASURY_MAX_RETRIES ?? sp), 0, 5),
-		backoffMs: xp(Number(e.ATLASZ_TREASURY_BACKOFF_MS ?? cp), 0, 6e4)
+		baseUrl: V(e.ATLASZ_TREASURY_BASE_URL) || sp,
+		recordLimit: Ep(Number(e.ATLASZ_TREASURY_RECORD_LIMIT ?? up), 1, 30),
+		metrics: mp,
+		timeoutMs: Ep(Number(e.ATLASZ_TREASURY_TIMEOUT_MS ?? dp), 1e3, 6e4),
+		maxRetries: Ep(Number(e.ATLASZ_TREASURY_MAX_RETRIES ?? fp), 0, 5),
+		backoffMs: Ep(Number(e.ATLASZ_TREASURY_BACKOFF_MS ?? pp), 0, 6e4)
 	};
 }
-async function dp(e, n = up()) {
-	let r = vp(n.baseUrl, n.recordLimit);
-	return pp(fp({
-		payload: await t((t) => _p(r, Sp(e, t)), {
+async function gp(e, n = hp()) {
+	let r = Cp(n.baseUrl, n.recordLimit);
+	return vp(_p({
+		payload: await t((t) => Sp(r, Dp(e, t)), {
 			maxRetries: n.maxRetries,
 			backoffMs: n.backoffMs,
 			timeoutMs: n.timeoutMs
@@ -9800,11 +9831,11 @@ async function dp(e, n = up()) {
 		metrics: n.metrics
 	}));
 }
-function fp(e) {
+function _p(e) {
 	if (!e.payload || typeof e.payload != "object") return [];
 	let t = e.payload;
 	if (!Array.isArray(t.data)) return [];
-	let n = e.metrics ?? lp, r = e.sourceApiUrl ?? vp(np, ap).toString(), i = [];
+	let n = e.metrics ?? mp, r = e.sourceApiUrl ?? Cp(sp, up).toString(), i = [];
 	for (let a of t.data) {
 		if (!a || typeof a != "object") continue;
 		let o = V(a.record_date), s = Date.parse(`${o}T00:00:00Z`);
@@ -9822,11 +9853,11 @@ function fp(e) {
 				labels: t.meta?.labels ?? {},
 				dataTypes: t.meta?.dataTypes ?? {},
 				dataFormats: t.meta?.dataFormats ?? {},
-				sourceUrl: ip,
+				sourceUrl: lp,
 				sourceApiUrl: r,
 				retrievedAt: e.retrievedAt
 			}), f = {
-				id: bp("debt_to_penny", c.field, o),
+				id: Tp("debt_to_penny", c.field, o),
 				datasetId: "debt_to_penny",
 				datasetName: "Debt to the Penny",
 				tableId: "debt_to_penny",
@@ -9837,33 +9868,33 @@ function fp(e) {
 				metricValue: l,
 				rawValue: n,
 				units: c.units,
-				sourceUrl: ip,
+				sourceUrl: lp,
 				sourceApiUrl: r,
-				sourceName: tp,
+				sourceName: op,
 				retrievedAt: e.retrievedAt,
 				provenance: "official-api",
-				confidence: gp({
+				confidence: xp({
 					recordDate: o,
 					metricName: u,
 					metricValue: l,
-					sourceUrl: ip,
+					sourceUrl: lp,
 					sourceApiUrl: r,
 					retrievedAt: e.retrievedAt
 				}),
 				rawPayloadHash: z(d),
 				rawPayloadJson: d
 			};
-			hp(f) && i.push(f);
+			bp(f) && i.push(f);
 		}
 	}
 	return i;
 }
-function pp(e) {
-	return e.filter(hp).map(mp);
+function vp(e) {
+	return e.filter(bp).map(yp);
 }
-function mp(e) {
+function yp(e) {
 	let t = `treasury|${e.datasetId}|${e.metricName}|${e.recordDate}`.toLowerCase(), n = U({
-		id: G(ep, t),
+		id: G(ap, t),
 		title: `${e.datasetName} — ${e.metricName}`,
 		summary: `Official Treasury Fiscal Data observation for ${e.metricName} on ${e.recordDate}: ${e.rawValue} ${e.units}. Dataset ${e.datasetId}, table ${e.tableId}.`,
 		source: e.sourceName,
@@ -9871,7 +9902,7 @@ function mp(e) {
 		observedAt: e.recordTimestamp,
 		category: "fiscal-event",
 		provenance: "official-api",
-		sourceId: ep,
+		sourceId: ap,
 		dedupeKey: t,
 		rawPayload: e,
 		affectedAssets: [],
@@ -9897,13 +9928,13 @@ function mp(e) {
 		treasuryFiscalRecord: e
 	};
 }
-function hp(e) {
-	return !!(e.datasetId && e.tableId && /^\d{4}-\d{2}-\d{2}$/.test(e.recordDate) && Number.isFinite(e.recordTimestamp) && e.metricName && Number.isFinite(e.metricValue) && e.units && /^https:\/\/fiscaldata\.treasury\.gov\/datasets\/debt-to-the-penny\/?$/.test(e.sourceUrl) && /^https:\/\/api\.fiscaldata\.treasury\.gov\/services\/api\/fiscal_service\/v2\/accounting\/od\/debt_to_penny/.test(e.sourceApiUrl) && e.sourceName === tp && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && e.rawPayloadHash.length > 0);
+function bp(e) {
+	return !!(e.datasetId && e.tableId && /^\d{4}-\d{2}-\d{2}$/.test(e.recordDate) && Number.isFinite(e.recordTimestamp) && e.metricName && Number.isFinite(e.metricValue) && e.units && /^https:\/\/fiscaldata\.treasury\.gov\/datasets\/debt-to-the-penny\/?$/.test(e.sourceUrl) && /^https:\/\/api\.fiscaldata\.treasury\.gov\/services\/api\/fiscal_service\/v2\/accounting\/od\/debt_to_penny/.test(e.sourceApiUrl) && e.sourceName === op && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && e.rawPayloadHash.length > 0);
 }
-function gp(e) {
+function xp(e) {
 	return /^\d{4}-\d{2}-\d{2}$/.test(e.recordDate) && e.metricName.length > 0 && Number.isFinite(e.metricValue) && /^https:\/\/fiscaldata\.treasury\.gov\//.test(e.sourceUrl) && /^https:\/\/api\.fiscaldata\.treasury\.gov\//.test(e.sourceApiUrl) && Number.isFinite(e.retrievedAt) ? 96 : 60;
 }
-async function _p(t, n) {
+async function Sp(t, n) {
 	let r = await fetch(t, {
 		signal: n,
 		headers: {
@@ -9913,8 +9944,8 @@ async function _p(t, n) {
 	});
 	return e(r, "Treasury Fiscal Data"), await r.json();
 }
-function vp(e, t) {
-	let n = new URL(`${yp(e)}${rp}`);
+function Cp(e, t) {
+	let n = new URL(`${wp(e)}${cp}`);
 	return n.searchParams.set("sort", "-record_date"), n.searchParams.set("page[size]", String(t)), n.searchParams.set("fields", [
 		"record_date",
 		"debt_held_public_amt",
@@ -9923,16 +9954,16 @@ function vp(e, t) {
 		"src_line_nbr"
 	].join(",")), n;
 }
-function yp(e) {
+function wp(e) {
 	return e.replace(/\/$/, "");
 }
-function bp(e, t, n) {
-	return `${ep}:${e}:${t}:${n}`;
+function Tp(e, t, n) {
+	return `${ap}:${e}:${t}:${n}`;
 }
-function xp(e, t, n) {
+function Ep(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function Sp(e, t) {
+function Dp(e, t) {
 	if (e.aborted || t.aborted) {
 		let e = new AbortController();
 		return e.abort(), e.signal;
@@ -9942,7 +9973,7 @@ function Sp(e, t) {
 }
 //#endregion
 //#region electron/osint/adapters/blsAdapter.ts
-var Cp = "bls_public", wp = "U.S. Bureau of Labor Statistics", Tp = "https://api.bls.gov/publicAPI/v2", Ep = "https://data.bls.gov/timeseries", Dp = /^[A-Z0-9]{8,}$/, Op = /^\d{4}-\d{2}-\d{2}$/, kp = [
+var Op = "bls_public", kp = "U.S. Bureau of Labor Statistics", Ap = "https://api.bls.gov/publicAPI/v2", jp = "https://data.bls.gov/timeseries", Mp = /^[A-Z0-9]{8,}$/, Np = /^\d{4}-\d{2}-\d{2}$/, Pp = [
 	{
 		seriesId: "CUUR0000SA0",
 		label: "CPI-U, all items"
@@ -9964,16 +9995,16 @@ var Cp = "bls_public", wp = "U.S. Bureau of Labor Statistics", Tp = "https://api
 		label: "Average hourly earnings, total private"
 	}
 ];
-function Ap(e = process.env) {
+function Fp(e = process.env) {
 	if (e.ATLASZ_BLS_DISABLE === "1") return null;
-	let t = V(e.ATLASZ_BLS_API_BASE) || Tp;
+	let t = V(e.ATLASZ_BLS_API_BASE) || Ap;
 	return /^https:\/\//i.test(t) ? {
 		apiBase: t,
-		series: Bp(e.ATLASZ_BLS_SERIES) ?? kp,
+		series: Gp(e.ATLASZ_BLS_SERIES) ?? Pp,
 		apiKey: V(e.ATLASZ_BLS_API_KEY) || void 0
 	} : null;
 }
-async function jp(t, n = Ap()) {
+async function Ip(t, n = Fp()) {
 	if (!n || n.series.length === 0) return [];
 	let r = Date.now(), i = new Date(r).getUTCFullYear(), a = {
 		seriesid: n.series.map((e) => e.seriesId),
@@ -9991,21 +10022,21 @@ async function jp(t, n = Ap()) {
 		},
 		body: JSON.stringify(a)
 	});
-	return e(o, "BLS"), Np(Mp(await o.json(), {
+	return e(o, "BLS"), Rp(Lp(await o.json(), {
 		retrievedAt: r,
 		config: n
 	}));
 }
-function Mp(e, t = {}) {
+function Lp(e, t = {}) {
 	if (!e || typeof e != "object") return [];
 	let n = e.Results?.series;
 	if (!Array.isArray(n) || n.length === 0) return [];
-	let r = t.retrievedAt ?? Date.now(), i = new Map((t.config?.series ?? kp).map((e) => [e.seriesId, e.label])), a = [];
+	let r = t.retrievedAt ?? Date.now(), i = new Map((t.config?.series ?? Pp).map((e) => [e.seriesId, e.label])), a = [];
 	for (let e of n) {
-		let t = V(e.seriesID).toUpperCase(), n = Fp(e.data);
-		if (!Dp.test(t) || !n) continue;
-		let o = Ip(V(n.year), V(n.period)), s = V(n.value), c = Number(s), l = `${Ep}/${t}`, u = Lp(e) || i.get(t) || t;
-		if (!Rp({
+		let t = V(e.seriesID).toUpperCase(), n = Bp(e.data);
+		if (!Mp.test(t) || !n) continue;
+		let o = Vp(V(n.year), V(n.period)), s = V(n.value), c = Number(s), l = `${jp}/${t}`, u = Hp(e) || i.get(t) || t;
+		if (!Up({
 			seriesId: t,
 			observationDate: o,
 			value: c,
@@ -10022,11 +10053,11 @@ function Mp(e, t = {}) {
 			value: c,
 			rawValue: s,
 			sourceUrl: l,
-			sourceApiUrl: `${Tp}/timeseries/data/`,
+			sourceApiUrl: `${Ap}/timeseries/data/`,
 			retrievedAt: r
 		});
 		a.push({
-			id: Vp(t, o),
+			id: Kp(t, o),
 			seriesId: t,
 			title: u,
 			period: V(n.period).toUpperCase(),
@@ -10037,11 +10068,11 @@ function Mp(e, t = {}) {
 			value: c,
 			rawValue: s,
 			sourceUrl: l,
-			sourceApiUrl: `${Tp}/timeseries/data/`,
-			sourceName: wp,
+			sourceApiUrl: `${Ap}/timeseries/data/`,
+			sourceName: kp,
 			retrievedAt: r,
 			provenance: "official-api",
-			confidence: zp({
+			confidence: Wp({
 				seriesId: t,
 				observationDate: o,
 				value: c,
@@ -10054,16 +10085,16 @@ function Mp(e, t = {}) {
 	}
 	return a;
 }
-function Np(e) {
+function Rp(e) {
 	let t = [];
-	for (let n of e) n.confidence < 90 || t.push(Pp(n));
+	for (let n of e) n.confidence < 90 || t.push(zp(n));
 	return t;
 }
-function Pp(e) {
+function zp(e) {
 	let t = `bls|${e.seriesId}|${e.observationDate}`.toLowerCase(), n = `Official BLS observation for ${e.seriesId} (${e.title}) — ${e.periodName} ${e.year}: ${e.rawValue}. Source: ${e.sourceName}.`;
 	return {
 		...U({
-			id: G(Cp, t),
+			id: G(Op, t),
 			title: `${e.seriesId} — ${e.title}`,
 			summary: n,
 			source: e.sourceName,
@@ -10071,7 +10102,7 @@ function Pp(e) {
 			observedAt: e.observationTimestamp,
 			category: "macro-event",
 			provenance: "official-api",
-			sourceId: Cp,
+			sourceId: Op,
 			dedupeKey: t,
 			rawPayload: e,
 			affectedAssets: [],
@@ -10091,88 +10122,88 @@ function Pp(e) {
 		blsObservation: e
 	};
 }
-function Fp(e) {
+function Bp(e) {
 	if (!Array.isArray(e)) return null;
 	for (let t of e) {
 		let e = t, n = V(e.value);
-		if (Ip(V(e.year), V(e.period)) && n && n !== "-" && Number.isFinite(Number(n))) return e;
+		if (Vp(V(e.year), V(e.period)) && n && n !== "-" && Number.isFinite(Number(n))) return e;
 	}
 	return null;
 }
-function Ip(e, t) {
+function Vp(e, t) {
 	if (!/^\d{4}$/.test(e)) return null;
 	let n = t.toUpperCase();
 	return /^M(0[1-9]|1[0-2])$/.test(n) ? `${e}-${n.slice(1)}-01` : /^Q0[1-4]$/.test(n) ? `${e}-${String(Number(n.slice(1)) * 3).padStart(2, "0")}-01` : n === "A01" || n === "S01" ? `${e}-01-01` : n === "S02" ? `${e}-07-01` : null;
 }
-function Lp(e) {
+function Hp(e) {
 	let t = e.catalog;
 	return V(t?.series_title);
 }
-function Rp(e) {
-	return !!(Dp.test(e.seriesId) && e.observationDate && Op.test(e.observationDate) && Number.isFinite(e.value) && /^https:\/\/data\.bls\.gov\/timeseries\/[A-Z0-9]+$/.test(e.sourceUrl) && Number.isFinite(e.retrievedAt));
+function Up(e) {
+	return !!(Mp.test(e.seriesId) && e.observationDate && Np.test(e.observationDate) && Number.isFinite(e.value) && /^https:\/\/data\.bls\.gov\/timeseries\/[A-Z0-9]+$/.test(e.sourceUrl) && Number.isFinite(e.retrievedAt));
 }
-function zp(e) {
-	return Rp(e) ? 96 : 60;
+function Wp(e) {
+	return Up(e) ? 96 : 60;
 }
-function Bp(e) {
-	let t = V(e).split(",").map((e) => e.trim().toUpperCase()).filter((e) => Dp.test(e));
+function Gp(e) {
+	let t = V(e).split(",").map((e) => e.trim().toUpperCase()).filter((e) => Mp.test(e));
 	if (t.length === 0) return null;
-	let n = new Map(kp.map((e) => [e.seriesId, e.label]));
+	let n = new Map(Pp.map((e) => [e.seriesId, e.label]));
 	return t.map((e) => ({
 		seriesId: e,
 		label: n.get(e) ?? e
 	}));
 }
-function Vp(e, t) {
-	return `${Cp}:${e.toLowerCase()}:${t}`;
+function Kp(e, t) {
+	return `${Op}:${e.toLowerCase()}:${t}`;
 }
 //#endregion
 //#region electron/osint/adapters/beaAdapter.ts
-var Hp = "bea_public", Up = "U.S. Bureau of Economic Analysis", Wp = "https://apps.bea.gov/api/data", Gp = "https://www.bea.gov/data/gdp/gross-domestic-product", Kp = 2e4, qp = 2, Jp = 1e3, Yp = /^\d{4}-\d{2}-\d{2}$/, Xp = [{
+var qp = "bea_public", Jp = "U.S. Bureau of Economic Analysis", Yp = "https://apps.bea.gov/api/data", Xp = "https://www.bea.gov/data/gdp/gross-domestic-product", Zp = 2e4, Qp = 2, $p = 1e3, em = /^\d{4}-\d{2}-\d{2}$/, tm = [{
 	datasetName: "NIPA",
 	tableName: "T10101",
 	lineNumber: "1",
 	label: "Real gross domestic product percent change",
 	frequency: "Q",
 	year: "X",
-	sourceUrl: Gp
+	sourceUrl: Xp
 }];
-function Zp(e = process.env) {
+function nm(e = process.env) {
 	if (e.ATLASZ_BEA_DISABLE === "1") return null;
-	let t = q(e.ATLASZ_BEA_API_KEY), n = q(e.ATLASZ_BEA_API_BASE) || Wp;
+	let t = q(e.ATLASZ_BEA_API_KEY), n = q(e.ATLASZ_BEA_API_BASE) || Yp;
 	return !t || !/^https:\/\//i.test(n) ? null : {
 		apiBase: n,
 		apiKey: t,
-		series: dm(e.ATLASZ_BEA_SERIES) ?? Xp,
-		timeoutMs: pm(Number(e.ATLASZ_BEA_TIMEOUT_MS ?? Kp), 1e3, 6e4),
-		maxRetries: pm(Number(e.ATLASZ_BEA_MAX_RETRIES ?? qp), 0, 5),
-		backoffMs: pm(Number(e.ATLASZ_BEA_BACKOFF_MS ?? Jp), 0, 6e4)
+		series: gm(e.ATLASZ_BEA_SERIES) ?? tm,
+		timeoutMs: vm(Number(e.ATLASZ_BEA_TIMEOUT_MS ?? Zp), 1e3, 6e4),
+		maxRetries: vm(Number(e.ATLASZ_BEA_MAX_RETRIES ?? Qp), 0, 5),
+		backoffMs: vm(Number(e.ATLASZ_BEA_BACKOFF_MS ?? $p), 0, 6e4)
 	};
 }
-async function Qp(e, n = Zp()) {
+async function rm(e, n = nm()) {
 	if (!n || n.series.length === 0) return [];
 	let r = Date.now(), i = [];
 	for (let a of n.series) {
-		let o = cm(n.apiBase, a, n.apiKey), s = cm(n.apiBase, a).toString(), c = await t((t) => om(o, mm(e, t)), {
+		let o = pm(n.apiBase, a, n.apiKey), s = pm(n.apiBase, a).toString(), c = await t((t) => dm(o, ym(e, t)), {
 			maxRetries: n.maxRetries,
 			backoffMs: n.backoffMs,
 			timeoutMs: n.timeoutMs
 		});
-		i.push(...$p(c, {
+		i.push(...im(c, {
 			retrievedAt: r,
 			series: a,
 			sourceApiUrl: s
 		}));
 	}
-	return em(i);
+	return am(i);
 }
-function $p(e, t = {}) {
+function im(e, t = {}) {
 	if (!e || typeof e != "object") return [];
-	let n = t.series ?? Xp[0], r = nm(e);
+	let n = t.series ?? tm[0], r = sm(e);
 	if (r.length === 0) return [];
-	let i = t.retrievedAt ?? Date.now(), a = t.sourceApiUrl ?? cm(Wp, n).toString(), o = rm(r, n);
+	let i = t.retrievedAt ?? Date.now(), a = t.sourceApiUrl ?? pm(Yp, n).toString(), o = cm(r, n);
 	if (!o) return [];
-	let s = q(o.TimePeriod), c = lm(s), l = c ? Date.parse(`${c}T00:00:00Z`) : NaN, u = q(o.DataValue), d = um(u), f = q(o.LineDescription) || n.label, p = q(o.CL_UNIT) || q(o.UnitOfMeasure) || "value", m = q(o.UNIT_MULT) || void 0, h = W({
+	let s = q(o.TimePeriod), c = mm(s), l = c ? Date.parse(`${c}T00:00:00Z`) : NaN, u = q(o.DataValue), d = hm(u), f = q(o.LineDescription) || n.label, p = q(o.CL_UNIT) || q(o.UnitOfMeasure) || "value", m = q(o.UNIT_MULT) || void 0, h = W({
 		datasetName: n.datasetName,
 		tableName: n.tableName,
 		lineNumber: n.lineNumber,
@@ -10188,7 +10219,7 @@ function $p(e, t = {}) {
 		sourceApiUrl: a,
 		retrievedAt: i
 	}), g = {
-		id: fm(n.datasetName, n.tableName, n.lineNumber, s),
+		id: _m(n.datasetName, n.tableName, n.lineNumber, s),
 		datasetName: n.datasetName,
 		tableName: n.tableName,
 		lineNumber: n.lineNumber,
@@ -10204,10 +10235,10 @@ function $p(e, t = {}) {
 		unitMultiplier: m,
 		sourceUrl: n.sourceUrl,
 		sourceApiUrl: a,
-		sourceName: Up,
+		sourceName: Jp,
 		retrievedAt: i,
 		provenance: "official-api",
-		confidence: am({
+		confidence: um({
 			datasetName: n.datasetName,
 			tableName: n.tableName,
 			lineNumber: n.lineNumber,
@@ -10220,14 +10251,14 @@ function $p(e, t = {}) {
 		rawPayloadHash: z(h),
 		rawPayloadJson: h
 	};
-	return im(g) ? [g] : [];
+	return lm(g) ? [g] : [];
 }
-function em(e) {
-	return e.filter(im).map(tm);
+function am(e) {
+	return e.filter(lm).map(om);
 }
-function tm(e) {
+function om(e) {
 	let t = `bea|${e.datasetName}|${e.tableName}|${e.lineNumber}|${e.timePeriod}`.toLowerCase(), n = U({
-		id: G(Hp, t),
+		id: G(qp, t),
 		title: `BEA ${e.datasetName} ${e.tableName} — ${e.lineDescription}`,
 		summary: `Official BEA observation for ${e.datasetName} ${e.tableName} line ${e.lineNumber} (${e.lineDescription}) at ${e.timePeriod}: ${e.rawValue} ${e.units}.`,
 		source: e.sourceName,
@@ -10235,7 +10266,7 @@ function tm(e) {
 		observedAt: e.observationTimestamp,
 		category: "macro-event",
 		provenance: "official-api",
-		sourceId: Hp,
+		sourceId: qp,
 		dedupeKey: t,
 		rawPayload: e,
 		affectedAssets: [],
@@ -10247,7 +10278,7 @@ function tm(e) {
 			"United States"
 		]),
 		extractedEntities: B([
-			Up,
+			Jp,
 			"United States",
 			e.datasetName,
 			e.tableName,
@@ -10262,16 +10293,16 @@ function tm(e) {
 		beaObservation: e
 	};
 }
-function nm(e) {
+function sm(e) {
 	if (e.BEAAPI?.Results?.Error ?? e.Results?.Error) return [];
 	let t = e.BEAAPI?.Results?.Data ?? e.Results?.Data;
 	return Array.isArray(t) ? t : [];
 }
-function rm(e, t) {
+function cm(e, t) {
 	let n = null;
 	for (let r of e) {
 		if (q(r.TableName) && q(r.TableName).toUpperCase() !== t.tableName.toUpperCase() || q(r.LineNumber) !== t.lineNumber) continue;
-		let e = lm(q(r.TimePeriod)), i = e ? Date.parse(`${e}T00:00:00Z`) : NaN, a = um(q(r.DataValue));
+		let e = mm(q(r.TimePeriod)), i = e ? Date.parse(`${e}T00:00:00Z`) : NaN, a = hm(q(r.DataValue));
 		!e || !Number.isFinite(i) || a === null || (!n || i > n.timestamp) && (n = {
 			row: r,
 			timestamp: i
@@ -10279,13 +10310,13 @@ function rm(e, t) {
 	}
 	return n?.row ?? null;
 }
-function im(e) {
-	return e.datasetName.length > 0 && e.tableName.length > 0 && e.lineNumber.length > 0 && Yp.test(e.observationDate) && Number.isFinite(e.observationTimestamp) && e.metricName.length > 0 && Number.isFinite(e.metricValue) && e.units.length > 0 && /^https:\/\/www\.bea\.gov\//.test(e.sourceUrl) && /^https:\/\/apps\.bea\.gov\/api\/data/.test(e.sourceApiUrl) && !/[?&]UserID=/i.test(e.sourceApiUrl) && e.sourceName === Up && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && e.rawPayloadHash.length > 0;
+function lm(e) {
+	return e.datasetName.length > 0 && e.tableName.length > 0 && e.lineNumber.length > 0 && em.test(e.observationDate) && Number.isFinite(e.observationTimestamp) && e.metricName.length > 0 && Number.isFinite(e.metricValue) && e.units.length > 0 && /^https:\/\/www\.bea\.gov\//.test(e.sourceUrl) && /^https:\/\/apps\.bea\.gov\/api\/data/.test(e.sourceApiUrl) && !/[?&]UserID=/i.test(e.sourceApiUrl) && e.sourceName === Jp && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && e.rawPayloadHash.length > 0;
 }
-function am(e) {
-	return e.datasetName.length > 0 && e.tableName.length > 0 && e.lineNumber.length > 0 && e.observationDate !== null && Yp.test(e.observationDate) && e.metricValue !== null && Number.isFinite(e.metricValue) && /^https:\/\/www\.bea\.gov\//.test(e.sourceUrl) && /^https:\/\/apps\.bea\.gov\/api\/data/.test(e.sourceApiUrl) && !/[?&]UserID=/i.test(e.sourceApiUrl) && Number.isFinite(e.retrievedAt) ? 96 : 60;
+function um(e) {
+	return e.datasetName.length > 0 && e.tableName.length > 0 && e.lineNumber.length > 0 && e.observationDate !== null && em.test(e.observationDate) && e.metricValue !== null && Number.isFinite(e.metricValue) && /^https:\/\/www\.bea\.gov\//.test(e.sourceUrl) && /^https:\/\/apps\.bea\.gov\/api\/data/.test(e.sourceApiUrl) && !/[?&]UserID=/i.test(e.sourceApiUrl) && Number.isFinite(e.retrievedAt) ? 96 : 60;
 }
-async function om(t, n) {
+async function dm(t, n) {
 	let r = await fetch(t, {
 		signal: n,
 		headers: {
@@ -10294,34 +10325,34 @@ async function om(t, n) {
 		}
 	});
 	e(r, "BEA");
-	let i = await r.json(), a = sm(i);
+	let i = await r.json(), a = fm(i);
 	if (a) throw Error(a);
 	return i;
 }
-function sm(e) {
+function fm(e) {
 	if (!e || typeof e != "object") return null;
 	let t = e, n = t.BEAAPI?.Results?.Error ?? t.Results?.Error;
 	return n ? `BEA API error ${q(n.APIErrorCode) || "unknown"}: ${q(n.APIErrorDescription) || "Unknown BEA API error"}` : null;
 }
-function cm(e, t, n) {
+function pm(e, t, n) {
 	let r = new URL(e);
 	return n && r.searchParams.set("UserID", n), r.searchParams.set("method", "GetData"), r.searchParams.set("DataSetName", t.datasetName), r.searchParams.set("TableName", t.tableName), r.searchParams.set("Frequency", t.frequency), r.searchParams.set("Year", t.year), r.searchParams.set("ResultFormat", "JSON"), r;
 }
-function lm(e) {
+function mm(e) {
 	let t = e.toUpperCase(), n = /^(\d{4})Q([1-4])$/.exec(t) ?? /^(\d{4})-Q([1-4])$/.exec(t);
 	if (n) return `${n[1]}-${String(Number(n[2]) * 3).padStart(2, "0")}-01`;
 	let r = /^(\d{4})M(0[1-9]|1[0-2])$/.exec(t) ?? /^(\d{4})-(0[1-9]|1[0-2])$/.exec(t);
 	return r ? `${r[1]}-${r[2]}-01` : /^\d{4}$/.test(t) ? `${t}-01-01` : null;
 }
-function um(e) {
+function hm(e) {
 	if (!e || e === "(NA)" || e === "---" || e === "--" || e === "...") return null;
 	let t = e.replace(/,/g, ""), n = Number(t);
 	return Number.isFinite(n) ? n : null;
 }
-function dm(e) {
+function gm(e) {
 	let t = q(e).split(",").map((e) => e.trim()).filter(Boolean);
 	if (t.length === 0) return null;
-	let n = new Map(Xp.map((e) => [`${e.tableName}:${e.lineNumber}`, e])), r = t.map((e) => {
+	let n = new Map(tm.map((e) => [`${e.tableName}:${e.lineNumber}`, e])), r = t.map((e) => {
 		let [t, r] = e.toUpperCase().split(":");
 		if (!/^T\d{5}$/.test(t) || !/^\d+$/.test(r ?? "")) return null;
 		let i = `${t}:${r}`;
@@ -10332,21 +10363,21 @@ function dm(e) {
 			label: `${t} line ${r}`,
 			frequency: "Q",
 			year: "X",
-			sourceUrl: Gp
+			sourceUrl: Xp
 		};
 	}).filter((e) => e !== null);
 	return r.length > 0 ? r : null;
 }
-function fm(e, t, n, r) {
-	return `${Hp}:${e.toLowerCase()}:${t.toLowerCase()}:${n}:${r.toLowerCase()}`;
+function _m(e, t, n, r) {
+	return `${qp}:${e.toLowerCase()}:${t.toLowerCase()}:${n}:${r.toLowerCase()}`;
 }
 function q(e) {
 	return e == null ? "" : String(e).trim();
 }
-function pm(e, t, n) {
+function vm(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function mm(e, t) {
+function ym(e, t) {
 	if (e.aborted || t.aborted) {
 		let e = new AbortController();
 		return e.abort(), e.signal;
@@ -10356,7 +10387,7 @@ function mm(e, t) {
 }
 //#endregion
 //#region electron/osint/adapters/eiaEnergyAdapter.ts
-var hm = "eia_energy_public", gm = "U.S. Energy Information Administration", _m = "https://api.eia.gov/v2", vm = "https://www.eia.gov/opendata/", ym = 2e4, bm = 2, xm = 1e3, Sm = /^[A-Z0-9._-]+$/i, Cm = /^\d{4}-\d{2}-\d{2}$/, wm = [
+var bm = "eia_energy_public", xm = "U.S. Energy Information Administration", Sm = "https://api.eia.gov/v2", Cm = "https://www.eia.gov/opendata/", wm = 2e4, Tm = 2, Em = 1e3, Dm = /^[A-Z0-9._-]+$/i, Om = /^\d{4}-\d{2}-\d{2}$/, km = [
 	{
 		seriesId: "PET.RWTC.D",
 		title: "Cushing, OK WTI spot price FOB",
@@ -10408,42 +10439,42 @@ var hm = "eia_energy_public", gm = "U.S. Energy Information Administration", _m 
 		sourceUrl: "https://www.eia.gov/opendata/browser/electricity/electric-power-operational-data"
 	}
 ];
-function Tm(e = process.env) {
+function Am(e = process.env) {
 	if (e.ATLASZ_EIA_DISABLE === "1") return null;
-	let t = J(e.ATLASZ_EIA_API_KEY), n = J(e.ATLASZ_EIA_API_BASE) || _m;
+	let t = J(e.ATLASZ_EIA_API_KEY), n = J(e.ATLASZ_EIA_API_BASE) || Sm;
 	return !t || !/^https:\/\//i.test(n) ? null : {
 		apiBase: n,
 		apiKey: t,
-		series: zm(e.ATLASZ_EIA_SERIES) ?? wm,
-		timeoutMs: Um(Number(e.ATLASZ_EIA_TIMEOUT_MS ?? ym), 1e3, 6e4),
-		maxRetries: Um(Number(e.ATLASZ_EIA_MAX_RETRIES ?? bm), 0, 5),
-		backoffMs: Um(Number(e.ATLASZ_EIA_BACKOFF_MS ?? xm), 0, 6e4)
+		series: Wm(e.ATLASZ_EIA_SERIES) ?? km,
+		timeoutMs: Jm(Number(e.ATLASZ_EIA_TIMEOUT_MS ?? wm), 1e3, 6e4),
+		maxRetries: Jm(Number(e.ATLASZ_EIA_MAX_RETRIES ?? Tm), 0, 5),
+		backoffMs: Jm(Number(e.ATLASZ_EIA_BACKOFF_MS ?? Em), 0, 6e4)
 	};
 }
-async function Em(e, n = Tm()) {
+async function jm(e, n = Am()) {
 	if (!n || n.series.length === 0) return [];
 	let r = Date.now(), i = [];
 	for (let a of n.series) {
-		let o = Fm(n.apiBase, a, n.apiKey), s = Fm(n.apiBase, a).toString(), c = await t((t) => Pm(o, Wm(e, t)), {
+		let o = Bm(n.apiBase, a, n.apiKey), s = Bm(n.apiBase, a).toString(), c = await t((t) => zm(o, Ym(e, t)), {
 			maxRetries: n.maxRetries,
 			backoffMs: n.backoffMs,
 			timeoutMs: n.timeoutMs
 		});
-		i.push(...Dm(c, {
+		i.push(...Mm(c, {
 			retrievedAt: r,
 			series: a,
 			sourceApiUrl: s
 		}));
 	}
-	return Om(i);
+	return Nm(i);
 }
-function Dm(e, t = {}) {
+function Mm(e, t = {}) {
 	if (!e || typeof e != "object") return [];
-	let n = t.series ?? wm[0], r = Am(e);
+	let n = t.series ?? km[0], r = Fm(e);
 	if (r.length === 0) return [];
-	let i = t.retrievedAt ?? Date.now(), a = t.sourceApiUrl ?? Fm(_m, n).toString(), o = jm(r);
+	let i = t.retrievedAt ?? Date.now(), a = t.sourceApiUrl ?? Bm(Sm, n).toString(), o = Im(r);
 	if (!o) return [];
-	let s = J(o.period) || J(o.date), c = Im(s), l = c ? Date.parse(`${c}T00:00:00Z`) : NaN, u = J(o.value), d = Lm(u), f = J(o.units) || J(o.unit) || J(o["value-units"]) || n.units || "value", p = J(o["series-description"]) || J(o.name) || J(o.description) || n.title, m = J(o["area-name"]) || J(o.region) || n.region, h = Bm(J(o.country) || J(o.countryCode) || n.countryCode), g = W({
+	let s = J(o.period) || J(o.date), c = Vm(s), l = c ? Date.parse(`${c}T00:00:00Z`) : NaN, u = J(o.value), d = Hm(u), f = J(o.units) || J(o.unit) || J(o["value-units"]) || n.units || "value", p = J(o["series-description"]) || J(o.name) || J(o.description) || n.title, m = J(o["area-name"]) || J(o.region) || n.region, h = Gm(J(o.country) || J(o.countryCode) || n.countryCode), g = W({
 		seriesId: n.seriesId.toUpperCase(),
 		title: p,
 		energyCategory: n.energyCategory,
@@ -10458,9 +10489,9 @@ function Dm(e, t = {}) {
 		sourceUrl: n.sourceUrl,
 		sourceApiUrl: a,
 		retrievedAt: i,
-		row: Rm(o)
+		row: Um(o)
 	}), _ = {
-		id: Hm(n.seriesId, s),
+		id: qm(n.seriesId, s),
 		seriesId: n.seriesId.toUpperCase(),
 		title: p,
 		energyCategory: n.energyCategory,
@@ -10475,10 +10506,10 @@ function Dm(e, t = {}) {
 		units: f,
 		sourceUrl: n.sourceUrl,
 		sourceApiUrl: a,
-		sourceName: gm,
+		sourceName: xm,
 		retrievedAt: i,
 		provenance: "official-api",
-		confidence: Nm({
+		confidence: Rm({
 			seriesId: n.seriesId,
 			observationDate: c,
 			value: d,
@@ -10489,14 +10520,14 @@ function Dm(e, t = {}) {
 		rawPayloadHash: z(g),
 		rawPayloadJson: g
 	};
-	return Mm(_) ? [_] : [];
+	return Lm(_) ? [_] : [];
 }
-function Om(e) {
-	return e.filter(Mm).map(km);
+function Nm(e) {
+	return e.filter(Lm).map(Pm);
 }
-function km(e) {
+function Pm(e) {
 	let t = `eia|${e.seriesId}|${e.period}`.toLowerCase(), n = U({
-		id: G(hm, t),
+		id: G(bm, t),
 		title: `EIA ${e.seriesId} — ${e.title}`,
 		summary: `Official EIA energy observation for ${e.seriesId} (${e.commodity}) at ${e.period}: ${e.rawValue} ${e.units}. Source: ${e.sourceName}.`,
 		source: e.sourceName,
@@ -10504,7 +10535,7 @@ function km(e) {
 		observedAt: e.observationTimestamp,
 		category: "energy-event",
 		provenance: "official-api",
-		sourceId: hm,
+		sourceId: bm,
 		dedupeKey: t,
 		rawPayload: e,
 		affectedAssets: [],
@@ -10515,7 +10546,7 @@ function km(e) {
 			e.seriesId
 		]),
 		extractedEntities: B([
-			gm,
+			xm,
 			e.seriesId,
 			e.title,
 			e.commodity,
@@ -10535,7 +10566,7 @@ function km(e) {
 		eiaEnergyRecord: e
 	};
 }
-function Am(e) {
+function Fm(e) {
 	if (e.error || e.code === 400 || e.code === 404) return [];
 	let t = e.response?.data;
 	if (Array.isArray(t)) return t;
@@ -10552,10 +10583,10 @@ function Am(e) {
 	}
 	return [];
 }
-function jm(e) {
+function Im(e) {
 	let t = null;
 	for (let n of e) {
-		let e = Im(J(n.period) || J(n.date)), r = e ? Date.parse(`${e}T00:00:00Z`) : NaN, i = Lm(J(n.value));
+		let e = Vm(J(n.period) || J(n.date)), r = e ? Date.parse(`${e}T00:00:00Z`) : NaN, i = Hm(J(n.value));
 		!e || !Number.isFinite(r) || i === null || (!t || r > t.timestamp) && (t = {
 			row: n,
 			timestamp: r
@@ -10563,13 +10594,13 @@ function jm(e) {
 	}
 	return t?.row ?? null;
 }
-function Mm(e) {
-	return Sm.test(e.seriesId) && e.title.length > 0 && e.energyCategory.length > 0 && e.commodity.length > 0 && e.period.length > 0 && Cm.test(e.observationDate) && Number.isFinite(e.observationTimestamp) && Number.isFinite(e.value) && e.units.length > 0 && /^https:\/\/www\.eia\.gov\//.test(e.sourceUrl) && /^https:\/\/api\.eia\.gov\/v2\/seriesid\//.test(e.sourceApiUrl) && !/[?&]api_key=/i.test(e.sourceApiUrl) && e.sourceName === gm && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && e.rawPayloadHash.length > 0 && !(e.rawPayloadJson ?? "").includes("api_key");
+function Lm(e) {
+	return Dm.test(e.seriesId) && e.title.length > 0 && e.energyCategory.length > 0 && e.commodity.length > 0 && e.period.length > 0 && Om.test(e.observationDate) && Number.isFinite(e.observationTimestamp) && Number.isFinite(e.value) && e.units.length > 0 && /^https:\/\/www\.eia\.gov\//.test(e.sourceUrl) && /^https:\/\/api\.eia\.gov\/v2\/seriesid\//.test(e.sourceApiUrl) && !/[?&]api_key=/i.test(e.sourceApiUrl) && e.sourceName === xm && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && e.rawPayloadHash.length > 0 && !(e.rawPayloadJson ?? "").includes("api_key");
 }
-function Nm(e) {
-	return Sm.test(e.seriesId) && e.observationDate !== null && Cm.test(e.observationDate) && e.value !== null && Number.isFinite(e.value) && /^https:\/\/www\.eia\.gov\//.test(e.sourceUrl) && /^https:\/\/api\.eia\.gov\/v2\/seriesid\//.test(e.sourceApiUrl) && !/[?&]api_key=/i.test(e.sourceApiUrl) && Number.isFinite(e.retrievedAt) ? 96 : 60;
+function Rm(e) {
+	return Dm.test(e.seriesId) && e.observationDate !== null && Om.test(e.observationDate) && e.value !== null && Number.isFinite(e.value) && /^https:\/\/www\.eia\.gov\//.test(e.sourceUrl) && /^https:\/\/api\.eia\.gov\/v2\/seriesid\//.test(e.sourceApiUrl) && !/[?&]api_key=/i.test(e.sourceApiUrl) && Number.isFinite(e.retrievedAt) ? 96 : 60;
 }
-async function Pm(t, n) {
+async function zm(t, n) {
 	let r = await fetch(t, {
 		signal: n,
 		headers: {
@@ -10579,11 +10610,11 @@ async function Pm(t, n) {
 	});
 	return e(r, "EIA"), await r.json();
 }
-function Fm(e, t, n) {
-	let r = new URL(`${Vm(e)}/seriesid/${encodeURIComponent(t.seriesId.toUpperCase())}`);
+function Bm(e, t, n) {
+	let r = new URL(`${Km(e)}/seriesid/${encodeURIComponent(t.seriesId.toUpperCase())}`);
 	return r.searchParams.set("length", "1"), n && r.searchParams.set("api_key", n), r;
 }
-function Im(e) {
+function Vm(e) {
 	let t = e.trim().toUpperCase();
 	if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t;
 	let n = /^(\d{4})(\d{2})(\d{2})$/.exec(t);
@@ -10593,49 +10624,49 @@ function Im(e) {
 	let i = /^(\d{4})Q([1-4])$/.exec(t) ?? /^(\d{4})-Q([1-4])$/.exec(t);
 	return i ? `${i[1]}-${String(Number(i[2]) * 3).padStart(2, "0")}-01` : /^\d{4}$/.test(t) ? `${t}-01-01` : null;
 }
-function Lm(e) {
+function Hm(e) {
 	if (!e || e === "(NA)" || e === "NA" || e === "---" || e === "--" || e === ".") return null;
 	let t = Number(e.replace(/,/g, ""));
 	return Number.isFinite(t) ? t : null;
 }
-function Rm(e) {
+function Um(e) {
 	let t = {};
 	for (let [n, r] of Object.entries(e)) /api[_-]?key/i.test(n) || (t[n] = r);
 	return t;
 }
-function zm(e) {
+function Wm(e) {
 	let t = J(e).split(",").map((e) => e.trim().toUpperCase()).filter(Boolean);
 	if (t.length === 0) return null;
-	let n = new Map(wm.map((e) => [e.seriesId.toUpperCase(), e])), r = t.map((e) => Sm.test(e) ? n.get(e) ?? {
+	let n = new Map(km.map((e) => [e.seriesId.toUpperCase(), e])), r = t.map((e) => Dm.test(e) ? n.get(e) ?? {
 		seriesId: e,
 		title: e,
 		energyCategory: "Energy",
 		commodity: "Energy",
 		region: "United States",
 		countryCode: "US",
-		sourceUrl: vm
+		sourceUrl: Cm
 	} : null).filter((e) => e !== null);
 	return r.length > 0 ? r : null;
 }
-function Bm(e) {
+function Gm(e) {
 	if (!e) return;
 	let t = e.toUpperCase();
 	if (/^[A-Z]{2}$/.test(t)) return t;
 	if (t === "USA" || t === "UNITED STATES") return "US";
 }
-function Vm(e) {
+function Km(e) {
 	return e.replace(/\/$/, "");
 }
-function Hm(e, t) {
-	return `${hm}:${e.toUpperCase()}:${t.toLowerCase()}`;
+function qm(e, t) {
+	return `${bm}:${e.toUpperCase()}:${t.toLowerCase()}`;
 }
 function J(e) {
 	return e == null ? "" : String(e).trim();
 }
-function Um(e, t, n) {
+function Jm(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function Wm(e, t) {
+function Ym(e, t) {
 	if (e.aborted || t.aborted) {
 		let e = new AbortController();
 		return e.abort(), e.signal;
@@ -10645,7 +10676,7 @@ function Wm(e, t) {
 }
 //#endregion
 //#region src/engine/geo/geoCore.ts
-var Gm = {
+var Xm = {
 	alabama: "AL",
 	alaska: "AK",
 	arizona: "AZ",
@@ -10700,25 +10731,25 @@ var Gm = {
 	"puerto rico": "PR",
 	"virgin islands": "VI",
 	guam: "GU"
-}, Km = Object.fromEntries(Object.entries(Gm).map(([e, t]) => [t, Jm(e)]));
-function qm(e) {
+}, Zm = Object.fromEntries(Object.entries(Xm).map(([e, t]) => [t, $m(e)]));
+function Qm(e) {
 	let t = typeof e == "string" ? e.trim() : "";
 	if (!t) return {};
 	let n = t.toUpperCase();
-	if (/^[A-Z]{2}$/.test(n) && Km[n]) return {
+	if (/^[A-Z]{2}$/.test(n) && Zm[n]) return {
 		code: n,
-		name: Km[n]
+		name: Zm[n]
 	};
-	let r = Gm[t.toLowerCase()];
+	let r = Xm[t.toLowerCase()];
 	return r ? {
 		code: r,
-		name: Jm(t.toLowerCase())
+		name: $m(t.toLowerCase())
 	} : {};
 }
-function Jm(e) {
+function $m(e) {
 	return e.replace(/\b\w/g, (e) => e.toUpperCase());
 }
-var Ym = {
+var eh = {
 	"united states": "US",
 	"united states of america": "US",
 	usa: "US",
@@ -10790,35 +10821,35 @@ var Ym = {
 	panama: "PA",
 	venezuela: "VE"
 };
-function Xm(e) {
+function th(e) {
 	let t = typeof e == "string" ? e.trim() : "";
 	if (!t) return {};
 	if (/^[A-Z]{2}$/.test(t.toUpperCase()) && t.length === 2) return {
 		code: t.toUpperCase(),
 		name: t
 	};
-	let n = Ym[t.toLowerCase()];
+	let n = eh[t.toLowerCase()];
 	return n ? {
 		code: n,
-		name: Jm(t.toLowerCase())
+		name: $m(t.toLowerCase())
 	} : { name: t };
 }
 function Y(e, t) {
 	return typeof e == "number" && typeof t == "number" && Number.isFinite(e) && Number.isFinite(t) && e >= -90 && e <= 90 && t >= -180 && t <= 180 && !(e === 0 && t === 0);
 }
-function Zm(e, t, n) {
+function nh(e, t, n) {
 	return Y(e, t) ? "exact" : n ? "region-only" : "unknown";
 }
-function Qm(e, t, n) {
+function rh(e, t, n) {
 	let r = Y(t, n);
 	return e === "exact" ? r : !r;
 }
-function $m(e) {
+function ih(e) {
 	return e === "exact" || e === "approximate" || e === "region-only" || e === "unknown";
 }
 //#endregion
 //#region electron/osint/adapters/eiaFacilityAdapter.ts
-var eh = "eia_power_plants_public", th = "U.S. Energy Information Administration", nh = "https://api.eia.gov/v2", rh = "electricity/operating-generator-capacity", ih = "EIA-860M operating generator capacity", ah = "https://www.eia.gov/electricity/data/eia860m/", oh = 25e3, sh = 2, ch = 1e3, lh = 200, uh = 2e3, dh = 1440 * 60 * 1e3 * 45, fh = /^[A-Z]{2}$/, ph = {
+var ah = "eia_power_plants_public", oh = "U.S. Energy Information Administration", sh = "https://api.eia.gov/v2", ch = "electricity/operating-generator-capacity", lh = "EIA-860M operating generator capacity", uh = "https://www.eia.gov/electricity/data/eia860m/", dh = 25e3, fh = 2, ph = 1e3, mh = 200, hh = 2e3, gh = 1440 * 60 * 1e3 * 45, _h = /^[A-Z]{2}$/, vh = {
 	NG: "Natural Gas",
 	BIT: "Coal (Bituminous)",
 	SUB: "Coal (Subbituminous)",
@@ -10837,7 +10868,7 @@ var eh = "eia_power_plants_public", th = "U.S. Energy Information Administration
 	OBG: "Other Biomass Gas",
 	PC: "Petroleum Coke",
 	PUR: "Purchased Steam"
-}, mh = {
+}, yh = {
 	"nextera energy": { ticker: "NEE" },
 	"florida power & light company": { ticker: "NEE" },
 	"duke energy": { ticker: "DUK" },
@@ -10854,26 +10885,26 @@ var eh = "eia_power_plants_public", th = "U.S. Energy Information Administration
 	"pg&e": { ticker: "PCG" },
 	"pacific gas & electric co": { ticker: "PCG" }
 };
-function hh(e = process.env) {
+function bh(e = process.env) {
 	if (e.ATLASZ_EIA_FACILITIES_DISABLE === "1") return null;
-	let t = Ih(e.ATLASZ_EIA_API_KEY), n = Ih(e.ATLASZ_EIA_API_BASE) || nh;
+	let t = Vh(e.ATLASZ_EIA_API_KEY), n = Vh(e.ATLASZ_EIA_API_BASE) || sh;
 	return !t || !/^https:\/\//i.test(n) ? null : {
 		apiBase: n,
 		apiKey: t,
-		states: Dh(e.ATLASZ_EIA_FACILITY_STATES),
-		maxFacilities: Rh(Number(e.ATLASZ_EIA_FACILITY_MAX ?? lh), 1, uh),
-		timeoutMs: Rh(Number(e.ATLASZ_EIA_TIMEOUT_MS ?? oh), 1e3, 6e4),
-		maxRetries: Rh(Number(e.ATLASZ_EIA_MAX_RETRIES ?? sh), 0, 5),
-		backoffMs: Rh(Number(e.ATLASZ_EIA_BACKOFF_MS ?? ch), 0, 6e4)
+		states: Mh(e.ATLASZ_EIA_FACILITY_STATES),
+		maxFacilities: Uh(Number(e.ATLASZ_EIA_FACILITY_MAX ?? mh), 1, hh),
+		timeoutMs: Uh(Number(e.ATLASZ_EIA_TIMEOUT_MS ?? dh), 1e3, 6e4),
+		maxRetries: Uh(Number(e.ATLASZ_EIA_MAX_RETRIES ?? fh), 0, 5),
+		backoffMs: Uh(Number(e.ATLASZ_EIA_BACKOFF_MS ?? ph), 0, 6e4)
 	};
 }
-async function gh(e, t = hh()) {
-	return bh(await _h(e, t));
+async function xh(e, t = bh()) {
+	return Th(await Sh(e, t));
 }
-async function _h(e, n = hh()) {
+async function Sh(e, n = bh()) {
 	if (!n) return [];
-	let r = Date.now(), i = Eh(n, n.apiKey), a = Eh(n).toString();
-	return vh(await t((t) => Th(i, zh(e, t)), {
+	let r = Date.now(), i = jh(n, n.apiKey), a = jh(n).toString();
+	return Ch(await t((t) => Ah(i, Wh(e, t)), {
 		maxRetries: n.maxRetries,
 		backoffMs: n.backoffMs,
 		timeoutMs: n.timeoutMs
@@ -10883,56 +10914,56 @@ async function _h(e, n = hh()) {
 		maxFacilities: n.maxFacilities
 	});
 }
-function vh(e, t = {}) {
+function Ch(e, t = {}) {
 	if (!e || typeof e != "object") return [];
 	let n = e;
 	if (n.error || n.code === 400 || n.code === 404) return [];
 	let r = n.response?.data;
 	if (!Array.isArray(r) || r.length === 0) return [];
-	let i = t.retrievedAt ?? Date.now(), a = t.sourceApiUrl ?? `${nh}/${rh}/data/?frequency=monthly&data[0]=nameplate-capacity-mw`, o = t.maxFacilities ?? lh, s = /* @__PURE__ */ new Map();
+	let i = t.retrievedAt ?? Date.now(), a = t.sourceApiUrl ?? `${sh}/${ch}/data/?frequency=monthly&data[0]=nameplate-capacity-mw`, o = t.maxFacilities ?? mh, s = /* @__PURE__ */ new Map();
 	for (let e of r) {
 		if (!e || typeof e != "object") continue;
-		let t = Ih(e.plantid ?? e.plantId);
+		let t = Vh(e.plantid ?? e.plantId);
 		t && s.set(t, [...s.get(t) ?? [], e]);
 	}
 	let c = [];
 	for (let [e, t] of s) {
-		let n = yh(e, t, {
+		let n = wh(e, t, {
 			retrievedAt: i,
 			sourceApiUrl: a
 		});
-		n && Sh(n) && c.push(n);
+		n && Dh(n) && c.push(n);
 	}
 	return c.sort((e, t) => (t.capacityMw ?? 0) - (e.capacityMw ?? 0) || e.facilityId.localeCompare(t.facilityId)).slice(0, o);
 }
-function yh(e, t, n) {
-	let r = jh(t, ["plantName", "plantname"]);
+function wh(e, t, n) {
+	let r = Ih(t, ["plantName", "plantname"]);
 	if (!r) return null;
-	let i = jh(t, ["entityName", "entityname"]) || void 0, a = jh(t, ["entityid", "entityId"]) || void 0, o = Oh(jh(t, [
+	let i = Ih(t, ["entityName", "entityname"]) || void 0, a = Ih(t, ["entityid", "entityId"]) || void 0, o = Nh(Ih(t, [
 		"stateid",
 		"state",
 		"stateId"
-	])), s = jh(t, [
+	])), s = Ih(t, [
 		"stateName",
 		"statename",
 		"stateDescription"
-	]) || void 0, c = jh(t, ["county", "countyName"]) || void 0, l = jh(t, [
+	]) || void 0, c = Ih(t, ["county", "countyName"]) || void 0, l = Ih(t, [
 		"balancing-authority-code",
 		"balancing_authority_code",
 		"balancingAuthorityCode"
-	]) || jh(t, [
+	]) || Ih(t, [
 		"balancing-authority-name",
 		"balancing_authority_name",
 		"balancingAuthorityName"
-	]) || void 0, u = wh(t), d = Zm(u?.lat, u?.lon, !!(o || c)), f = null, p = -1, m = 0, h = !1, g = /* @__PURE__ */ new Set();
+	]) || void 0, u = kh(t), d = nh(u?.lat, u?.lon, !!(o || c)), f = null, p = -1, m = 0, h = !1, g = /* @__PURE__ */ new Set();
 	for (let e of t) {
-		let t = Ph(e["nameplate-capacity-mw"] ?? e.nameplate_capacity_mw ?? e.nameplateCapacityMw);
+		let t = zh(e["nameplate-capacity-mw"] ?? e.nameplate_capacity_mw ?? e.nameplateCapacityMw);
 		t !== void 0 && (m += t, h = !0, t > p && (p = t, f = e));
-		let n = Ih(e.statusDescription ?? e.status);
+		let n = Vh(e.statusDescription ?? e.status);
 		n && g.add(n);
 	}
 	f ||= t[0];
-	let _ = Ih(f["energy-source-code"] ?? f.energy_source_code ?? f.energySourceCode) || void 0, v = Ih(f.technology ?? f.technologyDescription) || void 0, y = _ ? ph[_.toUpperCase()] ?? _ : void 0, b = g.size === 0 ? void 0 : g.size === 1 ? [...g][0] : "mixed", x = Mh(t, ["period"]) || void 0, S = i ? mh[kh(i)]?.ticker : void 0, C = W({
+	let _ = Vh(f["energy-source-code"] ?? f.energy_source_code ?? f.energySourceCode) || void 0, v = Vh(f.technology ?? f.technologyDescription) || void 0, y = _ ? vh[_.toUpperCase()] ?? _ : void 0, b = g.size === 0 ? void 0 : g.size === 1 ? [...g][0] : "mixed", x = Lh(t, ["period"]) || void 0, S = i ? yh[Ph(i)]?.ticker : void 0, C = W({
 		facilityId: e,
 		facilityName: r,
 		operatorName: i,
@@ -10941,7 +10972,7 @@ function yh(e, t, n) {
 		plantType: v,
 		primaryFuel: y,
 		energySource: _,
-		capacityMw: h ? Fh(m) : void 0,
+		capacityMw: h ? Bh(m) : void 0,
 		unitCount: t.length,
 		status: b,
 		state: o,
@@ -10952,13 +10983,13 @@ function yh(e, t, n) {
 		longitude: u?.lon,
 		geospatialPrecision: d,
 		period: x,
-		sourceDataset: ih,
-		sourceUrl: ah,
+		sourceDataset: lh,
+		sourceUrl: uh,
 		sourceApiUrl: n.sourceApiUrl,
-		rows: t.map(Ah)
+		rows: t.map(Fh)
 	});
 	return {
-		id: Nh(e),
+		id: Rh(e),
 		facilityId: e,
 		facilityName: r,
 		facilityKind: "power-plant",
@@ -10968,7 +10999,7 @@ function yh(e, t, n) {
 		plantType: v,
 		primaryFuel: y,
 		energySource: _?.toUpperCase(),
-		capacityMw: h ? Fh(m) : void 0,
+		capacityMw: h ? Bh(m) : void 0,
 		unitCount: t.length,
 		status: b,
 		state: o,
@@ -10978,15 +11009,15 @@ function yh(e, t, n) {
 		latitude: u?.lat,
 		longitude: u?.lon,
 		geospatialPrecision: d,
-		sourceDataset: ih,
-		sourceUrl: ah,
+		sourceDataset: lh,
+		sourceUrl: uh,
 		sourceApiUrl: n.sourceApiUrl,
-		sourceName: th,
+		sourceName: oh,
 		period: x,
 		retrievedAt: n.retrievedAt,
-		staleAt: n.retrievedAt + dh,
+		staleAt: n.retrievedAt + gh,
 		provenance: "official-api",
-		confidence: Ch({
+		confidence: Oh({
 			plantId: e,
 			facilityName: r,
 			sourceApiUrl: n.sourceApiUrl,
@@ -10996,20 +11027,20 @@ function yh(e, t, n) {
 		rawPayloadJson: C
 	};
 }
-function bh(e) {
-	return e.filter(Sh).map(xh);
+function Th(e) {
+	return e.filter(Dh).map(Eh);
 }
-function xh(e) {
+function Eh(e) {
 	let t = `eia-facility|${e.facilityId}`.toLowerCase(), n = [e.county, e.stateName ?? e.state].filter(Boolean).join(", "), r = e.capacityMw === void 0 ? "capacity unavailable" : `${e.capacityMw} MW nameplate`, i = e.primaryFuel ? `${e.primaryFuel} primary fuel` : "fuel unavailable", a = e.geospatialPrecision === "exact" ? `coordinates ${e.latitude}, ${e.longitude}` : `location ${e.geospatialPrecision}`, o = `EIA published power-plant facility ${e.facilityName} (plant ${e.facilityId})${n ? ` in ${n}` : ""}: ${r}, ${i}, ${a}. Facility location context only — not a verified outage, disruption, or vulnerability claim.`, s = U({
-		id: G(eh, t),
+		id: G(ah, t),
 		title: `Power plant: ${e.facilityName}${e.state ? ` (${e.state})` : ""}`.slice(0, 180),
 		summary: o,
-		source: th,
+		source: oh,
 		url: e.sourceUrl,
 		observedAt: e.retrievedAt,
 		category: "energy-facility",
 		provenance: "official-api",
-		sourceId: eh,
+		sourceId: ah,
 		dedupeKey: t,
 		rawPayload: e,
 		affectedAssets: e.operatorTicker ? [e.operatorTicker] : [],
@@ -11042,15 +11073,15 @@ function xh(e) {
 		eiaFacility: e
 	};
 }
-function Sh(e) {
-	return !!e.facilityId && !!e.facilityName && e.facilityKind === "power-plant" && $m(e.geospatialPrecision) && Qm(e.geospatialPrecision, e.latitude, e.longitude) && e.sourceDataset.length > 0 && /^https:\/\/www\.eia\.gov\//.test(e.sourceUrl) && /^https:\/\/api\.eia\.gov\/v2\/electricity\/operating-generator-capacity\//.test(e.sourceApiUrl) && !/[?&]api_key=/i.test(e.sourceApiUrl) && e.sourceName === th && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && Number.isFinite(e.staleAt) && e.rawPayloadHash.length > 0 && !(e.rawPayloadJson ?? "").includes("api_key") && e.confidence >= 90;
+function Dh(e) {
+	return !!e.facilityId && !!e.facilityName && e.facilityKind === "power-plant" && ih(e.geospatialPrecision) && rh(e.geospatialPrecision, e.latitude, e.longitude) && e.sourceDataset.length > 0 && /^https:\/\/www\.eia\.gov\//.test(e.sourceUrl) && /^https:\/\/api\.eia\.gov\/v2\/electricity\/operating-generator-capacity\//.test(e.sourceApiUrl) && !/[?&]api_key=/i.test(e.sourceApiUrl) && e.sourceName === oh && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && Number.isFinite(e.staleAt) && e.rawPayloadHash.length > 0 && !(e.rawPayloadJson ?? "").includes("api_key") && e.confidence >= 90;
 }
-function Ch(e) {
+function Oh(e) {
 	return e.plantId && e.facilityName && /^https:\/\/api\.eia\.gov\/v2\/electricity\/operating-generator-capacity\//.test(e.sourceApiUrl) && !/[?&]api_key=/i.test(e.sourceApiUrl) && Number.isFinite(e.retrievedAt) ? 95 : 60;
 }
-function wh(e) {
+function kh(e) {
 	for (let t of e) {
-		let e = Ph(t.latitude ?? t.lat), n = Ph(t.longitude ?? t.lon);
+		let e = zh(t.latitude ?? t.lat), n = zh(t.longitude ?? t.lon);
 		if (Y(e, n)) return {
 			lat: e,
 			lon: n
@@ -11058,7 +11089,7 @@ function wh(e) {
 	}
 	return null;
 }
-async function Th(t, n) {
+async function Ah(t, n) {
 	let r = await fetch(t, {
 		signal: n,
 		headers: {
@@ -11068,65 +11099,65 @@ async function Th(t, n) {
 	});
 	return e(r, "EIA facilities"), await r.json();
 }
-function Eh(e, t) {
-	let n = new URL(`${Lh(e.apiBase)}/${rh}/data/`);
+function jh(e, t) {
+	let n = new URL(`${Hh(e.apiBase)}/${ch}/data/`);
 	n.searchParams.set("frequency", "monthly"), n.searchParams.append("data[0]", "nameplate-capacity-mw"), n.searchParams.append("data[1]", "net-summer-capacity-mw");
 	for (let t of e.states ?? []) n.searchParams.append("facets[stateid][]", t);
-	return n.searchParams.set("sort[0][column]", "period"), n.searchParams.set("sort[0][direction]", "desc"), n.searchParams.set("offset", "0"), n.searchParams.set("length", String(Math.min((e.maxFacilities ?? lh) * 4, 5e3))), t && n.searchParams.set("api_key", t), n;
+	return n.searchParams.set("sort[0][column]", "period"), n.searchParams.set("sort[0][direction]", "desc"), n.searchParams.set("offset", "0"), n.searchParams.set("length", String(Math.min((e.maxFacilities ?? mh) * 4, 5e3))), t && n.searchParams.set("api_key", t), n;
 }
-function Dh(e) {
-	return Ih(e).split(",").map((e) => Oh(e.trim())).filter((e) => !!e);
+function Mh(e) {
+	return Vh(e).split(",").map((e) => Nh(e.trim())).filter((e) => !!e);
 }
-function Oh(e) {
+function Nh(e) {
 	let t = e.trim().toUpperCase();
-	return fh.test(t) ? t : void 0;
+	return _h.test(t) ? t : void 0;
 }
-function kh(e) {
+function Ph(e) {
 	return e.toLowerCase().replace(/\s+/g, " ").trim();
 }
-function Ah(e) {
+function Fh(e) {
 	let t = {};
 	for (let [n, r] of Object.entries(e)) /api[_-]?key/i.test(n) || (t[n] = r);
 	return t;
 }
-function jh(e, t) {
+function Ih(e, t) {
 	for (let n of e) for (let e of t) {
-		let t = Ih(n[e]);
+		let t = Vh(n[e]);
 		if (t) return t;
 	}
 	return "";
 }
-function Mh(e, t) {
+function Lh(e, t) {
 	let n = "";
 	for (let r of e) for (let e of t) {
-		let t = Ih(r[e]);
+		let t = Vh(r[e]);
 		t && t > n && (n = t);
 	}
 	return n;
 }
-function Nh(e) {
-	return `${eh}:${e.toLowerCase()}`;
+function Rh(e) {
+	return `${ah}:${e.toLowerCase()}`;
 }
-function Ph(e) {
+function zh(e) {
 	if (typeof e == "number" && Number.isFinite(e)) return e;
 	if (typeof e == "string" && e.trim() !== "") {
 		let t = Number(e.replace(/,/g, ""));
 		return Number.isFinite(t) ? t : void 0;
 	}
 }
-function Fh(e) {
+function Bh(e) {
 	return Math.round(e * 1e3) / 1e3;
 }
-function Ih(e) {
+function Vh(e) {
 	return e == null ? "" : String(e).trim();
 }
-function Lh(e) {
+function Hh(e) {
 	return e.replace(/\/$/, "");
 }
-function Rh(e, t, n) {
+function Uh(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function zh(e, t) {
+function Wh(e, t) {
 	if (e.aborted || t.aborted) {
 		let e = new AbortController();
 		return e.abort(), e.signal;
@@ -11136,7 +11167,7 @@ function zh(e, t) {
 }
 //#endregion
 //#region electron/osint/adapters/eiaRefineryAdapter.ts
-var Bh = "eia_refineries_public", Vh = "U.S. Energy Information Administration", Hh = "EIA U.S. Energy Atlas — Petroleum Refineries (EIA-820)", Uh = "https://atlas.eia.gov/datasets/petroleum-refineries", Wh = "https://services7.arcgis.com/FGr1D95XCGALKXqM/arcgis/rest/services/PetroleumRefineries_US_EIA/FeatureServer/0/query?where=1%3D1&outFields=*&f=geojson", Gh = 25e3, Kh = 2, qh = 1e3, Jh = 200, Yh = 1e3, Xh = 1440 * 60 * 1e3 * 180, Zh = {
+var Gh = "eia_refineries_public", Kh = "U.S. Energy Information Administration", qh = "EIA U.S. Energy Atlas — Petroleum Refineries (EIA-820)", Jh = "https://atlas.eia.gov/datasets/petroleum-refineries", Yh = "https://services7.arcgis.com/FGr1D95XCGALKXqM/arcgis/rest/services/PetroleumRefineries_US_EIA/FeatureServer/0/query?where=1%3D1&outFields=*&f=geojson", Xh = 25e3, Zh = 2, Qh = 1e3, $h = 200, eg = 1e3, tg = 1440 * 60 * 1e3 * 180, ng = {
 	"marathon petroleum": { ticker: "MPC" },
 	"marathon petroleum corp": { ticker: "MPC" },
 	"valero energy": { ticker: "VLO" },
@@ -11150,21 +11181,21 @@ var Bh = "eia_refineries_public", Vh = "U.S. Energy Information Administration",
 	"hf sinclair": { ticker: "DINO" },
 	"par pacific": { ticker: "PARR" }
 };
-function Qh(e = process.env) {
+function rg(e = process.env) {
 	if (e.ATLASZ_EIA_REFINERIES_DISABLE === "1") return null;
 	let t = V(e.ATLASZ_EIA_REFINERIES_URL);
-	return !t || !cg(t) ? null : {
+	return !t || !pg(t) ? null : {
 		apiUrl: t,
-		maxRefineries: mg(Number(e.ATLASZ_EIA_REFINERY_MAX ?? Jh), 1, Yh),
-		timeoutMs: mg(Number(e.ATLASZ_EIA_REFINERY_TIMEOUT_MS ?? Gh), 1e3, 6e4),
-		maxRetries: mg(Number(e.ATLASZ_EIA_REFINERY_MAX_RETRIES ?? Kh), 0, 5),
-		backoffMs: mg(Number(e.ATLASZ_EIA_REFINERY_BACKOFF_MS ?? qh), 0, 6e4)
+		maxRefineries: yg(Number(e.ATLASZ_EIA_REFINERY_MAX ?? $h), 1, eg),
+		timeoutMs: yg(Number(e.ATLASZ_EIA_REFINERY_TIMEOUT_MS ?? Xh), 1e3, 6e4),
+		maxRetries: yg(Number(e.ATLASZ_EIA_REFINERY_MAX_RETRIES ?? Zh), 0, 5),
+		backoffMs: yg(Number(e.ATLASZ_EIA_REFINERY_BACKOFF_MS ?? Qh), 0, 6e4)
 	};
 }
-async function $h(e, n = Qh()) {
+async function ig(e, n = rg()) {
 	if (!n) return [];
 	let r = Date.now();
-	return tg(eg(await t((t) => lg(n.apiUrl, hg(e, t)), {
+	return og(ag(await t((t) => mg(n.apiUrl, bg(e, t)), {
 		maxRetries: n.maxRetries,
 		backoffMs: n.backoffMs,
 		timeoutMs: n.timeoutMs
@@ -11174,11 +11205,11 @@ async function $h(e, n = Qh()) {
 		maxRefineries: n.maxRefineries
 	}));
 }
-function eg(e, t = {}) {
+function ag(e, t = {}) {
 	if (!e || typeof e != "object") return [];
 	let n = e.features;
 	if (!Array.isArray(n) || n.length === 0) return [];
-	let r = t.retrievedAt ?? Date.now(), i = t.sourceApiUrl ?? Wh, a = t.maxRefineries ?? Jh, o = [], s = /* @__PURE__ */ new Set();
+	let r = t.retrievedAt ?? Date.now(), i = t.sourceApiUrl ?? Yh, a = t.maxRefineries ?? $h, o = [], s = /* @__PURE__ */ new Set();
 	for (let e of n) {
 		if (!e || typeof e != "object") continue;
 		let t = e.properties, n = e.geometry;
@@ -11206,14 +11237,14 @@ function eg(e, t = {}) {
 			"Parent"
 		]) || void 0;
 		if (!a && !c) continue;
-		let u = H(t.OBJECTID ?? t.FID ?? t.objectid), d = X(t, ["Refinery_ID", "RefID"]) || (u === void 0 ? "" : String(u)) || pg(`${c ?? ""}-${a}-${X(t, [
+		let u = H(t.OBJECTID ?? t.FID ?? t.objectid), d = X(t, ["Refinery_ID", "RefID"]) || (u === void 0 ? "" : String(u)) || vg(`${c ?? ""}-${a}-${X(t, [
 			"State",
 			"STATE",
 			"state"
 		])}`);
 		if (!d || s.has(d)) continue;
 		s.add(d);
-		let { code: f, name: p } = qm(X(t, [
+		let { code: f, name: p } = Qm(X(t, [
 			"State",
 			"STATE",
 			"state"
@@ -11234,7 +11265,7 @@ function eg(e, t = {}) {
 			"STATUS",
 			"status",
 			"Operational_Status"
-		]) || void 0, v = ag(n, t), y = Zm(v?.lat, v?.lon, !!(f || m || h)), b = H(t.AD_Mbpd ?? t.AtmCrudeDist ?? t.atm_crude ?? t.Cap_Crude ?? t.crude_capacity ?? t.AtmosphericCrudeDistillation), x = b === void 0 ? void 0 : "thousand barrels per calendar day", S = og(t), C = c ?? l, w = C ? Zh[dg(C)]?.ticker : void 0, T = W({
+		]) || void 0, v = ug(n, t), y = nh(v?.lat, v?.lon, !!(f || m || h)), b = H(t.AD_Mbpd ?? t.AtmCrudeDist ?? t.atm_crude ?? t.Cap_Crude ?? t.crude_capacity ?? t.AtmosphericCrudeDistillation), x = b === void 0 ? void 0 : "thousand barrels per calendar day", S = dg(t), C = c ?? l, w = C ? ng[gg(C)]?.ticker : void 0, T = W({
 			facilityId: d,
 			facilityName: a,
 			operatorName: c,
@@ -11253,12 +11284,12 @@ function eg(e, t = {}) {
 			crudeCapacity: b,
 			crudeCapacityUnit: x,
 			products: S,
-			sourceDataset: Hh,
-			sourceUrl: Uh,
+			sourceDataset: qh,
+			sourceUrl: Jh,
 			sourceApiUrl: i,
-			properties: ug(t)
+			properties: hg(t)
 		}), E = {
-			id: fg(d),
+			id: _g(d),
 			facilityId: d,
 			facilityName: a || c,
 			facilityKind: "refinery",
@@ -11278,14 +11309,14 @@ function eg(e, t = {}) {
 			crudeCapacityUnit: x,
 			products: S,
 			status: _,
-			sourceDataset: Hh,
-			sourceUrl: Uh,
+			sourceDataset: qh,
+			sourceUrl: Jh,
 			sourceApiUrl: i,
-			sourceName: Vh,
+			sourceName: Kh,
 			retrievedAt: r,
-			staleAt: r + Xh,
+			staleAt: r + tg,
 			provenance: "official-api",
-			confidence: ig({
+			confidence: lg({
 				facilityId: d,
 				facilityName: a || c,
 				sourceApiUrl: i,
@@ -11294,28 +11325,28 @@ function eg(e, t = {}) {
 			rawPayloadHash: z(T),
 			rawPayloadJson: T
 		};
-		rg(E) && o.push(E);
+		cg(E) && o.push(E);
 	}
 	return o.sort((e, t) => (t.crudeCapacity ?? 0) - (e.crudeCapacity ?? 0) || e.facilityName.localeCompare(t.facilityName)).slice(0, a);
 }
-function tg(e) {
-	return e.filter(rg).map(ng);
+function og(e) {
+	return e.filter(cg).map(sg);
 }
-function ng(e) {
+function sg(e) {
 	let t = `eia-refinery|${e.facilityId}`.toLowerCase(), n = [
 		e.city,
 		e.county,
 		e.stateName ?? e.state
 	].filter(Boolean).join(", "), r = e.crudeCapacity === void 0 ? "capacity unavailable" : `${e.crudeCapacity} ${e.crudeCapacityUnit ?? ""}`.trim(), i = e.geospatialPrecision === "exact" ? `coordinates ${e.latitude}, ${e.longitude}` : `location ${e.geospatialPrecision}`, a = `EIA published petroleum refinery ${e.facilityName}${n ? ` in ${n}` : ""}: crude distillation ${r}, ${i}. Facility location/capacity context only — not a verified outage, disruption, or vulnerability claim.`, o = U({
-		id: G(Bh, t),
+		id: G(Gh, t),
 		title: `Refinery: ${e.facilityName}${e.state ? ` (${e.state})` : ""}`.slice(0, 180),
 		summary: a,
-		source: Vh,
+		source: Kh,
 		url: e.sourceUrl,
 		observedAt: e.retrievedAt,
 		category: "energy-facility",
 		provenance: "official-api",
-		sourceId: Bh,
+		sourceId: Gh,
 		dedupeKey: t,
 		rawPayload: e,
 		affectedAssets: e.operatorTicker ? [e.operatorTicker] : [],
@@ -11352,20 +11383,20 @@ function ng(e) {
 		eiaRefinery: e
 	};
 }
-function rg(e) {
-	return !!e.facilityId && !!e.facilityName && e.facilityKind === "refinery" && $m(e.geospatialPrecision) && Qm(e.geospatialPrecision, e.latitude, e.longitude) && e.sourceDataset.length > 0 && sg(e.sourceUrl) && cg(e.sourceApiUrl) && e.sourceName === Vh && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && Number.isFinite(e.staleAt) && e.rawPayloadHash.length > 0 && e.confidence >= 90;
+function cg(e) {
+	return !!e.facilityId && !!e.facilityName && e.facilityKind === "refinery" && ih(e.geospatialPrecision) && rh(e.geospatialPrecision, e.latitude, e.longitude) && e.sourceDataset.length > 0 && fg(e.sourceUrl) && pg(e.sourceApiUrl) && e.sourceName === Kh && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && Number.isFinite(e.staleAt) && e.rawPayloadHash.length > 0 && e.confidence >= 90;
 }
-function ig(e) {
-	return e.facilityId && e.facilityName && cg(e.sourceApiUrl) && Number.isFinite(e.retrievedAt) ? 95 : 60;
+function lg(e) {
+	return e.facilityId && e.facilityName && pg(e.sourceApiUrl) && Number.isFinite(e.retrievedAt) ? 95 : 60;
 }
-function ag(e, t) {
+function ug(e, t) {
 	let n = Array.isArray(e?.coordinates) ? e?.coordinates : [], r = H(n[0]), i = H(n[1]);
 	return Y(i, r) || (i = H(t.Latitude ?? t.latitude ?? t.LAT ?? t.Y), r = H(t.Longitude ?? t.longitude ?? t.LON ?? t.LONG ?? t.X)), Y(i, r) ? {
 		lat: i,
 		lon: r
 	} : null;
 }
-function og(e) {
+function dg(e) {
 	let t = X(e, [
 		"Products",
 		"PRODUCTS",
@@ -11376,7 +11407,7 @@ function og(e) {
 	let n = B(t.split(/[,;|]/).map((e) => e.trim()));
 	return n.length > 0 ? n : void 0;
 }
-function sg(e) {
+function fg(e) {
 	try {
 		let t = new URL(e);
 		return t.protocol === "https:" && /(^|\.)eia\.gov$/i.test(t.hostname);
@@ -11384,7 +11415,7 @@ function sg(e) {
 		return !1;
 	}
 }
-function cg(e) {
+function pg(e) {
 	try {
 		let t = new URL(e);
 		return t.protocol === "https:" ? /(^|\.)eia\.gov$/i.test(t.hostname) ? !0 : /(^|\.)arcgis\.com$/i.test(t.hostname) && /refiner/i.test(t.pathname) : !1;
@@ -11392,7 +11423,7 @@ function cg(e) {
 		return !1;
 	}
 }
-async function lg(t, n) {
+async function mg(t, n) {
 	let r = await fetch(t, {
 		signal: n,
 		headers: {
@@ -11409,24 +11440,24 @@ function X(e, t) {
 	}
 	return "";
 }
-function ug(e) {
+function hg(e) {
 	let t = {};
 	for (let [n, r] of Object.entries(e)) /api[_-]?key|token/i.test(n) || (t[n] = r);
 	return t;
 }
-function dg(e) {
+function gg(e) {
 	return e.toLowerCase().replace(/[.,]/g, "").replace(/\s+/g, " ").trim();
 }
-function fg(e) {
-	return `${Bh}:${e.toLowerCase()}`;
+function _g(e) {
+	return `${Gh}:${e.toLowerCase()}`;
 }
-function pg(e) {
+function vg(e) {
 	return e.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
 }
-function mg(e, t, n) {
+function yg(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function hg(e, t) {
+function bg(e, t) {
 	if (e.aborted || t.aborted) {
 		let e = new AbortController();
 		return e.abort(), e.signal;
@@ -11436,19 +11467,19 @@ function hg(e, t) {
 }
 //#endregion
 //#region electron/osint/adapters/lngTerminalAdapter.ts
-var gg = "lng_terminals_public", _g = 25e3, vg = 2, yg = 1e3, bg = 200, xg = 1e3, Sg = 1440 * 60 * 1e3 * 180, Cg = {
+var xg = "lng_terminals_public", Sg = 25e3, Cg = 2, wg = 1e3, Tg = 200, Eg = 1e3, Dg = 1440 * 60 * 1e3 * 180, Og = {
 	name: "U.S. Energy Information Administration",
 	dataset: "EIA U.S. Energy Atlas — LNG Import/Export Terminals",
 	page: "https://atlas.eia.gov/datasets/liquefied-natural-gas-lng-import-and-export-terminals"
-}, wg = {
+}, kg = {
 	name: "Federal Energy Regulatory Commission",
 	dataset: "FERC U.S. LNG Terminals",
 	page: "https://www.ferc.gov/natural-gas/lng"
-}, Tg = {
+}, Ag = {
 	name: "U.S. Department of Energy (FECM)",
 	dataset: "DOE/FECM LNG terminal data",
 	page: "https://www.energy.gov/fecm/listings/lng-reports"
-}, Eg = {
+}, jg = {
 	cheniere: { ticker: "LNG" },
 	"cheniere energy": { ticker: "LNG" },
 	sempra: { ticker: "SRE" },
@@ -11460,21 +11491,21 @@ var gg = "lng_terminals_public", _g = 25e3, vg = 2, yg = 1e3, bg = 200, xg = 1e3
 	"venture global": { ticker: "VG" },
 	"venture global lng": { ticker: "VG" }
 };
-function Dg(e = process.env) {
+function Mg(e = process.env) {
 	if (e.ATLASZ_LNG_TERMINALS_DISABLE === "1") return null;
 	let t = V(e.ATLASZ_LNG_TERMINALS_URL);
-	return !t || !Rg(t) ? null : {
+	return !t || !Ug(t) ? null : {
 		apiUrl: t,
-		maxTerminals: qg(Number(e.ATLASZ_LNG_TERMINAL_MAX ?? bg), 1, xg),
-		timeoutMs: qg(Number(e.ATLASZ_LNG_TERMINAL_TIMEOUT_MS ?? _g), 1e3, 6e4),
-		maxRetries: qg(Number(e.ATLASZ_LNG_TERMINAL_MAX_RETRIES ?? vg), 0, 5),
-		backoffMs: qg(Number(e.ATLASZ_LNG_TERMINAL_BACKOFF_MS ?? yg), 0, 6e4)
+		maxTerminals: Qg(Number(e.ATLASZ_LNG_TERMINAL_MAX ?? Tg), 1, Eg),
+		timeoutMs: Qg(Number(e.ATLASZ_LNG_TERMINAL_TIMEOUT_MS ?? Sg), 1e3, 6e4),
+		maxRetries: Qg(Number(e.ATLASZ_LNG_TERMINAL_MAX_RETRIES ?? Cg), 0, 5),
+		backoffMs: Qg(Number(e.ATLASZ_LNG_TERMINAL_BACKOFF_MS ?? wg), 0, 6e4)
 	};
 }
-async function Og(e, n = Dg()) {
+async function Ng(e, n = Mg()) {
 	if (!n) return [];
 	let r = Date.now();
-	return Ag(kg(await t((t) => Vg(n.apiUrl, Jg(e, t)), {
+	return Fg(Pg(await t((t) => Kg(n.apiUrl, $g(e, t)), {
 		maxRetries: n.maxRetries,
 		backoffMs: n.backoffMs,
 		timeoutMs: n.timeoutMs
@@ -11484,15 +11515,15 @@ async function Og(e, n = Dg()) {
 		maxTerminals: n.maxTerminals
 	}));
 }
-function kg(e, t = {}) {
+function Pg(e, t = {}) {
 	if (!e || typeof e != "object") return [];
-	let n = Pg(e);
+	let n = zg(e);
 	if (n.length === 0) return [];
 	let r = t.retrievedAt ?? Date.now(), i = t.sourceApiUrl ?? "";
-	if (!Rg(i)) return [];
-	let a = t.maxTerminals ?? bg, o = Bg(i), s = [], c = /* @__PURE__ */ new Set();
+	if (!Ug(i)) return [];
+	let a = t.maxTerminals ?? Tg, o = Gg(i), s = [], c = /* @__PURE__ */ new Set();
 	for (let { attrs: e, lat: t, lon: a } of n) {
-		let n = Hg(e, [
+		let n = qg(e, [
 			"Terminal",
 			"TerminalName",
 			"Name",
@@ -11500,61 +11531,61 @@ function kg(e, t = {}) {
 			"Facility",
 			"FacilityName",
 			"Project"
-		]), l = Hg(e, [
+		]), l = qg(e, [
 			"Operator",
 			"Operator_Name",
 			"Company",
 			"COMPANY"
-		]) || void 0, u = Hg(e, [
+		]) || void 0, u = qg(e, [
 			"Owner",
 			"Owner_Name",
 			"Parent",
 			"OwnerName"
 		]) || void 0;
 		if (!n && !l) continue;
-		let d = H(e.OBJECTID ?? e.FID ?? e.objectid), f = Hg(e, [
+		let d = H(e.OBJECTID ?? e.FID ?? e.objectid), f = qg(e, [
 			"Terminal_ID",
 			"TerminalID",
 			"ID"
-		]) || (d === void 0 ? "" : String(d)) || Kg(`${l ?? u ?? ""}-${n}-${Hg(e, [
+		]) || (d === void 0 ? "" : String(d)) || Zg(`${l ?? u ?? ""}-${n}-${qg(e, [
 			"State",
 			"STATE",
 			"state"
 		])}`);
 		if (!f || c.has(f)) continue;
 		c.add(f);
-		let { code: p, name: m } = qm(Hg(e, [
+		let { code: p, name: m } = Qm(qg(e, [
 			"State",
 			"STATE",
 			"state"
-		])), h = Hg(e, [
+		])), h = qg(e, [
 			"County",
 			"COUNTY",
 			"county"
-		]) || void 0, g = Hg(e, [
+		]) || void 0, g = qg(e, [
 			"City",
 			"CITY",
 			"city"
-		]) || void 0, _ = Hg(e, [
+		]) || void 0, _ = qg(e, [
 			"Status",
 			"STATUS",
 			"status"
 		]) || void 0, v = Y(t, a) ? {
 			lat: t,
 			lon: a
-		} : Fg(e), y = Zm(v?.lat, v?.lon, !!(p || h || g)), b = Ig(Hg(e, [
+		} : Bg(e), y = nh(v?.lat, v?.lon, !!(p || h || g)), b = Vg(qg(e, [
 			"Type",
 			"TerminalType",
 			"Import_Export",
 			"ImportExport",
 			"Service",
 			"Operation"
-		])), x = H(e.Capacity ?? e.Capacity_Bcfd ?? e.CapacityBcfd ?? e.Capacity_BCFD ?? e.BaseloadCapacity), S = x === void 0 ? void 0 : V(e.CapacityUnit ?? e.Units) || "Bcf/d", C = l ?? u, w = C ? Eg[Wg(C)]?.ticker : void 0, T = W({
+		])), x = H(e.Capacity ?? e.Capacity_Bcfd ?? e.CapacityBcfd ?? e.Capacity_BCFD ?? e.BaseloadCapacity), S = x === void 0 ? void 0 : V(e.CapacityUnit ?? e.Units) || "Bcf/d", C = l ?? u, w = C ? jg[Yg(C)]?.ticker : void 0, T = W({
 			facilityId: f,
 			facilityName: n,
 			operatorName: l,
 			ownerName: u,
-			operatorId: Hg(e, ["Operator_ID", "OperatorID"]) || void 0,
+			operatorId: qg(e, ["Operator_ID", "OperatorID"]) || void 0,
 			operatorTicker: w,
 			state: p,
 			stateName: m,
@@ -11570,15 +11601,15 @@ function kg(e, t = {}) {
 			sourceDataset: o.dataset,
 			sourceUrl: o.page,
 			sourceApiUrl: i,
-			attrs: Ug(e)
+			attrs: Jg(e)
 		}), E = {
-			id: Gg(f),
+			id: Xg(f),
 			facilityId: f,
 			facilityName: n || l,
 			facilityKind: "lng-terminal",
 			operatorName: l,
 			ownerName: u,
-			operatorId: Hg(e, ["Operator_ID", "OperatorID"]) || void 0,
+			operatorId: qg(e, ["Operator_ID", "OperatorID"]) || void 0,
 			operatorTicker: w,
 			state: p,
 			stateName: m,
@@ -11596,9 +11627,9 @@ function kg(e, t = {}) {
 			sourceApiUrl: i,
 			sourceName: o.name,
 			retrievedAt: r,
-			staleAt: r + Sg,
+			staleAt: r + Dg,
 			provenance: "official-api",
-			confidence: Ng({
+			confidence: Rg({
 				facilityId: f,
 				facilityName: n || l,
 				sourceApiUrl: i,
@@ -11607,20 +11638,20 @@ function kg(e, t = {}) {
 			rawPayloadHash: z(T),
 			rawPayloadJson: T
 		};
-		Mg(E) && s.push(E);
+		Lg(E) && s.push(E);
 	}
 	return s.sort((e, t) => (t.capacity ?? 0) - (e.capacity ?? 0) || e.facilityName.localeCompare(t.facilityName)).slice(0, a);
 }
-function Ag(e) {
-	return e.filter(Mg).map(jg);
+function Fg(e) {
+	return e.filter(Lg).map(Ig);
 }
-function jg(e) {
+function Ig(e) {
 	let t = `lng-terminal|${e.facilityId}`.toLowerCase(), n = [
 		e.city,
 		e.county,
 		e.stateName ?? e.state
 	].filter(Boolean).join(", "), r = e.terminalType ? `${e.terminalType} terminal` : "LNG terminal", i = e.capacity === void 0 ? "" : `, capacity ${e.capacity} ${e.capacityUnit ?? ""}`.trim(), a = e.geospatialPrecision === "exact" ? `coordinates ${e.latitude}, ${e.longitude}` : `location ${e.geospatialPrecision}`, o = `${e.sourceName} lists LNG ${r} ${e.facilityName}${n ? ` in ${n}` : ""}${i}, ${a}. Facility location/capacity context only — not a verified outage, disruption, export-flow, or vulnerability claim.`, s = U({
-		id: G(gg, t),
+		id: G(xg, t),
 		title: `LNG terminal: ${e.facilityName}${e.state ? ` (${e.state})` : ""}`.slice(0, 180),
 		summary: o,
 		source: e.sourceName,
@@ -11628,7 +11659,7 @@ function jg(e) {
 		observedAt: e.retrievedAt,
 		category: "energy-facility",
 		provenance: "official-api",
-		sourceId: gg,
+		sourceId: xg,
 		dedupeKey: t,
 		rawPayload: e,
 		affectedAssets: e.operatorTicker ? [e.operatorTicker] : [],
@@ -11666,13 +11697,13 @@ function jg(e) {
 		lngTerminal: e
 	};
 }
-function Mg(e) {
-	return !!e.facilityId && !!e.facilityName && e.facilityKind === "lng-terminal" && $m(e.geospatialPrecision) && Qm(e.geospatialPrecision, e.latitude, e.longitude) && e.sourceDataset.length > 0 && Lg(e.sourceUrl) && Rg(e.sourceApiUrl) && e.sourceName.length > 0 && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && Number.isFinite(e.staleAt) && e.rawPayloadHash.length > 0 && e.confidence >= 90;
+function Lg(e) {
+	return !!e.facilityId && !!e.facilityName && e.facilityKind === "lng-terminal" && ih(e.geospatialPrecision) && rh(e.geospatialPrecision, e.latitude, e.longitude) && e.sourceDataset.length > 0 && Hg(e.sourceUrl) && Ug(e.sourceApiUrl) && e.sourceName.length > 0 && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && Number.isFinite(e.staleAt) && e.rawPayloadHash.length > 0 && e.confidence >= 90;
 }
-function Ng(e) {
-	return e.facilityId && e.facilityName && Rg(e.sourceApiUrl) && Number.isFinite(e.retrievedAt) ? 95 : 60;
+function Rg(e) {
+	return e.facilityId && e.facilityName && Ug(e.sourceApiUrl) && Number.isFinite(e.retrievedAt) ? 95 : 60;
 }
-function Pg(e) {
+function zg(e) {
 	let t = e.features;
 	if (!Array.isArray(t)) return [];
 	let n = [];
@@ -11697,14 +11728,14 @@ function Pg(e) {
 	}
 	return n;
 }
-function Fg(e) {
+function Bg(e) {
 	let t = H(e.Latitude ?? e.latitude ?? e.LAT ?? e.Y), n = H(e.Longitude ?? e.longitude ?? e.LON ?? e.LONG ?? e.X);
 	return Y(t, n) ? {
 		lat: t,
 		lon: n
 	} : null;
 }
-function Ig(e) {
+function Vg(e) {
 	let t = e.toLowerCase();
 	if (t) {
 		if (/liquef/.test(t)) return "liquefaction";
@@ -11713,11 +11744,11 @@ function Ig(e) {
 		if (/import/.test(t)) return "import";
 	}
 }
-function Lg(e) {
-	return zg(e, (e) => /(^|\.)eia\.gov$/i.test(e) || /(^|\.)ferc\.gov$/i.test(e) || /(^|\.)energy\.gov$/i.test(e));
+function Hg(e) {
+	return Wg(e, (e) => /(^|\.)eia\.gov$/i.test(e) || /(^|\.)ferc\.gov$/i.test(e) || /(^|\.)energy\.gov$/i.test(e));
 }
-function Rg(e) {
-	return zg(e, (e, t) => {
+function Ug(e) {
+	return Wg(e, (e, t) => {
 		if (/(^|\.)eia\.gov$/i.test(e) || /(^|\.)ferc\.gov$/i.test(e) || /(^|\.)energy\.gov$/i.test(e)) return !0;
 		if (/(^|\.)arcgis\.com$/i.test(e)) {
 			let n = t.pathname.toLowerCase();
@@ -11726,7 +11757,7 @@ function Rg(e) {
 		return !1;
 	});
 }
-function zg(e, t) {
+function Wg(e, t) {
 	try {
 		let n = new URL(e);
 		return n.protocol === "https:" && t(n.hostname.toLowerCase(), n);
@@ -11734,15 +11765,15 @@ function zg(e, t) {
 		return !1;
 	}
 }
-function Bg(e) {
+function Gg(e) {
 	try {
 		let t = new URL(e).hostname.toLowerCase();
-		if (/(^|\.)ferc\.gov$/.test(t)) return wg;
-		if (/(^|\.)energy\.gov$/.test(t)) return Tg;
+		if (/(^|\.)ferc\.gov$/.test(t)) return kg;
+		if (/(^|\.)energy\.gov$/.test(t)) return Ag;
 	} catch {}
-	return Cg;
+	return Og;
 }
-async function Vg(t, n) {
+async function Kg(t, n) {
 	let r = await fetch(t, {
 		signal: n,
 		headers: {
@@ -11752,31 +11783,31 @@ async function Vg(t, n) {
 	});
 	return e(r, "LNG terminals"), await r.json();
 }
-function Hg(e, t) {
+function qg(e, t) {
 	for (let n of t) {
 		let t = V(e[n]);
 		if (t) return t;
 	}
 	return "";
 }
-function Ug(e) {
+function Jg(e) {
 	let t = {};
 	for (let [n, r] of Object.entries(e)) /api[_-]?key|token/i.test(n) || (t[n] = r);
 	return t;
 }
-function Wg(e) {
+function Yg(e) {
 	return e.toLowerCase().replace(/[.,]/g, "").replace(/\s+/g, " ").trim();
 }
-function Gg(e) {
-	return `${gg}:${e.toLowerCase()}`;
+function Xg(e) {
+	return `${xg}:${e.toLowerCase()}`;
 }
-function Kg(e) {
+function Zg(e) {
 	return e.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
 }
-function qg(e, t, n) {
+function Qg(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function Jg(e, t) {
+function $g(e, t) {
 	if (e.aborted || t.aborted) {
 		let e = new AbortController();
 		return e.abort(), e.signal;
@@ -11786,22 +11817,22 @@ function Jg(e, t) {
 }
 //#endregion
 //#region electron/osint/adapters/eiaNuclearAdapter.ts
-var Yg = "eia_nuclear_public";
-function Xg(e = process.env) {
-	return e.ATLASZ_EIA_NUCLEAR_DISABLE === "1" ? null : hh(e);
+var e_ = "eia_nuclear_public";
+function t_(e = process.env) {
+	return e.ATLASZ_EIA_NUCLEAR_DISABLE === "1" ? null : bh(e);
 }
-async function Zg(e, t = Xg()) {
-	return t ? t_(Qg(await _h(e, t))) : [];
+async function n_(e, t = t_()) {
+	return t ? o_(r_(await Sh(e, t))) : [];
 }
-function Qg(e) {
-	return e.filter($g).map(e_);
+function r_(e) {
+	return e.filter(i_).map(a_);
 }
-function $g(e) {
+function i_(e) {
 	return e.energySource === "NUC" || /nuclear/i.test(e.primaryFuel ?? "") || /nuclear/i.test(e.plantType ?? "");
 }
-function e_(e) {
+function a_(e) {
 	return {
-		id: `${Yg}:${e.facilityId.toLowerCase()}`,
+		id: `${e_}:${e.facilityId.toLowerCase()}`,
 		facilityId: e.facilityId,
 		facilityName: e.facilityName,
 		facilityKind: "nuclear-plant",
@@ -11831,12 +11862,12 @@ function e_(e) {
 		rawPayloadJson: e.rawPayloadJson
 	};
 }
-function t_(e) {
-	return e.filter(r_).map(n_);
+function o_(e) {
+	return e.filter(c_).map(s_);
 }
-function n_(e) {
+function s_(e) {
 	let t = `eia-nuclear|${e.facilityId}`.toLowerCase(), n = [e.county, e.stateName ?? e.state].filter(Boolean).join(", "), r = e.capacityMw === void 0 ? "capacity unavailable" : `${e.capacityMw} MW nameplate`, i = e.geospatialPrecision === "exact" ? `coordinates ${e.latitude}, ${e.longitude}` : `location ${e.geospatialPrecision}`, a = `EIA published nuclear power plant ${e.facilityName} (plant ${e.facilityId})${n ? ` in ${n}` : ""}: ${r}, ${i}. Facility location and capacity context only — not a verified outage, safety condition, or disruption.`, o = U({
-		id: G(Yg, t),
+		id: G(e_, t),
 		title: `Nuclear plant: ${e.facilityName}${e.state ? ` (${e.state})` : ""}`.slice(0, 180),
 		summary: a,
 		source: e.sourceName,
@@ -11844,7 +11875,7 @@ function n_(e) {
 		observedAt: e.retrievedAt,
 		category: "energy-facility",
 		provenance: "official-api",
-		sourceId: Yg,
+		sourceId: e_,
 		dedupeKey: t,
 		rawPayload: e,
 		affectedAssets: e.operatorTicker ? [e.operatorTicker] : [],
@@ -11881,28 +11912,28 @@ function n_(e) {
 		nuclearPlant: e
 	};
 }
-function r_(e) {
+function c_(e) {
 	let t = Number.isFinite(e.latitude) && Number.isFinite(e.longitude);
 	return !!e.facilityId && !!e.facilityName && e.facilityKind === "nuclear-plant" && (e.geospatialPrecision === "exact" ? t : !t) && e.sourceDataset.length > 0 && /^https:\/\/www\.eia\.gov\//.test(e.sourceUrl) && /^https:\/\/api\.eia\.gov\/v2\/electricity\/operating-generator-capacity\//.test(e.sourceApiUrl) && !/[?&]api_key=/i.test(e.sourceApiUrl) && e.sourceName === "U.S. Energy Information Administration" && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && Number.isFinite(e.staleAt) && e.rawPayloadHash.length > 0 && !(e.rawPayloadJson ?? "").includes("api_key") && e.confidence >= 90;
 }
 //#endregion
 //#region electron/osint/adapters/nrcReactorStatusAdapter.ts
-var i_ = "nrc_reactor_status_public", a_ = "U.S. Nuclear Regulatory Commission", o_ = "NRC Power Reactor Status Report", s_ = "https://www.nrc.gov/reading-rm/doc-collections/event-status/reactor-status/PowerReactorStatusForLast365Days.txt", c_ = 3e4, l_ = 2, u_ = 1e3, d_ = 200, f_ = 500, p_ = 1440 * 60 * 1e3 * 3;
-function m_(e = process.env) {
+var l_ = "nrc_reactor_status_public", u_ = "U.S. Nuclear Regulatory Commission", d_ = "NRC Power Reactor Status Report", f_ = "https://www.nrc.gov/reading-rm/doc-collections/event-status/reactor-status/PowerReactorStatusForLast365Days.txt", p_ = 3e4, m_ = 2, h_ = 1e3, g_ = 200, __ = 500, v_ = 1440 * 60 * 1e3 * 3;
+function y_(e = process.env) {
 	if (e.ATLASZ_NRC_REACTOR_STATUS_DISABLE === "1") return null;
-	let t = V(e.ATLASZ_NRC_REACTOR_STATUS_URL) || s_;
-	return b_(t) ? {
+	let t = V(e.ATLASZ_NRC_REACTOR_STATUS_URL) || f_;
+	return T_(t) ? {
 		url: t,
-		maxUnits: C_(Number(e.ATLASZ_NRC_REACTOR_STATUS_MAX ?? d_), 1, f_),
-		timeoutMs: C_(Number(e.ATLASZ_NRC_REACTOR_STATUS_TIMEOUT_MS ?? c_), 1e3, 6e4),
-		maxRetries: C_(Number(e.ATLASZ_NRC_REACTOR_STATUS_MAX_RETRIES ?? l_), 0, 5),
-		backoffMs: C_(Number(e.ATLASZ_NRC_REACTOR_STATUS_BACKOFF_MS ?? u_), 0, 6e4)
+		maxUnits: O_(Number(e.ATLASZ_NRC_REACTOR_STATUS_MAX ?? g_), 1, __),
+		timeoutMs: O_(Number(e.ATLASZ_NRC_REACTOR_STATUS_TIMEOUT_MS ?? p_), 1e3, 6e4),
+		maxRetries: O_(Number(e.ATLASZ_NRC_REACTOR_STATUS_MAX_RETRIES ?? m_), 0, 5),
+		backoffMs: O_(Number(e.ATLASZ_NRC_REACTOR_STATUS_BACKOFF_MS ?? h_), 0, 6e4)
 	} : null;
 }
-async function h_(e, n = m_()) {
+async function b_(e, n = y_()) {
 	if (!n) return [];
 	let r = Date.now();
-	return __(g_(await t((t) => x_(n.url, w_(e, t)), {
+	return S_(x_(await t((t) => E_(n.url, k_(e, t)), {
 		maxRetries: n.maxRetries,
 		backoffMs: n.backoffMs,
 		timeoutMs: n.timeoutMs
@@ -11912,11 +11943,11 @@ async function h_(e, n = m_()) {
 		maxUnits: n.maxUnits
 	}));
 }
-function g_(e, t = {}) {
+function x_(e, t = {}) {
 	if (typeof e != "string" || e.trim() === "") return [];
-	let n = t.retrievedAt ?? Date.now(), r = t.sourceUrl ?? s_;
-	if (!b_(r)) return [];
-	let i = t.maxUnits ?? d_, a = /* @__PURE__ */ new Map();
+	let n = t.retrievedAt ?? Date.now(), r = t.sourceUrl ?? f_;
+	if (!T_(r)) return [];
+	let i = t.maxUnits ?? g_, a = /* @__PURE__ */ new Map();
 	for (let t of e.split(/\r?\n/)) {
 		let e = t.trim();
 		if (!e) continue;
@@ -11942,39 +11973,39 @@ function g_(e, t = {}) {
 			powerPercent: e.powerPercent,
 			sourceUrl: r
 		}), i = {
-			id: `${i_}:${S_(e.unitName)}`,
+			id: `${l_}:${D_(e.unitName)}`,
 			unitName: e.unitName,
 			reportDate: e.reportDate,
 			reportTimestamp: e.reportTimestamp,
 			powerPercent: e.powerPercent,
-			sourceDataset: o_,
+			sourceDataset: d_,
 			sourceUrl: r,
-			sourceName: a_,
+			sourceName: u_,
 			retrievedAt: n,
-			staleAt: e.reportTimestamp + p_,
+			staleAt: e.reportTimestamp + v_,
 			provenance: "official-api",
 			confidence: 95,
 			rawPayloadHash: z(t),
 			rawPayloadJson: t
 		};
-		y_(i) && o.push(i);
+		w_(i) && o.push(i);
 	}
 	return o.sort((e, t) => e.unitName.localeCompare(t.unitName)).slice(0, i);
 }
-function __(e) {
-	return e.filter(y_).map(v_);
+function S_(e) {
+	return e.filter(w_).map(C_);
 }
-function v_(e) {
-	let t = `nrc-reactor-status|${S_(e.unitName)}|${e.reportDate}`.toLowerCase(), n = `NRC published the reactor power status for ${e.unitName} on ${e.reportDate}: ${e.powerPercent}% power. Operating power level as reported by the regulator — not an Atlasz safety, outage, disruption, or vulnerability assessment.`, r = U({
-		id: G(i_, t),
+function C_(e) {
+	let t = `nrc-reactor-status|${D_(e.unitName)}|${e.reportDate}`.toLowerCase(), n = `NRC published the reactor power status for ${e.unitName} on ${e.reportDate}: ${e.powerPercent}% power. Operating power level as reported by the regulator — not an Atlasz safety, outage, disruption, or vulnerability assessment.`, r = U({
+		id: G(l_, t),
 		title: `NRC reactor status: ${e.unitName} — ${e.powerPercent}%`.slice(0, 180),
 		summary: n,
-		source: a_,
+		source: u_,
 		url: e.sourceUrl,
 		observedAt: e.reportTimestamp,
 		category: "energy-facility",
 		provenance: "official-api",
-		sourceId: i_,
+		sourceId: l_,
 		dedupeKey: t,
 		rawPayload: e,
 		affectedAssets: [],
@@ -11998,10 +12029,10 @@ function v_(e) {
 		nrcReactorStatus: e
 	};
 }
-function y_(e) {
-	return !!e.unitName && /^\d{4}-\d{2}-\d{2}$/.test(e.reportDate) && Number.isFinite(e.reportTimestamp) && Number.isFinite(e.powerPercent) && e.powerPercent >= 0 && e.powerPercent <= 100 && b_(e.sourceUrl) && e.sourceName === a_ && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && Number.isFinite(e.staleAt) && e.rawPayloadHash.length > 0;
+function w_(e) {
+	return !!e.unitName && /^\d{4}-\d{2}-\d{2}$/.test(e.reportDate) && Number.isFinite(e.reportTimestamp) && Number.isFinite(e.powerPercent) && e.powerPercent >= 0 && e.powerPercent <= 100 && T_(e.sourceUrl) && e.sourceName === u_ && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && Number.isFinite(e.staleAt) && e.rawPayloadHash.length > 0;
 }
-function b_(e) {
+function T_(e) {
 	try {
 		let t = new URL(e);
 		return t.protocol === "https:" && /(^|\.)nrc\.gov$/i.test(t.hostname);
@@ -12009,7 +12040,7 @@ function b_(e) {
 		return !1;
 	}
 }
-async function x_(t, n) {
+async function E_(t, n) {
 	let r = await fetch(t, {
 		signal: n,
 		headers: {
@@ -12019,13 +12050,13 @@ async function x_(t, n) {
 	});
 	return e(r, "NRC reactor status"), await r.text();
 }
-function S_(e) {
+function D_(e) {
 	return e.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
 }
-function C_(e, t, n) {
+function O_(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function w_(e, t) {
+function k_(e, t) {
 	if (e.aborted || t.aborted) {
 		let e = new AbortController();
 		return e.abort(), e.signal;
@@ -12035,7 +12066,7 @@ function w_(e, t) {
 }
 //#endregion
 //#region electron/osint/adapters/eiaBalancingAuthorityAdapter.ts
-var T_ = "eia_balancing_authorities_public", E_ = "U.S. Energy Information Administration", D_ = "https://api.eia.gov/v2", O_ = "electricity/rto/region-data/facet/respondent", k_ = "EIA U.S. Electric System Operating Data — balancing authorities", A_ = "https://www.eia.gov/opendata/browser/electricity/rto/region-data", j_ = 2e4, M_ = 2, N_ = 1e3, P_ = 200, F_ = 500, I_ = 1440 * 60 * 1e3 * 90, L_ = /^[A-Z0-9-]{2,16}$/, R_ = {
+var A_ = "eia_balancing_authorities_public", j_ = "U.S. Energy Information Administration", M_ = "https://api.eia.gov/v2", N_ = "electricity/rto/region-data/facet/respondent", P_ = "EIA U.S. Electric System Operating Data — balancing authorities", F_ = "https://www.eia.gov/opendata/browser/electricity/rto/region-data", I_ = 2e4, L_ = 2, R_ = 1e3, z_ = 200, B_ = 500, V_ = 1440 * 60 * 1e3 * 90, H_ = /^[A-Z0-9-]{2,16}$/, U_ = {
 	CISO: "WECC",
 	BANC: "WECC",
 	LDWP: "WECC",
@@ -12066,7 +12097,7 @@ var T_ = "eia_balancing_authorities_public", E_ = "U.S. Energy Information Admin
 	FPC: "FRCC",
 	TEC: "FRCC",
 	JEA: "FRCC"
-}, z_ = {
+}, W_ = {
 	DUK: {
 		name: "Duke Energy",
 		ticker: "DUK"
@@ -12088,22 +12119,22 @@ var T_ = "eia_balancing_authorities_public", E_ = "U.S. Energy Information Admin
 		ticker: "AEP"
 	}
 };
-function B_(e = process.env) {
+function G_(e = process.env) {
 	if (e.ATLASZ_EIA_BA_DISABLE === "1") return null;
-	let t = V(e.ATLASZ_EIA_API_KEY), n = V(e.ATLASZ_EIA_API_BASE) || D_;
+	let t = V(e.ATLASZ_EIA_API_KEY), n = V(e.ATLASZ_EIA_API_BASE) || M_;
 	return !t || !/^https:\/\//i.test(n) ? null : {
 		apiBase: n,
 		apiKey: t,
-		maxRecords: Y_(Number(e.ATLASZ_EIA_BA_MAX ?? P_), 1, F_),
-		timeoutMs: Y_(Number(e.ATLASZ_EIA_TIMEOUT_MS ?? j_), 1e3, 6e4),
-		maxRetries: Y_(Number(e.ATLASZ_EIA_MAX_RETRIES ?? M_), 0, 5),
-		backoffMs: Y_(Number(e.ATLASZ_EIA_BACKOFF_MS ?? N_), 0, 6e4)
+		maxRecords: ev(Number(e.ATLASZ_EIA_BA_MAX ?? z_), 1, B_),
+		timeoutMs: ev(Number(e.ATLASZ_EIA_TIMEOUT_MS ?? I_), 1e3, 6e4),
+		maxRetries: ev(Number(e.ATLASZ_EIA_MAX_RETRIES ?? L_), 0, 5),
+		backoffMs: ev(Number(e.ATLASZ_EIA_BACKOFF_MS ?? R_), 0, 6e4)
 	};
 }
-async function V_(e, n = B_()) {
+async function K_(e, n = G_()) {
 	if (!n) return [];
-	let r = Date.now(), i = J_(n.apiBase, n.apiKey), a = J_(n.apiBase);
-	return U_(H_(await t((t) => q_(i, X_(e, t)), {
+	let r = Date.now(), i = $_(n.apiBase, n.apiKey), a = $_(n.apiBase);
+	return J_(q_(await t((t) => Q_(i, tv(e, t)), {
 		maxRetries: n.maxRetries,
 		backoffMs: n.backoffMs,
 		timeoutMs: n.timeoutMs
@@ -12113,42 +12144,42 @@ async function V_(e, n = B_()) {
 		maxRecords: n.maxRecords
 	}));
 }
-function H_(e, t = {}) {
+function q_(e, t = {}) {
 	if (!e || typeof e != "object") return [];
 	let n = e;
 	if (n.error || n.code === 400 || n.code === 404) return [];
 	let r = n.response?.facets;
 	if (!Array.isArray(r) || r.length === 0) return [];
-	let i = t.retrievedAt ?? Date.now(), a = t.sourceApiUrl ?? J_(D_), o = t.maxRecords ?? P_, s = [], c = /* @__PURE__ */ new Set();
+	let i = t.retrievedAt ?? Date.now(), a = t.sourceApiUrl ?? $_(M_), o = t.maxRecords ?? z_, s = [], c = /* @__PURE__ */ new Set();
 	for (let e of r) {
 		let t = V(e.id ?? e.code).toUpperCase(), n = V(e.name ?? e.id);
-		if (!L_.test(t) || !n || c.has(t)) continue;
+		if (!H_.test(t) || !n || c.has(t)) continue;
 		c.add(t);
-		let r = z_[t], o = W({
+		let r = W_[t], o = W({
 			baCode: t,
 			baName: n,
-			nercRegion: R_[t],
-			sourceDataset: k_,
-			sourceUrl: A_,
+			nercRegion: U_[t],
+			sourceDataset: P_,
+			sourceUrl: F_,
 			sourceApiUrl: a
 		}), l = {
-			id: `${T_}:${t.toLowerCase()}`,
+			id: `${A_}:${t.toLowerCase()}`,
 			baCode: t,
 			baName: n,
 			regionKind: "balancing-authority",
 			country: "US",
-			nercRegion: R_[t],
+			nercRegion: U_[t],
 			operatorName: r?.name,
 			operatorTicker: r?.ticker,
 			geospatialPrecision: "region-only",
-			sourceDataset: k_,
-			sourceUrl: A_,
+			sourceDataset: P_,
+			sourceUrl: F_,
 			sourceApiUrl: a,
-			sourceName: E_,
+			sourceName: j_,
 			retrievedAt: i,
-			staleAt: i + I_,
+			staleAt: i + V_,
 			provenance: "official-api",
-			confidence: K_({
+			confidence: Z_({
 				baCode: t,
 				baName: n,
 				sourceApiUrl: a,
@@ -12157,24 +12188,24 @@ function H_(e, t = {}) {
 			rawPayloadHash: z(o),
 			rawPayloadJson: o
 		};
-		G_(l) && s.push(l);
+		X_(l) && s.push(l);
 	}
 	return s.sort((e, t) => e.baCode.localeCompare(t.baCode)).slice(0, o);
 }
-function U_(e) {
-	return e.filter(G_).map(W_);
+function J_(e) {
+	return e.filter(X_).map(Y_);
 }
-function W_(e) {
+function Y_(e) {
 	let t = `eia-ba|${e.baCode}`.toLowerCase(), n = e.nercRegion ? `, ${e.nercRegion} region` : "", r = `EIA balancing authority ${e.baCode} — ${e.baName}${n}. Grid operating-region reference only — not an outage, grid-stress, reliability, or vulnerability claim.`, i = U({
-		id: G(T_, t),
+		id: G(A_, t),
 		title: `Balancing authority: ${e.baCode} — ${e.baName}`.slice(0, 180),
 		summary: r,
-		source: E_,
+		source: j_,
 		url: e.sourceUrl,
 		observedAt: e.retrievedAt,
 		category: "energy-grid",
 		provenance: "official-api",
-		sourceId: T_,
+		sourceId: A_,
 		dedupeKey: t,
 		rawPayload: e,
 		affectedAssets: e.operatorTicker ? [e.operatorTicker] : [],
@@ -12204,13 +12235,13 @@ function W_(e) {
 		gridRegion: e
 	};
 }
-function G_(e) {
-	return L_.test(e.baCode) && e.baName.length > 0 && (e.regionKind === "balancing-authority" || e.regionKind === "grid-region") && $m(e.geospatialPrecision) && e.geospatialPrecision !== "exact" && e.country.length > 0 && e.sourceDataset.length > 0 && /^https:\/\/www\.eia\.gov\//.test(e.sourceUrl) && /^https:\/\/api\.eia\.gov\/v2\/electricity\/rto\//.test(e.sourceApiUrl) && !/[?&]api_key=/i.test(e.sourceApiUrl) && e.sourceName === E_ && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && Number.isFinite(e.staleAt) && e.rawPayloadHash.length > 0 && !(e.rawPayloadJson ?? "").includes("api_key") && e.confidence >= 90;
+function X_(e) {
+	return H_.test(e.baCode) && e.baName.length > 0 && (e.regionKind === "balancing-authority" || e.regionKind === "grid-region") && ih(e.geospatialPrecision) && e.geospatialPrecision !== "exact" && e.country.length > 0 && e.sourceDataset.length > 0 && /^https:\/\/www\.eia\.gov\//.test(e.sourceUrl) && /^https:\/\/api\.eia\.gov\/v2\/electricity\/rto\//.test(e.sourceApiUrl) && !/[?&]api_key=/i.test(e.sourceApiUrl) && e.sourceName === j_ && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && Number.isFinite(e.staleAt) && e.rawPayloadHash.length > 0 && !(e.rawPayloadJson ?? "").includes("api_key") && e.confidence >= 90;
 }
-function K_(e) {
-	return L_.test(e.baCode) && e.baName.length > 0 && /^https:\/\/api\.eia\.gov\/v2\/electricity\/rto\//.test(e.sourceApiUrl) && !/[?&]api_key=/i.test(e.sourceApiUrl) && Number.isFinite(e.retrievedAt) ? 95 : 60;
+function Z_(e) {
+	return H_.test(e.baCode) && e.baName.length > 0 && /^https:\/\/api\.eia\.gov\/v2\/electricity\/rto\//.test(e.sourceApiUrl) && !/[?&]api_key=/i.test(e.sourceApiUrl) && Number.isFinite(e.retrievedAt) ? 95 : 60;
 }
-async function q_(t, n) {
+async function Q_(t, n) {
 	let r = await fetch(t, {
 		signal: n,
 		headers: {
@@ -12220,14 +12251,14 @@ async function q_(t, n) {
 	});
 	return e(r, "EIA balancing authorities"), await r.json();
 }
-function J_(e, t) {
-	let n = new URL(`${e.replace(/\/$/, "")}/${O_}`);
+function $_(e, t) {
+	let n = new URL(`${e.replace(/\/$/, "")}/${N_}`);
 	return t && n.searchParams.set("api_key", t), n.toString();
 }
-function Y_(e, t, n) {
+function ev(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function X_(e, t) {
+function tv(e, t) {
 	if (e.aborted || t.aborted) {
 		let e = new AbortController();
 		return e.abort(), e.signal;
@@ -12237,22 +12268,22 @@ function X_(e, t) {
 }
 //#endregion
 //#region electron/osint/adapters/unLocodeAdapter.ts
-var Z_ = "un_locode_public", Q_ = "UNECE UN/LOCODE", $_ = "UNECE UN/LOCODE Code List", ev = "https://unece.org/trade/cefact/UNLOCODE-Download", tv = 3e4, nv = 2, rv = 1e3, iv = 500, av = 5e3, ov = 1440 * 60 * 1e3 * 180, sv = /^[A-Z]{2}$/, cv = /^[A-Z0-9]{3}$/;
-function lv(e = process.env) {
+var nv = "un_locode_public", rv = "UNECE UN/LOCODE", iv = "UNECE UN/LOCODE Code List", av = "https://unece.org/trade/cefact/UNLOCODE-Download", ov = "https://opensource.unicc.org/un/unece/uncefact/vocab-locode/-/jobs/artifacts/2025-1/download?job=package-release", sv = 3e4, cv = 2, lv = 1e3, uv = 500, dv = 5e3, fv = 1440 * 60 * 1e3 * 180, pv = /^[A-Z]{2}$/, mv = /^[A-Z0-9]{3}$/;
+function hv(e = process.env) {
 	if (e.ATLASZ_UNLOCODE_DISABLE === "1") return null;
-	let t = V(e.ATLASZ_UNLOCODE_URL);
-	return !t || !Tv(t) ? null : {
+	let t = V(e.ATLASZ_UNLOCODE_URL) || ov;
+	return !t || !Pv(t) ? null : {
 		url: t,
 		portsOnly: e.ATLASZ_UNLOCODE_PORTS_ONLY !== "0",
-		maxRecords: kv(Number(e.ATLASZ_UNLOCODE_MAX ?? iv), 1, av),
-		timeoutMs: kv(Number(e.ATLASZ_UNLOCODE_TIMEOUT_MS ?? tv), 1e3, 6e4),
-		maxRetries: kv(Number(e.ATLASZ_UNLOCODE_MAX_RETRIES ?? nv), 0, 5),
-		backoffMs: kv(Number(e.ATLASZ_UNLOCODE_BACKOFF_MS ?? rv), 0, 6e4)
+		maxRecords: Vv(Number(e.ATLASZ_UNLOCODE_MAX ?? uv), 1, dv),
+		timeoutMs: Vv(Number(e.ATLASZ_UNLOCODE_TIMEOUT_MS ?? sv), 1e3, 6e4),
+		maxRetries: Vv(Number(e.ATLASZ_UNLOCODE_MAX_RETRIES ?? cv), 0, 5),
+		backoffMs: Vv(Number(e.ATLASZ_UNLOCODE_BACKOFF_MS ?? lv), 0, 6e4)
 	};
 }
-async function uv(e, n = lv()) {
+async function gv(e, n = hv()) {
 	if (!n) return [];
-	let r = Date.now(), i = dv(await t((t) => Dv(n.url, Av(e, t)), {
+	let r = Date.now(), i = _v(await t((t) => Iv(n.url, Hv(e, t)), {
 		maxRetries: n.maxRetries,
 		backoffMs: n.backoffMs,
 		timeoutMs: n.timeoutMs
@@ -12261,22 +12292,22 @@ async function uv(e, n = lv()) {
 		sourceApiUrl: n.url,
 		maxRecords: n.maxRecords
 	});
-	return pv(n.portsOnly ? i.filter(fv) : i);
+	return yv(n.portsOnly ? i.filter(vv) : i);
 }
-function dv(e, t = {}) {
+function _v(e, t = {}) {
 	if (typeof e != "string" || e.trim() === "") return [];
 	let n = t.retrievedAt ?? Date.now(), r = t.sourceApiUrl ?? "";
-	if (!Tv(r)) return [];
-	let i = t.maxRecords ?? iv, a = e.split(/\r?\n/).filter((e) => e.trim() !== ""), o = xv(a[0]), s = [], c = /* @__PURE__ */ new Set();
+	if (!Pv(r)) return [];
+	let i = t.maxRecords ?? uv, a = e.split(/\r?\n/).filter((e) => e.trim() !== ""), o = Dv(a[0]), s = [], c = /* @__PURE__ */ new Set();
 	for (let e of a) {
-		let t = Cv(e);
+		let t = Mv(e);
 		if (t.length < 8 || o.header && /country/i.test(t[o.country] ?? "")) continue;
 		let a = V(t[o.country]).toUpperCase(), l = V(t[o.location]).toUpperCase(), u = V(t[o.name]);
-		if (!sv.test(a) || !cv.test(l) || !u) continue;
+		if (!pv.test(a) || !mv.test(l) || !u) continue;
 		let d = `${a}${l}`;
 		if (c.has(d)) continue;
 		c.add(d);
-		let f = V(t[o.function]), p = _v(f), m = V(t[o.subdivision]) || void 0, h = V(t[o.status]) || void 0, g = o.iata >= 0 && V(t[o.iata]) || void 0, _ = o.coordinates >= 0 ? bv(V(t[o.coordinates])) : null, v = Zm(_?.lat, _?.lon, !!(a || m)), y = vv(p), b = W({
+		let f = kv(t, o), p = Cv(f), m = V(t[o.subdivision]) || void 0, h = Av(t, o) || void 0, g = o.iata >= 0 && V(t[o.iata]) || void 0, _ = o.coordinates >= 0 ? Ev(V(t[o.coordinates])) : null, v = nh(_?.lat, _?.lon, !!(a || m)), y = wv(p), b = W({
 			locode: d,
 			countryCode: a,
 			locationCode: l,
@@ -12287,11 +12318,11 @@ function dv(e, t = {}) {
 			functionCode: f,
 			latitude: _?.lat,
 			longitude: _?.lon,
-			sourceDataset: $_,
-			sourceUrl: ev,
+			sourceDataset: iv,
+			sourceUrl: av,
 			sourceApiUrl: r
 		}), x = {
-			id: `${Z_}:${d.toLowerCase()}`,
+			id: `${nv}:${d.toLowerCase()}`,
 			locode: d,
 			countryCode: a,
 			locationCode: l,
@@ -12305,14 +12336,14 @@ function dv(e, t = {}) {
 			latitude: _?.lat,
 			longitude: _?.lon,
 			geospatialPrecision: v,
-			sourceDataset: $_,
-			sourceUrl: ev,
+			sourceDataset: iv,
+			sourceUrl: av,
 			sourceApiUrl: r,
-			sourceName: Q_,
+			sourceName: rv,
 			retrievedAt: n,
-			staleAt: n + ov,
+			staleAt: n + fv,
 			provenance: "official-api",
-			confidence: gv({
+			confidence: Sv({
 				countryCode: a,
 				locationCode: l,
 				locationName: u,
@@ -12322,27 +12353,27 @@ function dv(e, t = {}) {
 			rawPayloadHash: z(b),
 			rawPayloadJson: b
 		};
-		if (hv(x) && s.push(x), s.length >= i) break;
+		if (xv(x) && s.push(x), s.length >= i) break;
 	}
 	return s;
 }
-function fv(e) {
+function vv(e) {
 	return e.functions.port;
 }
-function pv(e) {
-	return e.filter(hv).map(mv);
+function yv(e) {
+	return e.filter(xv).map(bv);
 }
-function mv(e) {
-	let t = `un-locode|${e.locode}`.toLowerCase(), n = yv(e.functions), r = e.geospatialPrecision === "exact" ? `coordinates ${e.latitude}, ${e.longitude}` : `location ${e.geospatialPrecision}`, i = `UN/LOCODE ${e.locode} — ${e.locationName}, ${e.countryCode}${e.subdivision ? ` (${e.subdivision})` : ""}. Functions: ${n.length > 0 ? n.join(", ") : "unspecified"}; ${r}. Trade/location registry context only — not live port activity, vessel traffic, congestion, or disruption.`, a = U({
-		id: G(Z_, t),
+function bv(e) {
+	let t = `un-locode|${e.locode}`.toLowerCase(), n = Tv(e.functions), r = e.geospatialPrecision === "exact" ? `coordinates ${e.latitude}, ${e.longitude}` : `location ${e.geospatialPrecision}`, i = `UN/LOCODE ${e.locode} — ${e.locationName}, ${e.countryCode}${e.subdivision ? ` (${e.subdivision})` : ""}. Functions: ${n.length > 0 ? n.join(", ") : "unspecified"}; ${r}. Trade/location registry context only — not live port activity, vessel traffic, congestion, or disruption.`, a = U({
+		id: G(nv, t),
 		title: `Location ${e.locode}: ${e.locationName}${e.functions.port ? " (port)" : ""}`.slice(0, 180),
 		summary: i,
-		source: Q_,
+		source: rv,
 		url: e.sourceUrl,
 		observedAt: e.retrievedAt,
 		category: "trade-logistics",
 		provenance: "official-api",
-		sourceId: Z_,
+		sourceId: nv,
 		dedupeKey: t,
 		rawPayload: e,
 		affectedAssets: [],
@@ -12369,14 +12400,14 @@ function mv(e) {
 		unLocode: e
 	};
 }
-function hv(e) {
+function xv(e) {
 	let t = Y(e.latitude, e.longitude);
-	return sv.test(e.countryCode) && cv.test(e.locationCode) && e.locode === `${e.countryCode}${e.locationCode}` && e.locationName.length > 0 && $m(e.geospatialPrecision) && (e.geospatialPrecision === "exact" ? t : !t) && e.sourceDataset.length > 0 && wv(e.sourceUrl) && Tv(e.sourceApiUrl) && e.sourceName === Q_ && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && Number.isFinite(e.staleAt) && e.rawPayloadHash.length > 0 && e.confidence >= 90;
+	return pv.test(e.countryCode) && mv.test(e.locationCode) && e.locode === `${e.countryCode}${e.locationCode}` && e.locationName.length > 0 && ih(e.geospatialPrecision) && (e.geospatialPrecision === "exact" ? t : !t) && e.sourceDataset.length > 0 && Nv(e.sourceUrl) && Pv(e.sourceApiUrl) && e.sourceName === rv && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && Number.isFinite(e.staleAt) && e.rawPayloadHash.length > 0 && e.confidence >= 90;
 }
-function gv(e) {
-	return sv.test(e.countryCode) && cv.test(e.locationCode) && e.locationName.length > 0 && Tv(e.sourceApiUrl) && Number.isFinite(e.retrievedAt) ? 95 : 60;
+function Sv(e) {
+	return pv.test(e.countryCode) && mv.test(e.locationCode) && e.locationName.length > 0 && Pv(e.sourceApiUrl) && Number.isFinite(e.retrievedAt) ? 95 : 60;
 }
-function _v(e) {
+function Cv(e) {
 	let t = (t) => e.includes(t);
 	return {
 		port: t("1"),
@@ -12389,23 +12420,23 @@ function _v(e) {
 		borderCrossing: /B/i.test(e)
 	};
 }
-function vv(e) {
+function wv(e) {
 	return e.port ? "port" : e.airport ? "airport" : e.rail ? "rail-terminal" : "logistics-location";
 }
-function yv(e) {
+function Tv(e) {
 	let t = [];
 	return e.port && t.push("port"), e.rail && t.push("rail"), e.road && t.push("road"), e.airport && t.push("airport"), e.postal && t.push("postal"), e.multimodal && t.push("multimodal"), e.fixedTransport && t.push("fixed-transport"), e.borderCrossing && t.push("border-crossing"), t;
 }
-function bv(e) {
+function Ev(e) {
 	let t = /^(\d{2})(\d{2})([NS])\s+(\d{3})(\d{2})([EW])$/.exec(e.trim());
 	if (!t) return null;
 	let n = (Number(t[1]) + Number(t[2]) / 60) * (t[3] === "S" ? -1 : 1), r = (Number(t[4]) + Number(t[5]) / 60) * (t[6] === "W" ? -1 : 1);
 	return Y(n, r) ? {
-		lat: Ov(n),
-		lon: Ov(r)
+		lat: Bv(n),
+		lon: Bv(r)
 	} : null;
 }
-function xv(e) {
+function Dv(e) {
 	let t = {
 		header: !1,
 		country: 1,
@@ -12418,25 +12449,36 @@ function xv(e) {
 		coordinates: 10
 	};
 	if (!e) return t;
-	let n = Cv(e).map((e) => e.trim().toLowerCase());
+	let n = Mv(e).map((e) => e.trim().toLowerCase());
 	if (!n.some((e) => e === "country" || e === "location" || e === "function")) return t;
 	let r = (e) => n.findIndex((t) => e.includes(t));
 	return {
 		header: !0,
-		country: Sv(r(["country"]), 1),
-		location: Sv(r(["location", "code"]), 2),
-		name: Sv(r(["name", "namewodiacritics"]), 3),
-		subdivision: Sv(r(["subdivision", "subdiv"]), 5),
-		status: Sv(r(["status"]), 6),
-		function: Sv(r(["function"]), 7),
+		country: Ov(r(["country"]), 1),
+		location: Ov(r(["location", "code"]), 2),
+		name: Ov(r(["name", "namewodiacritics"]), 3),
+		subdivision: Ov(r(["subdivision", "subdiv"]), 5),
+		status: Ov(r(["status"]), 6),
+		function: Ov(r(["function"]), 7),
 		iata: r(["iata"]),
-		coordinates: Sv(r(["coordinates"]), 10)
+		coordinates: Ov(r(["coordinates"]), 10)
 	};
 }
-function Sv(e, t) {
+function Ov(e, t) {
 	return e >= 0 ? e : t;
 }
-function Cv(e) {
+function kv(e, t) {
+	let n = V(e[t.function]), r = V(e[6]);
+	return jv(n) || !jv(r) ? n : r;
+}
+function Av(e, t) {
+	let n = V(e[t.status]), r = V(e[7]);
+	return jv(n) && r ? r : n;
+}
+function jv(e) {
+	return /^[0-9B-]{3,}$/.test(e);
+}
+function Mv(e) {
 	let t = [], n = "", r = !1;
 	for (let i = 0; i < e.length; i += 1) {
 		let a = e[i];
@@ -12444,37 +12486,55 @@ function Cv(e) {
 	}
 	return t.push(n), t.map((e) => e.trim());
 }
-function wv(e) {
-	return Ev(e, "unece.org");
+function Nv(e) {
+	return Pv(e);
 }
-function Tv(e) {
-	return Ev(e, "unece.org");
-}
-function Ev(e, t) {
+function Pv(e) {
 	try {
-		let n = new URL(e);
-		return n.protocol === "https:" && RegExp(`(^|\\.)${t.replace(".", "\\.")}$`, "i").test(n.hostname);
+		let t = new URL(e);
+		return t.protocol === "https:" ? Fv(t.hostname, "unece.org") ? !0 : t.hostname.toLowerCase() === "opensource.unicc.org" && /\/un\/unece\/uncefact\/vocab-locode\//i.test(t.pathname) : !1;
 	} catch {
 		return !1;
 	}
 }
-async function Dv(t, n) {
+function Fv(e, t) {
+	return RegExp(`(^|\\.)${t.replace(".", "\\.")}$`, "i").test(e);
+}
+async function Iv(t, n) {
 	let r = await fetch(t, {
 		signal: n,
 		headers: {
-			accept: "text/csv, text/plain, */*",
+			accept: "application/zip, text/csv, text/plain, */*",
 			"user-agent": "AtlaszIntel/0.4 (local-first trade/logistics intelligence; official UNECE UN/LOCODE)"
 		}
 	});
-	return e(r, "UN/LOCODE"), await r.text();
+	e(r, "UN/LOCODE");
+	let i = r.headers.get("content-type") ?? "";
+	return /zip|octet-stream/i.test(i) || /\.zip(?:$|\?)/i.test(t) || /artifacts\/[^/]+\/download/i.test(t) ? Lv(Buffer.from(await r.arrayBuffer())) : await r.text();
 }
-function Ov(e) {
+function Lv(e) {
+	return [...Rv(e).entries()].filter(([e]) => /release\/csv\/UNLOCODE CodeListPart\d+\.csv$/i.test(e)).sort(([e], [t]) => e.localeCompare(t)).map(([, e]) => e.toString("utf8")).join("\n");
+}
+function Rv(e) {
+	let t = zv(e), n = e.readUInt32LE(t + 16), r = e.readUInt16LE(t + 10), i = /* @__PURE__ */ new Map(), a = n;
+	for (let t = 0; t < r && e.readUInt32LE(a) === 33639248; t += 1) {
+		let t = e.readUInt16LE(a + 10), n = e.readUInt32LE(a + 20), r = e.readUInt16LE(a + 28), o = e.readUInt16LE(a + 30), s = e.readUInt16LE(a + 32), c = e.readUInt32LE(a + 42), l = e.subarray(a + 46, a + 46 + r).toString("utf8"), u = e.readUInt16LE(c + 26), d = e.readUInt16LE(c + 28), f = c + 30 + u + d, p = e.subarray(f, f + n), m = t === 0 ? Buffer.from(p) : t === 8 ? _(p) : Buffer.alloc(0);
+		m.length > 0 && i.set(l, m), a += 46 + r + o + s;
+	}
+	return i;
+}
+function zv(e) {
+	let t = Math.max(0, e.length - 66e3);
+	for (let n = e.length - 22; n >= t; --n) if (e.readUInt32LE(n) === 101010256) return n;
+	throw Error("Invalid ZIP: central directory not found");
+}
+function Bv(e) {
 	return Math.round(e * 1e5) / 1e5;
 }
-function kv(e, t, n) {
+function Vv(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function Av(e, t) {
+function Hv(e, t) {
 	if (e.aborted || t.aborted) {
 		let e = new AbortController();
 		return e.abort(), e.signal;
@@ -12484,22 +12544,22 @@ function Av(e, t) {
 }
 //#endregion
 //#region electron/osint/adapters/worldPortIndexAdapter.ts
-var jv = "world_port_index_public", Mv = "NGA World Port Index", Nv = "NGA World Port Index (Pub 150)", Pv = "https://msi.nga.mil/Publications/WPI", Fv = "https://msi.nga.mil/api/publications/download?type=view&key=16920959/SFH00000/UpdatedPub150.csv", Iv = 3e4, Lv = 2, Rv = 1e3, zv = 800, Bv = 5e3, Vv = 1440 * 60 * 1e3 * 180, Hv = /^[A-Z]{2}[A-Z0-9]{3}$/;
-function Uv(e = process.env) {
+var Uv = "world_port_index_public", Wv = "NGA World Port Index", Gv = "NGA World Port Index (Pub 150)", Kv = "https://msi.nga.mil/Publications/WPI", qv = "https://msi.nga.mil/api/publications/download?type=view&key=16920959/SFH00000/UpdatedPub150.csv", Jv = 3e4, Yv = 2, Xv = 1e3, Zv = 800, Qv = 5e3, $v = 1440 * 60 * 1e3 * 180, ey = /^[A-Z]{2}[A-Z0-9]{3}$/;
+function ty(e = process.env) {
 	if (e.ATLASZ_WPI_DISABLE === "1") return null;
-	let t = V(e.ATLASZ_WPI_URL) || Fv;
-	return ry(t) ? {
+	let t = V(e.ATLASZ_WPI_URL) || qv;
+	return hy(t) ? {
 		apiUrl: t,
-		maxRecords: oy(Number(e.ATLASZ_WPI_MAX ?? zv), 1, Bv),
-		timeoutMs: oy(Number(e.ATLASZ_WPI_TIMEOUT_MS ?? Iv), 1e3, 6e4),
-		maxRetries: oy(Number(e.ATLASZ_WPI_MAX_RETRIES ?? Lv), 0, 5),
-		backoffMs: oy(Number(e.ATLASZ_WPI_BACKOFF_MS ?? Rv), 0, 6e4)
+		maxRecords: vy(Number(e.ATLASZ_WPI_MAX ?? Zv), 1, Qv),
+		timeoutMs: vy(Number(e.ATLASZ_WPI_TIMEOUT_MS ?? Jv), 1e3, 6e4),
+		maxRetries: vy(Number(e.ATLASZ_WPI_MAX_RETRIES ?? Yv), 0, 5),
+		backoffMs: vy(Number(e.ATLASZ_WPI_BACKOFF_MS ?? Xv), 0, 6e4)
 	} : null;
 }
-async function Wv(e, n = Uv()) {
+async function ny(e, n = ty()) {
 	if (!n) return [];
 	let r = Date.now();
-	return Kv(Gv(await t((t) => ay(n.apiUrl, sy(e, t)), {
+	return iy(ry(await t((t) => _y(n.apiUrl, yy(e, t)), {
 		maxRetries: n.maxRetries,
 		backoffMs: n.backoffMs,
 		timeoutMs: n.timeoutMs
@@ -12509,20 +12569,20 @@ async function Wv(e, n = Uv()) {
 		maxRecords: n.maxRecords
 	}));
 }
-function Gv(e, t = {}) {
-	let n = t.retrievedAt ?? Date.now(), r = t.sourceApiUrl ?? Fv;
-	if (!ry(r)) return [];
-	let i = t.maxRecords ?? zv, a = Xv(e);
+function ry(e, t = {}) {
+	let n = t.retrievedAt ?? Date.now(), r = t.sourceApiUrl ?? qv;
+	if (!hy(r)) return [];
+	let i = t.maxRecords ?? Zv, a = cy(e);
 	if (a.length === 0) return [];
 	let o = [], s = /* @__PURE__ */ new Set();
 	for (let e of a) {
-		let t = ey(e, [
+		let t = fy(e, [
 			"world port index number",
 			"port number",
 			"index number",
 			"wpi number",
 			"portnumber"
-		]), a = ey(e, [
+		]), a = fy(e, [
 			"main port name",
 			"port name",
 			"portname",
@@ -12530,11 +12590,11 @@ function Gv(e, t = {}) {
 		]);
 		if (!t || !a || s.has(t)) continue;
 		s.add(t);
-		let c = H(ey(e, [
+		let c = H(fy(e, [
 			"latitude",
 			"lat",
 			"y"
-		])), l = H(ey(e, [
+		])), l = H(fy(e, [
 			"longitude",
 			"lon",
 			"long",
@@ -12542,20 +12602,20 @@ function Gv(e, t = {}) {
 		])), u = Y(c, l) ? {
 			lat: c,
 			lon: l
-		} : null, d = ey(e, [
+		} : null, d = fy(e, [
 			"un/locode",
 			"unlocode",
 			"un locode",
 			"locode"
-		]).toUpperCase().replace(/\s+/g, ""), f = Hv.test(d) ? d : void 0, { code: p, name: m } = Xm(ey(e, ["country code", "country"])), h = (f ? f.slice(0, 2) : void 0) ?? p, g = ey(e, [
+		]).toUpperCase().replace(/\s+/g, ""), f = ey.test(d) ? d : void 0, { code: p, name: m } = th(fy(e, ["country code", "country"])), h = (f ? f.slice(0, 2) : void 0) ?? p, g = fy(e, [
 			"region name",
 			"region",
 			"world water body"
-		]) || void 0, _ = ey(e, [
+		]) || void 0, _ = fy(e, [
 			"subdivision",
 			"subdiv",
 			"state"
-		]) || void 0, v = Zm(u?.lat, u?.lon, !!(h || g || _)), y = ey(e, ["harbor size", "harborsize"]) || void 0, b = ey(e, ["harbor type", "harbortype"]) || void 0, x = ey(e, ["shelter afforded", "shelter"]) || void 0, S = W({
+		]) || void 0, v = nh(u?.lat, u?.lon, !!(h || g || _)), y = fy(e, ["harbor size", "harborsize"]) || void 0, b = fy(e, ["harbor type", "harbortype"]) || void 0, x = fy(e, ["shelter afforded", "shelter"]) || void 0, S = W({
 			portNumber: t,
 			portName: a,
 			country: m,
@@ -12568,11 +12628,11 @@ function Gv(e, t = {}) {
 			harborType: b,
 			shelter: x,
 			linkedLocode: f,
-			sourceDataset: Nv,
-			sourceUrl: Pv,
+			sourceDataset: Gv,
+			sourceUrl: Kv,
 			sourceApiUrl: r
 		}), C = {
-			id: `${jv}:${t.toLowerCase()}`,
+			id: `${Uv}:${t.toLowerCase()}`,
 			portNumber: t,
 			portName: a,
 			country: m,
@@ -12586,14 +12646,14 @@ function Gv(e, t = {}) {
 			harborType: b,
 			shelter: x,
 			linkedLocode: f,
-			sourceDataset: Nv,
-			sourceUrl: Pv,
+			sourceDataset: Gv,
+			sourceUrl: Kv,
 			sourceApiUrl: r,
-			sourceName: Mv,
+			sourceName: Wv,
 			retrievedAt: n,
-			staleAt: n + Vv,
+			staleAt: n + $v,
 			provenance: "official-api",
-			confidence: Yv({
+			confidence: sy({
 				portNumber: t,
 				portName: a,
 				sourceApiUrl: r,
@@ -12602,28 +12662,28 @@ function Gv(e, t = {}) {
 			rawPayloadHash: z(S),
 			rawPayloadJson: S
 		};
-		if (Jv(C) && o.push(C), o.length >= i) break;
+		if (oy(C) && o.push(C), o.length >= i) break;
 	}
 	return o;
 }
-function Kv(e) {
-	return e.filter(Jv).map(qv);
+function iy(e) {
+	return e.filter(oy).map(ay);
 }
-function qv(e) {
+function ay(e) {
 	let t = `wpi|${e.portNumber}`.toLowerCase(), n = [e.subdivision, e.country ?? e.countryCode].filter(Boolean).join(", "), r = e.geospatialPrecision === "exact" ? `coordinates ${e.latitude}, ${e.longitude}` : `location ${e.geospatialPrecision}`, i = [
 		e.harborSize && `${e.harborSize} harbor`,
 		e.harborType,
 		e.shelter && `${e.shelter} shelter`
 	].filter(Boolean).join(", "), a = `NGA World Port Index lists port ${e.portName} (No. ${e.portNumber})${n ? ` in ${n}` : ""}: ${r}${i ? `; ${i}` : ""}${e.linkedLocode ? `; UN/LOCODE ${e.linkedLocode}` : ""}. Physical port reference data only — not live traffic, congestion, trade volume, or disruption.`, o = U({
-		id: G(jv, t),
+		id: G(Uv, t),
 		title: `Port: ${e.portName}${e.countryCode ? ` (${e.countryCode})` : ""}`.slice(0, 180),
 		summary: a,
-		source: Mv,
+		source: Wv,
 		url: e.sourceUrl,
 		observedAt: e.retrievedAt,
 		category: "trade-logistics",
 		provenance: "official-api",
-		sourceId: jv,
+		sourceId: Uv,
 		dedupeKey: t,
 		rawPayload: e,
 		affectedAssets: [],
@@ -12650,43 +12710,43 @@ function qv(e) {
 		worldPort: e
 	};
 }
-function Jv(e) {
+function oy(e) {
 	let t = Y(e.latitude, e.longitude);
-	return !!e.portNumber && !!e.portName && $m(e.geospatialPrecision) && (e.geospatialPrecision === "exact" ? t : !t) && (e.linkedLocode === void 0 || Hv.test(e.linkedLocode)) && e.sourceDataset.length > 0 && ny(e.sourceUrl) && ry(e.sourceApiUrl) && e.sourceName === Mv && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && Number.isFinite(e.staleAt) && e.rawPayloadHash.length > 0 && e.confidence >= 90;
+	return !!e.portNumber && !!e.portName && ih(e.geospatialPrecision) && (e.geospatialPrecision === "exact" ? t : !t) && (e.linkedLocode === void 0 || ey.test(e.linkedLocode)) && e.sourceDataset.length > 0 && my(e.sourceUrl) && hy(e.sourceApiUrl) && e.sourceName === Wv && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && Number.isFinite(e.staleAt) && e.rawPayloadHash.length > 0 && e.confidence >= 90;
 }
-function Yv(e) {
-	return e.portNumber && e.portName && ry(e.sourceApiUrl) && Number.isFinite(e.retrievedAt) ? 95 : 60;
+function sy(e) {
+	return e.portNumber && e.portName && hy(e.sourceApiUrl) && Number.isFinite(e.retrievedAt) ? 95 : 60;
 }
-function Xv(e) {
-	return Array.isArray(e) ? e.filter((e) => e && typeof e == "object").map((e) => Qv(e)) : e && typeof e == "object" && Array.isArray(e.ports) ? e.ports.filter((e) => e && typeof e == "object").map((e) => Qv(e)) : typeof e == "string" && e.trim() !== "" ? Zv(e) : [];
+function cy(e) {
+	return Array.isArray(e) ? e.filter((e) => e && typeof e == "object").map((e) => uy(e)) : e && typeof e == "object" && Array.isArray(e.ports) ? e.ports.filter((e) => e && typeof e == "object").map((e) => uy(e)) : typeof e == "string" && e.trim() !== "" ? ly(e) : [];
 }
-function Zv(e) {
+function ly(e) {
 	let t = e.split(/\r?\n/).filter((e) => e.trim() !== "");
 	if (t.length < 2) return [];
-	let n = ty(t[0]).map((e) => $v(e)), r = [];
+	let n = py(t[0]).map((e) => dy(e)), r = [];
 	for (let e = 1; e < t.length; e += 1) {
-		let i = ty(t[e]), a = {};
+		let i = py(t[e]), a = {};
 		for (let e = 0; e < n.length; e += 1) a[n[e]] = (i[e] ?? "").trim();
 		r.push(a);
 	}
 	return r;
 }
-function Qv(e) {
+function uy(e) {
 	let t = {};
-	for (let [n, r] of Object.entries(e)) t[$v(n)] = r == null ? "" : String(r);
+	for (let [n, r] of Object.entries(e)) t[dy(n)] = r == null ? "" : String(r);
 	return t;
 }
-function $v(e) {
+function dy(e) {
 	return e.trim().toLowerCase().replace(/[_\s]+/g, " ").trim();
 }
-function ey(e, t) {
+function fy(e, t) {
 	for (let n of t) {
 		let t = (e[n] ?? "").trim();
 		if (t) return t;
 	}
 	return "";
 }
-function ty(e) {
+function py(e) {
 	let t = [], n = "", r = !1;
 	for (let i = 0; i < e.length; i += 1) {
 		let a = e[i];
@@ -12694,13 +12754,13 @@ function ty(e) {
 	}
 	return t.push(n), t.map((e) => e.trim());
 }
-function ny(e) {
-	return iy(e, "nga.mil");
+function my(e) {
+	return gy(e, "nga.mil");
 }
-function ry(e) {
-	return iy(e, "nga.mil");
+function hy(e) {
+	return gy(e, "nga.mil");
 }
-function iy(e, t) {
+function gy(e, t) {
 	try {
 		let n = new URL(e);
 		return n.protocol === "https:" && RegExp(`(^|\\.)${t.replace(".", "\\.")}$`, "i").test(n.hostname);
@@ -12708,7 +12768,7 @@ function iy(e, t) {
 		return !1;
 	}
 }
-async function ay(t, n) {
+async function _y(t, n) {
 	let r = await fetch(t, {
 		signal: n,
 		headers: {
@@ -12720,10 +12780,10 @@ async function ay(t, n) {
 	let i = r.headers.get("content-type") ?? "";
 	return /json/i.test(i) ? await r.json() : await r.text();
 }
-function oy(e, t, n) {
+function vy(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function sy(e, t) {
+function yy(e, t) {
 	if (e.aborted || t.aborted) {
 		let e = new AbortController();
 		return e.abort(), e.signal;
@@ -12733,7 +12793,7 @@ function sy(e, t) {
 }
 //#endregion
 //#region electron/osint/adapters/usgsMineralAdapter.ts
-var cy = "usgs_minerals_public", ly = "USGS Mineral Resources", uy = "https://mrdata.usgs.gov/", dy = 3e4, fy = 2, py = 1e3, my = 600, hy = 5e3, gy = 1440 * 60 * 1e3 * 180, _y = {
+var by = "usgs_minerals_public", xy = "USGS Mineral Resources", Sy = "https://mrdata.usgs.gov/", Cy = "https://mrdata.usgs.gov/mrds/mrds.csv", wy = 3e4, Ty = 2, Ey = 1e3, Dy = 600, Oy = 5e3, ky = 1440 * 60 * 1e3 * 180, Ay = {
 	"freeport-mcmoran": { ticker: "FCX" },
 	"freeport mcmoran": { ticker: "FCX" },
 	newmont: { ticker: "NEM" },
@@ -12745,33 +12805,33 @@ var cy = "usgs_minerals_public", ly = "USGS Mineral Resources", uy = "https://mr
 	"cleveland-cliffs": { ticker: "CLF" },
 	nucor: { ticker: "NUE" }
 };
-function vy(e = process.env) {
+function jy(e = process.env) {
 	if (e.ATLASZ_USGS_MINERALS_DISABLE === "1") return null;
-	let t = [], n = V(e.ATLASZ_USGS_USMIN_URL), r = V(e.ATLASZ_USGS_MRDS_URL);
-	return n && Fy(n) && t.push({
+	let t = [], n = V(e.ATLASZ_USGS_USMIN_URL), r = V(e.ATLASZ_USGS_MRDS_URL) || Cy;
+	return n && Jy(n) && t.push({
 		database: "USMIN",
 		url: n
-	}), r && Fy(r) && t.push({
+	}), r && Jy(r) && t.push({
 		database: "MRDS",
 		url: r
 	}), t.length === 0 ? null : {
 		sources: t,
-		maxRecords: Ry(Number(e.ATLASZ_USGS_MINERALS_MAX ?? my), 1, hy),
-		timeoutMs: Ry(Number(e.ATLASZ_USGS_MINERALS_TIMEOUT_MS ?? dy), 1e3, 6e4),
-		maxRetries: Ry(Number(e.ATLASZ_USGS_MINERALS_MAX_RETRIES ?? fy), 0, 5),
-		backoffMs: Ry(Number(e.ATLASZ_USGS_MINERALS_BACKOFF_MS ?? py), 0, 6e4)
+		maxRecords: Qy(Number(e.ATLASZ_USGS_MINERALS_MAX ?? Dy), 1, Oy),
+		timeoutMs: Qy(Number(e.ATLASZ_USGS_MINERALS_TIMEOUT_MS ?? wy), 1e3, 6e4),
+		maxRetries: Qy(Number(e.ATLASZ_USGS_MINERALS_MAX_RETRIES ?? Ty), 0, 5),
+		backoffMs: Qy(Number(e.ATLASZ_USGS_MINERALS_BACKOFF_MS ?? Ey), 0, 6e4)
 	};
 }
-async function yy(e, n = vy()) {
+async function My(e, n = jy()) {
 	if (!n) return [];
 	let r = Date.now(), i = [], a = [];
 	for (let o of n.sources) try {
-		let a = await t((t) => Ly(o.url, zy(e, t)), {
+		let a = await t((t) => Xy(o.url, $y(e, t), n.maxRecords), {
 			maxRetries: n.maxRetries,
 			backoffMs: n.backoffMs,
 			timeoutMs: n.timeoutMs
 		});
-		i.push(...by(a, {
+		i.push(...Ny(a, {
 			database: o.database,
 			retrievedAt: r,
 			sourceApiUrl: o.url,
@@ -12781,16 +12841,16 @@ async function yy(e, n = vy()) {
 		a.push(e instanceof Error ? e : Error(String(e)));
 	}
 	if (i.length === 0 && a.length > 0) throw a[0];
-	return xy(i);
+	return Py(i);
 }
-function by(e, t) {
+function Ny(e, t) {
 	let n = t.database, r = t.retrievedAt ?? Date.now(), i = t.sourceApiUrl ?? "";
-	if (!Fy(i)) return [];
-	let a = t.maxRecords ?? my, o = Oy(e);
+	if (!Jy(i)) return [];
+	let a = t.maxRecords ?? Dy, o = Vy(e);
 	if (o.length === 0) return [];
 	let s = n === "USMIN" ? "USGS USMIN deposit database" : "USGS MRDS (legacy occurrence database, not updated since 2011)", c = [], l = /* @__PURE__ */ new Set();
 	for (let e of o) {
-		let t = My(e, [
+		let t = Gy(e, [
 			"dep_id",
 			"mrds_id",
 			"rec_id",
@@ -12798,7 +12858,7 @@ function by(e, t) {
 			"site_id",
 			"id",
 			"objectid"
-		]), o = My(e, [
+		]), o = Gy(e, [
 			"site_name",
 			"name",
 			"ftr_name",
@@ -12809,12 +12869,12 @@ function by(e, t) {
 		let u = `${n}:${t}`;
 		if (l.has(u)) continue;
 		l.add(u);
-		let d = H(My(e, [
+		let d = H(Gy(e, [
 			"latitude",
 			"lat",
 			"y",
 			"dec_lat"
-		])), f = H(My(e, [
+		])), f = H(Gy(e, [
 			"longitude",
 			"lon",
 			"long",
@@ -12823,39 +12883,39 @@ function by(e, t) {
 		])), p = Y(d, f) ? {
 			lat: d,
 			lon: f
-		} : null, m = Ey(e), h = My(e, [
+		} : null, m = zy(e), h = Gy(e, [
 			"dev_stat",
 			"development_status",
 			"dev_status",
 			"status"
-		]) || void 0, g = My(e, [
+		]) || void 0, g = Gy(e, [
 			"prod_size",
 			"production_status",
 			"production",
 			"producer"
-		]) || void 0, _ = My(e, [
+		]) || void 0, _ = Gy(e, [
 			"dep_type",
 			"deposit_type",
 			"model"
-		]) || void 0, { code: v, name: y } = Xm(My(e, [
+		]) || void 0, { code: v, name: y } = th(Gy(e, [
 			"country",
 			"country_code",
 			"nation"
-		])), b = My(e, [
+		])), b = Gy(e, [
 			"state",
 			"state_prov",
 			"province",
 			"region"
-		]), x = v === "US" ? qm(b) : {}, S = x.code ?? (b || void 0), C = x.name ?? (b || void 0), w = My(e, [
+		]), x = v === "US" ? Qm(b) : {}, S = x.code ?? (b || void 0), C = x.name ?? (b || void 0), w = Gy(e, [
 			"county",
 			"district",
 			"county_district"
-		]) || void 0, T = Zm(p?.lat, p?.lon, !!(v || S || w)), E = My(e, [
+		]) || void 0, T = nh(p?.lat, p?.lon, !!(v || S || w)), E = Gy(e, [
 			"operator",
 			"owner",
 			"oper_name",
 			"company"
-		]) || void 0, D = E ? _y[Iy(E)]?.ticker : void 0, ee = Ty(h, g), te = W({
+		]) || void 0, D = E ? Ay[Yy(E)]?.ticker : void 0, ee = Ry(h, g), te = W({
 			database: n,
 			siteId: t,
 			siteName: o,
@@ -12873,10 +12933,10 @@ function by(e, t) {
 			operatorName: E,
 			operatorTicker: D,
 			sourceDataset: s,
-			sourceUrl: uy,
+			sourceUrl: Sy,
 			sourceApiUrl: i
 		}), ne = {
-			id: `${cy}:${n.toLowerCase()}:${t.toLowerCase()}`,
+			id: `${by}:${n.toLowerCase()}:${t.toLowerCase()}`,
 			siteId: t,
 			siteName: o,
 			facilityKind: ee,
@@ -12893,18 +12953,18 @@ function by(e, t) {
 			state: S,
 			stateName: C,
 			county: w,
-			district: My(e, ["district", "mining_district"]) || void 0,
+			district: Gy(e, ["district", "mining_district"]) || void 0,
 			latitude: p?.lat,
 			longitude: p?.lon,
 			geospatialPrecision: T,
 			sourceDataset: s,
-			sourceUrl: uy,
+			sourceUrl: Sy,
 			sourceApiUrl: i,
-			sourceName: ly,
+			sourceName: xy,
 			retrievedAt: r,
-			staleAt: r + gy,
+			staleAt: r + ky,
 			provenance: "official-api",
-			confidence: wy({
+			confidence: Ly({
 				siteId: t,
 				siteName: o,
 				sourceApiUrl: i,
@@ -12913,28 +12973,28 @@ function by(e, t) {
 			rawPayloadHash: z(te),
 			rawPayloadJson: te
 		};
-		if (Cy(ne) && c.push(ne), c.length >= a) break;
+		if (Iy(ne) && c.push(ne), c.length >= a) break;
 	}
 	return c;
 }
-function xy(e) {
-	return e.filter(Cy).map(Sy);
+function Py(e) {
+	return e.filter(Iy).map(Fy);
 }
-function Sy(e) {
+function Fy(e) {
 	let t = `usgs-mineral|${e.database}|${e.siteId}`.toLowerCase(), n = [
 		e.county,
 		e.stateName ?? e.state,
 		e.country ?? e.countryCode
 	].filter(Boolean).join(", "), r = e.commodities.length > 0 ? e.commodities.join(", ") : "commodity unspecified", i = e.geospatialPrecision === "exact" ? `coordinates ${e.latitude}, ${e.longitude}` : `location ${e.geospatialPrecision}`, a = e.developmentStatus ? `; development status: ${e.developmentStatus} (as reported)` : "", o = e.legacyNotMaintained ? " MRDS legacy record — not systematically updated since 2011; not current mine activity." : "", s = `USGS ${e.database} mineral site ${e.siteName}${n ? ` in ${n}` : ""}: commodities ${r}, ${i}${a}.${o} Mineral resource reference data only — not current production, reserves, ownership, or an investment signal.`, c = U({
-		id: G(cy, t),
+		id: G(by, t),
 		title: `Mineral site: ${e.siteName}${e.commodities[0] ? ` (${e.commodities[0]})` : ""}`.slice(0, 180),
 		summary: s,
-		source: ly,
+		source: xy,
 		url: e.sourceUrl,
 		observedAt: e.retrievedAt,
 		category: "materials",
 		provenance: "official-api",
-		sourceId: cy,
+		sourceId: by,
 		dedupeKey: t,
 		rawPayload: e,
 		affectedAssets: e.operatorTicker ? [e.operatorTicker] : [],
@@ -12967,18 +13027,18 @@ function Sy(e) {
 		mineralSite: e
 	};
 }
-function Cy(e) {
+function Iy(e) {
 	let t = Y(e.latitude, e.longitude);
-	return !!e.siteId && !!e.siteName && (e.facilityKind === "mine" || e.facilityKind === "mineral-resource-site") && (e.database === "USMIN" || e.database === "MRDS") && $m(e.geospatialPrecision) && (e.geospatialPrecision === "exact" ? t : !t) && e.sourceDataset.length > 0 && Py(e.sourceUrl) && Fy(e.sourceApiUrl) && e.sourceName === ly && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && Number.isFinite(e.staleAt) && e.rawPayloadHash.length > 0 && e.confidence >= 90;
+	return !!e.siteId && !!e.siteName && (e.facilityKind === "mine" || e.facilityKind === "mineral-resource-site") && (e.database === "USMIN" || e.database === "MRDS") && ih(e.geospatialPrecision) && (e.geospatialPrecision === "exact" ? t : !t) && e.sourceDataset.length > 0 && qy(e.sourceUrl) && Jy(e.sourceApiUrl) && e.sourceName === xy && e.provenance === "official-api" && Number.isFinite(e.retrievedAt) && Number.isFinite(e.staleAt) && e.rawPayloadHash.length > 0 && e.confidence >= 90;
 }
-function wy(e) {
-	return e.siteId && e.siteName && Fy(e.sourceApiUrl) && Number.isFinite(e.retrievedAt) ? 95 : 60;
+function Ly(e) {
+	return e.siteId && e.siteName && Jy(e.sourceApiUrl) && Number.isFinite(e.retrievedAt) ? 95 : 60;
 }
-function Ty(e, t) {
+function Ry(e, t) {
 	let n = `${e ?? ""} ${t ?? ""}`;
 	return /producer|mine|operating|plant|past producer/i.test(n) ? "mine" : "mineral-resource-site";
 }
-function Ey(e) {
+function zy(e) {
 	let t = [
 		"commod1",
 		"commod2",
@@ -12990,51 +13050,51 @@ function Ey(e) {
 	], n = [];
 	for (let r of t) {
 		let t = (e[r] ?? "").trim();
-		t && n.push(...t.split(/[,;|+]/).map((e) => Dy(e.trim())));
+		t && n.push(...t.split(/[,;|+]/).map((e) => By(e.trim())));
 	}
 	return B(n).slice(0, 12);
 }
-function Dy(e) {
+function By(e) {
 	return e ? e.length <= 3 ? e.toUpperCase() : e.charAt(0).toUpperCase() + e.slice(1).toLowerCase() : "";
 }
-function Oy(e) {
-	if (Array.isArray(e)) return e.filter((e) => e && typeof e == "object").map((e) => Ay(e));
+function Vy(e) {
+	if (Array.isArray(e)) return e.filter((e) => e && typeof e == "object").map((e) => Uy(e));
 	if (e && typeof e == "object") {
 		let t = e.features ?? e.data;
 		if (Array.isArray(t)) return t.filter((e) => e && typeof e == "object").map((e) => {
 			let t = e.properties;
-			return Ay(t && typeof t == "object" ? t : e);
+			return Uy(t && typeof t == "object" ? t : e);
 		});
 	}
-	return typeof e == "string" && e.trim() !== "" ? ky(e) : [];
+	return typeof e == "string" && e.trim() !== "" ? Hy(e) : [];
 }
-function ky(e) {
+function Hy(e) {
 	let t = e.split(/\r?\n/).filter((e) => e.trim() !== "");
 	if (t.length < 2) return [];
-	let n = Ny(t[0]).map(jy), r = [];
+	let n = Ky(t[0]).map(Wy), r = [];
 	for (let e = 1; e < t.length; e += 1) {
-		let i = Ny(t[e]), a = {};
+		let i = Ky(t[e]), a = {};
 		for (let e = 0; e < n.length; e += 1) a[n[e]] = (i[e] ?? "").trim();
 		r.push(a);
 	}
 	return r;
 }
-function Ay(e) {
+function Uy(e) {
 	let t = {};
-	for (let [n, r] of Object.entries(e)) t[jy(n)] = r == null ? "" : String(r);
+	for (let [n, r] of Object.entries(e)) t[Wy(n)] = r == null ? "" : String(r);
 	return t;
 }
-function jy(e) {
+function Wy(e) {
 	return e.trim().toLowerCase().replace(/\s+/g, "_");
 }
-function My(e, t) {
+function Gy(e, t) {
 	for (let n of t) {
 		let t = (e[n] ?? "").trim();
 		if (t) return t;
 	}
 	return "";
 }
-function Ny(e) {
+function Ky(e) {
 	let t = [], n = "", r = !1;
 	for (let i = 0; i < e.length; i += 1) {
 		let a = e[i];
@@ -13042,7 +13102,7 @@ function Ny(e) {
 	}
 	return t.push(n), t.map((e) => e.trim());
 }
-function Py(e) {
+function qy(e) {
 	try {
 		let t = new URL(e);
 		return t.protocol === "https:" && /(^|\.)usgs\.gov$/i.test(t.hostname);
@@ -13050,28 +13110,43 @@ function Py(e) {
 		return !1;
 	}
 }
-function Fy(e) {
-	return Py(e);
+function Jy(e) {
+	return qy(e);
 }
-function Iy(e) {
+function Yy(e) {
 	return e.toLowerCase().replace(/[.,]/g, "").replace(/\s+/g, " ").trim();
 }
-async function Ly(t, n) {
-	let r = await fetch(t, {
+async function Xy(t, n, r) {
+	let i = await fetch(t, {
 		signal: n,
 		headers: {
 			accept: "text/csv, application/json, application/geo+json, */*",
 			"user-agent": "AtlaszIntel/0.4 (local-first materials intelligence; official USGS Mineral Resources)"
 		}
 	});
-	e(r, "USGS minerals");
-	let i = r.headers.get("content-type") ?? "";
-	return /json/i.test(i) ? await r.json() : await r.text();
+	e(i, "USGS minerals");
+	let a = i.headers.get("content-type") ?? "";
+	return /json/i.test(a) ? await i.json() : i.body && /csv|text/i.test(a) ? await Zy(i, r + 1) : await i.text();
 }
-function Ry(e, t, n) {
+async function Zy(e, t) {
+	let n = e.body?.getReader();
+	if (!n) return await e.text();
+	let r = new TextDecoder(), i = "";
+	try {
+		for (; i.split(/\r?\n/).length <= t;) {
+			let { value: e, done: t } = await n.read();
+			if (t) break;
+			i += r.decode(e, { stream: !0 });
+		}
+		return i += r.decode(), i.split(/\r?\n/).slice(0, Math.max(2, t)).join("\n");
+	} finally {
+		await n.cancel().catch(() => void 0);
+	}
+}
+function Qy(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
-function zy(e, t) {
+function $y(e, t) {
 	if (e.aborted || t.aborted) {
 		let e = new AbortController();
 		return e.abort(), e.signal;
@@ -13081,7 +13156,7 @@ function zy(e, t) {
 }
 //#endregion
 //#region electron/osint/adapters/usgsQuakeAdapter.ts
-var By = "usgs_significant_quakes", Vy = "USGS Earthquake Hazards Program", Hy = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_month.geojson", Uy = /^https:\/\/earthquake\.usgs\.gov\//, Wy = 50, Gy = 200, Ky = {
+var eb = "usgs_significant_quakes", tb = "USGS Earthquake Hazards Program", nb = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_month.geojson", rb = /^https:\/\/earthquake\.usgs\.gov\//, ib = 50, ab = 200, ob = {
 	alaska: "US",
 	california: "US",
 	nevada: "US",
@@ -13111,35 +13186,35 @@ var By = "usgs_significant_quakes", Vy = "USGS Earthquake Hazards Program", Hy =
 	colombia: "CO",
 	russia: "RU"
 };
-function qy(e = process.env) {
+function sb(e = process.env) {
 	if (e.ATLASZ_USGS_QUAKES_DISABLE === "1") return null;
-	let t = V(e.ATLASZ_USGS_QUAKES_URL) || Hy;
+	let t = V(e.ATLASZ_USGS_QUAKES_URL) || nb;
 	return /^https:\/\//i.test(t) ? {
 		feedUrl: t,
 		minMagnitude: Number.isFinite(Number(e.ATLASZ_USGS_MIN_MAGNITUDE)) ? Math.max(0, Number(e.ATLASZ_USGS_MIN_MAGNITUDE)) : 0,
-		maxRecords: rb(Number(e.ATLASZ_USGS_MAX_RECORDS ?? Wy), 1, Gy)
+		maxRecords: _b(Number(e.ATLASZ_USGS_MAX_RECORDS ?? ib), 1, ab)
 	} : null;
 }
-async function Jy(t, n = qy()) {
+async function cb(t, n = sb()) {
 	if (!n) return [];
 	let r = await fetch(n.feedUrl, {
 		signal: t,
 		headers: { accept: "application/geo+json, application/json" }
 	});
-	return e(r, "USGS earthquakes"), Xy(Yy(await r.json(), {
+	return e(r, "USGS earthquakes"), ub(lb(await r.json(), {
 		retrievedAt: Date.now(),
 		config: n
 	}));
 }
-function Yy(e, t = {}) {
+function lb(e, t = {}) {
 	if (!e || typeof e != "object") return [];
 	let n = e.features;
 	if (!Array.isArray(n) || n.length === 0) return [];
-	let r = t.retrievedAt ?? Date.now(), i = t.config?.minMagnitude ?? 0, a = t.config?.maxRecords ?? Wy, o = [];
+	let r = t.retrievedAt ?? Date.now(), i = t.config?.minMagnitude ?? 0, a = t.config?.maxRecords ?? ib, o = [];
 	for (let e of n) {
 		if (!e || typeof e != "object") continue;
 		let n = e.properties, a = e.geometry, s = V(e.id), c = H(n?.mag), l = H(n?.time), u = V(n?.url), d = Array.isArray(a?.coordinates) ? a?.coordinates : [], f = H(d[0]), p = H(d[1]), m = H(d[2]);
-		if (!eb({
+		if (!mb({
 			eventId: s,
 			magnitude: c,
 			time: l,
@@ -13148,7 +13223,7 @@ function Yy(e, t = {}) {
 			lon: f,
 			retrievedAt: r
 		}) || c < i) continue;
-		let h = V(n?.place), g = V(n?.title) || `M ${c} - ${h}`, _ = Qy(h), v = _ ? Ky[_.toLowerCase()] : void 0, y = V(n?.alert) || void 0, b = H(n?.tsunami) === 1, x = H(n?.sig), S = V(n?.status), C = W({
+		let h = V(n?.place), g = V(n?.title) || `M ${c} - ${h}`, _ = fb(h), v = _ ? ob[_.toLowerCase()] : void 0, y = V(n?.alert) || void 0, b = H(n?.tsunami) === 1, x = H(n?.sig), S = V(n?.status), C = W({
 			eventId: s,
 			magnitude: c,
 			place: h,
@@ -13164,11 +13239,11 @@ function Yy(e, t = {}) {
 			significance: x,
 			status: S,
 			sourceUrl: u,
-			sourceFeedUrl: t.config?.feedUrl ?? Hy,
+			sourceFeedUrl: t.config?.feedUrl ?? nb,
 			retrievedAt: r
 		});
 		o.push({
-			id: nb(s),
+			id: gb(s),
 			eventId: s,
 			magnitude: c,
 			place: h,
@@ -13184,11 +13259,11 @@ function Yy(e, t = {}) {
 			significance: x,
 			status: S,
 			sourceUrl: u,
-			sourceFeedUrl: t.config?.feedUrl ?? Hy,
-			sourceName: Vy,
+			sourceFeedUrl: t.config?.feedUrl ?? nb,
+			sourceName: tb,
 			retrievedAt: r,
 			provenance: "official-api",
-			confidence: tb({
+			confidence: hb({
 				eventId: s,
 				magnitude: c,
 				time: l,
@@ -13203,16 +13278,16 @@ function Yy(e, t = {}) {
 	}
 	return o.sort((e, t) => t.time - e.time).slice(0, a);
 }
-function Xy(e) {
+function ub(e) {
 	let t = [];
-	for (let n of e) n.confidence < 90 || t.push(Zy(n));
+	for (let n of e) n.confidence < 90 || t.push(db(n));
 	return t;
 }
-function Zy(e) {
+function db(e) {
 	let t = `usgs-quake|${e.eventId}`.toLowerCase(), n = e.tsunami ? " Tsunami flag set by USGS." : "", r = e.alert ? ` PAGER alert: ${e.alert}.` : "", i = `USGS recorded a magnitude ${e.magnitude} earthquake — ${e.place} — at depth ${e.depthKm ?? "unknown"} km.${r}${n} Source: ${e.sourceName}.`;
 	return {
 		...U({
-			id: G(By, t),
+			id: G(eb, t),
 			title: e.title.slice(0, 140),
 			summary: i,
 			source: e.sourceName,
@@ -13220,7 +13295,7 @@ function Zy(e) {
 			observedAt: e.time,
 			category: "natural-disaster",
 			provenance: "official-api",
-			sourceId: By,
+			sourceId: eb,
 			dedupeKey: t,
 			rawPayload: e,
 			affectedAssets: [],
@@ -13238,81 +13313,81 @@ function Zy(e) {
 				e.countryCode ?? ""
 			])
 		}),
-		severity: $y(e.magnitude),
+		severity: pb(e.magnitude),
 		lat: e.lat,
 		lon: e.lon,
 		confidence: e.confidence,
 		earthquakeEvent: e
 	};
 }
-function Qy(e) {
+function fb(e) {
 	let t = e.split(",");
 	return (t.length > 1 ? t[t.length - 1].trim() : "") || void 0;
 }
-function $y(e) {
+function pb(e) {
 	return e >= 7 ? "critical" : e >= 6 ? "elevated" : e >= 5 ? "watch" : "stable";
 }
-function eb(e) {
-	return !!(e.eventId && e.magnitude !== void 0 && Number.isFinite(e.magnitude) && e.time !== void 0 && Number.isFinite(e.time) && Uy.test(e.sourceUrl) && e.lat !== void 0 && Number.isFinite(e.lat) && e.lon !== void 0 && Number.isFinite(e.lon) && Number.isFinite(e.retrievedAt));
+function mb(e) {
+	return !!(e.eventId && e.magnitude !== void 0 && Number.isFinite(e.magnitude) && e.time !== void 0 && Number.isFinite(e.time) && rb.test(e.sourceUrl) && e.lat !== void 0 && Number.isFinite(e.lat) && e.lon !== void 0 && Number.isFinite(e.lon) && Number.isFinite(e.retrievedAt));
 }
-function tb(e) {
-	return eb(e) ? 96 : 60;
+function hb(e) {
+	return mb(e) ? 96 : 60;
 }
-function nb(e) {
-	return `${By}:${e.toLowerCase()}`;
+function gb(e) {
+	return `${eb}:${e.toLowerCase()}`;
 }
-function rb(e, t, n) {
+function _b(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
 //#endregion
 //#region electron/osint/adapters/cisaKevAdapter.ts
-var ib = "cisa_kev_public", ab = "CISA Known Exploited Vulnerabilities Catalog", ob = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json", sb = "https://nvd.nist.gov/vuln/detail", cb = 25, lb = 100, ub = /^CVE-\d{4}-\d{4,}$/, db = /^\d{4}-\d{2}-\d{2}$/;
-function fb(e = process.env) {
+var vb = "cisa_kev_public", yb = "CISA Known Exploited Vulnerabilities Catalog", bb = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json", xb = "https://nvd.nist.gov/vuln/detail", Sb = 25, Cb = 100, wb = /^CVE-\d{4}-\d{4,}$/, Tb = /^\d{4}-\d{2}-\d{2}$/;
+function Eb(e = process.env) {
 	if (e.ATLASZ_CISA_KEV_DISABLE === "1") return null;
-	let t = V(e.ATLASZ_CISA_KEV_URL) || ob;
+	let t = V(e.ATLASZ_CISA_KEV_URL) || bb;
 	return /^https:\/\//i.test(t) ? {
 		catalogUrl: t,
-		maxRecords: Cb(Number(e.ATLASZ_CISA_KEV_MAX_RECORDS ?? cb), 1, lb)
+		maxRecords: Lb(Number(e.ATLASZ_CISA_KEV_MAX_RECORDS ?? Sb), 1, Cb)
 	} : null;
 }
-async function pb(t, n = fb()) {
+async function Db(t, n = Eb()) {
 	if (!n) return [];
 	let r = await fetch(n.catalogUrl, {
 		signal: t,
 		headers: { accept: "application/json" }
 	});
-	return e(r, "CISA KEV"), _b(gb(await r.json(), {
+	return e(r, "CISA KEV"), jb(Ab(await r.json(), {
 		config: n,
 		sourceCatalogUrl: n.catalogUrl,
 		retrievedAt: Date.now()
 	}));
 }
-async function mb(e, t = fb()) {
+async function Ob(e, t = Eb()) {
 	if (!t) return /* @__PURE__ */ new Set();
 	try {
 		let n = await fetch(t.catalogUrl, {
 			signal: e,
 			headers: { accept: "application/json" }
 		});
-		return n.ok ? hb(await n.json()) : /* @__PURE__ */ new Set();
+		return n.ok ? kb(await n.json()) : /* @__PURE__ */ new Set();
 	} catch {
 		return /* @__PURE__ */ new Set();
 	}
 }
-function hb(e) {
+function kb(e) {
 	let t = /* @__PURE__ */ new Set();
-	for (let n of gb(e, { config: { maxRecords: 2 ** 53 - 1 } })) t.add(n.cveId);
+	for (let n of Ab(e, { config: { maxRecords: 2 ** 53 - 1 } })) t.add(n.cveId);
 	return t;
 }
-function gb(e, t = {}) {
+function Ab(e, t = {}) {
 	if (!e || typeof e != "object") return [];
 	let n = e, r = Array.isArray(n.vulnerabilities) ? n.vulnerabilities : [];
 	if (r.length === 0) return [];
-	let i = V(n.catalogVersion) || "unknown", a = t.sourceCatalogUrl ?? ob, o = t.retrievedAt ?? Date.now(), s = t.config?.maxRecords ?? cb, c = [];
+	let i = V(n.catalogVersion) || "unknown", a = t.sourceCatalogUrl ?? bb, o = t.retrievedAt ?? Date.now(), s = t.config?.maxRecords ?? Sb, c = [];
 	for (let e of r) {
 		if (!e || typeof e != "object") continue;
-		let t = V(e.cveID).toUpperCase(), n = V(e.vendorProject), r = V(e.product), s = V(e.vulnerabilityName), l = V(e.dateAdded), u = V(e.shortDescription), d = V(e.requiredAction), f = V(e.dueDate), p = V(e.knownRansomwareCampaignUse).toLowerCase() === "known", m = B(xb(e.cwes).map((e) => e.toUpperCase())), h = `${sb}/${t}`;
-		if (!yb({
+		let t = V(e.cveID).toUpperCase(), n = V(e.vendorProject), r = V(e.product), s = V(e.vulnerabilityName), l = V(e.dateAdded), u = V(e.shortDescription), d = V(e.requiredAction), f = V(e.dueDate), p = V(e.knownRansomwareCampaignUse).toLowerCase() === "known", m = B(Fb(e.cwes).map((e) => e.toUpperCase())), h = `${xb}/${t}`;
+		if (!Nb({
 			cveId: t,
 			vendorProject: n,
 			product: r,
@@ -13337,7 +13412,7 @@ function gb(e, t = {}) {
 			retrievedAt: o
 		});
 		c.push({
-			id: Sb(t),
+			id: Ib(t),
 			cveId: t,
 			vendorProject: n,
 			product: r,
@@ -13352,10 +13427,10 @@ function gb(e, t = {}) {
 			catalogVersion: i,
 			sourceUrl: h,
 			sourceCatalogUrl: a,
-			sourceName: ab,
+			sourceName: yb,
 			retrievedAt: o,
 			provenance: "official-api",
-			confidence: bb({
+			confidence: Pb({
 				cveId: t,
 				vendorProject: n,
 				product: r,
@@ -13369,16 +13444,16 @@ function gb(e, t = {}) {
 	}
 	return c.sort((e, t) => t.dateAddedTimestamp - e.dateAddedTimestamp), c.slice(0, s);
 }
-function _b(e) {
+function jb(e) {
 	let t = [];
-	for (let n of e) n.confidence < 90 || t.push(vb(n));
+	for (let n of e) n.confidence < 90 || t.push(Mb(n));
 	return t;
 }
-function vb(e) {
+function Mb(e) {
 	let t = `cisa-kev|${e.cveId}`.toLowerCase(), n = e.knownRansomwareCampaignUse ? " Known use in ransomware campaigns." : "", r = e.dueDate ? ` Federal remediation due ${e.dueDate}.` : "", i = `CISA added ${e.cveId} (${e.vendorProject} ${e.product}) to the Known Exploited Vulnerabilities catalog on ${e.dateAdded}: ${e.vulnerabilityName}.${n}${r} Required action: ${e.requiredAction} Source: ${e.sourceName}.`;
 	return {
 		...U({
-			id: G(ib, t),
+			id: G(vb, t),
 			title: `${e.cveId} — ${e.vendorProject} ${e.product}`,
 			summary: i,
 			source: e.sourceName,
@@ -13386,7 +13461,7 @@ function vb(e) {
 			observedAt: e.dateAddedTimestamp,
 			category: "cyber-advisory",
 			provenance: "official-api",
-			sourceId: ib,
+			sourceId: vb,
 			dedupeKey: t,
 			rawPayload: e,
 			affectedAssets: [],
@@ -13407,38 +13482,38 @@ function vb(e) {
 		kevVulnerability: e
 	};
 }
-function yb(e) {
-	return !!(ub.test(e.cveId) && e.vendorProject && e.product && e.vulnerabilityName && db.test(e.dateAdded) && Number.isFinite(Date.parse(`${e.dateAdded}T00:00:00Z`)) && /^https:\/\/nvd\.nist\.gov\/vuln\/detail\/CVE-\d{4}-\d{4,}$/.test(e.sourceUrl));
+function Nb(e) {
+	return !!(wb.test(e.cveId) && e.vendorProject && e.product && e.vulnerabilityName && Tb.test(e.dateAdded) && Number.isFinite(Date.parse(`${e.dateAdded}T00:00:00Z`)) && /^https:\/\/nvd\.nist\.gov\/vuln\/detail\/CVE-\d{4}-\d{4,}$/.test(e.sourceUrl));
 }
-function bb(e) {
-	return yb(e) ? 96 : 60;
+function Pb(e) {
+	return Nb(e) ? 96 : 60;
 }
-function xb(e) {
+function Fb(e) {
 	return Array.isArray(e) ? e.map((e) => V(e)).filter(Boolean) : [];
 }
-function Sb(e) {
-	return `${ib}:${e.toLowerCase()}`;
+function Ib(e) {
+	return `${vb}:${e.toLowerCase()}`;
 }
-function Cb(e, t, n) {
+function Lb(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
 //#endregion
 //#region electron/osint/adapters/nvdCveAdapter.ts
-var wb = "nvd_cve_public", Tb = "NIST National Vulnerability Database", Eb = "https://services.nvd.nist.gov/rest/json/cves/2.0", Db = "https://nvd.nist.gov/vuln/detail", Ob = 25, kb = 100, Ab = 7, jb = 120, Mb = /^CVE-\d{4}-\d{4,}$/, Nb = /^CWE-\d+$/;
-function Pb(e = process.env) {
+var Rb = "nvd_cve_public", zb = "NIST National Vulnerability Database", Bb = "https://services.nvd.nist.gov/rest/json/cves/2.0", Vb = "https://nvd.nist.gov/vuln/detail", Hb = 25, Ub = 100, Wb = 7, Gb = 120, Kb = /^CVE-\d{4}-\d{4,}$/, qb = /^CWE-\d+$/;
+function Jb(e = process.env) {
 	if (e.ATLASZ_NVD_DISABLE === "1") return null;
-	let t = V(e.ATLASZ_NVD_BASE_URL) || Eb;
+	let t = V(e.ATLASZ_NVD_BASE_URL) || Bb;
 	return /^https:\/\//i.test(t) ? {
 		baseUrl: t,
 		apiKey: V(e.ATLASZ_NVD_API_KEY) || void 0,
-		resultsPerPage: Xb(Number(e.ATLASZ_NVD_RESULTS_PER_PAGE ?? Ob), 1, kb),
-		lookbackDays: Xb(Number(e.ATLASZ_NVD_LOOKBACK_DAYS ?? Ab), 1, jb),
+		resultsPerPage: ux(Number(e.ATLASZ_NVD_RESULTS_PER_PAGE ?? Hb), 1, Ub),
+		lookbackDays: ux(Number(e.ATLASZ_NVD_LOOKBACK_DAYS ?? Wb), 1, Gb),
 		linkKev: e.ATLASZ_NVD_LINK_KEV !== "0"
 	} : null;
 }
-async function Fb(t, n = Pb()) {
+async function Yb(t, n = Jb()) {
 	if (!n) return [];
-	let r = Date.now(), i = qb(n, r), a = { accept: "application/json" };
+	let r = Date.now(), i = sx(n, r), a = { accept: "application/json" };
 	n.apiKey && (a.apiKey = n.apiKey);
 	let o = await fetch(i, {
 		signal: t,
@@ -13446,22 +13521,22 @@ async function Fb(t, n = Pb()) {
 	});
 	e(o, "NVD");
 	let s = await o.json(), c = /* @__PURE__ */ new Set();
-	return n.linkKev && (c = await mb(t, fb())), Lb(Ib(s, {
+	return n.linkKev && (c = await Ob(t, Eb())), Zb(Xb(s, {
 		retrievedAt: r,
-		sourceApiUrl: Jb(n),
+		sourceApiUrl: cx(n),
 		knownExploitedCveIds: c
 	}));
 }
-function Ib(e, t = {}) {
+function Xb(e, t = {}) {
 	if (!e || typeof e != "object") return [];
 	let n = e, r = Array.isArray(n.vulnerabilities) ? n.vulnerabilities : [];
 	if (r.length === 0) return [];
-	let i = t.retrievedAt ?? Date.now(), a = t.sourceApiUrl ?? Eb, o = t.knownExploitedCveIds ?? /* @__PURE__ */ new Set(), s = [];
+	let i = t.retrievedAt ?? Date.now(), a = t.sourceApiUrl ?? Bb, o = t.knownExploitedCveIds ?? /* @__PURE__ */ new Set(), s = [];
 	for (let e of r) {
 		let t = e?.cve;
 		if (!t || typeof t != "object") continue;
-		let n = V(t.id).toUpperCase(), r = V(t.sourceIdentifier), c = V(t.published), l = V(t.lastModified), u = V(t.vulnStatus) || "Unknown", d = zb(t.descriptions), f = `${Db}/${n}`, p = Date.parse(c), m = Date.parse(l);
-		if (!Wb({
+		let n = V(t.id).toUpperCase(), r = V(t.sourceIdentifier), c = V(t.published), l = V(t.lastModified), u = V(t.vulnStatus) || "Unknown", d = $b(t.descriptions), f = `${Vb}/${n}`, p = Date.parse(c), m = Date.parse(l);
+		if (!ix({
 			cveId: n,
 			sourceIdentifier: r,
 			publishedTimestamp: p,
@@ -13469,7 +13544,7 @@ function Ib(e, t = {}) {
 			sourceUrl: f,
 			retrievedAt: i
 		})) continue;
-		let h = Bb(t.metrics), g = Vb(t.weaknesses), _ = Hb(t.configurations), v = Ub(t.references), y = o.has(n), b = W({
+		let h = ex(t.metrics), g = tx(t.weaknesses), _ = nx(t.configurations), v = rx(t.references), y = o.has(n), b = W({
 			cveId: n,
 			sourceIdentifier: r,
 			published: c,
@@ -13486,7 +13561,7 @@ function Ib(e, t = {}) {
 			retrievedAt: i
 		});
 		s.push({
-			id: Yb(n),
+			id: lx(n),
 			cveId: n,
 			sourceIdentifier: r,
 			published: c,
@@ -13501,11 +13576,11 @@ function Ib(e, t = {}) {
 			references: v,
 			sourceUrl: f,
 			sourceApiUrl: a,
-			sourceName: Tb,
+			sourceName: zb,
 			retrievedAt: i,
 			inKnownExploitedCatalog: y,
 			provenance: "official-api",
-			confidence: Gb({
+			confidence: ax({
 				cveId: n,
 				sourceIdentifier: r,
 				publishedTimestamp: p,
@@ -13519,16 +13594,16 @@ function Ib(e, t = {}) {
 	}
 	return s.sort((e, t) => t.lastModifiedTimestamp - e.lastModifiedTimestamp), s;
 }
-function Lb(e) {
+function Zb(e) {
 	let t = [];
-	for (let n of e) n.confidence < 90 || t.push(Rb(n));
+	for (let n of e) n.confidence < 90 || t.push(Qb(n));
 	return t;
 }
-function Rb(e) {
+function Qb(e) {
 	let t = `nvd|${e.cveId}`.toLowerCase(), n = e.cvss ? ` CVSS ${e.cvss.version} ${e.cvss.baseScore} (${e.cvss.baseSeverity}).` : " CVSS not yet assigned.", r = e.inKnownExploitedCatalog ? " Listed in the CISA Known Exploited Vulnerabilities catalog (active exploitation confirmed)." : "", i = e.vendorProducts.length > 0 ? ` Affected: ${e.vendorProducts.slice(0, 4).join(", ")}.` : "", a = `${e.cveId} (${e.vulnStatus}) published ${e.published.slice(0, 10)}.${n}${i}${r} Source: ${e.sourceName}.`;
 	return {
 		...U({
-			id: G(wb, t),
+			id: G(Rb, t),
 			title: e.cvss ? `${e.cveId} — ${e.cvss.baseSeverity} (CVSS ${e.cvss.baseScore})` : `${e.cveId} — ${e.vulnStatus}`,
 			summary: a,
 			source: e.sourceName,
@@ -13536,7 +13611,7 @@ function Rb(e) {
 			observedAt: e.publishedTimestamp,
 			category: "cyber-advisory",
 			provenance: "official-api",
-			sourceId: wb,
+			sourceId: Rb,
 			dedupeKey: t,
 			rawPayload: e,
 			affectedAssets: [],
@@ -13557,13 +13632,13 @@ function Rb(e) {
 		nvdCve: e
 	};
 }
-function zb(e) {
+function $b(e) {
 	if (!Array.isArray(e)) return "";
 	for (let t of e) if (t && typeof t == "object" && V(t.lang) === "en") return V(t.value);
 	let t = e[0];
 	return t && typeof t == "object" ? V(t.value) : "";
 }
-function Bb(e) {
+function ex(e) {
 	if (!e || typeof e != "object") return;
 	let t = e;
 	for (let { key: e, version: n } of [
@@ -13584,7 +13659,7 @@ function Bb(e) {
 		if (!Array.isArray(r) || r.length === 0) continue;
 		let i = r.find((e) => e && typeof e == "object" && V(e.type) === "Primary") ?? r[0], a = i.cvssData ?? {}, o = H(a.baseScore);
 		if (o === void 0) continue;
-		let s = V(a.baseSeverity).toUpperCase() || V(i.baseSeverity).toUpperCase() || Kb(o);
+		let s = V(a.baseSeverity).toUpperCase() || V(i.baseSeverity).toUpperCase() || ox(o);
 		return {
 			version: n,
 			vectorString: V(a.vectorString) || void 0,
@@ -13595,19 +13670,19 @@ function Bb(e) {
 		};
 	}
 }
-function Vb(e) {
+function tx(e) {
 	if (!Array.isArray(e)) return [];
 	let t = [];
 	for (let n of e) {
 		let e = n?.description;
 		if (Array.isArray(e)) for (let n of e) {
 			let e = V(n?.value).toUpperCase();
-			Nb.test(e) && t.push(e);
+			qb.test(e) && t.push(e);
 		}
 	}
 	return B(t);
 }
-function Hb(e) {
+function nx(e) {
 	if (!Array.isArray(e)) return [];
 	let t = [];
 	for (let n of e) {
@@ -13624,7 +13699,7 @@ function Hb(e) {
 	}
 	return B(t);
 }
-function Ub(e) {
+function rx(e) {
 	if (!Array.isArray(e)) return [];
 	let t = [];
 	for (let n of e) {
@@ -13639,50 +13714,50 @@ function Ub(e) {
 	}
 	return t.slice(0, 12);
 }
-function Wb(e) {
-	return !!(Mb.test(e.cveId) && e.sourceIdentifier && Number.isFinite(e.publishedTimestamp) && Number.isFinite(e.lastModifiedTimestamp) && /^https:\/\/nvd\.nist\.gov\/vuln\/detail\/CVE-\d{4}-\d{4,}$/.test(e.sourceUrl) && Number.isFinite(e.retrievedAt));
+function ix(e) {
+	return !!(Kb.test(e.cveId) && e.sourceIdentifier && Number.isFinite(e.publishedTimestamp) && Number.isFinite(e.lastModifiedTimestamp) && /^https:\/\/nvd\.nist\.gov\/vuln\/detail\/CVE-\d{4}-\d{4,}$/.test(e.sourceUrl) && Number.isFinite(e.retrievedAt));
 }
-function Gb(e) {
-	return Wb(e) ? 96 : 60;
+function ax(e) {
+	return ix(e) ? 96 : 60;
 }
-function Kb(e) {
+function ox(e) {
 	return e >= 9 ? "CRITICAL" : e >= 7 ? "HIGH" : e >= 4 ? "MEDIUM" : e > 0 ? "LOW" : "NONE";
 }
-function qb(e, t) {
+function sx(e, t) {
 	let n = new URL(e.baseUrl);
 	n.searchParams.set("resultsPerPage", String(e.resultsPerPage));
 	let r = new Date(t), i = /* @__PURE__ */ new Date(t - e.lookbackDays * 24 * 60 * 60 * 1e3);
 	return n.searchParams.set("lastModStartDate", i.toISOString()), n.searchParams.set("lastModEndDate", r.toISOString()), n.toString();
 }
-function Jb(e) {
+function cx(e) {
 	let t = new URL(e.baseUrl);
 	return t.searchParams.set("resultsPerPage", String(e.resultsPerPage)), t.toString();
 }
-function Yb(e) {
-	return `${wb}:${e.toLowerCase()}`;
+function lx(e) {
+	return `${Rb}:${e.toLowerCase()}`;
 }
-function Xb(e, t, n) {
+function ux(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
 //#endregion
 //#region electron/osint/adapters/githubAdvisoryAdapter.ts
-var Zb = "github_ghsa_public", Qb = "GitHub Advisory Database", $b = "https://api.github.com/advisories", ex = "https://github.com/advisories", tx = "Atlasz-Intel", nx = 30, rx = 100, ix = /^GHSA-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}$/i, ax = /^CVE-\d{4}-\d{4,}$/, ox = /^CWE-\d+$/;
-function sx(e = process.env) {
+var dx = "github_ghsa_public", fx = "GitHub Advisory Database", px = "https://api.github.com/advisories", mx = "https://github.com/advisories", hx = "Atlasz-Intel", gx = 30, _x = 100, vx = /^GHSA-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}$/i, yx = /^CVE-\d{4}-\d{4,}$/, bx = /^CWE-\d+$/;
+function xx(e = process.env) {
 	if (e.ATLASZ_GITHUB_GHSA_DISABLE === "1") return null;
-	let t = V(e.ATLASZ_GITHUB_ADVISORIES_URL) || $b;
+	let t = V(e.ATLASZ_GITHUB_ADVISORIES_URL) || px;
 	return /^https:\/\//i.test(t) ? {
 		apiUrl: t,
 		token: V(e.ATLASZ_GITHUB_TOKEN) || void 0,
-		perPage: wx(Number(e.ATLASZ_GITHUB_GHSA_PER_PAGE ?? nx), 1, rx),
-		advisoryType: Sx(e.ATLASZ_GITHUB_GHSA_TYPE),
+		perPage: Rx(Number(e.ATLASZ_GITHUB_GHSA_PER_PAGE ?? gx), 1, _x),
+		advisoryType: Ix(e.ATLASZ_GITHUB_GHSA_TYPE),
 		linkKev: e.ATLASZ_GITHUB_GHSA_LINK_KEV !== "0"
 	} : null;
 }
-async function cx(t, n = sx()) {
+async function Sx(t, n = xx()) {
 	if (!n) return [];
-	let r = Date.now(), i = bx(n), a = {
+	let r = Date.now(), i = Px(n), a = {
 		accept: "application/vnd.github+json",
-		"user-agent": tx,
+		"user-agent": hx,
 		"x-github-api-version": "2022-11-28"
 	};
 	n.token && (a.authorization = `Bearer ${n.token}`);
@@ -13692,29 +13767,29 @@ async function cx(t, n = sx()) {
 	});
 	e(o, "GitHub advisories");
 	let s = await o.json(), c = /* @__PURE__ */ new Set();
-	return n.linkKev && (c = await mb(t, fb())), ux(lx(s, {
+	return n.linkKev && (c = await Ob(t, Eb())), wx(Cx(s, {
 		retrievedAt: r,
-		sourceApiUrl: xx(n),
+		sourceApiUrl: Fx(n),
 		knownExploitedCveIds: c
 	}));
 }
-function lx(e, t = {}) {
+function Cx(e, t = {}) {
 	let n = Array.isArray(e) ? e : Array.isArray(e?.advisories) ? e.advisories : [];
 	if (n.length === 0) return [];
-	let r = t.retrievedAt ?? Date.now(), i = t.sourceApiUrl ?? $b, a = t.knownExploitedCveIds ?? /* @__PURE__ */ new Set(), o = [];
+	let r = t.retrievedAt ?? Date.now(), i = t.sourceApiUrl ?? px, a = t.knownExploitedCveIds ?? /* @__PURE__ */ new Set(), o = [];
 	for (let e of n) {
 		if (!e || typeof e != "object") continue;
-		let t = e, n = V(t.ghsa_id), s = fx(t), c = V(t.summary), l = V(t.severity).toLowerCase(), u = V(t.type) || "reviewed", d = V(t.published_at), f = V(t.updated_at), p = V(t.withdrawn_at) || void 0, m = V(t.html_url) || `${ex}/${n}`, h = Date.parse(d), g = Date.parse(f);
-		if (!vx({
+		let t = e, n = V(t.ghsa_id), s = Ex(t), c = V(t.summary), l = V(t.severity).toLowerCase(), u = V(t.type) || "reviewed", d = V(t.published_at), f = V(t.updated_at), p = V(t.withdrawn_at) || void 0, m = V(t.html_url) || `${mx}/${n}`, h = Date.parse(d), g = Date.parse(f);
+		if (!Mx({
 			ghsaId: n,
 			sourceUrl: m,
 			publishedTimestamp: h,
 			updatedTimestamp: g,
 			severity: l,
-			sourceIdentifier: Qb,
+			sourceIdentifier: fx,
 			retrievedAt: r
 		})) continue;
-		let _ = px(t.vulnerabilities), v = hx(t.cwes), y = gx(t.references), b = !!(s && a.has(s)), x = W({
+		let _ = Dx(t.vulnerabilities), v = kx(t.cwes), y = Ax(t.references), b = !!(s && a.has(s)), x = W({
 			ghsaId: n,
 			cveId: s,
 			type: u,
@@ -13732,7 +13807,7 @@ function lx(e, t = {}) {
 			retrievedAt: r
 		});
 		o.push({
-			id: Cx(n),
+			id: Lx(n),
 			ghsaId: n,
 			cveId: s,
 			type: u,
@@ -13748,18 +13823,18 @@ function lx(e, t = {}) {
 			withdrawnAt: p,
 			sourceUrl: m,
 			sourceApiUrl: i,
-			sourceIdentifier: Qb,
-			sourceName: Qb,
+			sourceIdentifier: fx,
+			sourceName: fx,
 			retrievedAt: r,
 			inKnownExploitedCatalog: b,
 			provenance: "official-api",
-			confidence: yx({
+			confidence: Nx({
 				ghsaId: n,
 				sourceUrl: m,
 				publishedTimestamp: h,
 				updatedTimestamp: g,
 				severity: l,
-				sourceIdentifier: Qb,
+				sourceIdentifier: fx,
 				retrievedAt: r
 			}),
 			rawPayloadHash: z(x),
@@ -13768,16 +13843,16 @@ function lx(e, t = {}) {
 	}
 	return o.sort((e, t) => t.publishedTimestamp - e.publishedTimestamp), o;
 }
-function ux(e) {
+function wx(e) {
 	let t = [];
-	for (let n of e) n.withdrawnAt || n.confidence < 90 || t.push(dx(n));
+	for (let n of e) n.withdrawnAt || n.confidence < 90 || t.push(Tx(n));
 	return t;
 }
-function dx(e) {
+function Tx(e) {
 	let t = `ghsa|${e.ghsaId}`.toLowerCase(), n = e.cveId ? ` Linked ${e.cveId}.` : "", r = e.inKnownExploitedCatalog ? " Listed in the CISA Known Exploited Vulnerabilities catalog (active exploitation confirmed)." : "", i = e.packages.length > 0 ? ` Affected: ${e.packages.slice(0, 4).map((e) => `${e.ecosystem}:${e.name}`).join(", ")}.` : "", a = `${e.ghsaId} (${e.severity || "unknown"} severity) published ${e.publishedAt.slice(0, 10)}.${n}${i}${r} ${e.summary} Source: ${e.sourceName}.`;
 	return {
 		...U({
-			id: G(Zb, t),
+			id: G(dx, t),
 			title: `${e.ghsaId} — ${e.summary || e.severity}`.slice(0, 140),
 			summary: a,
 			source: e.sourceName,
@@ -13785,7 +13860,7 @@ function dx(e) {
 			observedAt: e.publishedTimestamp,
 			category: "cyber-advisory",
 			provenance: "official-api",
-			sourceId: Zb,
+			sourceId: dx,
 			dedupeKey: t,
 			rawPayload: e,
 			affectedAssets: [],
@@ -13804,24 +13879,24 @@ function dx(e) {
 				...e.cweIds
 			])
 		}),
-		severity: _x(e.severity),
+		severity: jx(e.severity),
 		confidence: e.confidence,
 		ghsaAdvisory: e
 	};
 }
-function fx(e) {
+function Ex(e) {
 	let t = V(e.cve_id).toUpperCase();
-	if (ax.test(t)) return t;
+	if (yx.test(t)) return t;
 	let n = e.identifiers;
 	if (Array.isArray(n)) for (let e of n) {
 		let t = e;
 		if (V(t.type).toUpperCase() === "CVE") {
 			let e = V(t.value).toUpperCase();
-			if (ax.test(e)) return e;
+			if (yx.test(e)) return e;
 		}
 	}
 }
-function px(e) {
+function Dx(e) {
 	if (!Array.isArray(e)) return [];
 	let t = [];
 	for (let n of e) {
@@ -13830,24 +13905,24 @@ function px(e) {
 			ecosystem: r,
 			name: i,
 			vulnerableRange: V(n.vulnerable_version_range) || void 0,
-			firstPatched: mx(n.first_patched_version) || void 0
+			firstPatched: Ox(n.first_patched_version) || void 0
 		});
 	}
 	return t.slice(0, 20);
 }
-function mx(e) {
+function Ox(e) {
 	return typeof e == "string" ? e.trim() : V(e?.identifier);
 }
-function hx(e) {
+function kx(e) {
 	if (!Array.isArray(e)) return [];
 	let t = [];
 	for (let n of e) {
 		let e = V(n?.cwe_id).toUpperCase();
-		ox.test(e) && t.push(e);
+		bx.test(e) && t.push(e);
 	}
 	return B(t);
 }
-function gx(e) {
+function Ax(e) {
 	if (!Array.isArray(e)) return [];
 	let t = [];
 	for (let n of e) {
@@ -13856,7 +13931,7 @@ function gx(e) {
 	}
 	return B(t).slice(0, 12);
 }
-function _x(e) {
+function jx(e) {
 	switch (e.toLowerCase()) {
 		case "critical": return "critical";
 		case "high": return "elevated";
@@ -13866,33 +13941,33 @@ function _x(e) {
 		default: return "stable";
 	}
 }
-function vx(e) {
-	return !!(ix.test(e.ghsaId) && /^https:\/\/github\.com\/advisories\/GHSA-/i.test(e.sourceUrl) && Number.isFinite(e.publishedTimestamp) && Number.isFinite(e.updatedTimestamp) && e.severity && e.sourceIdentifier && Number.isFinite(e.retrievedAt));
+function Mx(e) {
+	return !!(vx.test(e.ghsaId) && /^https:\/\/github\.com\/advisories\/GHSA-/i.test(e.sourceUrl) && Number.isFinite(e.publishedTimestamp) && Number.isFinite(e.updatedTimestamp) && e.severity && e.sourceIdentifier && Number.isFinite(e.retrievedAt));
 }
-function yx(e) {
-	return vx(e) ? 96 : 60;
+function Nx(e) {
+	return Mx(e) ? 96 : 60;
 }
-function bx(e) {
+function Px(e) {
 	let t = new URL(e.apiUrl);
 	return t.searchParams.set("type", e.advisoryType), t.searchParams.set("sort", "published"), t.searchParams.set("direction", "desc"), t.searchParams.set("per_page", String(e.perPage)), t.toString();
 }
-function xx(e) {
+function Fx(e) {
 	let t = new URL(e.apiUrl);
 	return t.searchParams.set("type", e.advisoryType), t.searchParams.set("per_page", String(e.perPage)), t.toString();
 }
-function Sx(e) {
+function Ix(e) {
 	let t = V(e).toLowerCase();
 	return t === "unreviewed" || t === "malware" ? t : "reviewed";
 }
-function Cx(e) {
-	return `${Zb}:${e.toLowerCase()}`;
+function Lx(e) {
+	return `${dx}:${e.toLowerCase()}`;
 }
-function wx(e, t, n) {
+function Rx(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
 //#endregion
 //#region electron/osint/adapters/osvAdapter.ts
-var Tx = "osv_dev_public", Ex = "OSV.dev", Dx = "https://api.osv.dev", Ox = "https://osv.dev/vulnerability", kx = /^[A-Za-z][A-Za-z0-9]*-[A-Za-z0-9][A-Za-z0-9-]*$/, Ax = /^CVE-\d{4}-\d{4,}$/i, jx = /^GHSA-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}$/i, Mx = 40, Nx = 100, Px = [
+var zx = "osv_dev_public", Bx = "OSV.dev", Vx = "https://api.osv.dev", Hx = "https://osv.dev/vulnerability", Ux = /^[A-Za-z][A-Za-z0-9]*-[A-Za-z0-9][A-Za-z0-9-]*$/, Wx = /^CVE-\d{4}-\d{4,}$/i, Gx = /^GHSA-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}$/i, Kx = 40, qx = 100, Jx = [
 	{
 		ecosystem: "PyPI",
 		name: "requests"
@@ -13906,19 +13981,19 @@ var Tx = "osv_dev_public", Ex = "OSV.dev", Dx = "https://api.osv.dev", Ox = "htt
 		name: "org.apache.logging.log4j:log4j-core"
 	}
 ];
-function Fx(e = process.env) {
+function Yx(e = process.env) {
 	if (e.ATLASZ_OSV_DISABLE === "1") return null;
-	let t = V(e.ATLASZ_OSV_API_BASE) || Dx;
+	let t = V(e.ATLASZ_OSV_API_BASE) || Vx;
 	if (!/^https:\/\//i.test(t)) return null;
 	let n = B(V(e.ATLASZ_OSV_IDS).split(",").map((e) => e.trim()).filter(Boolean));
 	return {
 		apiBase: t,
-		packages: Jx(e.ATLASZ_OSV_PACKAGES) ?? (n.length > 0 ? [] : Px),
+		packages: cS(e.ATLASZ_OSV_PACKAGES) ?? (n.length > 0 ? [] : Jx),
 		vulnIds: n,
-		maxRecords: Zx(Number(e.ATLASZ_OSV_MAX_RECORDS ?? Mx), 1, Nx)
+		maxRecords: dS(Number(e.ATLASZ_OSV_MAX_RECORDS ?? Kx), 1, qx)
 	};
 }
-async function Ix(t, n = Fx()) {
+async function Xx(t, n = Yx()) {
 	if (!n || n.packages.length === 0 && n.vulnIds.length === 0) return [];
 	let r = Date.now(), i = [];
 	for (let r of n.vulnIds) {
@@ -13945,26 +14020,26 @@ async function Ix(t, n = Fx()) {
 		let o = await a.json();
 		Array.isArray(o.vulns) && i.push(...o.vulns);
 	}
-	return Rx(Lx(i, {
+	return Qx(Zx(i, {
 		retrievedAt: r,
 		config: n
 	}));
 }
-function Lx(e, t = {}) {
-	let n = Bx(e);
+function Zx(e, t = {}) {
+	let n = eS(e);
 	if (n.length === 0) return [];
-	let r = t.retrievedAt ?? Date.now(), i = t.config?.maxRecords ?? Mx, a = /* @__PURE__ */ new Map();
+	let r = t.retrievedAt ?? Date.now(), i = t.config?.maxRecords ?? Kx, a = /* @__PURE__ */ new Map();
 	for (let e of n) {
 		if (!e || typeof e != "object") continue;
-		let t = e, n = V(t.id), i = V(t.published), o = V(t.modified), s = Date.parse(i), c = Date.parse(o), l = `${Ox}/${n}`;
-		if (!Kx({
+		let t = e, n = V(t.id), i = V(t.published), o = V(t.modified), s = Date.parse(i), c = Date.parse(o), l = `${Hx}/${n}`;
+		if (!oS({
 			osvId: n,
 			sourceUrl: l,
 			publishedTimestamp: s,
 			modifiedTimestamp: c,
 			retrievedAt: r
 		})) continue;
-		let u = B(Yx(t.aliases)), d = B(u.filter((e) => Ax.test(e)).map((e) => e.toUpperCase())), f = B(u.filter((e) => jx.test(e))), p = Vx(t.affected), m = Ux(t), h = Wx(t.references), g = Number.isFinite(s) ? s : c, _ = W({
+		let u = B(lS(t.aliases)), d = B(u.filter((e) => Wx.test(e)).map((e) => e.toUpperCase())), f = B(u.filter((e) => Gx.test(e))), p = tS(t.affected), m = rS(t), h = iS(t.references), g = Number.isFinite(s) ? s : c, _ = W({
 			osvId: n,
 			aliases: u,
 			relatedCveIds: d,
@@ -13976,11 +14051,11 @@ function Lx(e, t = {}) {
 			affectedPackages: p,
 			references: h,
 			sourceUrl: l,
-			sourceApiUrl: `${Dx}/v1/vulns/${n}`,
+			sourceApiUrl: `${Vx}/v1/vulns/${n}`,
 			retrievedAt: r
 		});
 		a.set(n, {
-			id: Xx(n),
+			id: uS(n),
 			osvId: n,
 			aliases: u,
 			relatedCveIds: d,
@@ -13997,11 +14072,11 @@ function Lx(e, t = {}) {
 			affectedPackages: p,
 			references: h,
 			sourceUrl: l,
-			sourceApiUrl: `${Dx}/v1/vulns/${n}`,
-			sourceName: Ex,
+			sourceApiUrl: `${Vx}/v1/vulns/${n}`,
+			sourceName: Bx,
 			retrievedAt: r,
 			provenance: "official-api",
-			confidence: qx({
+			confidence: sS({
 				osvId: n,
 				sourceUrl: l,
 				publishedTimestamp: s,
@@ -14014,16 +14089,16 @@ function Lx(e, t = {}) {
 	}
 	return [...a.values()].sort((e, t) => t.observedTimestamp - e.observedTimestamp).slice(0, i);
 }
-function Rx(e) {
+function Qx(e) {
 	let t = [];
-	for (let n of e) n.confidence < 90 || t.push(zx(n));
+	for (let n of e) n.confidence < 90 || t.push($x(n));
 	return t;
 }
-function zx(e) {
+function $x(e) {
 	let t = `osv|${e.osvId}`.toLowerCase(), n = e.relatedCveIds.length > 0 ? ` Linked ${e.relatedCveIds.join(", ")}.` : "", r = e.affectedPackages.length > 0 ? ` Affected: ${e.affectedPackages.slice(0, 4).map((e) => `${e.ecosystem}:${e.name}`).join(", ")}.` : "", i = `${e.osvId} (${e.severity || "unscored"})${e.published ? ` published ${e.published.slice(0, 10)}` : ""}.${n}${r} ${e.summary} Source: ${e.sourceName}.`;
 	return {
 		...U({
-			id: G(Tx, t),
+			id: G(zx, t),
 			title: `${e.osvId} — ${e.summary || e.severity || "OSV advisory"}`.slice(0, 140),
 			summary: i,
 			source: e.sourceName,
@@ -14031,7 +14106,7 @@ function zx(e) {
 			observedAt: e.observedTimestamp,
 			category: "cyber-advisory",
 			provenance: "official-api",
-			sourceId: Tx,
+			sourceId: zx,
 			dedupeKey: t,
 			rawPayload: e,
 			affectedAssets: [],
@@ -14050,12 +14125,12 @@ function zx(e) {
 				...e.affectedPackages.map((e) => `${e.ecosystem}:${e.name}`)
 			])
 		}),
-		severity: Gx(e.severity),
+		severity: aS(e.severity),
 		confidence: e.confidence,
 		osvVulnerability: e
 	};
 }
-function Bx(e) {
+function eS(e) {
 	if (Array.isArray(e)) return e;
 	if (e && typeof e == "object") {
 		let t = e;
@@ -14064,7 +14139,7 @@ function Bx(e) {
 	}
 	return [];
 }
-function Vx(e) {
+function tS(e) {
 	if (!Array.isArray(e)) return [];
 	let t = [];
 	for (let n of e) {
@@ -14072,12 +14147,12 @@ function Vx(e) {
 		!r || !i || t.push({
 			ecosystem: r,
 			name: i,
-			fixed: Hx(n.ranges)
+			fixed: nS(n.ranges)
 		});
 	}
 	return t.slice(0, 20);
 }
-function Hx(e) {
+function nS(e) {
 	if (Array.isArray(e)) for (let t of e) {
 		let e = t?.events;
 		if (Array.isArray(e)) for (let t of e) {
@@ -14086,11 +14161,11 @@ function Hx(e) {
 		}
 	}
 }
-function Ux(e) {
+function rS(e) {
 	let t = e.database_specific;
 	return V(t?.severity).toUpperCase() || (Array.isArray(e.severity) && e.severity.length > 0 ? V(e.severity[0]?.type).toUpperCase() : "");
 }
-function Wx(e) {
+function iS(e) {
 	if (!Array.isArray(e)) return [];
 	let t = [];
 	for (let n of e) {
@@ -14099,7 +14174,7 @@ function Wx(e) {
 	}
 	return B(t).slice(0, 12);
 }
-function Gx(e) {
+function aS(e) {
 	switch (e.toUpperCase()) {
 		case "CRITICAL": return "critical";
 		case "HIGH": return "elevated";
@@ -14109,13 +14184,13 @@ function Gx(e) {
 		default: return "watch";
 	}
 }
-function Kx(e) {
-	return !!(kx.test(e.osvId) && /^https:\/\/osv\.dev\/vulnerability\//.test(e.sourceUrl) && (Number.isFinite(e.publishedTimestamp) || Number.isFinite(e.modifiedTimestamp)) && Number.isFinite(e.retrievedAt));
+function oS(e) {
+	return !!(Ux.test(e.osvId) && /^https:\/\/osv\.dev\/vulnerability\//.test(e.sourceUrl) && (Number.isFinite(e.publishedTimestamp) || Number.isFinite(e.modifiedTimestamp)) && Number.isFinite(e.retrievedAt));
 }
-function qx(e) {
-	return Kx(e) ? 96 : 60;
+function sS(e) {
+	return oS(e) ? 96 : 60;
 }
-function Jx(e) {
+function cS(e) {
 	let t = V(e);
 	if (!t) return null;
 	try {
@@ -14130,44 +14205,44 @@ function Jx(e) {
 		return null;
 	}
 }
-function Yx(e) {
+function lS(e) {
 	return Array.isArray(e) ? e.map((e) => V(e)).filter(Boolean) : [];
 }
-function Xx(e) {
-	return `${Tx}:${e.toLowerCase()}`;
+function uS(e) {
+	return `${zx}:${e.toLowerCase()}`;
 }
-function Zx(e, t, n) {
+function dS(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
 //#endregion
 //#region electron/osint/adapters/cisaAdvisoryAdapter.ts
-var Qx = "cisa_advisories_public", $x = "CISA Cybersecurity Advisories", eS = "https://www.cisa.gov/cybersecurity-advisories/all.xml", tS = /^https:\/\/(www\.)?cisa\.gov\//i, nS = /\b(ICSA-\d{2}-\d{3}-\d{2}[A-Z]?|ICSMA-\d{2}-\d{3}-\d{2}[A-Z]?|AA\d{2}-\d{3}[A-Z]?|ICS-ALERT-\d{2}-\d{3}-\d{2}[A-Z]?)\b/i, rS = /CVE-\d{4}-\d{4,}/gi, iS = 40, aS = 100;
-function oS(e = process.env) {
+var fS = "cisa_advisories_public", pS = "CISA Cybersecurity Advisories", mS = "https://www.cisa.gov/cybersecurity-advisories/all.xml", hS = /^https:\/\/(www\.)?cisa\.gov\//i, gS = /\b(ICSA-\d{2}-\d{3}-\d{2}[A-Z]?|ICSMA-\d{2}-\d{3}-\d{2}[A-Z]?|AA\d{2}-\d{3}[A-Z]?|ICS-ALERT-\d{2}-\d{3}-\d{2}[A-Z]?)\b/i, _S = /CVE-\d{4}-\d{4,}/gi, vS = 40, yS = 100;
+function bS(e = process.env) {
 	if (e.ATLASZ_CISA_ADVISORIES_DISABLE === "1") return null;
-	let t = V(e.ATLASZ_CISA_ADVISORIES_URL) || eS;
+	let t = V(e.ATLASZ_CISA_ADVISORIES_URL) || mS;
 	return /^https:\/\//i.test(t) ? {
 		feedUrl: t,
-		maxRecords: bS(Number(e.ATLASZ_CISA_ADVISORIES_MAX_RECORDS ?? iS), 1, aS)
+		maxRecords: PS(Number(e.ATLASZ_CISA_ADVISORIES_MAX_RECORDS ?? vS), 1, yS)
 	} : null;
 }
-async function sS(t, n = oS()) {
+async function xS(t, n = bS()) {
 	if (!n) return [];
 	let r = await fetch(n.feedUrl, {
 		signal: t,
 		headers: { accept: "application/rss+xml, application/xml, text/xml" }
 	});
-	return e(r, "CISA advisories"), lS(cS(await r.text(), {
+	return e(r, "CISA advisories"), CS(SS(await r.text(), {
 		retrievedAt: Date.now(),
 		config: n
 	}));
 }
-function cS(e, t = {}) {
-	let n = typeof e == "string" ? uS(e) : e;
+function SS(e, t = {}) {
+	let n = typeof e == "string" ? wS(e) : e;
 	if (n.length === 0) return [];
-	let r = t.retrievedAt ?? Date.now(), i = t.config?.maxRecords ?? iS, a = /* @__PURE__ */ new Map();
+	let r = t.retrievedAt ?? Date.now(), i = t.config?.maxRecords ?? vS, a = /* @__PURE__ */ new Map();
 	for (let e of n) {
-		let t = V(e.title), n = V(e.link), i = fS(t, n), o = V(e.published), s = V(e.updated), c = Date.parse(o), l = Date.parse(s);
-		if (!hS({
+		let t = V(e.title), n = V(e.link), i = ES(t, n), o = V(e.published), s = V(e.updated), c = Date.parse(o), l = Date.parse(s);
+		if (!kS({
 			advisoryId: i,
 			title: t,
 			sourceUrl: n,
@@ -14176,8 +14251,8 @@ function cS(e, t = {}) {
 			retrievedAt: r
 		})) continue;
 		let u = V(e.description).replace(/\s+/g, " ").slice(0, 600), d = B([
-			...mS(t),
-			...mS(e.description),
+			...OS(t),
+			...OS(e.description),
 			...(e.cves ?? []).map((e) => e.toUpperCase()).filter((e) => /^CVE-\d{4}-\d{4,}$/.test(e))
 		]), f = B((e.vendors ?? []).map(V).filter(Boolean)), p = B((e.products ?? []).map(V).filter(Boolean)), m = B([n]), h = Number.isFinite(c) ? c : l, g = W({
 			advisoryId: i,
@@ -14193,7 +14268,7 @@ function cS(e, t = {}) {
 			retrievedAt: r
 		});
 		a.set(i, {
-			id: yS(i),
+			id: NS(i),
 			advisoryId: i,
 			title: t,
 			summary: u,
@@ -14207,10 +14282,10 @@ function cS(e, t = {}) {
 			updatedTimestamp: Number.isFinite(l) ? l : void 0,
 			observedTimestamp: Number.isFinite(h) ? h : r,
 			sourceUrl: n,
-			sourceName: $x,
+			sourceName: pS,
 			retrievedAt: r,
 			provenance: "official-api",
-			confidence: gS({
+			confidence: AS({
 				advisoryId: i,
 				title: t,
 				sourceUrl: n,
@@ -14224,31 +14299,31 @@ function cS(e, t = {}) {
 	}
 	return [...a.values()].sort((e, t) => t.observedTimestamp - e.observedTimestamp).slice(0, i);
 }
-function lS(e) {
+function CS(e) {
 	let t = [];
-	for (let n of e) n.confidence < 90 || t.push(dS(n));
+	for (let n of e) n.confidence < 90 || t.push(TS(n));
 	return t;
 }
-function uS(e) {
+function wS(e) {
 	if (typeof e != "string" || !/<item[\s>]/i.test(e)) return [];
 	let t = [];
 	for (let n of e.split(/<item[\s>]/i).slice(1)) {
-		let e = n.split(/<\/item>/i)[0] ?? "", r = _S(e, "title"), i = _S(e, "link") || _S(e, "guid");
+		let e = n.split(/<\/item>/i)[0] ?? "", r = jS(e, "title"), i = jS(e, "link") || jS(e, "guid");
 		!r || !i || t.push({
 			title: r,
 			link: i,
-			description: _S(e, "description"),
-			published: _S(e, "pubDate") || _S(e, "published"),
-			updated: _S(e, "updated") || _S(e, "lastBuildDate")
+			description: jS(e, "description"),
+			published: jS(e, "pubDate") || jS(e, "published"),
+			updated: jS(e, "updated") || jS(e, "lastBuildDate")
 		});
 	}
 	return t;
 }
-function dS(e) {
+function TS(e) {
 	let t = `cisa-advisory|${e.advisoryId}`.toLowerCase(), n = e.relatedCveIds.length > 0 ? ` References ${e.relatedCveIds.slice(0, 6).join(", ")}.` : "", r = `CISA advisory ${e.advisoryId}${e.published ? ` published ${e.published.slice(0, 16)}` : ""}: ${e.title}.${n} Source: ${e.sourceName}.`;
 	return {
 		...U({
-			id: G(Qx, t),
+			id: G(fS, t),
 			title: e.title.slice(0, 140),
 			summary: r,
 			source: e.sourceName,
@@ -14256,14 +14331,14 @@ function dS(e) {
 			observedAt: e.observedTimestamp,
 			category: "cyber-advisory",
 			provenance: "official-api",
-			sourceId: Qx,
+			sourceId: fS,
 			dedupeKey: t,
 			rawPayload: e,
 			affectedAssets: [],
 			narrativeTags: B([
 				"CISA Advisory",
 				"CISA",
-				pS(e.advisoryId),
+				DS(e.advisoryId),
 				...e.relatedCveIds,
 				...e.vendors
 			]),
@@ -14278,60 +14353,60 @@ function dS(e) {
 		cisaAdvisory: e
 	};
 }
-function fS(e, t) {
-	let n = e.match(nS);
+function ES(e, t) {
+	let n = e.match(gS);
 	if (n) return n[0].toUpperCase();
-	let r = t.match(nS);
+	let r = t.match(gS);
 	return r ? r[0].toUpperCase() : "";
 }
-function pS(e) {
+function DS(e) {
 	return e.startsWith("ICSMA") ? "ICS Medical advisory" : e.startsWith("ICSA") ? "ICS advisory" : e.startsWith("ICS-ALERT") ? "ICS alert" : /^AA\d/.test(e) ? "Cybersecurity advisory" : "Advisory";
 }
-function mS(e) {
+function OS(e) {
 	let t = V(e);
-	return t ? B((t.match(rS) ?? []).map((e) => e.toUpperCase())) : [];
+	return t ? B((t.match(_S) ?? []).map((e) => e.toUpperCase())) : [];
 }
-function hS(e) {
-	return !!(e.advisoryId && e.title && tS.test(e.sourceUrl) && (Number.isFinite(e.publishedTimestamp) || Number.isFinite(e.updatedTimestamp)) && Number.isFinite(e.retrievedAt));
+function kS(e) {
+	return !!(e.advisoryId && e.title && hS.test(e.sourceUrl) && (Number.isFinite(e.publishedTimestamp) || Number.isFinite(e.updatedTimestamp)) && Number.isFinite(e.retrievedAt));
 }
-function gS(e) {
-	return hS(e) ? 96 : 60;
+function AS(e) {
+	return kS(e) ? 96 : 60;
 }
-function _S(e, t) {
+function jS(e, t) {
 	let n = e.match(RegExp(`<${t}[^>]*>([\\s\\S]*?)<\\/${t}>`, "i"));
-	return n ? vS(n[1].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")).trim() : "";
+	return n ? MS(n[1].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")).trim() : "";
 }
-function vS(e) {
+function MS(e) {
 	return e.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, "\"").replace(/&#39;/g, "'");
 }
-function yS(e) {
-	return `${Qx}:${e.toLowerCase()}`;
+function NS(e) {
+	return `${fS}:${e.toLowerCase()}`;
 }
-function bS(e, t, n) {
+function PS(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
 //#endregion
 //#region electron/osint/adapters/githubReleaseAdapter.ts
-var xS = "github_releases_public", SS = "GitHub Releases", CS = "https://api.github.com", wS = "Atlasz-Intel", TS = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/, ES = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/releases\b/, DS = 5, OS = 20, kS = [
+var FS = "github_releases_public", IS = "GitHub Releases", LS = "https://api.github.com", RS = "Atlasz-Intel", zS = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/, BS = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/releases\b/, VS = 5, HS = 20, US = [
 	"sigstore/cosign",
 	"aquasecurity/trivy",
 	"OISF/suricata"
 ];
-function AS(e = process.env) {
+function WS(e = process.env) {
 	if (e.ATLASZ_GITHUB_RELEASES_DISABLE === "1") return null;
-	let t = V(e.ATLASZ_GITHUB_API_BASE) || CS;
+	let t = V(e.ATLASZ_GITHUB_API_BASE) || LS;
 	return /^https:\/\//i.test(t) ? {
 		apiBase: t,
-		repos: RS(e.ATLASZ_GITHUB_RELEASE_REPOS) ?? kS,
+		repos: QS(e.ATLASZ_GITHUB_RELEASE_REPOS) ?? US,
 		token: V(e.ATLASZ_GITHUB_TOKEN) || void 0,
-		perPage: BS(Number(e.ATLASZ_GITHUB_RELEASES_PER_PAGE ?? DS), 1, OS)
+		perPage: eC(Number(e.ATLASZ_GITHUB_RELEASES_PER_PAGE ?? VS), 1, HS)
 	} : null;
 }
-async function jS(t, n = AS()) {
+async function GS(t, n = WS()) {
 	if (!n || n.repos.length === 0) return [];
 	let r = Date.now(), i = {
 		accept: "application/vnd.github+json",
-		"user-agent": wS,
+		"user-agent": RS,
 		"x-github-api-version": "2022-11-28"
 	};
 	n.token && (i.authorization = `Bearer ${n.token}`);
@@ -14345,9 +14420,9 @@ async function jS(t, n = AS()) {
 		let s = await o.json();
 		Array.isArray(s) && a.push(...s);
 	}
-	return NS(MS(a, { retrievedAt: r }));
+	return qS(KS(a, { retrievedAt: r }));
 }
-function MS(e, t = {}) {
+function KS(e, t = {}) {
 	let n = Array.isArray(e) ? e : [];
 	if (n.length === 0) return [];
 	let r = t.retrievedAt ?? Date.now(), i = [];
@@ -14355,8 +14430,8 @@ function MS(e, t = {}) {
 		if (!e || typeof e != "object") continue;
 		let t = e;
 		if (t.draft === !0) continue;
-		let n = V(t.html_url), a = n.match(ES)?.[1] ?? "", o = t.id === void 0 || t.id === null ? "" : String(t.id), s = V(t.tag_name), c = V(t.name) || s, l = V(t.published_at), u = V(t.created_at), d = Date.parse(l), f = Date.parse(u);
-		if (!IS({
+		let n = V(t.html_url), a = n.match(BS)?.[1] ?? "", o = t.id === void 0 || t.id === null ? "" : String(t.id), s = V(t.tag_name), c = V(t.name) || s, l = V(t.published_at), u = V(t.created_at), d = Date.parse(l), f = Date.parse(u);
+		if (!XS({
 			repoFullName: a,
 			releaseId: o,
 			tagName: s,
@@ -14374,11 +14449,11 @@ function MS(e, t = {}) {
 			publishedAt: l,
 			createdAt: u,
 			sourceUrl: n,
-			sourceApiUrl: `${CS}/repos/${a}/releases`,
+			sourceApiUrl: `${LS}/repos/${a}/releases`,
 			retrievedAt: r
 		});
 		i.push({
-			id: zS(a, o || s),
+			id: $S(a, o || s),
 			repoFullName: a,
 			releaseId: o,
 			tagName: s,
@@ -14390,11 +14465,11 @@ function MS(e, t = {}) {
 			createdTimestamp: Number.isFinite(f) ? f : void 0,
 			observedTimestamp: Number.isFinite(p) ? p : r,
 			sourceUrl: n,
-			sourceApiUrl: `${CS}/repos/${a}/releases`,
-			sourceName: SS,
+			sourceApiUrl: `${LS}/repos/${a}/releases`,
+			sourceName: IS,
 			retrievedAt: r,
 			provenance: "official-api",
-			confidence: LS({
+			confidence: ZS({
 				repoFullName: a,
 				releaseId: o,
 				tagName: s,
@@ -14409,16 +14484,16 @@ function MS(e, t = {}) {
 	}
 	return i.sort((e, t) => t.observedTimestamp - e.observedTimestamp);
 }
-function NS(e) {
+function qS(e) {
 	let t = [];
-	for (let n of e) n.confidence < 90 || t.push(PS(n));
+	for (let n of e) n.confidence < 90 || t.push(JS(n));
 	return t;
 }
-function PS(e) {
+function JS(e) {
 	let t = `ghrelease|${e.repoFullName}|${e.releaseId || e.tagName}`.toLowerCase(), n = e.tagName ? ` ${e.tagName}` : "", r = e.isPrerelease ? " (prerelease)" : "", i = `${e.repoFullName} released ${e.name || e.tagName}${r}${e.publishedAt ? ` on ${e.publishedAt.slice(0, 10)}` : ""}. Source: ${e.sourceName}.`;
 	return {
 		...U({
-			id: G(xS, t),
+			id: G(FS, t),
 			title: `${e.repoFullName}${n}`.slice(0, 140),
 			summary: i,
 			source: e.sourceName,
@@ -14426,7 +14501,7 @@ function PS(e) {
 			observedAt: e.observedTimestamp,
 			category: "open-source-release",
 			provenance: "official-api",
-			sourceId: xS,
+			sourceId: FS,
 			dedupeKey: t,
 			rawPayload: e,
 			affectedAssets: [],
@@ -14438,36 +14513,36 @@ function PS(e) {
 			extractedEntities: B([
 				e.repoFullName,
 				e.tagName,
-				FS(e.repoFullName)
+				YS(e.repoFullName)
 			])
 		}),
 		confidence: e.confidence,
 		githubRelease: e
 	};
 }
-function FS(e) {
+function YS(e) {
 	return e.split("/")[1] ?? e;
 }
-function IS(e) {
-	return !!(TS.test(e.repoFullName) && (e.releaseId || e.tagName) && ES.test(e.sourceUrl) && (Number.isFinite(e.publishedTimestamp) || Number.isFinite(e.createdTimestamp)) && Number.isFinite(e.retrievedAt));
+function XS(e) {
+	return !!(zS.test(e.repoFullName) && (e.releaseId || e.tagName) && BS.test(e.sourceUrl) && (Number.isFinite(e.publishedTimestamp) || Number.isFinite(e.createdTimestamp)) && Number.isFinite(e.retrievedAt));
 }
-function LS(e) {
-	return IS(e) ? 96 : 60;
+function ZS(e) {
+	return XS(e) ? 96 : 60;
 }
-function RS(e) {
-	let t = V(e).split(",").map((e) => e.trim()).filter((e) => TS.test(e));
+function QS(e) {
+	let t = V(e).split(",").map((e) => e.trim()).filter((e) => zS.test(e));
 	return t.length > 0 ? B(t) : null;
 }
-function zS(e, t) {
-	return `${xS}:${e.toLowerCase()}:${t.toLowerCase()}`;
+function $S(e, t) {
+	return `${FS}:${e.toLowerCase()}:${t.toLowerCase()}`;
 }
-function BS(e, t, n) {
+function eC(e, t, n) {
 	return Number.isFinite(e) ? Math.max(t, Math.min(n, Math.round(e))) : t;
 }
 //#endregion
 //#region electron/osint/adapters/politicianTradeAdapter.ts
-var VS = "politician_disclosure_public";
-function HS(e = process.env) {
+var tC = "politician_disclosure_public";
+function nC(e = process.env) {
 	let t = V(e.ATLASZ_POLITICIAN_DISCLOSURE_URL);
 	if (!t || !/^https?:\/\//i.test(t)) return null;
 	let n, r = V(e.ATLASZ_POLITICIAN_DISCLOSURE_HEADERS);
@@ -14480,7 +14555,7 @@ function HS(e = process.env) {
 		headers: n
 	};
 }
-async function US(e, t = HS()) {
+async function rC(e, t = nC()) {
 	if (!t) return [];
 	let n = await fetch(t.url, {
 		signal: e,
@@ -14496,18 +14571,18 @@ async function US(e, t = HS()) {
 	} catch {
 		throw Error("Politician disclosure provider returned non-JSON");
 	}
-	return WS(i);
+	return iC(i);
 }
-function WS(e) {
-	let t = JS(e), n = [];
+function iC(e) {
+	let t = cC(e), n = [];
 	for (let e of t) {
-		let t = GS(e);
+		let t = aC(e);
 		t && n.push(t);
 	}
 	return n;
 }
-function GS(e) {
-	let t = ZS(e, [
+function aC(e) {
+	let t = dC(e, [
 		"representative",
 		"senator",
 		"politician",
@@ -14516,50 +14591,50 @@ function GS(e) {
 		"member"
 	]);
 	if (!t) return null;
-	let n = ZS(e, [
+	let n = dC(e, [
 		"office",
 		"chamber",
 		"district",
 		"state",
 		"party"
-	]), r = qS(ZS(e, [
+	]), r = sC(dC(e, [
 		"ticker",
 		"symbol",
 		"asset_ticker",
 		"assetTicker"
-	])), i = ZS(e, [
+	])), i = dC(e, [
 		"asset",
 		"asset_description",
 		"assetDescription",
 		"company",
 		"security",
 		"issuer"
-	]), a = KS(ZS(e, [
+	]), a = oC(dC(e, [
 		"type",
 		"transaction_type",
 		"transactionType",
 		"action",
 		"order_type"
-	])), o = ZS(e, [
+	])), o = dC(e, [
 		"amount",
 		"amount_range",
 		"amountRange",
 		"range",
 		"value"
-	]), s = ZS(e, [
+	]), s = dC(e, [
 		"link",
 		"ptr_link",
 		"ptrLink",
 		"source",
 		"url",
 		"document_url"
-	]), c = yr(XS(e, [
+	]), c = yr(uC(e, [
 		"transaction_date",
 		"transactionDate",
 		"tx_date",
 		"traded",
 		"date"
-	])), l = yr(XS(e, [
+	])), l = yr(uC(e, [
 		"disclosure_date",
 		"disclosureDate",
 		"filed",
@@ -14580,7 +14655,7 @@ function GS(e) {
 		o
 	].join("|").toLowerCase();
 	return U({
-		id: G(VS, p),
+		id: G(tC, p),
 		title: d,
 		summary: f.join(" "),
 		source: "Public official financial disclosure",
@@ -14588,7 +14663,7 @@ function GS(e) {
 		observedAt: u,
 		category: "public-disclosure",
 		provenance: "public-disclosure",
-		sourceId: VS,
+		sourceId: tC,
 		dedupeKey: p,
 		rawPayload: e,
 		affectedAssets: r ? [r] : [],
@@ -14604,17 +14679,17 @@ function GS(e) {
 		])
 	});
 }
-function KS(e) {
+function oC(e) {
 	let t = e.toLowerCase();
 	return /(purchase|buy|acquire|bought)/.test(t) ? "purchase" : /(sale|sell|sold|dispos)/.test(t) ? "sale" : /exchange/.test(t) ? "exchange" : "unknown";
 }
-function qS(e) {
+function sC(e) {
 	let t = e.toUpperCase().replace(/[^A-Z0-9.-]/g, "");
 	return /^[A-Z]{1,6}([.-][A-Z]{1,4})?$/.test(t) ? t : "";
 }
-function JS(e) {
-	if (Array.isArray(e)) return e.filter(YS);
-	if (YS(e)) for (let t of [
+function cC(e) {
+	if (Array.isArray(e)) return e.filter(lC);
+	if (lC(e)) for (let t of [
 		"data",
 		"transactions",
 		"results",
@@ -14622,22 +14697,22 @@ function JS(e) {
 		"items"
 	]) {
 		let n = e[t];
-		if (Array.isArray(n)) return n.filter(YS);
+		if (Array.isArray(n)) return n.filter(lC);
 	}
 	return [];
 }
-function YS(e) {
+function lC(e) {
 	return !!e && typeof e == "object" && !Array.isArray(e);
 }
-function XS(e, t) {
+function uC(e, t) {
 	for (let n of t) if (e[n] !== void 0 && e[n] !== null && e[n] !== "") return e[n];
 }
-function ZS(e, t) {
-	return V(XS(e, t));
+function dC(e, t) {
+	return V(uC(e, t));
 }
 //#endregion
 //#region electron/osint/adapters/rssAdapter.ts
-async function QS(e, t) {
+async function fC(e, t) {
 	if (!/^https?:\/\//i.test(t.url)) return [];
 	let n = await fetch(t.url, {
 		signal: e,
@@ -14648,15 +14723,15 @@ async function QS(e, t) {
 		}
 	});
 	if (!n.ok) throw Error(`RSS ${t.sourceName} HTTP ${n.status}`);
-	return $S(await n.text(), t);
+	return pC(await n.text(), t);
 }
-function $S(e, t) {
+function pC(e, t) {
 	if (typeof e != "string" || !e.includes("<item") && !e.includes("<entry")) return [];
-	let n = e.includes("<entry") && !e.includes("<item"), r = eC(e, n ? "entry" : "item"), i = [];
+	let n = e.includes("<entry") && !e.includes("<item"), r = mC(e, n ? "entry" : "item"), i = [];
 	for (let e of r) {
-		let r = rC(tC(e, "title")), a = rC(n ? nC(e, "link", "href") || tC(e, "id") : tC(e, "link"));
+		let r = _C(hC(e, "title")), a = _C(n ? gC(e, "link", "href") || hC(e, "id") : hC(e, "link"));
 		if (!r || !a) continue;
-		let o = rC(tC(e, "description") || tC(e, "summary") || tC(e, "content")), s = tC(e, "pubDate") || tC(e, "updated") || tC(e, "published"), c = s ? Date.parse(s) : NaN, l = wn(`${r} ${o}`);
+		let o = _C(hC(e, "description") || hC(e, "summary") || hC(e, "content")), s = hC(e, "pubDate") || hC(e, "updated") || hC(e, "published"), c = s ? Date.parse(s) : NaN, l = wn(`${r} ${o}`);
 		i.push(Tn({
 			id: G(t.sourceId, a),
 			title: r,
@@ -14672,23 +14747,23 @@ function $S(e, t) {
 	}
 	return i;
 }
-function eC(e, t) {
+function mC(e, t) {
 	return e.split(RegExp(`<${t}[\\s>]`, "i")).slice(1).map((e) => e.split(RegExp(`</${t}>`, "i"))[0] ?? "");
 }
-function tC(e, t) {
+function hC(e, t) {
 	let n = e.match(RegExp(`<${t}[^>]*>([\\s\\S]*?)<\\/${t}>`, "i"));
 	return n ? V(n[1].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")) : "";
 }
-function nC(e, t, n) {
+function gC(e, t, n) {
 	let r = e.match(RegExp(`<${t}[^>]*\\b${n}="([^"]*)"`, "i"));
 	return r ? r[1].trim() : "";
 }
-function rC(e) {
+function _C(e) {
 	return e.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, "\"").replace(/&#39;/g, "'").trim();
 }
 //#endregion
 //#region electron/osint/adapters/customJsonAdapter.ts
-async function iC(e, t) {
+async function vC(e, t) {
 	if (!/^https?:\/\//i.test(t.url)) return [];
 	let n = await fetch(t.url, {
 		signal: e,
@@ -14704,22 +14779,22 @@ async function iC(e, t) {
 	} catch {
 		throw Error(`Custom JSON ${t.sourceName} returned non-JSON`);
 	}
-	return aC(r, t);
+	return yC(r, t);
 }
-function aC(e, t) {
-	let n = oC(e), r = [];
+function yC(e, t) {
+	let n = bC(e), r = [];
 	for (let e of n) {
-		let n = sC(e.properties) ? {
+		let n = xC(e.properties) ? {
 			...e,
 			...e.properties
-		} : e, i = lC(n, [
+		} : e, i = CC(n, [
 			"title",
 			"headline",
 			"name",
 			"full_name",
 			"summary",
 			"event"
-		]), a = lC(n, [
+		]), a = CC(n, [
 			"url",
 			"link",
 			"html_url",
@@ -14729,14 +14804,14 @@ function aC(e, t) {
 			"webcast_live"
 		]);
 		if (!i || !a) continue;
-		let o = lC(n, [
+		let o = CC(n, [
 			"summary",
 			"description",
 			"body",
 			"content",
 			"abstract",
 			"mission"
-		]), s = yr(cC(n, [
+		]), s = yr(SC(n, [
 			"timestamp",
 			"date",
 			"published",
@@ -14762,9 +14837,9 @@ function aC(e, t) {
 	}
 	return r;
 }
-function oC(e) {
-	if (Array.isArray(e)) return e.filter(sC);
-	if (sC(e)) for (let t of [
+function bC(e) {
+	if (Array.isArray(e)) return e.filter(xC);
+	if (xC(e)) for (let t of [
 		"items",
 		"data",
 		"results",
@@ -14773,22 +14848,22 @@ function oC(e) {
 		"features"
 	]) {
 		let n = e[t];
-		if (Array.isArray(n)) return n.filter(sC);
+		if (Array.isArray(n)) return n.filter(xC);
 	}
 	return [];
 }
-function sC(e) {
+function xC(e) {
 	return !!e && typeof e == "object" && !Array.isArray(e);
 }
-function cC(e, t) {
+function SC(e, t) {
 	for (let n of t) if (e[n] !== void 0 && e[n] !== null && e[n] !== "") return e[n];
 }
-function lC(e, t) {
-	return V(cC(e, t));
+function CC(e, t) {
+	return V(SC(e, t));
 }
 //#endregion
 //#region electron/osint/adapterRegistry.ts
-function uC(e, t = process.env) {
+function wC(e, t = process.env) {
 	switch (e.adapter) {
 		case "gdelt": return {
 			fetcher: Fr,
@@ -14804,289 +14879,289 @@ function uC(e, t = process.env) {
 			};
 		}
 		case "fred-macro": {
-			let e = Mi(t);
+			let e = Ni(t);
 			return {
-				fetcher: e ? (t) => Ni(t, e) : void 0,
+				fetcher: e ? (t) => Pi(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "noaa-alerts": {
-			let e = sa(t);
+			let e = fa(t);
 			return {
-				fetcher: e ? (t) => ca(t, e) : void 0,
+				fetcher: e ? (t) => pa(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "federal-register": {
-			let e = lo(t);
+			let e = ho(t);
 			return {
-				fetcher: e ? (t) => po(t, e) : void 0,
+				fetcher: e ? (t) => vo(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "ofac-sdn": {
-			let e = Ro(t);
+			let e = Uo(t);
 			return {
-				fetcher: e ? (t) => zo(t, e) : void 0,
+				fetcher: e ? (t) => Wo(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "congress-gov": {
-			let e = _s(t);
+			let e = Ss(t);
 			return {
-				fetcher: e ? (t) => vs(t, e) : void 0,
+				fetcher: e ? (t) => Cs(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "un-comtrade": {
-			let e = hc(t);
+			let e = bc(t);
 			return {
-				fetcher: e ? (t) => vc(t, e) : void 0,
+				fetcher: e ? (t) => Cc(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "openalex-works": {
-			let e = Zc(t);
+			let e = nl(t);
 			return {
-				fetcher: e ? (t) => Qc(t, e) : void 0,
+				fetcher: e ? (t) => rl(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "crossref-works": {
-			let e = Of(t);
+			let e = Nf(t);
 			return {
-				fetcher: e ? (t) => kf(t, e) : void 0,
+				fetcher: e ? (t) => Pf(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "market-reference-sec": {
-			let e = El(t);
+			let e = jl(t);
 			return {
-				fetcher: e ? (t) => Dl(t, e) : void 0,
+				fetcher: e ? (t) => Ml(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "sec-company-facts": {
-			let e = Yl(t);
+			let e = eu(t);
 			return {
-				fetcher: e ? (t) => Zl(t, e) : void 0,
+				fetcher: e ? (t) => nu(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "sec-form4": {
-			let e = Cu(t);
+			let e = Ou(t);
 			return {
-				fetcher: e ? (t) => Tu(t, e) : void 0,
+				fetcher: e ? (t) => Au(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "sec-form13f": {
-			let e = od(t);
+			let e = dd(t);
 			return {
-				fetcher: e ? (t) => sd(t, e) : void 0,
+				fetcher: e ? (t) => fd(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "etf-holdings": {
-			let e = zd(t);
+			let e = Wd(t);
 			return {
-				fetcher: e ? (t) => Bd(t, e) : void 0,
+				fetcher: e ? (t) => Gd(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "treasury-fiscal": {
-			let e = up(t);
+			let e = hp(t);
 			return {
-				fetcher: (t) => dp(t, e),
+				fetcher: (t) => gp(t, e),
 				configured: !0,
 				managed: !1
 			};
 		}
 		case "bls": {
-			let e = Ap(t);
+			let e = Fp(t);
 			return {
-				fetcher: e ? (t) => jp(t, e) : void 0,
+				fetcher: e ? (t) => Ip(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "bea": {
-			let e = Zp(t);
+			let e = nm(t);
 			return {
-				fetcher: e ? (t) => Qp(t, e) : void 0,
+				fetcher: e ? (t) => rm(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "eia-energy": {
-			let e = Tm(t);
+			let e = Am(t);
 			return {
-				fetcher: e ? (t) => Em(t, e) : void 0,
+				fetcher: e ? (t) => jm(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "eia-power-plants": {
-			let e = hh(t);
+			let e = bh(t);
 			return {
-				fetcher: e ? (t) => gh(t, e) : void 0,
+				fetcher: e ? (t) => xh(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "eia-refineries": {
-			let e = Qh(t);
+			let e = rg(t);
 			return {
-				fetcher: e ? (t) => $h(t, e) : void 0,
+				fetcher: e ? (t) => ig(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "lng-terminals": {
-			let e = Dg(t);
+			let e = Mg(t);
 			return {
-				fetcher: e ? (t) => Og(t, e) : void 0,
+				fetcher: e ? (t) => Ng(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "eia-nuclear": {
-			let e = Xg(t);
+			let e = t_(t);
 			return {
-				fetcher: e ? (t) => Zg(t, e) : void 0,
+				fetcher: e ? (t) => n_(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "nrc-reactor-status": {
-			let e = m_(t);
+			let e = y_(t);
 			return {
-				fetcher: e ? (t) => h_(t, e) : void 0,
+				fetcher: e ? (t) => b_(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "eia-balancing-authorities": {
-			let e = B_(t);
+			let e = G_(t);
 			return {
-				fetcher: e ? (t) => V_(t, e) : void 0,
+				fetcher: e ? (t) => K_(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "un-locode": {
-			let e = lv(t);
+			let e = hv(t);
 			return {
-				fetcher: e ? (t) => uv(t, e) : void 0,
+				fetcher: e ? (t) => gv(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "world-port-index": {
-			let e = Uv(t);
+			let e = ty(t);
 			return {
-				fetcher: e ? (t) => Wv(t, e) : void 0,
+				fetcher: e ? (t) => ny(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "usgs-minerals": {
-			let e = vy(t);
+			let e = jy(t);
 			return {
-				fetcher: e ? (t) => yy(t, e) : void 0,
+				fetcher: e ? (t) => My(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "usgs-quakes": {
-			let e = qy(t);
+			let e = sb(t);
 			return {
-				fetcher: e ? (t) => Jy(t, e) : void 0,
+				fetcher: e ? (t) => cb(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "uspto-patents": {
-			let e = ja(t);
+			let e = Ia(t);
 			return {
-				fetcher: e ? (t) => Ma(t, e) : void 0,
+				fetcher: e ? (t) => La(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "cisa-kev": {
-			let e = fb(t);
+			let e = Eb(t);
 			return {
-				fetcher: e ? (t) => pb(t, e) : void 0,
+				fetcher: e ? (t) => Db(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "nvd-cve": {
-			let e = Pb(t);
+			let e = Jb(t);
 			return {
-				fetcher: e ? (t) => Fb(t, e) : void 0,
+				fetcher: e ? (t) => Yb(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "github-ghsa": {
-			let e = sx(t);
+			let e = xx(t);
 			return {
-				fetcher: e ? (t) => cx(t, e) : void 0,
+				fetcher: e ? (t) => Sx(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "osv-dev": {
-			let e = Fx(t);
+			let e = Yx(t);
 			return {
-				fetcher: e ? (t) => Ix(t, e) : void 0,
+				fetcher: e ? (t) => Xx(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "cisa-advisories": {
-			let e = oS(t);
+			let e = bS(t);
 			return {
-				fetcher: e ? (t) => sS(t, e) : void 0,
+				fetcher: e ? (t) => xS(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "github-releases": {
-			let e = AS(t);
+			let e = WS(t);
 			return {
-				fetcher: e ? (t) => jS(t, e) : void 0,
+				fetcher: e ? (t) => GS(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "public-disclosure-json": {
-			let e = HS(t);
+			let e = nC(t);
 			return {
-				fetcher: e ? (t) => US(t, e) : void 0,
+				fetcher: e ? (t) => rC(t, e) : void 0,
 				configured: e !== null,
 				managed: !1
 			};
 		}
 		case "rss": {
-			let t = dC(e.endpoint);
+			let t = TC(e.endpoint);
 			return {
-				fetcher: t ? (t) => QS(t, {
+				fetcher: t ? (t) => fC(t, {
 					url: e.endpoint,
 					sourceId: e.providerId,
 					sourceName: e.providerName,
@@ -15097,9 +15172,9 @@ function uC(e, t = process.env) {
 			};
 		}
 		case "custom-json": {
-			let t = dC(e.endpoint);
+			let t = TC(e.endpoint);
 			return {
-				fetcher: t ? (t) => iC(t, {
+				fetcher: t ? (t) => vC(t, {
 					url: e.endpoint,
 					sourceId: e.providerId,
 					sourceName: e.providerName,
@@ -15119,22 +15194,22 @@ function uC(e, t = process.env) {
 		};
 	}
 }
-function dC(e) {
+function TC(e) {
 	return !!(e && /^https?:\/\//i.test(e));
 }
 //#endregion
 //#region electron/osint/sourceRegistry.ts
-var fC = 2, pC = 1e3, mC = 3600 * 1e3;
-function hC(e, t, n = mC) {
+var EC = 2, DC = 1e3, OC = 3600 * 1e3;
+function kC(e, t, n = OC) {
 	if (t <= 0) return e;
 	let r = e * 2 ** Math.min(t, 6);
 	return Math.min(Math.max(e, r), n);
 }
-var gC = class {
+var AC = class {
 	definitions;
 	states = /* @__PURE__ */ new Map();
 	constructor(e = {}) {
-		this.definitions = _C(e);
+		this.definitions = jC(e);
 		for (let e of this.definitions) this.states.set(e.sourceId, {
 			status: e.enabled ? "idle" : "disabled",
 			itemCount: 0,
@@ -15149,7 +15224,7 @@ var gC = class {
 		let r = [];
 		for (let i of this.definitions) {
 			if (!i.enabled || !i.fetcher) continue;
-			let a = this.requireState(i.sourceId), o = hC(i.rateLimitMs, a.consecutiveFailures);
+			let a = this.requireState(i.sourceId), o = kC(i.rateLimitMs, a.consecutiveFailures);
 			if (a.lastAttemptAt && e - a.lastAttemptAt < o) {
 				a.consecutiveFailures === 0 && (a.status = "rate-limited");
 				continue;
@@ -15167,7 +15242,7 @@ var gC = class {
 			}
 		}
 		return {
-			events: xC(r),
+			events: FC(r),
 			sources: this.snapshots()
 		};
 	}
@@ -15204,24 +15279,24 @@ var gC = class {
 		return t;
 	}
 };
-function _C(e) {
-	let t = e.env ?? process.env, { providers: n } = ur({ configPath: e.configPath ?? bC(t) });
-	return n.map((e) => vC(e, t));
+function jC(e) {
+	let t = e.env ?? process.env, { providers: n } = ur({ configPath: e.configPath ?? PC(t) });
+	return n.map((e) => MC(e, t));
 }
-function vC(e, t) {
-	let n = uC(e, t), r = t.ATLASZ_ENABLE_PUBLIC_WORLD !== "0", i = n.managed ? dr(e, t) : n.configured, a = e.enabled && (n.managed ? !0 : r && i);
+function MC(e, t) {
+	let n = wC(e, t), r = t.ATLASZ_ENABLE_PUBLIC_WORLD !== "0", i = n.managed ? dr(e, t) : n.configured, a = e.enabled && (n.managed ? !0 : r && i);
 	return {
 		sourceId: e.providerId,
 		sourceName: e.providerName,
 		sourceType: e.category,
 		category: e.category,
-		endpointType: yC(e),
+		endpointType: NC(e),
 		endpoint: e.endpoint ?? "managed by existing Atlasz ingestion service",
 		pollIntervalMs: e.pollIntervalMs ?? 0,
 		rateLimitMs: e.rateLimitGuardMs ?? 0,
 		timeoutMs: e.timeoutMs ?? 0,
-		backoffMs: e.backoffMs ?? pC,
-		maxRetries: e.maxRetries ?? fC,
+		backoffMs: e.backoffMs ?? DC,
+		maxRetries: e.maxRetries ?? EC,
 		enabled: a,
 		authType: e.authType,
 		configured: i,
@@ -15232,23 +15307,23 @@ function vC(e, t) {
 		fetcher: n.fetcher
 	};
 }
-function yC(e) {
+function NC(e) {
 	if (e.adapter === "disabled") return "placeholder";
 	let t = vr(e.providerId).feedTypes[0];
 	return t === "RSS" ? "rss" : t === "WebSocket" ? "websocket" : t === "local" || t === "SQLite" ? "local" : t === "REST" ? "rest" : e.adapter === "rss" || e.adapter === "sec-edgar" ? "rss" : e.category === "crypto-realtime" ? "websocket" : "rest";
 }
-function bC(e) {
+function PC(e) {
 	let t = e.ATLASZ_PROVIDER_CONFIG ?? e.ATLASZ_PROVIDERS_CONFIG;
 	return t && t.trim() !== "" ? t : l(process.cwd(), "atlasz.providers.json");
 }
-function xC(e) {
+function FC(e) {
 	return [...new Map(e.map((e) => [e.dedupeHash, e])).values()];
 }
 //#endregion
 //#region electron/worldIntelService.ts
-var SC = class {
+var IC = class {
 	persistence;
-	registry = new gC();
+	registry = new AC();
 	assetIdentity;
 	enabled = process.env.ATLASZ_ENABLE_PUBLIC_WORLD !== "0";
 	status = this.enabled ? "stale" : "disabled";
@@ -15267,12 +15342,12 @@ var SC = class {
 			let n = new Map(this.persistence.listWorldIntelEvents(1e3).map((e) => [e.id, e]));
 			for (let t of e) {
 				let e = n.get(t.id);
-				this.persistWorldEvent(Wd(fd(ku(tu(nl(Cc(Ss(Uo(t, e), e), e), e), e), e), e), e));
+				this.persistWorldEvent(Yd(_d(Pu(ou(sl(Oc(Ds(Jo(t, e), e), e), e), e), e), e), e));
 			}
 			let r = this.persistence.listWorldIntelEvents(300);
 			this.persistCountryState(En(r)), this.assetIdentity.ensureForEvents(r), this.status = e.length > 0 || r.length > 0 ? "ready" : "stale", this.lastError = t.find((e) => e.status === "failed")?.lastError, this.updatedAt = Date.now();
 			let i = this.buildSnapshot();
-			return i.worldEvents.length > 0 && CC(this.persistence, i), i;
+			return i.worldEvents.length > 0 && LC(this.persistence, i), i;
 		}).catch((e) => (this.lastError = e instanceof Error ? e.message : String(e), this.status = this.persistence.listWorldIntelEvents(1).length > 0 || this.persistence.listHeadlines(1).length > 0 ? "stale" : "failed", this.buildSnapshot())).finally(() => {
 			this.inFlight = null;
 		}), this.inFlight) : (this.status = "disabled", Promise.resolve(this.buildSnapshot()));
@@ -15281,7 +15356,7 @@ var SC = class {
 		return this.assetIdentity.toggleFavorite(e, t, n), this.buildSnapshot();
 	}
 	buildSnapshot() {
-		let e = this.persistence.listHeadlines(120).map(TC), t = this.persistence.listWorldIntelEvents(300), n = new Set(t.map((e) => e.id)), r = e.filter((e) => !n.has(e.id)).map((e) => Tn(e, {
+		let e = this.persistence.listHeadlines(120).map(zC), t = this.persistence.listWorldIntelEvents(300), n = new Set(t.map((e) => e.id)), r = e.filter((e) => !n.has(e.id)).map((e) => Tn(e, {
 			sourceId: e.source || "legacy_world_headlines",
 			provenance: this.status === "stale" ? "local-derived" : "public-unauthenticated"
 		})), i = [...t, ...r].sort((e, t) => t.timestamp - e.timestamp), a = this.mergeCountries(this.persistence.listCountryIntelState(), En(i)), o = this.mergeAssetIdentities(this.assetIdentity.list(), Dn(i)), s = this.mergeSources(this.registry.snapshots(), this.persistence.listOsintSources()), c = this.persistence.listSecCompanyFilings(void 0, 120), l = this.persistence.listMarketIdentities(void 0, 500), u = this.persistence.listFredMacroObservations(void 0, 120), d = this.persistence.listTreasuryFiscalRecords(void 0, 120), f = this.persistence.listBeaObservations(void 0, 120), p = this.persistence.listEiaEnergyRecords(void 0, 120);
@@ -15311,8 +15386,8 @@ var SC = class {
 		for (let t of e) this.safePersist(() => this.persistence.saveOsintSource(t));
 	}
 	persistWorldEvent(e) {
-		if (e.secFiling && this.safePersist(() => this.persistence.saveSecCompanyFiling(e.secFiling)), !(e.marketIdentity && (this.safePersist(() => this.persistence.saveMarketIdentity(e.marketIdentity)), !DC(e.marketIdentity)))) {
-			e.fredObservation && this.safePersist(() => this.persistence.saveFredMacroObservation(e.fredObservation)), e.treasuryFiscalRecord && this.safePersist(() => this.persistence.saveTreasuryFiscalRecord(e.treasuryFiscalRecord)), e.beaObservation && this.safePersist(() => this.persistence.saveBeaObservation(e.beaObservation)), e.eiaEnergyRecord && this.safePersist(() => this.persistence.saveEiaEnergyRecord(e.eiaEnergyRecord)), this.safePersist(() => this.persistence.saveWorldIntelEvent(e)), this.safePersist(() => this.persistence.saveHeadline(wC(e)));
+		if (e.secFiling && this.safePersist(() => this.persistence.saveSecCompanyFiling(e.secFiling)), !(e.marketIdentity && (this.safePersist(() => this.persistence.saveMarketIdentity(e.marketIdentity)), !VC(e.marketIdentity)))) {
+			e.fredObservation && this.safePersist(() => this.persistence.saveFredMacroObservation(e.fredObservation)), e.treasuryFiscalRecord && this.safePersist(() => this.persistence.saveTreasuryFiscalRecord(e.treasuryFiscalRecord)), e.beaObservation && this.safePersist(() => this.persistence.saveBeaObservation(e.beaObservation)), e.eiaEnergyRecord && this.safePersist(() => this.persistence.saveEiaEnergyRecord(e.eiaEnergyRecord)), this.safePersist(() => this.persistence.saveWorldIntelEvent(e)), this.safePersist(() => this.persistence.saveHeadline(RC(e)));
 			for (let t of e.affectedAssets) this.safePersist(() => this.persistence.saveEventAssetLink({
 				id: `world-event:${e.id}:${t}`,
 				eventId: e.id,
@@ -15357,7 +15432,7 @@ var SC = class {
 		}
 	}
 };
-function CC(e, t) {
+function LC(e, t) {
 	let n = t.updatedAt ?? Date.now(), r = new Date(n).toISOString().slice(0, 10);
 	for (let i of t.dailyBrief.slice(0, 5)) e.saveBrief({
 		id: `world-${r}-${i.id}`,
@@ -15374,7 +15449,7 @@ function CC(e, t) {
 		createdAt: n
 	});
 }
-function wC(e) {
+function RC(e) {
 	return {
 		id: e.id,
 		title: e.title,
@@ -15385,7 +15460,7 @@ function wC(e) {
 		observedAt: e.timestamp
 	};
 }
-function TC(e) {
+function zC(e) {
 	return {
 		id: e.id,
 		title: e.title,
@@ -15396,7 +15471,7 @@ function TC(e) {
 		observedAt: e.observedAt
 	};
 }
-var EC = new Set([
+var BC = new Set([
 	"AAPL",
 	"AMD",
 	"AMZN",
@@ -15414,27 +15489,27 @@ var EC = new Set([
 	"TSM",
 	"XOM"
 ]);
-function DC(e) {
-	return process.env.ATLASZ_MARKET_REFERENCE_SURFACE_ALL === "1" || EC.has(e.ticker);
+function VC(e) {
+	return process.env.ATLASZ_MARKET_REFERENCE_SURFACE_ALL === "1" || BC.has(e.ticker);
 }
 //#endregion
 //#region electron/quant/quantMath.ts
-function OC(e) {
+function HC(e) {
 	return e.length === 0 ? null : e.reduce((e, t) => e + t, 0) / e.length;
 }
-function kC(e) {
+function UC(e) {
 	if (e.length < 2) return null;
-	let t = OC(e);
+	let t = HC(e);
 	if (t === null) return null;
 	let n = e.reduce((e, n) => e + (n - t) ** 2, 0) / (e.length - 1);
 	return Math.sqrt(n);
 }
-function AC(e) {
+function WC(e) {
 	if (e.length < 3) return null;
-	let t = e.slice(0, -1), n = e[e.length - 1], r = OC(t), i = kC(t);
+	let t = e.slice(0, -1), n = e[e.length - 1], r = HC(t), i = UC(t);
 	return r === null || i === null || i === 0 ? null : (n - r) / i;
 }
-function jC(e) {
+function GC(e) {
 	let t = [];
 	for (let n = 1; n < e.length; n += 1) {
 		let r = e[n - 1];
@@ -15442,35 +15517,35 @@ function jC(e) {
 	}
 	return t;
 }
-function MC(e) {
-	return kC(jC(e));
+function KC(e) {
+	return UC(GC(e));
 }
-function NC(e) {
+function qC(e) {
 	if (e.length === 0) return null;
 	let t = e[0];
 	for (let n of e) n > t && (t = n);
 	let n = e[e.length - 1];
 	return t === 0 ? null : (n - t) / t * 100;
 }
-function PC(e, t = 10) {
+function JC(e, t = 10) {
 	if (e.length < 2) return null;
-	let n = e[e.length - 1], r = OC(e.slice(Math.max(0, e.length - 1 - t), e.length - 1));
+	let n = e[e.length - 1], r = HC(e.slice(Math.max(0, e.length - 1 - t), e.length - 1));
 	return r === null || r === 0 ? null : n / r;
 }
-function FC(e) {
+function YC(e) {
 	let t = 0, n = 0;
 	for (let r of e) t += r.price * r.volume, n += r.volume;
 	return n === 0 ? null : t / n;
 }
-function IC(e) {
+function XC(e) {
 	if (e.length === 0) return null;
-	let t = FC(e);
+	let t = YC(e);
 	return t === null || t === 0 ? null : (e[e.length - 1].price - t) / t * 100;
 }
-function LC(e, t) {
+function ZC(e, t) {
 	let n = Math.min(e.length, t.length);
 	if (n < 3) return null;
-	let r = e.slice(e.length - n), i = t.slice(t.length - n), a = OC(r), o = OC(i);
+	let r = e.slice(e.length - n), i = t.slice(t.length - n), a = HC(r), o = HC(i);
 	if (a === null || o === null) return null;
 	let s = 0, c = 0, l = 0;
 	for (let e = 0; e < n; e += 1) {
@@ -15479,28 +15554,28 @@ function LC(e, t) {
 	}
 	return c === 0 || l === 0 ? null : s / Math.sqrt(c * l);
 }
-function RC(e, t) {
+function QC(e, t) {
 	if (e.length < 2 || t.length < 2) return null;
-	let n = zC(e), r = zC(t);
+	let n = $C(e), r = $C(t);
 	return n === null || r === null ? null : (n - r) * 100;
 }
-function zC(e) {
+function $C(e) {
 	if (e.length < 2) return null;
 	let t = e[0], n = e[e.length - 1];
 	return t === 0 ? null : (n - t) / t;
 }
-function BC(e) {
+function ew(e) {
 	if (e.length < 2) return null;
 	let t = e[0], n = e[e.length - 1];
 	return t === 0 ? null : (n - t) / t * 100;
 }
 //#endregion
 //#region electron/quant/eventOverlayService.ts
-function VC(e) {
+function tw(e) {
 	let t = e.assetSymbol.toUpperCase(), n = e.allowModelInferred ?? !1, r = e.maxMarkers ?? 50, i = [];
 	for (let r of e.events) {
 		if (r.timestamp < e.from || r.timestamp > e.to) continue;
-		let a = HC(r, t);
+		let a = nw(r, t);
 		a && (a === "model-inferred" && !n || i.push({
 			eventId: r.id,
 			timestamp: r.timestamp,
@@ -15513,12 +15588,12 @@ function VC(e) {
 	}
 	return i.sort((e, t) => e.timestamp - t.timestamp).slice(0, r);
 }
-function HC(e, t) {
+function nw(e, t) {
 	return e.affectedAssets.map((e) => e.toUpperCase()).includes(t) ? e.category === "macro-event" ? "macro-proxy" : e.provenance === "model-inferred" ? "model-inferred" : "direct-asset" : null;
 }
 //#endregion
 //#region src/quant.ts
-function UC(e, t = Date.now()) {
+function rw(e, t = Date.now()) {
 	return {
 		generatedAt: t,
 		regime: "unavailable",
@@ -15531,7 +15606,7 @@ function UC(e, t = Date.now()) {
 		eiaEnergyRecords: []
 	};
 }
-function WC(e, t, n = Date.now()) {
+function iw(e, t, n = Date.now()) {
 	return {
 		assetSymbol: e,
 		generatedAt: n,
@@ -15544,7 +15619,7 @@ function WC(e, t, n = Date.now()) {
 }
 //#endregion
 //#region electron/quant/quantComputeService.ts
-var GC = 12, KC = 60, qC = 3, JC = /(BTC|ETH|SOL|LINK|KAS|XRP|ADA|DOGE|AVAX|USDT?$|-USD$)/i, YC = class {
+var aw = 12, ow = 60, sw = 3, cw = /(BTC|ETH|SOL|LINK|KAS|XRP|ADA|DOGE|AVAX|USDT?$|-USD$)/i, lw = class {
 	source;
 	constructor(e) {
 		this.source = e;
@@ -15554,25 +15629,25 @@ var GC = 12, KC = 60, qC = 3, JC = /(BTC|ETH|SOL|LINK|KAS|XRP|ADA|DOGE|AVAX|USDT
 	}
 	computeAssetSnapshot(e, t = {}) {
 		let n = t.now ?? Date.now(), r = this.loadBars(e);
-		if (r.length < GC) return WC(e, `Insufficient price history (${r.length}/${GC} bars) from current public sources.`, n);
-		let i = tw(e), a = r.map((e) => e.price), o = r.map((e) => e.volume), s = Math.min(1, r.length / KC), c = r[r.length - 1].time, l = [];
-		l.push(XC({
+		if (r.length < aw) return iw(e, `Insufficient price history (${r.length}/${aw} bars) from current public sources.`, n);
+		let i = hw(e), a = r.map((e) => e.price), o = r.map((e) => e.volume), s = Math.min(1, r.length / ow), c = r[r.length - 1].time, l = [];
+		l.push(uw({
 			symbol: e,
 			timestamp: c,
 			name: "Volume velocity",
-			value: PC(o),
+			value: JC(o),
 			unit: "x",
 			window: "10-bar",
-			threshold: qC,
+			threshold: sw,
 			coverage: s,
-			status: (e) => e >= qC ? "anomaly" : e >= 2 ? "elevated" : "normal",
+			status: (e) => e >= sw ? "anomaly" : e >= 2 ? "elevated" : "normal",
 			explain: (e) => `Latest volume is ${e.toFixed(2)}× the 10-bar average.`,
 			unavailable: "Not enough volume history to compute velocity."
-		})), l.push(XC({
+		})), l.push(uw({
 			symbol: e,
 			timestamp: c,
 			name: "Price z-score",
-			value: AC(a),
+			value: WC(a),
 			unit: "σ",
 			window: `${a.length}-bar`,
 			threshold: 3,
@@ -15580,11 +15655,11 @@ var GC = 12, KC = 60, qC = 3, JC = /(BTC|ETH|SOL|LINK|KAS|XRP|ADA|DOGE|AVAX|USDT
 			status: (e) => Math.abs(e) >= 3 ? "anomaly" : Math.abs(e) >= 2 ? "elevated" : "normal",
 			explain: (e) => `Latest price is ${e.toFixed(2)}σ from its moving average.`,
 			unavailable: "Not enough price history to compute a z-score."
-		})), l.push(XC({
+		})), l.push(uw({
 			symbol: e,
 			timestamp: c,
 			name: "VWAP deviation",
-			value: IC(r),
+			value: XC(r),
 			unit: "%",
 			window: "session",
 			threshold: 5,
@@ -15592,22 +15667,22 @@ var GC = 12, KC = 60, qC = 3, JC = /(BTC|ETH|SOL|LINK|KAS|XRP|ADA|DOGE|AVAX|USDT
 			status: (e) => Math.abs(e) >= 5 ? "anomaly" : Math.abs(e) >= 2 ? "elevated" : "normal",
 			explain: (e) => `Latest price is ${e.toFixed(2)}% from session VWAP.`,
 			unavailable: "Intraday data does not support a VWAP computation."
-		})), l.push(XC({
+		})), l.push(uw({
 			symbol: e,
 			timestamp: c,
 			name: "Realized volatility",
-			value: $C(MC(a)),
+			value: pw(KC(a)),
 			unit: "%",
 			window: `${a.length}-bar`,
 			coverage: s,
 			status: () => "normal",
 			explain: (e) => `Std. dev. of per-bar returns is ${e.toFixed(2)}%.`,
 			unavailable: "Not enough returns to compute realized volatility."
-		})), l.push(XC({
+		})), l.push(uw({
 			symbol: e,
 			timestamp: c,
 			name: "Current drawdown",
-			value: NC(a),
+			value: qC(a),
 			unit: "%",
 			window: "window peak",
 			threshold: -20,
@@ -15616,8 +15691,8 @@ var GC = 12, KC = 60, qC = 3, JC = /(BTC|ETH|SOL|LINK|KAS|XRP|ADA|DOGE|AVAX|USDT
 			explain: (e) => `Down ${Math.abs(e).toFixed(2)}% from the window peak.`,
 			unavailable: "No price history to compute drawdown."
 		}));
-		let u = (i && i !== e ? this.loadBars(i) : []).map((e) => e.price), d = u.length >= GC ? RC(ew(a, u), ew(u, a)) : null;
-		l.push(ZC({
+		let u = (i && i !== e ? this.loadBars(i) : []).map((e) => e.price), d = u.length >= aw ? QC(mw(a, u), mw(u, a)) : null;
+		l.push(dw({
 			symbol: e,
 			timestamp: c,
 			name: "Relative strength",
@@ -15629,8 +15704,8 @@ var GC = 12, KC = 60, qC = 3, JC = /(BTC|ETH|SOL|LINK|KAS|XRP|ADA|DOGE|AVAX|USDT
 			explain: (e) => `${e >= 0 ? "Outperforming" : "Underperforming"} ${i} by ${Math.abs(e).toFixed(2)}% over the window.`,
 			unavailable: i ? `Benchmark ${i} history unavailable from current public sources.` : "No benchmark configured for this asset class."
 		}));
-		let f = u.length >= GC ? LC(jC(ew(a, u)), jC(ew(u, a))) : null;
-		return l.push(ZC({
+		let f = u.length >= aw ? ZC(GC(mw(a, u)), GC(mw(u, a))) : null;
+		return l.push(dw({
 			symbol: e,
 			timestamp: c,
 			name: "Rolling correlation",
@@ -15647,7 +15722,7 @@ var GC = 12, KC = 60, qC = 3, JC = /(BTC|ETH|SOL|LINK|KAS|XRP|ADA|DOGE|AVAX|USDT
 			benchmark: i,
 			bars: r,
 			metrics: l,
-			markers: VC({
+			markers: tw({
 				events: t.events ?? [],
 				assetSymbol: e,
 				from: r[0].time,
@@ -15665,16 +15740,16 @@ var GC = 12, KC = 60, qC = 3, JC = /(BTC|ETH|SOL|LINK|KAS|XRP|ADA|DOGE|AVAX|USDT
 		})).filter((e) => Number.isFinite(e.price) && Number.isFinite(e.time)).sort((e, t) => e.time - t.time);
 	}
 };
-function XC(e) {
-	return QC(e, void 0, ["market_ticks_daily"], "math-derived");
+function uw(e) {
+	return fw(e, void 0, ["market_ticks_daily"], "math-derived");
 }
-function ZC(e) {
-	return QC({
+function dw(e) {
+	return fw({
 		...e,
 		window: "window"
 	}, e.benchmark, ["market_ticks_daily", e.benchmark ? `benchmark:${e.benchmark}` : "benchmark:none"], "math-derived");
 }
-function QC(e, t, n, r) {
+function fw(e, t, n, r) {
 	let i = `${e.symbol}:${e.name}`.toLowerCase().replace(/\s+/g, "-");
 	return e.value === null || !Number.isFinite(e.value) ? {
 		id: i,
@@ -15711,23 +15786,23 @@ function QC(e, t, n, r) {
 		confidence: Math.max(.1, Math.min(.95, e.coverage))
 	};
 }
-function $C(e) {
+function pw(e) {
 	return e === null ? null : e * 100;
 }
-function ew(e, t) {
+function mw(e, t) {
 	let n = Math.min(e.length, t.length);
 	return e.slice(e.length - n);
 }
-function tw(e) {
+function hw(e) {
 	let t = e.toUpperCase();
-	if (JC.test(t)) return "BTC";
+	if (cw.test(t)) return "BTC";
 	if (/^[A-Z]{1,5}$/.test(t)) return "SPY";
 }
 //#endregion
 //#region electron/quant/macroComputeService.ts
-function nw(e, t = Date.now()) {
-	let n = [], r = rw(e);
-	n.push(aw({
+function gw(e, t = Date.now()) {
+	let n = [], r = _w(e);
+	n.push(yw({
 		id: "yield-curve-10y2y",
 		metricName: "10Y-2Y yield curve",
 		metricValue: r.value,
@@ -15737,8 +15812,8 @@ function nw(e, t = Date.now()) {
 		status: r.value === null ? "unavailable" : r.value < 0 ? "anomaly" : "normal",
 		unavailableReason: r.value === null ? r.reason : void 0
 	}));
-	let i = e.dgs10 !== void 0 && e.dgs3mo !== void 0 ? ow(e.dgs10 - e.dgs3mo) : null;
-	n.push(aw({
+	let i = e.dgs10 !== void 0 && e.dgs3mo !== void 0 ? bw(e.dgs10 - e.dgs3mo) : null;
+	n.push(yw({
 		id: "yield-curve-10y3m",
 		metricName: "10Y-3M yield curve",
 		metricValue: i,
@@ -15748,8 +15823,8 @@ function nw(e, t = Date.now()) {
 		status: i === null ? "unavailable" : i < 0 ? "anomaly" : "normal",
 		unavailableReason: i === null ? "10Y-3M unavailable from current sources." : void 0
 	}));
-	let a = e.dxySeries && e.dxySeries.length >= 2 ? BC(e.dxySeries) : null;
-	n.push(aw({
+	let a = e.dxySeries && e.dxySeries.length >= 2 ? ew(e.dxySeries) : null;
+	n.push(yw({
 		id: "dxy-momentum",
 		metricName: "DXY momentum (liquidity-proxy)",
 		metricValue: a,
@@ -15759,9 +15834,9 @@ function nw(e, t = Date.now()) {
 		status: a === null ? "unavailable" : Math.abs(a) >= 2 ? "elevated" : "normal",
 		unavailableReason: a === null ? "Dollar-index history unavailable from current sources." : void 0
 	}));
-	let { regime: o, explanation: s } = iw(r.value, a);
+	let { regime: o, explanation: s } = vw(r.value, a);
 	return o === "unavailable" ? {
-		...UC(s, t),
+		...rw(s, t),
 		metrics: n
 	} : {
 		generatedAt: t,
@@ -15775,13 +15850,13 @@ function nw(e, t = Date.now()) {
 		eiaEnergyRecords: []
 	};
 }
-function rw(e) {
+function _w(e) {
 	return e.t10y2y !== void 0 && Number.isFinite(e.t10y2y) ? {
-		value: ow(e.t10y2y),
+		value: bw(e.t10y2y),
 		sources: ["FRED:T10Y2Y"],
 		reason: ""
 	} : e.dgs10 !== void 0 && e.dgs2 !== void 0 ? {
-		value: ow(e.dgs10 - e.dgs2),
+		value: bw(e.dgs10 - e.dgs2),
 		sources: ["FRED:DGS10", "FRED:DGS2"],
 		reason: ""
 	} : {
@@ -15790,7 +15865,7 @@ function rw(e) {
 		reason: "Yield-curve series unavailable from current public sources."
 	};
 }
-function iw(e, t) {
+function vw(e, t) {
 	if (e === null && t === null) return {
 		regime: "unavailable",
 		explanation: "Insufficient macro series to classify a regime."
@@ -15801,38 +15876,37 @@ function iw(e, t) {
 		explanation: `Signals: ${r.join(", ")}.`
 	};
 }
-function aw(e) {
+function yw(e) {
 	return {
 		...e,
 		provenance: "math-derived"
 	};
 }
-function ow(e) {
+function bw(e) {
 	return Math.round(e * 100) / 100;
 }
-var sw = "https://api.stlouisfed.org/fred";
-async function cw(e, t = process.env) {
-	let n = V(t.ATLASZ_FRED_API_KEY);
-	if (!n) return null;
-	let r = V(t.ATLASZ_FRED_BASE_URL) || sw, [i, a, o, s] = await Promise.all([
-		lw(r, n, "T10Y2Y", e),
-		lw(r, n, "DGS10", e),
-		lw(r, n, "DGS2", e),
-		lw(r, n, "DGS3MO", e)
+var xw = "https://api.stlouisfed.org/fred", Sw = "https://fred.stlouisfed.org/graph/fredgraph.csv";
+async function Cw(e, t = process.env) {
+	let n = V(t.ATLASZ_FRED_API_KEY), r = V(t.ATLASZ_FRED_BASE_URL) || xw, [i, a, o, s] = await Promise.all([
+		ww(r, n, "T10Y2Y", e),
+		ww(r, n, "DGS10", e),
+		ww(r, n, "DGS2", e),
+		ww(r, n, "DGS3MO", e)
 	]);
 	return {
 		t10y2y: i,
 		dgs10: a,
 		dgs2: o,
 		dgs3mo: s,
-		dxySeries: await uw(r, n, "DTWEXBGS", 30, e)
+		dxySeries: await Tw(r, n, "DTWEXBGS", 30, e)
 	};
 }
-async function lw(e, t, n, r) {
-	let i = await uw(e, t, n, 1, r);
+async function ww(e, t, n, r) {
+	let i = await Tw(e, t, n, 1, r);
 	return i[i.length - 1];
 }
-async function uw(e, t, n, r, i) {
+async function Tw(e, t, n, r, i) {
+	if (!t) return Ew(n, r, i);
 	let a = new URL(`${e}/series/observations`);
 	a.searchParams.set("series_id", n), a.searchParams.set("api_key", t), a.searchParams.set("file_type", "json"), a.searchParams.set("sort_order", "desc"), a.searchParams.set("limit", String(r));
 	let o = await fetch(a, {
@@ -15842,20 +15916,42 @@ async function uw(e, t, n, r, i) {
 	if (!o.ok) throw Error(`FRED ${n} HTTP ${o.status}`);
 	return ((await o.json()).observations ?? []).map((e) => Number(e.value)).filter((e) => Number.isFinite(e)).reverse();
 }
+async function Ew(e, t, n) {
+	let r = new URL(Sw);
+	r.searchParams.set("id", e);
+	let i = await fetch(r, {
+		signal: n,
+		headers: {
+			accept: "text/csv, text/plain, */*",
+			"user-agent": "AtlaszIntel/0.4 (local-first quant macro; official FRED graph CSV)"
+		}
+	});
+	if (!i.ok) throw Error(`FRED ${e} CSV HTTP ${i.status}`);
+	let a = (await i.text()).split(/\r?\n/).filter(Boolean);
+	if (a.length < 2) return [];
+	let o = a[0].split(",").map((e) => e.trim()).findIndex((t) => t.toUpperCase() === e);
+	if (o < 1) return [];
+	let s = [];
+	for (let e = a.length - 1; e >= 1 && s.length < t; --e) {
+		let t = a[e].split(",").map((e) => e.trim()), n = Number(t[o]);
+		Number.isFinite(n) && s.push(n);
+	}
+	return s.reverse();
+}
 //#endregion
 //#region electron/quant/quantService.ts
-var dw = 16, fw = 8e3, pw = [
+var Dw = 16, Ow = 8e3, kw = [
 	"SPY",
 	"QQQ",
 	"BTC",
 	"AAPL",
 	"MSFT",
 	"NVDA"
-], mw = class {
+], Aw = class {
 	persistence;
 	compute;
 	constructor(e) {
-		this.persistence = e, this.compute = new YC(e);
+		this.persistence = e, this.compute = new lw(e);
 	}
 	async snapshot() {
 		let e = Date.now(), t = this.resolveSymbols(), n = this.persistence.listWorldIntelEvents(300);
@@ -15870,20 +15966,20 @@ var dw = 16, fw = 8e3, pw = [
 	}
 	resolveSymbols() {
 		let e = this.persistence.listAssetIdentities().map((e) => e.symbol.toUpperCase());
-		return [...new Set([...e, ...pw])].slice(0, dw);
+		return [...new Set([...e, ...kw])].slice(0, Dw);
 	}
 	async macroSnapshot(e) {
-		let t = new AbortController(), n = setTimeout(() => t.abort(), fw);
+		let t = new AbortController(), n = setTimeout(() => t.abort(), Ow);
 		try {
-			let n = await cw(t.signal);
+			let n = await Cw(t.signal);
 			return n ? {
-				...nw(n, e),
+				...gw(n, e),
 				fredObservations: this.persistence.listFredMacroObservations(void 0, 12),
 				treasuryFiscalRecords: this.persistence.listTreasuryFiscalRecords(void 0, 12),
 				beaObservations: this.persistence.listBeaObservations(void 0, 12),
 				eiaEnergyRecords: this.persistence.listEiaEnergyRecords(void 0, 12)
 			} : {
-				...UC("Macro series unavailable: configure ATLASZ_FRED_API_KEY (fail-closed).", e),
+				...rw("Macro series unavailable: public FRED CSV returned no usable series.", e),
 				fredObservations: this.persistence.listFredMacroObservations(void 0, 12),
 				treasuryFiscalRecords: this.persistence.listTreasuryFiscalRecords(void 0, 12),
 				beaObservations: this.persistence.listBeaObservations(void 0, 12),
@@ -15891,7 +15987,7 @@ var dw = 16, fw = 8e3, pw = [
 			};
 		} catch (t) {
 			return {
-				...UC(`Macro series fetch failed: ${t instanceof Error ? t.message : String(t)}`, e),
+				...rw(`Macro series fetch failed: ${t instanceof Error ? t.message : String(t)}`, e),
 				fredObservations: this.persistence.listFredMacroObservations(void 0, 12),
 				treasuryFiscalRecords: this.persistence.listTreasuryFiscalRecords(void 0, 12),
 				beaObservations: this.persistence.listBeaObservations(void 0, 12),
@@ -15901,8 +15997,8 @@ var dw = 16, fw = 8e3, pw = [
 			clearTimeout(n);
 		}
 	}
-}, hw = "lexical-hash-v1", gw = new Set(/* @__PURE__ */ "the.a.an.and.or.of.to.in.on.for.with.as.at.by.is.are.was.were.be.from.that.this.it.its.into.over.after.new".split("."));
-function _w(e) {
+}, jw = "lexical-hash-v1", Mw = new Set(/* @__PURE__ */ "the.a.an.and.or.of.to.in.on.for.with.as.at.by.is.are.was.were.be.from.that.this.it.its.into.over.after.new".split("."));
+function Nw(e) {
 	return [
 		e.title,
 		e.summary,
@@ -15911,41 +16007,41 @@ function _w(e) {
 		String(e.category)
 	].join(" ").toLowerCase();
 }
-function vw(e) {
-	return g("sha256").update(_w(e)).digest("hex").slice(0, 32);
+function Pw(e) {
+	return g("sha256").update(Nw(e)).digest("hex").slice(0, 32);
 }
-function yw(e) {
-	let t = Sw(e);
+function Fw(e) {
+	let t = Rw(e);
 	if (t.length === 0) return null;
 	let n = Array(256).fill(0);
 	for (let e of t) {
-		let t = Cw(e) % 256, r = Cw(`${e}#sign`) & 1 ? -1 : 1;
+		let t = zw(e) % 256, r = zw(`${e}#sign`) & 1 ? -1 : 1;
 		n[t] += r;
 	}
 	let r = Math.sqrt(n.reduce((e, t) => e + t * t, 0));
 	return r === 0 ? null : n.map((e) => e / r);
 }
-function bw(e) {
-	return yw(_w(e));
+function Iw(e) {
+	return Fw(Nw(e));
 }
-function xw(e, t) {
+function Lw(e, t) {
 	if (e.length !== t.length || e.length === 0) return 0;
 	let n = 0;
 	for (let r = 0; r < e.length; r += 1) n += e[r] * t[r];
 	return Math.max(-1, Math.min(1, n));
 }
-function Sw(e) {
-	return e.toLowerCase().split(/[^a-z0-9]+/).filter((e) => e.length > 2 && !gw.has(e));
+function Rw(e) {
+	return e.toLowerCase().split(/[^a-z0-9]+/).filter((e) => e.length > 2 && !Mw.has(e));
 }
-function Cw(e) {
+function zw(e) {
 	let t = 2166136261;
 	for (let n = 0; n < e.length; n += 1) t ^= e.charCodeAt(n), t = Math.imul(t, 16777619);
 	return t >>> 0;
 }
 //#endregion
 //#region src/intel.ts
-var ww = "HISTORICAL_PLAYBOOK_UNAVAILABLE", Tw = "RETURN_PROFILE_UNAVAILABLE";
-function Ew(e, t, n = Date.now()) {
+var Bw = "HISTORICAL_PLAYBOOK_UNAVAILABLE", Vw = "RETURN_PROFILE_UNAVAILABLE";
+function Hw(e, t, n = Date.now()) {
 	return {
 		queryEventId: e,
 		generatedAt: n,
@@ -15957,27 +16053,27 @@ function Ew(e, t, n = Date.now()) {
 }
 //#endregion
 //#region electron/intel/historicalPlaybookService.ts
-var Dw = 864e5, Ow = 3, kw = class {
+var Uw = 864e5, Ww = 3, Gw = class {
 	source;
 	constructor(e) {
 		this.source = e;
 	}
 	playbookFor(e, t = {}) {
 		let n = t.now ?? Date.now(), r = this.source.listWorldIntelEvents(400), i = r.find((t) => t.id === e);
-		if (!i) return Ew(e, "Event not found in local store.", n);
+		if (!i) return Hw(e, "Event not found in local store.", n);
 		let a = this.ensureEmbeddings(r), o = a.get(e);
-		if (!o) return Ew(e, `${ww}: no embedding for the query event.`, n);
+		if (!o) return Hw(e, `${Bw}: no embedding for the query event.`, n);
 		let s = r.filter((t) => t.timestamp < i.timestamp && t.id !== e && t.dedupeHash !== i.dedupeHash).map((e) => ({
 			event: e,
 			vector: a.get(e.id)
 		})).filter((e) => !!e.vector).map((e) => ({
 			event: e.event,
-			similarity: xw(o, e.vector)
-		})).sort((e, t) => t.similarity - e.similarity).slice(0, Ow);
-		return s.length === 0 ? Ew(e, `${ww}: no prior comparable events (insufficient history).`, n) : {
+			similarity: Lw(o, e.vector)
+		})).sort((e, t) => t.similarity - e.similarity).slice(0, Ww);
+		return s.length === 0 ? Hw(e, `${Bw}: no prior comparable events (insufficient history).`, n) : {
 			queryEventId: e,
 			generatedAt: n,
-			embeddingModel: hw,
+			embeddingModel: jw,
 			available: !0,
 			matches: s.map((e) => this.toMatch(i, e.event, e.similarity))
 		};
@@ -15985,12 +16081,12 @@ var Dw = 864e5, Ow = 3, kw = class {
 	ensureEmbeddings(e) {
 		let t = new Map(this.source.listWorldIntelEmbeddings(800).map((e) => [e.eventId, e])), n = /* @__PURE__ */ new Map();
 		for (let r of e) {
-			let e = vw(r), i = t.get(r.id);
+			let e = Pw(r), i = t.get(r.id);
 			if (i && i.summaryHash === e && i.embeddingModel === "lexical-hash-v1" && i.embeddingVector.length === 256) {
 				n.set(r.id, i.embeddingVector);
 				continue;
 			}
-			let a = bw(r);
+			let a = Iw(r);
 			if (a) {
 				n.set(r.id, a);
 				try {
@@ -15999,7 +16095,7 @@ var Dw = 864e5, Ow = 3, kw = class {
 						eventId: r.id,
 						timestamp: r.timestamp,
 						summaryHash: e,
-						embeddingModel: hw,
+						embeddingModel: jw,
 						embeddingVector: a,
 						sourceEventCategory: String(r.category),
 						provenance: "local-computed",
@@ -16011,7 +16107,7 @@ var Dw = 864e5, Ow = 3, kw = class {
 		return n;
 	}
 	toMatch(e, t, n) {
-		let r = Mw(e.affectedAssets, t.affectedAssets), i = Mw(e.narrativeTags, t.narrativeTags), a = [`${Math.round(n * 100)}% lexical similarity`];
+		let r = Jw(e.affectedAssets, t.affectedAssets), i = Jw(e.narrativeTags, t.narrativeTags), a = [`${Math.round(n * 100)}% lexical similarity`];
 		return e.category === t.category && a.push(`same category (${String(t.category)})`), r.length > 0 && a.push(`shared assets: ${r.slice(0, 4).join(", ")}`), i.length > 0 && a.push(`shared narrative: ${i.slice(0, 3).join(", ")}`), {
 			eventId: t.id,
 			title: t.title,
@@ -16031,26 +16127,26 @@ var Dw = 864e5, Ow = 3, kw = class {
 				time: e.observedAt
 			})).filter((e) => Number.isFinite(e.price) && Number.isFinite(e.time)).sort((e, t) => e.time - t.time);
 			if (n.length === 0) continue;
-			let r = jw(n, e.timestamp, 3 * Dw);
+			let r = qw(n, e.timestamp, 3 * Uw);
 			if (r === null) continue;
-			let i = Aw(n, e.timestamp, 1 * Dw, r), a = Aw(n, e.timestamp, 5 * Dw, r), o = Aw(n, e.timestamp, 7 * Dw, r);
+			let i = Kw(n, e.timestamp, 1 * Uw, r), a = Kw(n, e.timestamp, 5 * Uw, r), o = Kw(n, e.timestamp, 7 * Uw, r);
 			return {
 				symbol: t,
 				oneDayPct: i,
 				fiveDayPct: a,
 				sevenDayPct: o,
 				provenance: "math-derived",
-				unavailableReason: i === null && a === null && o === null ? Tw : void 0
+				unavailableReason: i === null && a === null && o === null ? Vw : void 0
 			};
 		}
 		return null;
 	}
 };
-function Aw(e, t, n, r) {
-	let i = jw(e, t + n, 2 * Dw);
+function Kw(e, t, n, r) {
+	let i = qw(e, t + n, 2 * Uw);
 	return i === null || r === 0 ? null : (i - r) / r * 100;
 }
-function jw(e, t, n) {
+function qw(e, t, n) {
 	let r = null, i = Infinity;
 	for (let n of e) {
 		let e = Math.abs(n.time - t);
@@ -16058,13 +16154,13 @@ function jw(e, t, n) {
 	}
 	return !r || i > n ? null : r.price;
 }
-function Mw(e, t) {
+function Jw(e, t) {
 	let n = new Set(t.map((e) => e.toUpperCase()));
 	return [...new Set(e.filter((e) => n.has(e.toUpperCase())))];
 }
 //#endregion
 //#region src/engine/decisionJournal.ts
-function Nw(e = Date.now()) {
+function Yw(e = Date.now()) {
 	return {
 		generatedAt: e,
 		theses: [],
@@ -16078,16 +16174,16 @@ function Nw(e = Date.now()) {
 }
 //#endregion
 //#region electron/journal/thesisService.ts
-var Pw = 864e5, Fw = class {
+var Xw = 864e5, Zw = class {
 	persistence;
 	quant;
 	constructor(e) {
-		this.persistence = e, this.quant = new YC(e);
+		this.persistence = e, this.quant = new lw(e);
 	}
 	save(e) {
 		let t = Date.now(), n = String(e.assetSymbol || "").toUpperCase().trim();
 		if (!n) return this.dashboard(t);
-		let r = this.persistence.listWorldIntelEvents(300), i = Iw(this.quant.computeAssetSnapshot(n, {
+		let r = this.persistence.listWorldIntelEvents(300), i = Qw(this.quant.computeAssetSnapshot(n, {
 			events: r,
 			now: t
 		})), a = {
@@ -16098,7 +16194,7 @@ var Pw = 864e5, Fw = class {
 			triggerEventId: e.triggerEventId ?? null,
 			snapshotMetrics: i,
 			userNotes: String(e.userNotes ?? ""),
-			targetHorizonDays: Vw(e.targetHorizonDays, 1, 3650, 30),
+			targetHorizonDays: rT(e.targetHorizonDays, 1, 3650, 30),
 			isClosed: !1,
 			performanceGrade: null,
 			entryPrice: i.price,
@@ -16113,8 +16209,8 @@ var Pw = 864e5, Fw = class {
 	}
 	dashboard(e = Date.now()) {
 		let t = this.persistence.listUserTheses(500);
-		if (t.length === 0) return Nw(e);
-		let n = t.map((t) => this.markToMarket(t, e)), r = n.filter((e) => e.currentReturn !== null), i = r.filter((e) => Rw(e.thesisType, e.currentReturn)), a = r.length > 0 ? i.length / r.length : null;
+		if (t.length === 0) return Yw(e);
+		let n = t.map((t) => this.markToMarket(t, e)), r = n.filter((e) => e.currentReturn !== null), i = r.filter((e) => eT(e.thesisType, e.currentReturn)), a = r.length > 0 ? i.length / r.length : null;
 		return {
 			generatedAt: e,
 			theses: n,
@@ -16122,7 +16218,7 @@ var Pw = 864e5, Fw = class {
 			closedCount: n.filter((e) => e.isClosed).length,
 			followThroughRate: a,
 			evaluableCount: r.length,
-			byProvenance: Lw(n),
+			byProvenance: $w(n),
 			priceDataAvailable: r.length > 0
 		};
 	}
@@ -16130,10 +16226,10 @@ var Pw = 864e5, Fw = class {
 		let n = this.persistence.listMarketTicks(e.assetSymbol, 800).map((e) => ({
 			price: e.price,
 			time: e.observedAt
-		})).filter((e) => Number.isFinite(e.price) && Number.isFinite(e.time)).sort((e, t) => e.time - t.time), r = e.entryPrice, i = n.length > 0 ? n[n.length - 1].price : null, a = r && r !== 0 && i !== null ? Hw((i - r) / r * 100) : null, o = (t) => {
+		})).filter((e) => Number.isFinite(e.price) && Number.isFinite(e.time)).sort((e, t) => e.time - t.time), r = e.entryPrice, i = n.length > 0 ? n[n.length - 1].price : null, a = r && r !== 0 && i !== null ? iT((i - r) / r * 100) : null, o = (t) => {
 			if (!r || r === 0) return null;
-			let i = Bw(n, e.timestamp + t * Pw, 2 * Pw);
-			return i === null ? null : Hw((i - r) / r * 100);
+			let i = nT(n, e.timestamp + t * Xw, 2 * Xw);
+			return i === null ? null : iT((i - r) / r * 100);
 		};
 		return {
 			...e,
@@ -16141,18 +16237,18 @@ var Pw = 864e5, Fw = class {
 			oneDayReturn: o(1),
 			sevenDayReturn: o(7),
 			thirtyDayReturn: o(30),
-			performanceGrade: a === null ? null : zw(e.thesisType, a),
+			performanceGrade: a === null ? null : tT(e.thesisType, a),
 			updatedAt: t
 		};
 	}
 };
-function Iw(e) {
+function Qw(e) {
 	let t = (t) => {
 		let n = e.metrics.find((e) => e.metricName === t);
 		return n && n.status !== "unavailable" ? n.metricValue : null;
 	}, n = e.bars.length > 0 ? e.bars[e.bars.length - 1].price : null, r = new Set(e.metrics.filter((e) => e.status !== "unavailable").map((e) => e.provenance));
 	e.markers.length > 0 && r.add("local-computed");
-	let i = e.metrics.filter((e) => e.status !== "unavailable").map((e) => e.dataCoverage), a = i.length > 0 ? Hw(i.reduce((e, t) => e + t, 0) / i.length, 3) : null;
+	let i = e.metrics.filter((e) => e.status !== "unavailable").map((e) => e.dataCoverage), a = i.length > 0 ? iT(i.reduce((e, t) => e + t, 0) / i.length, 3) : null;
 	return {
 		price: n,
 		volumeVelocity: t("Volume velocity"),
@@ -16168,7 +16264,7 @@ function Iw(e) {
 		sourceCoverage: a
 	};
 }
-function Lw(e) {
+function $w(e) {
 	let t = /* @__PURE__ */ new Map();
 	for (let n of e) {
 		let e = n.snapshotMetrics.activeProvenanceBadges[0] ?? "local-computed", r = t.get(e) ?? {
@@ -16180,16 +16276,16 @@ function Lw(e) {
 	return [...t.entries()].map(([e, t]) => ({
 		provenance: e,
 		count: t.count,
-		avgReturn: t.returns.length > 0 ? Hw(t.returns.reduce((e, t) => e + t, 0) / t.returns.length) : null
+		avgReturn: t.returns.length > 0 ? iT(t.returns.reduce((e, t) => e + t, 0) / t.returns.length) : null
 	}));
 }
-function Rw(e, t) {
+function eT(e, t) {
 	return e === "Positive" ? t > 0 : e === "Negative" ? t < 0 : Math.abs(t) < 2;
 }
-function zw(e, t) {
-	return Rw(e, t) ? Math.abs(t) >= 5 ? "strong follow-through" : "follow-through" : Math.abs(t) >= 5 ? "counter-move" : "inline";
+function tT(e, t) {
+	return eT(e, t) ? Math.abs(t) >= 5 ? "strong follow-through" : "follow-through" : Math.abs(t) >= 5 ? "counter-move" : "inline";
 }
-function Bw(e, t, n) {
+function nT(e, t, n) {
 	let r = null, i = Infinity;
 	for (let n of e) {
 		let e = Math.abs(n.time - t);
@@ -16197,30 +16293,30 @@ function Bw(e, t, n) {
 	}
 	return r && i <= n ? r.price : null;
 }
-function Vw(e, t, n, r) {
+function rT(e, t, n, r) {
 	let i = Math.round(Number(e));
 	return Number.isFinite(i) ? Math.max(t, Math.min(n, i)) : r;
 }
-function Hw(e, t = 2) {
+function iT(e, t = 2) {
 	let n = 10 ** t;
 	return Math.round(e * n) / n;
 }
 //#endregion
 //#region src/engine/graphMutator.ts
-var Uw = {
+var aT = {
 	Sovereign: "sovereign",
 	Location: "location",
 	Commodity: "commodity",
 	Corporation: "corporation",
 	Infrastructure: "infrastructure"
 };
-function Ww(e) {
+function oT(e) {
 	return e.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 64);
 }
-function Gw(e) {
+function sT(e) {
 	return Math.min(1, Math.max(0, e));
 }
-var Kw = class {
+var cT = class {
 	nodes = /* @__PURE__ */ new Map();
 	adjacency = /* @__PURE__ */ new Map();
 	decayFactor;
@@ -16240,15 +16336,15 @@ var Kw = class {
 		return e;
 	}
 	upsertConnection(e) {
-		let t = this.now(), n = e.confidence_metrics.score, r = `event:${Ww(e.event_summary)}`, i = [];
+		let t = this.now(), n = e.confidence_metrics.score, r = `event:${oT(e.event_summary)}`, i = [];
 		this.ensureNode(r, e.event_summary, "event", t, e.primary_macro_theme) && i.push(r);
 		for (let a of e.extracted_entities) {
-			let o = `entity:${Ww(a.name)}`;
-			this.ensureNode(o, a.name, Uw[a.type] ?? "infrastructure", t, e.primary_macro_theme) && i.push(o), this.reinforceEdge(r, o, "involves", .6, n, "Volatility_Expansion", t);
+			let o = `entity:${oT(a.name)}`;
+			this.ensureNode(o, a.name, aT[a.type] ?? "infrastructure", t, e.primary_macro_theme) && i.push(o), this.reinforceEdge(r, o, "involves", .6, n, "Volatility_Expansion", t);
 		}
 		let a = 0, o = 0;
 		for (let s of e.downstream_exposure_chain) {
-			let c = `asset:${Ww(s.node_name)}`;
+			let c = `asset:${oT(s.node_name)}`;
 			this.ensureNode(c, s.node_name, "asset", t, e.primary_macro_theme) && i.push(c);
 			let l = s.transmission_mechanism || s.exposure_direction, u = this.hasEdge(r, c);
 			this.reinforceEdge(r, c, l, s.exposure_weight, n, s.exposure_direction, t), u ? o += 1 : a += 1;
@@ -16266,17 +16362,17 @@ var Kw = class {
 		this.ensureNode(e.source.id, e.source.label, e.source.kind, t), this.ensureNode(e.target.id, e.target.label, e.target.kind, t);
 		let n = this.adjacency.get(e.source.id) ?? [], r = n.find((t) => t.target === e.target.id);
 		if (r) {
-			r.weight = Gw(e.weight), r.relation = e.relation, r.direction = e.direction ?? r.direction, r.provenance = e.provenance, r.confidence = Gw(e.confidence ?? e.weight), r.lastReinforcedAt = t, r.lastDecayedAt = t, r.reinforcements += 1;
+			r.weight = sT(e.weight), r.relation = e.relation, r.direction = e.direction ?? r.direction, r.provenance = e.provenance, r.confidence = sT(e.confidence ?? e.weight), r.lastReinforcedAt = t, r.lastDecayedAt = t, r.reinforcements += 1;
 			return;
 		}
 		n.push({
 			source: e.source.id,
 			target: e.target.id,
 			relation: e.relation,
-			weight: Gw(e.weight),
+			weight: sT(e.weight),
 			direction: e.direction ?? "Volatility_Expansion",
 			provenance: e.provenance,
-			confidence: Gw(e.confidence ?? e.weight),
+			confidence: sT(e.confidence ?? e.weight),
 			createdAt: t,
 			lastReinforcedAt: t,
 			lastDecayedAt: t,
@@ -16390,7 +16486,7 @@ var Kw = class {
 		}
 		for (let t of [...this.nodes.keys()]) e.has(t) || this.nodes.delete(t);
 	}
-}, qw = [
+}, lT = [
 	"Geopolitical Choke Point",
 	"Supply Chain Disruption",
 	"Monetary Policy Shocks",
@@ -16398,23 +16494,23 @@ var Kw = class {
 	"Regulatory Constraints",
 	"Resource Scarcity",
 	"Commodity Shock"
-], Jw = [
+], uT = [
 	"Sovereign",
 	"Location",
 	"Commodity",
 	"Corporation",
 	"Infrastructure"
-], Yw = [
+], dT = [
 	"Bullish_Catalyst",
 	"Bearish_Headwind",
 	"Volatility_Expansion"
-], Xw = {
+], fT = {
 	type: "object",
 	properties: {
 		event_summary: { type: "string" },
 		primary_macro_theme: {
 			type: "string",
-			enum: [...qw]
+			enum: [...lT]
 		},
 		extracted_entities: {
 			type: "array",
@@ -16424,7 +16520,7 @@ var Kw = class {
 					name: { type: "string" },
 					type: {
 						type: "string",
-						enum: [...Jw]
+						enum: [...uT]
 					}
 				},
 				required: ["name", "type"]
@@ -16438,7 +16534,7 @@ var Kw = class {
 					node_name: { type: "string" },
 					exposure_direction: {
 						type: "string",
-						enum: [...Yw]
+						enum: [...dT]
 					},
 					exposure_weight: {
 						type: "number",
@@ -16476,51 +16572,51 @@ var Kw = class {
 		"confidence_metrics"
 	]
 };
-function Zw(e) {
+function pT(e) {
 	let t = typeof e == "number" ? e : Number(e);
 	return Number.isFinite(t) ? Math.min(1, Math.max(0, t)) : 0;
 }
-function Qw(e) {
+function mT(e) {
 	return typeof e == "string" ? e.trim() : "";
 }
-function $w(e, t, n) {
+function hT(e, t, n) {
 	return typeof e == "string" && t.includes(e) ? e : n;
 }
-function eT(e) {
+function gT(e) {
 	if (!e || typeof e != "object") return null;
-	let t = e, n = Qw(t.event_summary);
+	let t = e, n = mT(t.event_summary);
 	if (n === "") return null;
 	let r = (Array.isArray(t.extracted_entities) ? t.extracted_entities : []).map((e) => {
 		if (!e || typeof e != "object") return null;
-		let t = e, n = Qw(t.name);
+		let t = e, n = mT(t.name);
 		return n === "" ? null : {
 			name: n,
-			type: $w(t.type, Jw, "Infrastructure")
+			type: hT(t.type, uT, "Infrastructure")
 		};
 	}).filter((e) => e !== null), i = (Array.isArray(t.downstream_exposure_chain) ? t.downstream_exposure_chain : []).map((e) => {
 		if (!e || typeof e != "object") return null;
-		let t = e, n = Qw(t.node_name);
+		let t = e, n = mT(t.node_name);
 		return n === "" ? null : {
 			node_name: n,
-			exposure_direction: $w(t.exposure_direction, Yw, "Volatility_Expansion"),
-			exposure_weight: Zw(t.exposure_weight),
-			transmission_mechanism: Qw(t.transmission_mechanism)
+			exposure_direction: hT(t.exposure_direction, dT, "Volatility_Expansion"),
+			exposure_weight: pT(t.exposure_weight),
+			transmission_mechanism: mT(t.transmission_mechanism)
 		};
 	}).filter((e) => e !== null), a = t.confidence_metrics && typeof t.confidence_metrics == "object" ? t.confidence_metrics : {};
 	return {
 		event_summary: n,
-		primary_macro_theme: $w(t.primary_macro_theme, qw, "Supply Chain Disruption"),
+		primary_macro_theme: hT(t.primary_macro_theme, lT, "Supply Chain Disruption"),
 		extracted_entities: r,
 		downstream_exposure_chain: i,
 		confidence_metrics: {
-			score: Zw(a.score),
-			primary_uncertainty: Qw(a.primary_uncertainty)
+			score: pT(a.score),
+			primary_uncertainty: mT(a.primary_uncertainty)
 		}
 	};
 }
 //#endregion
 //#region src/engine/cognitiveParser.ts
-var tT = "You are the primary cognitive node of Atlasz Intel, a local financial intelligence engine. Map the physical and macro plumbing hidden behind unstructured text.\n\nRules:\n1. NO PROSE. Output must start with '{' and end with '}'. No preamble.\n2. Adhere 100% to the enforced JSON schema. Every field is required. Do not invent keys.\n3. Look past hype: identify structural dependencies — sectors, raw materials, shipping lanes, and corporate anchors in the blast radius.\n4. Be conservative with exposure weights. A direct refinery hit is ~1.0 exposure to its equity; a secondary consumer-goods tariff is ~0.3.\n5. Set confidence by verifiable facts in the text versus speculative narrative. State the biggest remaining uncertainty.", nT = class {
+var _T = "You are the primary cognitive node of Atlasz Intel, a local financial intelligence engine. Map the physical and macro plumbing hidden behind unstructured text.\n\nRules:\n1. NO PROSE. Output must start with '{' and end with '}'. No preamble.\n2. Adhere 100% to the enforced JSON schema. Every field is required. Do not invent keys.\n3. Look past hype: identify structural dependencies — sectors, raw materials, shipping lanes, and corporate anchors in the blast radius.\n4. Be conservative with exposure weights. A direct refinery hit is ~1.0 exposure to its equity; a secondary consumer-goods tariff is ~0.3.\n5. Set confidence by verifiable facts in the text versus speculative narrative. State the biggest remaining uncertainty.", vT = class {
 	endpoint;
 	model;
 	timeoutMs;
@@ -16534,7 +16630,7 @@ var tT = "You are the primary cognitive node of Atlasz Intel, a local financial 
 		let n = typeof e?.headline == "string" ? e.headline.trim() : "";
 		if (n === "") return null;
 		if (!this.fetchImpl) return this.warn("fetch is unavailable in this runtime; failing closed"), null;
-		let r = t.timeoutMs && t.timeoutMs > 0 ? t.timeoutMs : this.timeoutMs, i = t.instruction ? `${tT}\n\n${t.instruction}` : tT, a = typeof e.context == "string" && e.context.trim() !== "" ? e.context.trim() : "", o = new AbortController(), s = setTimeout(() => o.abort(), r);
+		let r = t.timeoutMs && t.timeoutMs > 0 ? t.timeoutMs : this.timeoutMs, i = t.instruction ? `${_T}\n\n${t.instruction}` : _T, a = typeof e.context == "string" && e.context.trim() !== "" ? e.context.trim() : "", o = new AbortController(), s = setTimeout(() => o.abort(), r);
 		try {
 			let t = await this.fetchImpl(this.endpoint, {
 				method: "POST",
@@ -16543,7 +16639,7 @@ var tT = "You are the primary cognitive node of Atlasz Intel, a local financial 
 				body: JSON.stringify({
 					model: this.model,
 					stream: !1,
-					format: Xw,
+					format: fT,
 					options: {
 						temperature: 0,
 						top_p: .1
@@ -16566,7 +16662,7 @@ var tT = "You are the primary cognitive node of Atlasz Intel, a local financial 
 			} catch {
 				return this.warn("ollama content was not valid JSON; failing closed"), null;
 			}
-			let l = rT(c), u = eT(c);
+			let l = yT(c), u = gT(c);
 			return u ? {
 				extraction: u,
 				validationIssueCount: l,
@@ -16602,7 +16698,7 @@ var tT = "You are the primary cognitive node of Atlasz Intel, a local financial 
 		return n ? e.upsertConnection(n.extraction) : null;
 	}
 };
-function rT(e) {
+function yT(e) {
 	if (!e || typeof e != "object") return 1;
 	let t = e, n = 0;
 	if ((typeof t.event_summary != "string" || t.event_summary.trim() === "") && (n += 1), Array.isArray(t.extracted_entities) || (n += 1), !Array.isArray(t.downstream_exposure_chain)) n += 1;
@@ -16618,21 +16714,21 @@ function rT(e) {
 }
 //#endregion
 //#region electron/ingest/types.ts
-function iT(e) {
+function bT(e) {
 	let t = 2166136261;
 	for (let n = 0; n < e.length; n += 1) t ^= e.charCodeAt(n), t = Math.imul(t, 16777619);
 	return (t >>> 0).toString(36);
 }
-function aT(e, t, n) {
+function xT(e, t, n) {
 	return Math.min(n, Math.max(t, e));
 }
-function oT(e) {
+function ST(e) {
 	let t = typeof e == "number" ? e : Number(e);
 	return Number.isFinite(t) ? t : null;
 }
 //#endregion
 //#region electron/ingest/cognitiveTaskManager.ts
-var sT = class extends v {
+var CT = class extends v {
 	enabled;
 	endpoint;
 	model;
@@ -16651,7 +16747,7 @@ var sT = class extends v {
 	validationFailures = 0;
 	processing = !1;
 	constructor(e = {}) {
-		super(), this.on("error", () => void 0), this.enabled = e.enabled ?? process.env.ATLASZ_ENABLE_OLLAMA === "1", this.endpoint = e.endpoint ?? process.env.ATLASZ_OLLAMA_ENDPOINT ?? "http://localhost:11434/api/chat", this.model = e.model ?? process.env.ATLASZ_OLLAMA_MODEL ?? "qwen2.5:7b", this.initialTimeoutMs = e.requestTimeoutMs ?? 18e3, this.minTimeoutMs = e.minTimeoutMs ?? 3e3, this.maxTimeoutMs = e.maxTimeoutMs ?? 3e4, this.latencyWindowSize = e.latencyWindowSize ?? 8, this.timeoutScale = e.timeoutScale ?? 1.5, this.maxQueueSize = e.maxQueueSize ?? 250, this.parser = new nT({
+		super(), this.on("error", () => void 0), this.enabled = e.enabled ?? process.env.ATLASZ_ENABLE_OLLAMA === "1", this.endpoint = e.endpoint ?? process.env.ATLASZ_OLLAMA_ENDPOINT ?? "http://localhost:11434/api/chat", this.model = e.model ?? process.env.ATLASZ_OLLAMA_MODEL ?? "qwen2.5:7b", this.initialTimeoutMs = e.requestTimeoutMs ?? 18e3, this.minTimeoutMs = e.minTimeoutMs ?? 3e3, this.maxTimeoutMs = e.maxTimeoutMs ?? 3e4, this.latencyWindowSize = e.latencyWindowSize ?? 8, this.timeoutScale = e.timeoutScale ?? 1.5, this.maxQueueSize = e.maxQueueSize ?? 250, this.parser = new vT({
 			endpoint: this.endpoint,
 			model: this.model,
 			timeoutMs: this.maxTimeoutMs,
@@ -16670,7 +16766,7 @@ var sT = class extends v {
 	enqueueBatch(e) {
 		if (!this.enabled || e.length === 0) return;
 		let t = Math.max(...e.map((e) => e.observedAt)), n = [...new Set(e.map((e) => e.sourceName))], r = {
-			id: `batch-${iT(e.map((e) => e.id).join("|"))}`,
+			id: `batch-${bT(e.map((e) => e.id).join("|"))}`,
 			title: `Batch summary of ${e.length} public market narratives`,
 			sourceName: n.length === 1 ? n[0] : "Atlasz public narrative batch",
 			sourceUrl: e[0].sourceUrl,
@@ -16712,7 +16808,7 @@ var sT = class extends v {
 	}
 	currentTimeoutMs() {
 		let e = this.rollingAverageLatencyMs();
-		return e ? Math.round(aT(e * this.timeoutScale, this.minTimeoutMs, this.maxTimeoutMs)) : this.initialTimeoutMs;
+		return e ? Math.round(xT(e * this.timeoutScale, this.minTimeoutMs, this.maxTimeoutMs)) : this.initialTimeoutMs;
 	}
 	rollingAverageLatencyMs() {
 		if (this.successfulDurationsMs.length === 0) return;
@@ -16744,14 +16840,14 @@ var sT = class extends v {
 			context: `${t.summary}\n${t.rawText.slice(0, 1800)}`.trim()
 		}, {
 			timeoutMs: r,
-			instruction: cT(n)
+			instruction: wT(n)
 		});
 		if (!a) return this.failedExtractions += 1, this.markFailure(t.sourceName), null;
 		let o = Date.now() - i;
 		this.recordSuccessfulDuration(o), a.validationIssueCount > 0 ? this.markFailure(t.sourceName, a.validationIssueCount) : this.markSuccess(t.sourceName);
 		let s = this.sourcePenalty(t.sourceName);
 		return this.successfulExtractions += 1, {
-			extraction: lT(a.extraction, s),
+			extraction: TT(a.extraction, s),
 			meta: {
 				durationMs: o,
 				timeoutMs: r,
@@ -16788,30 +16884,30 @@ var sT = class extends v {
 	}
 	recomputePenalty(e) {
 		let t = Math.max(1, e.attempts), n = e.validationFailures / t, r = Math.min(.35, e.structuralIssues * .035);
-		e.penalty = Number(aT(1 - n * .65 - r, .25, 1).toFixed(3));
+		e.penalty = Number(xT(1 - n * .65 - r, .25, 1).toFixed(3));
 	}
 };
-function cT(e) {
+function wT(e) {
 	let t = "You convert public market/news text into strictly structured, non-predictive exposure mapping. Do not give trading advice. Return only JSON matching the schema.";
 	return e === "batch-summary" ? `${t} This input is a high-velocity batch; summarize only the dominant shared macro theme and the strongest exposure chains.` : e === "keyword-priority" ? `${t} This input was selected during elevated narrative velocity; ignore weak tangential references and extract only high-conviction exposure links.` : t;
 }
-function lT(e, t) {
+function TT(e, t) {
 	return {
 		...e,
 		confidence_metrics: {
 			...e.confidence_metrics,
-			score: aT(e.confidence_metrics.score * t, 0, 1),
+			score: xT(e.confidence_metrics.score * t, 0, 1),
 			primary_uncertainty: t < .95 ? `${e.confidence_metrics.primary_uncertainty} Source reliability penalty applied: ${t.toFixed(2)}.` : e.confidence_metrics.primary_uncertainty
 		},
 		downstream_exposure_chain: e.downstream_exposure_chain.map((e) => ({
 			...e,
-			exposure_weight: aT(e.exposure_weight * t, 0, 1)
+			exposure_weight: xT(e.exposure_weight * t, 0, 1)
 		}))
 	};
 }
 //#endregion
 //#region electron/ingest/exposureMatrix.ts
-var uT = [
+var ET = [
 	{
 		keywords: [
 			"taiwan",
@@ -17002,9 +17098,9 @@ var uT = [
 		confidence: .58
 	}
 ];
-function dT(e, t = `event:${iT(e)}`) {
+function DT(e, t = `event:${bT(e)}`) {
 	let n = e.toLowerCase(), r = [];
-	for (let e of uT) {
+	for (let e of ET) {
 		let i = e.keywords.find((e) => n.includes(e));
 		i && r.push({
 			eventId: t,
@@ -17014,9 +17110,9 @@ function dT(e, t = `event:${iT(e)}`) {
 			reason: `${e.theme}: ${e.reason}`
 		});
 	}
-	return fT(r);
+	return OT(r);
 }
-function fT(e) {
+function OT(e) {
 	let t = /* @__PURE__ */ new Map();
 	for (let n of e) {
 		let e = t.get(n.keyword);
@@ -17035,7 +17131,7 @@ function fT(e) {
 }
 //#endregion
 //#region electron/ingest/polymarketGammaService.ts
-var pT = "inflation OR fed OR election OR tariffs OR Taiwan OR oil OR recession", mT = class extends v {
+var kT = "inflation OR fed OR election OR tariffs OR Taiwan OR oil OR recession", AT = class extends v {
 	intervalMs;
 	requestTimeoutMs;
 	query;
@@ -17044,7 +17140,7 @@ var pT = "inflation OR fed OR election OR tariffs OR Taiwan OR oil OR recession"
 	running = !1;
 	seen = /* @__PURE__ */ new Map();
 	constructor(e = {}) {
-		super(), this.on("error", () => void 0), this.intervalMs = e.intervalMs ?? 5 * 6e4, this.requestTimeoutMs = e.requestTimeoutMs ?? 12e3, this.query = e.query ?? pT, this.limit = e.limit ?? 40;
+		super(), this.on("error", () => void 0), this.intervalMs = e.intervalMs ?? 5 * 6e4, this.requestTimeoutMs = e.requestTimeoutMs ?? 12e3, this.query = e.query ?? kT, this.limit = e.limit ?? 40;
 	}
 	on(e, t) {
 		return super.on(e, t);
@@ -17070,7 +17166,7 @@ var pT = "inflation OR fed OR election OR tariffs OR Taiwan OR oil OR recession"
 			if (!n.ok) throw Error(`Polymarket Gamma HTTP ${n.status}`);
 			let r = await n.json(), i = Array.isArray(r) ? r : [];
 			for (let e of i) {
-				let t = hT(e);
+				let t = jT(e);
 				!t || this.wasSeenRecently(t.id, t.probability) || (this.seen.set(t.id, t.probability), this.emit("probability", t));
 			}
 		} catch (e) {
@@ -17084,52 +17180,52 @@ var pT = "inflation OR fed OR election OR tariffs OR Taiwan OR oil OR recession"
 		return n !== void 0 && Math.abs(n - t) < .01;
 	}
 };
-function hT(e) {
-	let t = yT(e.question) || yT(e.title);
+function jT(e) {
+	let t = FT(e.question) || FT(e.title);
 	if (!t) return null;
-	let n = gT(e);
+	let n = MT(e);
 	if (n === null) return null;
-	let r = yT(e.slug);
+	let r = FT(e.slug);
 	return {
-		id: `polymarket-${yT(e.id) || iT(t)}`,
+		id: `polymarket-${FT(e.id) || bT(t)}`,
 		title: t,
 		probability: n,
 		sourceUrl: r ? `https://polymarket.com/event/${r}` : "https://polymarket.com/",
 		observedAt: Date.now(),
-		tags: vT(e.tags)
+		tags: PT(e.tags)
 	};
 }
-function gT(e) {
-	let t = _T(e.outcomePrices);
+function MT(e) {
+	let t = NT(e.outcomePrices);
 	if (t.length === 0) return null;
 	let n = t.filter((e) => e >= .01 && e <= .99);
 	return n.length === 0 ? null : Math.max(...n);
 }
-function _T(e) {
-	if (Array.isArray(e)) return e.map(oT).filter((e) => e !== null);
+function NT(e) {
+	if (Array.isArray(e)) return e.map(ST).filter((e) => e !== null);
 	if (typeof e == "string") try {
-		return _T(JSON.parse(e));
+		return NT(JSON.parse(e));
 	} catch {
-		return e.split(",").map((e) => oT(e.trim())).filter((e) => e !== null);
+		return e.split(",").map((e) => ST(e.trim())).filter((e) => e !== null);
 	}
 	return [];
 }
-function vT(e) {
+function PT(e) {
 	return Array.isArray(e) ? e.map((e) => {
 		if (typeof e == "string") return e;
 		if (e && typeof e == "object") {
 			let t = e;
-			return yT(t.label) || yT(t.name);
+			return FT(t.label) || FT(t.name);
 		}
 		return "";
 	}).filter((e) => e.length > 0).slice(0, 5) : [];
 }
-function yT(e) {
+function FT(e) {
 	return typeof e == "string" ? e.trim() : "";
 }
 //#endregion
 //#region node_modules/xml2js/lib/defaults.js
-var bT = /* @__PURE__ */ E(((e) => {
+var IT = /* @__PURE__ */ E(((e) => {
 	(function() {
 		e.defaults = {
 			"0.1": {
@@ -17200,7 +17296,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}
 		};
 	}).call(e);
-})), xT = /* @__PURE__ */ E(((e, t) => {
+})), LT = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e, n, r, i, a, o, s, c = [].slice, l = {}.hasOwnProperty;
 		e = function() {
@@ -17227,7 +17323,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			return a(e.valueOf) ? e.valueOf() : e;
 		}, t.exports.assign = e, t.exports.isFunction = a, t.exports.isObject = o, t.exports.isArray = r, t.exports.isEmpty = i, t.exports.isPlainObject = s, t.exports.getValue = n;
 	}).call(e);
-})), ST = /* @__PURE__ */ E(((e, t) => {
+})), RT = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		t.exports = (function() {
 			function e() {}
@@ -17244,7 +17340,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, e;
 		})();
 	}).call(e);
-})), CT = /* @__PURE__ */ E(((e, t) => {
+})), zT = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		t.exports = (function() {
 			function e() {}
@@ -17253,7 +17349,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, e;
 		})();
 	}).call(e);
-})), wT = /* @__PURE__ */ E(((e, t) => {
+})), BT = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		t.exports = (function() {
 			function e(e) {
@@ -17268,9 +17364,9 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, e;
 		})();
 	}).call(e);
-})), TT = /* @__PURE__ */ E(((e, t) => {
+})), VT = /* @__PURE__ */ E(((e, t) => {
 	(function() {
-		var e = CT(), n = wT();
+		var e = zT(), n = BT();
 		t.exports = (function() {
 			function t() {
 				this.defaultParams = {
@@ -17326,10 +17422,10 @@ var bT = /* @__PURE__ */ E(((e) => {
 			Dummy: 205
 		};
 	}).call(e);
-})), ET = /* @__PURE__ */ E(((e, t) => {
+})), HT = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e = Z();
-		WT(), t.exports = (function() {
+		oE(), t.exports = (function() {
 			function t(t, n, r) {
 				if (this.parent = t, this.parent && (this.options = this.parent.options, this.stringify = this.parent.stringify), n == null) throw Error("Missing attribute name. " + this.debugInfo(n));
 				this.name = this.stringify.name(n), this.value = this.stringify.attValue(r), this.type = e.Attribute, this.isId = !1, this.schemaTypeInfo = null;
@@ -17364,7 +17460,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, t;
 		})();
 	}).call(e);
-})), DT = /* @__PURE__ */ E(((e, t) => {
+})), UT = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		t.exports = (function() {
 			function e(e) {
@@ -17393,7 +17489,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, e;
 		})();
 	}).call(e);
-})), OT = /* @__PURE__ */ E(((e, t) => {
+})), WT = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e, n, r, i, a, o, s, c, l = function(e, t) {
 			for (var n in t) u.call(t, n) && (e[n] = t[n]);
@@ -17402,7 +17498,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, u = {}.hasOwnProperty;
-		c = xT(), s = c.isObject, o = c.isFunction, a = c.getValue, i = WT(), e = Z(), n = ET(), r = DT(), t.exports = (function(t) {
+		c = LT(), s = c.isObject, o = c.isFunction, a = c.getValue, i = oE(), e = Z(), n = HT(), r = UT(), t.exports = (function(t) {
 			l(i, t);
 			function i(t, n, r) {
 				var a, o, s, c;
@@ -17502,7 +17598,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, i;
 		})(i);
 	}).call(e);
-})), kT = /* @__PURE__ */ E(((e, t) => {
+})), GT = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e, n = function(e, t) {
 			for (var n in t) r.call(t, n) && (e[n] = t[n]);
@@ -17511,7 +17607,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}
 			return i.prototype = t.prototype, e.prototype = new i(), e.__super__ = t.prototype, e;
 		}, r = {}.hasOwnProperty;
-		e = WT(), t.exports = (function(e) {
+		e = oE(), t.exports = (function(e) {
 			n(t, e);
 			function t(e) {
 				t.__super__.constructor.call(this, e), this.value = "";
@@ -17549,7 +17645,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, t;
 		})(e);
 	}).call(e);
-})), AT = /* @__PURE__ */ E(((e, t) => {
+})), KT = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e, n, r = function(e, t) {
 			for (var n in t) i.call(t, n) && (e[n] = t[n]);
@@ -17558,7 +17654,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, i = {}.hasOwnProperty;
-		e = Z(), n = kT(), t.exports = (function(t) {
+		e = Z(), n = GT(), t.exports = (function(t) {
 			r(n, t);
 			function n(t, r) {
 				if (n.__super__.constructor.call(this, t), r == null) throw Error("Missing CDATA text. " + this.debugInfo());
@@ -17571,7 +17667,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), jT = /* @__PURE__ */ E(((e, t) => {
+})), qT = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e, n, r = function(e, t) {
 			for (var n in t) i.call(t, n) && (e[n] = t[n]);
@@ -17580,7 +17676,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, i = {}.hasOwnProperty;
-		e = Z(), n = kT(), t.exports = (function(t) {
+		e = Z(), n = GT(), t.exports = (function(t) {
 			r(n, t);
 			function n(t, r) {
 				if (n.__super__.constructor.call(this, t), r == null) throw Error("Missing comment text. " + this.debugInfo());
@@ -17593,7 +17689,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), MT = /* @__PURE__ */ E(((e, t) => {
+})), JT = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e, n, r, i = function(e, t) {
 			for (var n in t) a.call(t, n) && (e[n] = t[n]);
@@ -17602,7 +17698,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, a = {}.hasOwnProperty;
-		r = xT().isObject, n = WT(), e = Z(), t.exports = (function(t) {
+		r = LT().isObject, n = oE(), e = Z(), t.exports = (function(t) {
 			i(n, t);
 			function n(t, i, a, o) {
 				var s;
@@ -17613,7 +17709,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), NT = /* @__PURE__ */ E(((e, t) => {
+})), YT = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e, n, r = function(e, t) {
 			for (var n in t) i.call(t, n) && (e[n] = t[n]);
@@ -17622,7 +17718,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, i = {}.hasOwnProperty;
-		n = WT(), e = Z(), t.exports = (function(t) {
+		n = oE(), e = Z(), t.exports = (function(t) {
 			r(n, t);
 			function n(t, r, i, a, o, s) {
 				if (n.__super__.constructor.call(this, t), r == null) throw Error("Missing DTD element name. " + this.debugInfo());
@@ -17638,7 +17734,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), PT = /* @__PURE__ */ E(((e, t) => {
+})), XT = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e, n, r, i = function(e, t) {
 			for (var n in t) a.call(t, n) && (e[n] = t[n]);
@@ -17647,7 +17743,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, a = {}.hasOwnProperty;
-		r = xT().isObject, n = WT(), e = Z(), t.exports = (function(t) {
+		r = LT().isObject, n = oE(), e = Z(), t.exports = (function(t) {
 			i(n, t);
 			function n(t, i, a, o) {
 				if (n.__super__.constructor.call(this, t), a == null) throw Error("Missing DTD entity name. " + this.debugInfo(a));
@@ -17676,7 +17772,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), FT = /* @__PURE__ */ E(((e, t) => {
+})), ZT = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e, n, r = function(e, t) {
 			for (var n in t) i.call(t, n) && (e[n] = t[n]);
@@ -17685,7 +17781,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, i = {}.hasOwnProperty;
-		n = WT(), e = Z(), t.exports = (function(t) {
+		n = oE(), e = Z(), t.exports = (function(t) {
 			r(n, t);
 			function n(t, r, i) {
 				if (n.__super__.constructor.call(this, t), r == null) throw Error("Missing DTD element name. " + this.debugInfo());
@@ -17696,7 +17792,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), IT = /* @__PURE__ */ E(((e, t) => {
+})), QT = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e, n, r = function(e, t) {
 			for (var n in t) i.call(t, n) && (e[n] = t[n]);
@@ -17705,7 +17801,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, i = {}.hasOwnProperty;
-		n = WT(), e = Z(), t.exports = (function(t) {
+		n = oE(), e = Z(), t.exports = (function(t) {
 			r(n, t);
 			function n(t, r, i) {
 				if (n.__super__.constructor.call(this, t), r == null) throw Error("Missing DTD notation name. " + this.debugInfo(r));
@@ -17721,7 +17817,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), LT = /* @__PURE__ */ E(((e, t) => {
+})), $T = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e, n, r, i, a, o, s, c, l = function(e, t) {
 			for (var n in t) u.call(t, n) && (e[n] = t[n]);
@@ -17730,7 +17826,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, u = {}.hasOwnProperty;
-		c = xT().isObject, s = WT(), e = Z(), n = NT(), i = PT(), r = FT(), a = IT(), o = DT(), t.exports = (function(t) {
+		c = LT().isObject, s = oE(), e = Z(), n = YT(), i = XT(), r = ZT(), a = QT(), o = UT(), t.exports = (function(t) {
 			l(s, t);
 			function s(t, n, r) {
 				var i, a, o, l, u, d;
@@ -17790,7 +17886,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, s;
 		})(s);
 	}).call(e);
-})), RT = /* @__PURE__ */ E(((e, t) => {
+})), eE = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e, n, r = function(e, t) {
 			for (var n in t) i.call(t, n) && (e[n] = t[n]);
@@ -17799,7 +17895,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, i = {}.hasOwnProperty;
-		e = Z(), n = WT(), t.exports = (function(t) {
+		e = Z(), n = oE(), t.exports = (function(t) {
 			r(n, t);
 			function n(t, r) {
 				if (n.__super__.constructor.call(this, t), r == null) throw Error("Missing raw text. " + this.debugInfo());
@@ -17812,7 +17908,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), zT = /* @__PURE__ */ E(((e, t) => {
+})), tE = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e, n, r = function(e, t) {
 			for (var n in t) i.call(t, n) && (e[n] = t[n]);
@@ -17821,7 +17917,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, i = {}.hasOwnProperty;
-		e = Z(), n = kT(), t.exports = (function(t) {
+		e = Z(), n = GT(), t.exports = (function(t) {
 			r(n, t);
 			function n(t, r) {
 				if (n.__super__.constructor.call(this, t), r == null) throw Error("Missing element text. " + this.debugInfo());
@@ -17845,7 +17941,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), BT = /* @__PURE__ */ E(((e, t) => {
+})), nE = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e, n, r = function(e, t) {
 			for (var n in t) i.call(t, n) && (e[n] = t[n]);
@@ -17854,7 +17950,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, i = {}.hasOwnProperty;
-		e = Z(), n = kT(), t.exports = (function(t) {
+		e = Z(), n = GT(), t.exports = (function(t) {
 			r(n, t);
 			function n(t, r, i) {
 				if (n.__super__.constructor.call(this, t), r == null) throw Error("Missing instruction target. " + this.debugInfo());
@@ -17869,7 +17965,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), VT = /* @__PURE__ */ E(((e, t) => {
+})), rE = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e, n, r = function(e, t) {
 			for (var n in t) i.call(t, n) && (e[n] = t[n]);
@@ -17878,7 +17974,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, i = {}.hasOwnProperty;
-		n = WT(), e = Z(), t.exports = (function(t) {
+		n = oE(), e = Z(), t.exports = (function(t) {
 			r(n, t);
 			function n(t) {
 				n.__super__.constructor.call(this, t), this.type = e.Dummy;
@@ -17890,7 +17986,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, n;
 		})(n);
 	}).call(e);
-})), HT = /* @__PURE__ */ E(((e, t) => {
+})), iE = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		t.exports = (function() {
 			function e(e) {
@@ -17905,7 +18001,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, e;
 		})();
 	}).call(e);
-})), UT = /* @__PURE__ */ E(((e, t) => {
+})), aE = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		t.exports = {
 			Disconnected: 1,
@@ -17916,12 +18012,12 @@ var bT = /* @__PURE__ */ E(((e) => {
 			ImplementationSpecific: 32
 		};
 	}).call(e);
-})), WT = /* @__PURE__ */ E(((e, t) => {
+})), oE = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e, n, r, i, a, o, s, c, l, u, d, f, p, m, h, g, _, v = {}.hasOwnProperty;
-		_ = xT(), g = _.isObject, h = _.isFunction, m = _.isEmpty, p = _.getValue, c = null, r = null, i = null, a = null, o = null, d = null, f = null, u = null, s = null, n = null, l = null, e = null, t.exports = (function() {
+		_ = LT(), g = _.isObject, h = _.isFunction, m = _.isEmpty, p = _.getValue, c = null, r = null, i = null, a = null, o = null, d = null, f = null, u = null, s = null, n = null, l = null, e = null, t.exports = (function() {
 			function t(t) {
-				this.parent = t, this.parent && (this.options = this.parent.options, this.stringify = this.parent.stringify), this.value = null, this.children = [], this.baseURI = null, c || (c = OT(), r = AT(), i = jT(), a = MT(), o = LT(), d = RT(), f = zT(), u = BT(), s = VT(), n = Z(), l = HT(), DT(), e = UT());
+				this.parent = t, this.parent && (this.options = this.parent.options, this.stringify = this.parent.stringify), this.value = null, this.children = [], this.baseURI = null, c || (c = WT(), r = KT(), i = qT(), a = JT(), o = $T(), d = eE(), f = tE(), u = nE(), s = rE(), n = Z(), l = iE(), UT(), e = aE());
 			}
 			return Object.defineProperty(t.prototype, "nodeName", { get: function() {
 				return this.name;
@@ -18152,7 +18248,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, t;
 		})();
 	}).call(e);
-})), GT = /* @__PURE__ */ E(((e, t) => {
+})), sE = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e = function(e, t) {
 			return function() {
@@ -18230,7 +18326,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, t;
 		})();
 	}).call(e);
-})), KT = /* @__PURE__ */ E(((e, t) => {
+})), cE = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		t.exports = {
 			None: 0,
@@ -18239,10 +18335,10 @@ var bT = /* @__PURE__ */ E(((e) => {
 			CloseTag: 3
 		};
 	}).call(e);
-})), qT = /* @__PURE__ */ E(((e, t) => {
+})), lE = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e, n, r, i = {}.hasOwnProperty;
-		r = xT().assign, e = Z(), MT(), LT(), AT(), jT(), OT(), RT(), zT(), BT(), VT(), NT(), FT(), PT(), IT(), n = KT(), t.exports = (function() {
+		r = LT().assign, e = Z(), JT(), $T(), KT(), qT(), WT(), eE(), tE(), nE(), rE(), YT(), ZT(), XT(), QT(), n = cE(), t.exports = (function() {
 			function t(e) {
 				var t, n, r;
 				for (t in e ||= {}, this.options = e, n = e.writer || {}, n) i.call(n, t) && (r = n[t], this["_" + t] = this[t], this[t] = r);
@@ -18333,7 +18429,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, t.prototype.openNode = function(e, t, n) {}, t.prototype.closeNode = function(e, t, n) {}, t.prototype.openAttribute = function(e, t, n) {}, t.prototype.closeAttribute = function(e, t, n) {}, t;
 		})();
 	}).call(e);
-})), JT = /* @__PURE__ */ E(((e, t) => {
+})), uE = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e, n = function(e, t) {
 			for (var n in t) r.call(t, n) && (e[n] = t[n]);
@@ -18342,7 +18438,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}
 			return i.prototype = t.prototype, e.prototype = new i(), e.__super__ = t.prototype, e;
 		}, r = {}.hasOwnProperty;
-		e = qT(), t.exports = (function(e) {
+		e = lE(), t.exports = (function(e) {
 			n(t, e);
 			function t(e) {
 				t.__super__.constructor.call(this, e);
@@ -18354,7 +18450,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, t;
 		})(e);
 	}).call(e);
-})), YT = /* @__PURE__ */ E(((e, t) => {
+})), dE = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e, n, r, i, a, o, s, c = function(e, t) {
 			for (var n in t) l.call(t, n) && (e[n] = t[n]);
@@ -18363,7 +18459,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, l = {}.hasOwnProperty;
-		s = xT().isPlainObject, r = ST(), n = TT(), i = WT(), e = Z(), o = GT(), a = JT(), t.exports = (function(t) {
+		s = LT().isPlainObject, r = RT(), n = VT(), i = oE(), e = Z(), o = sE(), a = uE(), t.exports = (function(t) {
 			c(i, t);
 			function i(t) {
 				i.__super__.constructor.call(this, null), this.name = "#document", this.type = e.Document, this.documentURI = null, this.domConfig = new n(), t ||= {}, t.writer ||= new a(), this.options = t, this.stringify = new o(t);
@@ -18446,10 +18542,10 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, i;
 		})(i);
 	}).call(e);
-})), XT = /* @__PURE__ */ E(((e, t) => {
+})), fE = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e, n, r, i, a, o, s, c, l, u, d, f, p, m, h, g, _, v, y, b, x, S, C, w = {}.hasOwnProperty;
-		C = xT(), x = C.isObject, b = C.isFunction, S = C.isPlainObject, y = C.getValue, e = Z(), f = YT(), p = OT(), i = AT(), a = jT(), h = RT(), v = zT(), m = BT(), u = MT(), d = LT(), o = NT(), c = PT(), s = FT(), l = IT(), r = ET(), _ = GT(), g = JT(), n = KT(), t.exports = (function() {
+		C = LT(), x = C.isObject, b = C.isFunction, S = C.isPlainObject, y = C.getValue, e = Z(), f = dE(), p = WT(), i = KT(), a = qT(), h = eE(), v = tE(), m = nE(), u = JT(), d = $T(), o = YT(), c = XT(), s = ZT(), l = QT(), r = HT(), _ = sE(), g = uE(), n = cE(), t.exports = (function() {
 			function t(t, n, r) {
 				var i;
 				this.name = "?xml", this.type = e.Document, t ||= {}, i = {}, t.writer ? S(t.writer) && (i = t.writer, t.writer = new g()) : t.writer = new g(), this.options = t, this.writer = t.writer, this.writerOptions = this.writer.filterOptions(i), this.stringify = new _(t), this.onDataCallback = n || function() {}, this.onEndCallback = r || function() {}, this.currentNode = null, this.currentLevel = -1, this.openTags = {}, this.documentStarted = !1, this.documentCompleted = !1, this.root = null;
@@ -18612,7 +18708,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, t;
 		})();
 	}).call(e);
-})), ZT = /* @__PURE__ */ E(((e, t) => {
+})), pE = /* @__PURE__ */ E(((e, t) => {
 	(function() {
 		var e, n, r, i = function(e, t) {
 			for (var n in t) a.call(t, n) && (e[n] = t[n]);
@@ -18621,7 +18717,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, a = {}.hasOwnProperty;
-		e = Z(), r = qT(), n = KT(), t.exports = (function(t) {
+		e = Z(), r = lE(), n = cE(), t.exports = (function(t) {
 			i(r, t);
 			function r(e, t) {
 				this.stream = e, r.__super__.constructor.call(this, t);
@@ -18677,10 +18773,10 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, r;
 		})(r);
 	}).call(e);
-})), QT = /* @__PURE__ */ E(((e, t) => {
+})), mE = /* @__PURE__ */ E(((e, t) => {
 	(function() {
-		var e, n, r, i, a, o, s, c, l, u = xT();
-		c = u.assign, l = u.isFunction, r = ST(), i = YT(), a = XT(), s = JT(), o = ZT(), e = Z(), n = KT(), t.exports.create = function(e, t, n, r) {
+		var e, n, r, i, a, o, s, c, l, u = LT();
+		c = u.assign, l = u.isFunction, r = RT(), i = dE(), a = fE(), s = uE(), o = pE(), e = Z(), n = cE(), t.exports.create = function(e, t, n, r) {
 			var a, o;
 			if (e == null) throw Error("Root element needs a name.");
 			return r = c({}, t, n, r), a = new i(r), o = a.element(e), r.headless || (a.declaration(r), (r.pubID != null || r.sysID != null) && a.dtd(r)), o;
@@ -18693,10 +18789,10 @@ var bT = /* @__PURE__ */ E(((e) => {
 			return new o(e, t);
 		}, t.exports.implementation = new r(), t.exports.nodeType = e, t.exports.writerState = n;
 	}).call(e);
-})), $T = /* @__PURE__ */ E(((e) => {
+})), hE = /* @__PURE__ */ E(((e) => {
 	(function() {
 		var t, n, r, i, a, o = {}.hasOwnProperty;
-		t = QT(), n = bT().defaults, i = function(e) {
+		t = mE(), n = IT().defaults, i = function(e) {
 			return typeof e == "string" && (e.indexOf("&") >= 0 || e.indexOf(">") >= 0 || e.indexOf("<") >= 0);
 		}, a = function(e) {
 			return "<![CDATA[" + r(e) + "]]>";
@@ -18730,7 +18826,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}, e;
 		})();
 	}).call(e);
-})), eE = /* @__PURE__ */ E(((e) => {
+})), gE = /* @__PURE__ */ E(((e) => {
 	(function(e) {
 		e.parser = function(e, t) {
 			return new n(e, t);
@@ -19556,13 +19652,13 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}) : String.fromCodePoint = n;
 		})();
 	})(e === void 0 ? e.sax = {} : e);
-})), tE = /* @__PURE__ */ E(((e) => {
+})), _E = /* @__PURE__ */ E(((e) => {
 	(function() {
 		e.stripBOM = function(e) {
 			return e[0] === "﻿" ? e.substring(1) : e;
 		};
 	}).call(e);
-})), nE = /* @__PURE__ */ E(((e) => {
+})), vE = /* @__PURE__ */ E(((e) => {
 	(function() {
 		var t = /* @__PURE__ */ new RegExp(/(?!xmlns)^.*:/);
 		e.normalize = function(e) {
@@ -19577,7 +19673,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			return /^(?:true|false)$/i.test(e) && (e = e.toLowerCase() === "true"), e;
 		};
 	}).call(e);
-})), rE = /* @__PURE__ */ E(((e) => {
+})), yE = /* @__PURE__ */ E(((e) => {
 	(function() {
 		var t, n, r, i, a, o, s, c, l = function(e, t) {
 			return function() {
@@ -19590,7 +19686,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, d = {}.hasOwnProperty;
-		s = eE(), r = re("events"), t = tE(), o = nE(), c = re("timers").setImmediate, n = bT().defaults, i = function(e) {
+		s = gE(), r = re("events"), t = _E(), o = vE(), c = re("timers").setImmediate, n = IT().defaults, i = function(e) {
 			return typeof e == "object" && !!e && Object.keys(e).length === 0;
 		}, a = function(e, t, n) {
 			var r, i, a;
@@ -19702,7 +19798,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			return typeof n == "object" && (r = n), i = new e.Parser(r), i.parseStringPromise(t);
 		};
 	}).call(e);
-})), iE = /* @__PURE__ */ E(((e) => {
+})), bE = /* @__PURE__ */ E(((e) => {
 	(function() {
 		var t, n, r, i, a = function(e, t) {
 			for (var n in t) o.call(t, n) && (e[n] = t[n]);
@@ -19711,7 +19807,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			}
 			return r.prototype = t.prototype, e.prototype = new r(), e.__super__ = t.prototype, e;
 		}, o = {}.hasOwnProperty;
-		n = bT(), t = $T(), r = rE(), i = nE(), e.defaults = n.defaults, e.processors = i, e.ValidationError = (function(e) {
+		n = IT(), t = hE(), r = yE(), i = vE(), e.defaults = n.defaults, e.processors = i, e.ValidationError = (function(e) {
 			a(t, e);
 			function t(e) {
 				this.message = e;
@@ -19719,7 +19815,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			return t;
 		})(Error), e.Builder = t.Builder, e.Parser = r.Parser, e.parseString = r.parseString, e.parseStringPromise = r.parseStringPromise;
 	}).call(e);
-})), aE = /* @__PURE__ */ E(((e, t) => {
+})), xE = /* @__PURE__ */ E(((e, t) => {
 	var n = t.exports = {};
 	n.feed = [
 		["author", "creator"],
@@ -19789,23 +19885,23 @@ var bT = /* @__PURE__ */ E(((e) => {
 		"keywords",
 		"episodeType"
 	].map(r);
-})), oE = /* @__PURE__ */ D({
+})), SE = /* @__PURE__ */ D({
 	AElig: () => "Æ",
 	AMP: () => "&",
 	Aacute: () => "Á",
 	Abreve: () => "Ă",
 	Acirc: () => "Â",
 	Acy: () => "А",
-	Afr: () => cE,
+	Afr: () => wE,
 	Agrave: () => "À",
 	Alpha: () => "Α",
 	Amacr: () => "Ā",
 	And: () => "⩓",
 	Aogon: () => "Ą",
-	Aopf: () => uE,
+	Aopf: () => EE,
 	ApplyFunction: () => "⁡",
 	Aring: () => "Å",
-	Ascr: () => fE,
+	Ascr: () => OE,
 	Assign: () => "≔",
 	Atilde: () => "Ã",
 	Auml: () => "Ä",
@@ -19816,8 +19912,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 	Because: () => "∵",
 	Bernoullis: () => "ℬ",
 	Beta: () => "Β",
-	Bfr: () => mE,
-	Bopf: () => vE,
+	Bfr: () => AE,
+	Bopf: () => PE,
 	Breve: () => "˘",
 	Bscr: () => "ℬ",
 	Bumpeq: () => "≎",
@@ -19852,7 +19948,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	Coproduct: () => "∐",
 	CounterClockwiseContourIntegral: () => "∳",
 	Cross: () => "⨯",
-	Cscr: () => wE,
+	Cscr: () => BE,
 	Cup: () => "⋓",
 	CupCap: () => "≍",
 	DD: () => "ⅅ",
@@ -19867,7 +19963,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	Dcy: () => "Д",
 	Del: () => "∇",
 	Delta: () => "Δ",
-	Dfr: () => DE,
+	Dfr: () => UE,
 	DiacriticalAcute: () => "´",
 	DiacriticalDot: () => "˙",
 	DiacriticalDoubleAcute: () => "˝",
@@ -19875,7 +19971,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	DiacriticalTilde: () => "˜",
 	Diamond: () => "⋄",
 	DifferentialD: () => "ⅆ",
-	Dopf: () => kE,
+	Dopf: () => GE,
 	Dot: () => "¨",
 	DotDot: () => "⃜",
 	DotEqual: () => "≐",
@@ -19907,7 +20003,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	DownTee: () => "⊤",
 	DownTeeArrow: () => "↧",
 	Downarrow: () => "⇓",
-	Dscr: () => jE,
+	Dscr: () => qE,
 	Dstrok: () => "Đ",
 	ENG: () => "Ŋ",
 	ETH: () => "Ð",
@@ -19916,14 +20012,14 @@ var bT = /* @__PURE__ */ E(((e) => {
 	Ecirc: () => "Ê",
 	Ecy: () => "Э",
 	Edot: () => "Ė",
-	Efr: () => NE,
+	Efr: () => YE,
 	Egrave: () => "È",
 	Element: () => "∈",
 	Emacr: () => "Ē",
 	EmptySmallSquare: () => "◻",
 	EmptyVerySmallSquare: () => "▫",
 	Eogon: () => "Ę",
-	Eopf: () => FE,
+	Eopf: () => ZE,
 	Epsilon: () => "Ε",
 	Equal: () => "⩵",
 	EqualTilde: () => "≂",
@@ -19935,10 +20031,10 @@ var bT = /* @__PURE__ */ E(((e) => {
 	Exists: () => "∃",
 	ExponentialE: () => "ⅇ",
 	Fcy: () => "Ф",
-	Ffr: () => LE,
+	Ffr: () => $E,
 	FilledSmallSquare: () => "◼",
 	FilledVerySmallSquare: () => "▪",
-	Fopf: () => zE,
+	Fopf: () => tD,
 	ForAll: () => "∀",
 	Fouriertrf: () => "ℱ",
 	Fscr: () => "ℱ",
@@ -19951,9 +20047,9 @@ var bT = /* @__PURE__ */ E(((e) => {
 	Gcirc: () => "Ĝ",
 	Gcy: () => "Г",
 	Gdot: () => "Ġ",
-	Gfr: () => UE,
+	Gfr: () => aD,
 	Gg: () => "⋙",
-	Gopf: () => GE,
+	Gopf: () => sD,
 	GreaterEqual: () => "≥",
 	GreaterEqualLess: () => "⋛",
 	GreaterFullEqual: () => "≧",
@@ -19961,7 +20057,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	GreaterLess: () => "≷",
 	GreaterSlantEqual: () => "⩾",
 	GreaterTilde: () => "≳",
-	Gscr: () => qE,
+	Gscr: () => lD,
 	Gt: () => "≫",
 	HARDcy: () => "Ъ",
 	Hacek: () => "ˇ",
@@ -19994,7 +20090,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	InvisibleComma: () => "⁣",
 	InvisibleTimes: () => "⁢",
 	Iogon: () => "Į",
-	Iopf: () => eD,
+	Iopf: () => gD,
 	Iota: () => "Ι",
 	Iscr: () => "ℐ",
 	Itilde: () => "Ĩ",
@@ -20002,9 +20098,9 @@ var bT = /* @__PURE__ */ E(((e) => {
 	Iuml: () => "Ï",
 	Jcirc: () => "Ĵ",
 	Jcy: () => "Й",
-	Jfr: () => rD,
-	Jopf: () => aD,
-	Jscr: () => sD,
+	Jfr: () => yD,
+	Jopf: () => xD,
+	Jscr: () => CD,
 	Jsercy: () => "Ј",
 	Jukcy: () => "Є",
 	KHcy: () => "Х",
@@ -20012,9 +20108,9 @@ var bT = /* @__PURE__ */ E(((e) => {
 	Kappa: () => "Κ",
 	Kcedil: () => "Ķ",
 	Kcy: () => "К",
-	Kfr: () => lD,
-	Kopf: () => dD,
-	Kscr: () => pD,
+	Kfr: () => TD,
+	Kopf: () => DD,
+	Kscr: () => kD,
 	LJcy: () => "Љ",
 	LT: () => "<",
 	Lacute: () => "Ĺ",
@@ -20057,7 +20153,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	LessLess: () => "⪡",
 	LessSlantEqual: () => "⩽",
 	LessTilde: () => "≲",
-	Lfr: () => _D,
+	Lfr: () => ND,
 	Ll: () => "⋘",
 	Lleftarrow: () => "⇚",
 	Lmidot: () => "Ŀ",
@@ -20067,7 +20163,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	Longleftarrow: () => "⟸",
 	Longleftrightarrow: () => "⟺",
 	Longrightarrow: () => "⟹",
-	Lopf: () => yD,
+	Lopf: () => FD,
 	LowerLeftArrow: () => "↙",
 	LowerRightArrow: () => "↘",
 	Lscr: () => "ℒ",
@@ -20078,9 +20174,9 @@ var bT = /* @__PURE__ */ E(((e) => {
 	Mcy: () => "М",
 	MediumSpace: () => " ",
 	Mellintrf: () => "ℳ",
-	Mfr: () => wD,
+	Mfr: () => BD,
 	MinusPlus: () => "∓",
-	Mopf: () => ED,
+	Mopf: () => HD,
 	Mscr: () => "ℳ",
 	Mu: () => "Μ",
 	NJcy: () => "Њ",
@@ -20095,7 +20191,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	NestedGreaterGreater: () => "≫",
 	NestedLessLess: () => "≪",
 	NewLine: () => "\n",
-	Nfr: () => LD,
+	Nfr: () => $D,
 	NoBreak: () => "⁠",
 	NonBreakingSpace: () => "\xA0",
 	Nopf: () => "ℕ",
@@ -20105,53 +20201,53 @@ var bT = /* @__PURE__ */ E(((e) => {
 	NotDoubleVerticalBar: () => "∦",
 	NotElement: () => "∉",
 	NotEqual: () => "≠",
-	NotEqualTilde: () => eO,
+	NotEqualTilde: () => gO,
 	NotExists: () => "∄",
 	NotGreater: () => "≯",
 	NotGreaterEqual: () => "≱",
-	NotGreaterFullEqual: () => tO,
-	NotGreaterGreater: () => nO,
+	NotGreaterFullEqual: () => _O,
+	NotGreaterGreater: () => vO,
 	NotGreaterLess: () => "≹",
-	NotGreaterSlantEqual: () => rO,
+	NotGreaterSlantEqual: () => yO,
 	NotGreaterTilde: () => "≵",
-	NotHumpDownHump: () => iO,
-	NotHumpEqual: () => aO,
+	NotHumpDownHump: () => bO,
+	NotHumpEqual: () => xO,
 	NotLeftTriangle: () => "⋪",
-	NotLeftTriangleBar: () => cO,
+	NotLeftTriangleBar: () => wO,
 	NotLeftTriangleEqual: () => "⋬",
 	NotLess: () => "≮",
 	NotLessEqual: () => "≰",
 	NotLessGreater: () => "≸",
-	NotLessLess: () => lO,
-	NotLessSlantEqual: () => uO,
+	NotLessLess: () => TO,
+	NotLessSlantEqual: () => EO,
 	NotLessTilde: () => "≴",
-	NotNestedGreaterGreater: () => dO,
-	NotNestedLessLess: () => fO,
+	NotNestedGreaterGreater: () => DO,
+	NotNestedLessLess: () => OO,
 	NotPrecedes: () => "⊀",
-	NotPrecedesEqual: () => pO,
+	NotPrecedesEqual: () => kO,
 	NotPrecedesSlantEqual: () => "⋠",
 	NotReverseElement: () => "∌",
 	NotRightTriangle: () => "⋫",
-	NotRightTriangleBar: () => mO,
+	NotRightTriangleBar: () => AO,
 	NotRightTriangleEqual: () => "⋭",
-	NotSquareSubset: () => hO,
+	NotSquareSubset: () => jO,
 	NotSquareSubsetEqual: () => "⋢",
-	NotSquareSuperset: () => gO,
+	NotSquareSuperset: () => MO,
 	NotSquareSupersetEqual: () => "⋣",
-	NotSubset: () => _O,
+	NotSubset: () => NO,
 	NotSubsetEqual: () => "⊈",
 	NotSucceeds: () => "⊁",
-	NotSucceedsEqual: () => vO,
+	NotSucceedsEqual: () => PO,
 	NotSucceedsSlantEqual: () => "⋡",
-	NotSucceedsTilde: () => yO,
-	NotSuperset: () => bO,
+	NotSucceedsTilde: () => FO,
+	NotSuperset: () => IO,
 	NotSupersetEqual: () => "⊉",
 	NotTilde: () => "≁",
 	NotTildeEqual: () => "≄",
 	NotTildeFullEqual: () => "≇",
 	NotTildeTilde: () => "≉",
 	NotVerticalBar: () => "∤",
-	Nscr: () => OO,
+	Nscr: () => WO,
 	Ntilde: () => "Ñ",
 	Nu: () => "Ν",
 	OElig: () => "Œ",
@@ -20159,16 +20255,16 @@ var bT = /* @__PURE__ */ E(((e) => {
 	Ocirc: () => "Ô",
 	Ocy: () => "О",
 	Odblac: () => "Ő",
-	Ofr: () => GO,
+	Ofr: () => sk,
 	Ograve: () => "Ò",
 	Omacr: () => "Ō",
 	Omega: () => "Ω",
 	Omicron: () => "Ο",
-	Oopf: () => qO,
+	Oopf: () => lk,
 	OpenCurlyDoubleQuote: () => "“",
 	OpenCurlyQuote: () => "‘",
 	Or: () => "⩔",
-	Oscr: () => YO,
+	Oscr: () => dk,
 	Oslash: () => "Ø",
 	Otilde: () => "Õ",
 	Otimes: () => "⨷",
@@ -20179,7 +20275,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	OverParenthesis: () => "⏜",
 	PartialD: () => "∂",
 	Pcy: () => "П",
-	Pfr: () => XO,
+	Pfr: () => fk,
 	Phi: () => "Φ",
 	Pi: () => "Π",
 	PlusMinus: () => "±",
@@ -20194,12 +20290,12 @@ var bT = /* @__PURE__ */ E(((e) => {
 	Product: () => "∏",
 	Proportion: () => "∷",
 	Proportional: () => "∝",
-	Pscr: () => $O,
+	Pscr: () => hk,
 	Psi: () => "Ψ",
 	QUOT: () => "\"",
-	Qfr: () => tk,
+	Qfr: () => _k,
 	Qopf: () => "ℚ",
-	Qscr: () => ik,
+	Qscr: () => bk,
 	RBarr: () => "⤐",
 	REG: () => "®",
 	Racute: () => "Ŕ",
@@ -20253,14 +20349,14 @@ var bT = /* @__PURE__ */ E(((e) => {
 	Scedil: () => "Ş",
 	Scirc: () => "Ŝ",
 	Scy: () => "С",
-	Sfr: () => uk,
+	Sfr: () => Ek,
 	ShortDownArrow: () => "↓",
 	ShortLeftArrow: () => "←",
 	ShortRightArrow: () => "→",
 	ShortUpArrow: () => "↑",
 	Sigma: () => "Σ",
 	SmallCircle: () => "∘",
-	Sopf: () => pk,
+	Sopf: () => kk,
 	Sqrt: () => "√",
 	Square: () => "□",
 	SquareIntersection: () => "⊓",
@@ -20269,7 +20365,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	SquareSuperset: () => "⊐",
 	SquareSupersetEqual: () => "⊒",
 	SquareUnion: () => "⊔",
-	Sscr: () => _k,
+	Sscr: () => Nk,
 	Star: () => "⋆",
 	Sub: () => "⋐",
 	Subset: () => "⋐",
@@ -20293,18 +20389,18 @@ var bT = /* @__PURE__ */ E(((e) => {
 	Tcaron: () => "Ť",
 	Tcedil: () => "Ţ",
 	Tcy: () => "Т",
-	Tfr: () => yk,
+	Tfr: () => Fk,
 	Therefore: () => "∴",
 	Theta: () => "Θ",
-	ThickSpace: () => xk,
+	ThickSpace: () => Lk,
 	ThinSpace: () => " ",
 	Tilde: () => "∼",
 	TildeEqual: () => "≃",
 	TildeFullEqual: () => "≅",
 	TildeTilde: () => "≈",
-	Topf: () => Sk,
+	Topf: () => Rk,
 	TripleDot: () => "⃛",
-	Tscr: () => wk,
+	Tscr: () => Bk,
 	Tstrok: () => "Ŧ",
 	Uacute: () => "Ú",
 	Uarr: () => "↟",
@@ -20314,7 +20410,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	Ucirc: () => "Û",
 	Ucy: () => "У",
 	Udblac: () => "Ű",
-	Ufr: () => Ek,
+	Ufr: () => Hk,
 	Ugrave: () => "Ù",
 	Umacr: () => "Ū",
 	UnderBar: () => "_",
@@ -20324,7 +20420,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	Union: () => "⋃",
 	UnionPlus: () => "⊎",
 	Uogon: () => "Ų",
-	Uopf: () => Ok,
+	Uopf: () => Wk,
 	UpArrow: () => "↑",
 	UpArrowBar: () => "⤒",
 	UpArrowDownArrow: () => "⇅",
@@ -20339,7 +20435,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	Upsi: () => "ϒ",
 	Upsilon: () => "Υ",
 	Uring: () => "Ů",
-	Uscr: () => Ak,
+	Uscr: () => Kk,
 	Utilde: () => "Ũ",
 	Uuml: () => "Ü",
 	VDash: () => "⊫",
@@ -20355,28 +20451,28 @@ var bT = /* @__PURE__ */ E(((e) => {
 	VerticalSeparator: () => "❘",
 	VerticalTilde: () => "≀",
 	VeryThinSpace: () => " ",
-	Vfr: () => Ik,
-	Vopf: () => Bk,
-	Vscr: () => Hk,
+	Vfr: () => Qk,
+	Vopf: () => nA,
+	Vscr: () => iA,
 	Vvdash: () => "⊪",
 	Wcirc: () => "Ŵ",
 	Wedge: () => "⋀",
-	Wfr: () => Jk,
-	Wopf: () => Xk,
-	Wscr: () => Qk,
-	Xfr: () => eA,
+	Wfr: () => uA,
+	Wopf: () => fA,
+	Wscr: () => mA,
+	Xfr: () => gA,
 	Xi: () => "Ξ",
-	Xopf: () => nA,
-	Xscr: () => iA,
+	Xopf: () => vA,
+	Xscr: () => bA,
 	YAcy: () => "Я",
 	YIcy: () => "Ї",
 	YUcy: () => "Ю",
 	Yacute: () => "Ý",
 	Ycirc: () => "Ŷ",
 	Ycy: () => "Ы",
-	Yfr: () => oA,
-	Yopf: () => cA,
-	Yscr: () => uA,
+	Yfr: () => SA,
+	Yopf: () => wA,
+	Yscr: () => EA,
 	Yuml: () => "Ÿ",
 	ZHcy: () => "Ж",
 	Zacute: () => "Ź",
@@ -20387,18 +20483,18 @@ var bT = /* @__PURE__ */ E(((e) => {
 	Zeta: () => "Ζ",
 	Zfr: () => "ℨ",
 	Zopf: () => "ℤ",
-	Zscr: () => mA,
+	Zscr: () => AA,
 	aacute: () => "á",
 	abreve: () => "ă",
 	ac: () => "∾",
-	acE: () => sE,
+	acE: () => CE,
 	acd: () => "∿",
 	acirc: () => "â",
 	acute: () => "´",
 	acy: () => "а",
 	aelig: () => "æ",
 	af: () => "⁡",
-	afr: () => lE,
+	afr: () => TE,
 	agrave: () => "à",
 	alefsym: () => "ℵ",
 	aleph: () => "ℵ",
@@ -20430,7 +20526,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	angst: () => "Å",
 	angzarr: () => "⍼",
 	aogon: () => "ą",
-	aopf: () => dE,
+	aopf: () => DE,
 	ap: () => "≈",
 	apE: () => "⩰",
 	apacir: () => "⩯",
@@ -20440,7 +20536,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	approx: () => "≈",
 	approxeq: () => "≊",
 	aring: () => "å",
-	ascr: () => pE,
+	ascr: () => kE,
 	ast: () => "*",
 	asymp: () => "≈",
 	asympeq: () => "≍",
@@ -20470,7 +20566,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	beta: () => "β",
 	beth: () => "ℶ",
 	between: () => "≬",
-	bfr: () => hE,
+	bfr: () => jE,
 	bigcap: () => "⋂",
 	bigcirc: () => "◯",
 	bigcup: () => "⋃",
@@ -20496,10 +20592,10 @@ var bT = /* @__PURE__ */ E(((e) => {
 	blk14: () => "░",
 	blk34: () => "▓",
 	block: () => "█",
-	bne: () => gE,
-	bnequiv: () => _E,
+	bne: () => ME,
+	bnequiv: () => NE,
 	bnot: () => "⌐",
-	bopf: () => yE,
+	bopf: () => FE,
 	bot: () => "⊥",
 	bottom: () => "⊥",
 	bowtie: () => "⋈",
@@ -20550,7 +20646,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	bprime: () => "‵",
 	breve: () => "˘",
 	brvbar: () => "¦",
-	bscr: () => bE,
+	bscr: () => IE,
 	bsemi: () => "⁏",
 	bsim: () => "∽",
 	bsime: () => "⋍",
@@ -20570,7 +20666,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	capcap: () => "⩋",
 	capcup: () => "⩇",
 	capdot: () => "⩀",
-	caps: () => xE,
+	caps: () => LE,
 	caret: () => "⁁",
 	caron: () => "ˇ",
 	ccaps: () => "⩍",
@@ -20584,7 +20680,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	cemptyv: () => "⦲",
 	cent: () => "¢",
 	centerdot: () => "·",
-	cfr: () => SE,
+	cfr: () => RE,
 	chcy: () => "ч",
 	check: () => "✓",
 	checkmark: () => "✓",
@@ -20618,13 +20714,13 @@ var bT = /* @__PURE__ */ E(((e) => {
 	cong: () => "≅",
 	congdot: () => "⩭",
 	conint: () => "∮",
-	copf: () => CE,
+	copf: () => zE,
 	coprod: () => "∐",
 	copy: () => "©",
 	copysr: () => "℗",
 	crarr: () => "↵",
 	cross: () => "✗",
-	cscr: () => TE,
+	cscr: () => VE,
 	csub: () => "⫏",
 	csube: () => "⫑",
 	csup: () => "⫐",
@@ -20642,7 +20738,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	cupcup: () => "⩊",
 	cupdot: () => "⊍",
 	cupor: () => "⩅",
-	cups: () => EE,
+	cups: () => HE,
 	curarr: () => "↷",
 	curarrm: () => "⤼",
 	curlyeqprec: () => "⋞",
@@ -20672,12 +20768,12 @@ var bT = /* @__PURE__ */ E(((e) => {
 	ddagger: () => "‡",
 	ddarr: () => "⇊",
 	ddotseq: () => "⩷",
-	default: () => gA,
+	default: () => MA,
 	deg: () => "°",
 	delta: () => "δ",
 	demptyv: () => "⦱",
 	dfisht: () => "⥿",
-	dfr: () => OE,
+	dfr: () => WE,
 	dharl: () => "⇃",
 	dharr: () => "⇂",
 	diam: () => "⋄",
@@ -20695,7 +20791,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	dlcorn: () => "⌞",
 	dlcrop: () => "⌍",
 	dollar: () => "$",
-	dopf: () => AE,
+	dopf: () => KE,
 	dot: () => "˙",
 	doteq: () => "≐",
 	doteqdot: () => "≑",
@@ -20710,7 +20806,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	drbkarow: () => "⤐",
 	drcorn: () => "⌟",
 	drcrop: () => "⌌",
-	dscr: () => ME,
+	dscr: () => JE,
 	dscy: () => "ѕ",
 	dsol: () => "⧶",
 	dstrok: () => "đ",
@@ -20734,7 +20830,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	edot: () => "ė",
 	ee: () => "ⅇ",
 	efDot: () => "≒",
-	efr: () => PE,
+	efr: () => XE,
 	eg: () => "⪚",
 	egrave: () => "è",
 	egs: () => "⪖",
@@ -20754,7 +20850,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	eng: () => "ŋ",
 	ensp: () => " ",
 	eogon: () => "ę",
-	eopf: () => IE,
+	eopf: () => QE,
 	epar: () => "⋕",
 	eparsl: () => "⧣",
 	eplus: () => "⩱",
@@ -20790,14 +20886,14 @@ var bT = /* @__PURE__ */ E(((e) => {
 	ffilig: () => "ﬃ",
 	fflig: () => "ﬀ",
 	ffllig: () => "ﬄ",
-	ffr: () => RE,
+	ffr: () => eD,
 	filig: () => "ﬁ",
 	fjlig: () => "fj",
 	flat: () => "♭",
 	fllig: () => "ﬂ",
 	fltns: () => "▱",
 	fnof: () => "ƒ",
-	fopf: () => BE,
+	fopf: () => nD,
 	forall: () => "∀",
 	fork: () => "⋔",
 	forkv: () => "⫙",
@@ -20819,7 +20915,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	frac78: () => "⅞",
 	frasl: () => "⁄",
 	frown: () => "⌢",
-	fscr: () => VE,
+	fscr: () => rD,
 	gE: () => "≧",
 	gEl: () => "⪌",
 	gacute: () => "ǵ",
@@ -20840,9 +20936,9 @@ var bT = /* @__PURE__ */ E(((e) => {
 	gesdot: () => "⪀",
 	gesdoto: () => "⪂",
 	gesdotol: () => "⪄",
-	gesl: () => HE,
+	gesl: () => iD,
 	gesles: () => "⪔",
-	gfr: () => WE,
+	gfr: () => oD,
 	gg: () => "≫",
 	ggg: () => "⋙",
 	gimel: () => "ℷ",
@@ -20858,7 +20954,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	gneq: () => "⪈",
 	gneqq: () => "≩",
 	gnsim: () => "⋧",
-	gopf: () => KE,
+	gopf: () => cD,
 	grave: () => "`",
 	gscr: () => "ℊ",
 	gsim: () => "≳",
@@ -20877,8 +20973,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 	gtreqqless: () => "⪌",
 	gtrless: () => "≷",
 	gtrsim: () => "≳",
-	gvertneqq: () => JE,
-	gvnE: () => YE,
+	gvertneqq: () => uD,
+	gvnE: () => dD,
 	hArr: () => "⇔",
 	hairsp: () => " ",
 	half: () => "½",
@@ -20893,16 +20989,16 @@ var bT = /* @__PURE__ */ E(((e) => {
 	heartsuit: () => "♥",
 	hellip: () => "…",
 	hercon: () => "⊹",
-	hfr: () => XE,
+	hfr: () => fD,
 	hksearow: () => "⤥",
 	hkswarow: () => "⤦",
 	hoarr: () => "⇿",
 	homtht: () => "∻",
 	hookleftarrow: () => "↩",
 	hookrightarrow: () => "↪",
-	hopf: () => ZE,
+	hopf: () => pD,
 	horbar: () => "―",
-	hscr: () => QE,
+	hscr: () => mD,
 	hslash: () => "ℏ",
 	hstrok: () => "ħ",
 	hybull: () => "⁃",
@@ -20914,7 +21010,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	iecy: () => "е",
 	iexcl: () => "¡",
 	iff: () => "⇔",
-	ifr: () => $E,
+	ifr: () => hD,
 	igrave: () => "ì",
 	ii: () => "ⅈ",
 	iiiint: () => "⨌",
@@ -20941,11 +21037,11 @@ var bT = /* @__PURE__ */ E(((e) => {
 	intprod: () => "⨼",
 	iocy: () => "ё",
 	iogon: () => "į",
-	iopf: () => tD,
+	iopf: () => _D,
 	iota: () => "ι",
 	iprod: () => "⨼",
 	iquest: () => "¿",
-	iscr: () => nD,
+	iscr: () => vD,
 	isin: () => "∈",
 	isinE: () => "⋹",
 	isindot: () => "⋵",
@@ -20958,22 +21054,22 @@ var bT = /* @__PURE__ */ E(((e) => {
 	iuml: () => "ï",
 	jcirc: () => "ĵ",
 	jcy: () => "й",
-	jfr: () => iD,
+	jfr: () => bD,
 	jmath: () => "ȷ",
-	jopf: () => oD,
-	jscr: () => cD,
+	jopf: () => SD,
+	jscr: () => wD,
 	jsercy: () => "ј",
 	jukcy: () => "є",
 	kappa: () => "κ",
 	kappav: () => "ϰ",
 	kcedil: () => "ķ",
 	kcy: () => "к",
-	kfr: () => uD,
+	kfr: () => ED,
 	kgreen: () => "ĸ",
 	khcy: () => "х",
 	kjcy: () => "ќ",
-	kopf: () => fD,
-	kscr: () => mD,
+	kopf: () => OD,
+	kscr: () => AD,
 	lAarr: () => "⇚",
 	lArr: () => "⇐",
 	lAtail: () => "⤛",
@@ -21002,7 +21098,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	lat: () => "⪫",
 	latail: () => "⤙",
 	late: () => "⪭",
-	lates: () => hD,
+	lates: () => jD,
 	lbarr: () => "⤌",
 	lbbrk: () => "❲",
 	lbrace: () => "{",
@@ -21041,7 +21137,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	lesdot: () => "⩿",
 	lesdoto: () => "⪁",
 	lesdotor: () => "⪃",
-	lesg: () => gD,
+	lesg: () => MD,
 	lesges: () => "⪓",
 	lessapprox: () => "⪅",
 	lessdot: () => "⋖",
@@ -21051,7 +21147,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	lesssim: () => "≲",
 	lfisht: () => "⥼",
 	lfloor: () => "⌊",
-	lfr: () => vD,
+	lfr: () => PD,
 	lg: () => "≶",
 	lgE: () => "⪑",
 	lhard: () => "↽",
@@ -21084,7 +21180,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	looparrowleft: () => "↫",
 	looparrowright: () => "↬",
 	lopar: () => "⦅",
-	lopf: () => bD,
+	lopf: () => ID,
 	loplus: () => "⨭",
 	lotimes: () => "⨴",
 	lowast: () => "∗",
@@ -21101,7 +21197,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	lrm: () => "‎",
 	lrtri: () => "⊿",
 	lsaquo: () => "‹",
-	lscr: () => xD,
+	lscr: () => LD,
 	lsh: () => "↰",
 	lsim: () => "≲",
 	lsime: () => "⪍",
@@ -21124,8 +21220,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 	ltrif: () => "◂",
 	lurdshar: () => "⥊",
 	luruhar: () => "⥦",
-	lvertneqq: () => SD,
-	lvnE: () => CD,
+	lvertneqq: () => RD,
+	lvnE: () => zD,
 	mDDot: () => "∺",
 	macr: () => "¯",
 	male: () => "♂",
@@ -21141,7 +21237,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	mcy: () => "м",
 	mdash: () => "—",
 	measuredangle: () => "∡",
-	mfr: () => TD,
+	mfr: () => VD,
 	mho: () => "℧",
 	micro: () => "µ",
 	mid: () => "∣",
@@ -21156,43 +21252,43 @@ var bT = /* @__PURE__ */ E(((e) => {
 	mldr: () => "…",
 	mnplus: () => "∓",
 	models: () => "⊧",
-	mopf: () => DD,
+	mopf: () => UD,
 	mp: () => "∓",
-	mscr: () => OD,
+	mscr: () => WD,
 	mstpos: () => "∾",
 	mu: () => "μ",
 	multimap: () => "⊸",
 	mumap: () => "⊸",
-	nGg: () => UD,
-	nGt: () => WD,
-	nGtv: () => GD,
+	nGg: () => aO,
+	nGt: () => oO,
+	nGtv: () => sO,
 	nLeftarrow: () => "⇍",
 	nLeftrightarrow: () => "⇎",
-	nLl: () => XD,
-	nLt: () => ZD,
-	nLtv: () => QD,
+	nLl: () => fO,
+	nLt: () => pO,
+	nLtv: () => mO,
 	nRightarrow: () => "⇏",
 	nVDash: () => "⊯",
 	nVdash: () => "⊮",
 	nabla: () => "∇",
 	nacute: () => "ń",
-	nang: () => kD,
+	nang: () => GD,
 	nap: () => "≉",
-	napE: () => AD,
-	napid: () => jD,
+	napE: () => KD,
+	napid: () => qD,
 	napos: () => "ŉ",
 	napprox: () => "≉",
 	natur: () => "♮",
 	natural: () => "♮",
 	naturals: () => "ℕ",
 	nbsp: () => "\xA0",
-	nbump: () => MD,
-	nbumpe: () => ND,
+	nbump: () => JD,
+	nbumpe: () => YD,
 	ncap: () => "⩃",
 	ncaron: () => "ň",
 	ncedil: () => "ņ",
 	ncong: () => "≇",
-	ncongdot: () => PD,
+	ncongdot: () => XD,
 	ncup: () => "⩂",
 	ncy: () => "н",
 	ndash: () => "–",
@@ -21201,19 +21297,19 @@ var bT = /* @__PURE__ */ E(((e) => {
 	nearhk: () => "⤤",
 	nearr: () => "↗",
 	nearrow: () => "↗",
-	nedot: () => FD,
+	nedot: () => ZD,
 	nequiv: () => "≢",
 	nesear: () => "⤨",
-	nesim: () => ID,
+	nesim: () => QD,
 	nexist: () => "∄",
 	nexists: () => "∄",
-	nfr: () => RD,
-	ngE: () => zD,
+	nfr: () => eO,
+	ngE: () => tO,
 	nge: () => "≱",
 	ngeq: () => "≱",
-	ngeqq: () => BD,
-	ngeqslant: () => VD,
-	nges: () => HD,
+	ngeqq: () => nO,
+	ngeqslant: () => rO,
+	nges: () => iO,
 	ngsim: () => "≵",
 	ngt: () => "≯",
 	ngtr: () => "≯",
@@ -21226,27 +21322,27 @@ var bT = /* @__PURE__ */ E(((e) => {
 	niv: () => "∋",
 	njcy: () => "њ",
 	nlArr: () => "⇍",
-	nlE: () => KD,
+	nlE: () => cO,
 	nlarr: () => "↚",
 	nldr: () => "‥",
 	nle: () => "≰",
 	nleftarrow: () => "↚",
 	nleftrightarrow: () => "↮",
 	nleq: () => "≰",
-	nleqq: () => qD,
-	nleqslant: () => JD,
-	nles: () => YD,
+	nleqq: () => lO,
+	nleqslant: () => uO,
+	nles: () => dO,
 	nless: () => "≮",
 	nlsim: () => "≴",
 	nlt: () => "≮",
 	nltri: () => "⋪",
 	nltrie: () => "⋬",
 	nmid: () => "∤",
-	nopf: () => $D,
+	nopf: () => hO,
 	not: () => "¬",
 	notin: () => "∉",
-	notinE: () => sO,
-	notindot: () => oO,
+	notinE: () => CO,
+	notindot: () => SO,
 	notinva: () => "∉",
 	notinvb: () => "⋷",
 	notinvc: () => "⋶",
@@ -21256,25 +21352,25 @@ var bT = /* @__PURE__ */ E(((e) => {
 	notnivc: () => "⋽",
 	npar: () => "∦",
 	nparallel: () => "∦",
-	nparsl: () => xO,
-	npart: () => SO,
+	nparsl: () => LO,
+	npart: () => RO,
 	npolint: () => "⨔",
 	npr: () => "⊀",
 	nprcue: () => "⋠",
-	npre: () => wO,
+	npre: () => BO,
 	nprec: () => "⊀",
-	npreceq: () => CO,
+	npreceq: () => zO,
 	nrArr: () => "⇏",
 	nrarr: () => "↛",
-	nrarrc: () => TO,
-	nrarrw: () => EO,
+	nrarrc: () => VO,
+	nrarrw: () => HO,
 	nrightarrow: () => "↛",
 	nrtri: () => "⋫",
 	nrtrie: () => "⋭",
 	nsc: () => "⊁",
 	nsccue: () => "⋡",
-	nsce: () => DO,
-	nscr: () => kO,
+	nsce: () => UO,
+	nscr: () => GO,
 	nshortmid: () => "∤",
 	nshortparallel: () => "∦",
 	nsim: () => "≁",
@@ -21285,19 +21381,19 @@ var bT = /* @__PURE__ */ E(((e) => {
 	nsqsube: () => "⋢",
 	nsqsupe: () => "⋣",
 	nsub: () => "⊄",
-	nsubE: () => AO,
+	nsubE: () => KO,
 	nsube: () => "⊈",
-	nsubset: () => jO,
+	nsubset: () => qO,
 	nsubseteq: () => "⊈",
-	nsubseteqq: () => MO,
+	nsubseteqq: () => JO,
 	nsucc: () => "⊁",
-	nsucceq: () => NO,
+	nsucceq: () => YO,
 	nsup: () => "⊅",
-	nsupE: () => PO,
+	nsupE: () => XO,
 	nsupe: () => "⊉",
-	nsupset: () => FO,
+	nsupset: () => ZO,
 	nsupseteq: () => "⊉",
-	nsupseteqq: () => IO,
+	nsupseteqq: () => QO,
 	ntgl: () => "≹",
 	ntilde: () => "ñ",
 	ntlg: () => "≸",
@@ -21311,18 +21407,18 @@ var bT = /* @__PURE__ */ E(((e) => {
 	numsp: () => " ",
 	nvDash: () => "⊭",
 	nvHarr: () => "⤄",
-	nvap: () => LO,
+	nvap: () => $O,
 	nvdash: () => "⊬",
-	nvge: () => RO,
-	nvgt: () => zO,
+	nvge: () => ek,
+	nvgt: () => tk,
 	nvinfin: () => "⧞",
 	nvlArr: () => "⤂",
-	nvle: () => BO,
-	nvlt: () => VO,
-	nvltrie: () => HO,
+	nvle: () => nk,
+	nvlt: () => rk,
+	nvltrie: () => ik,
 	nvrArr: () => "⤃",
-	nvrtrie: () => UO,
-	nvsim: () => WO,
+	nvrtrie: () => ak,
+	nvsim: () => ok,
 	nwArr: () => "⇖",
 	nwarhk: () => "⤣",
 	nwarr: () => "↖",
@@ -21341,7 +21437,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	odsold: () => "⦼",
 	oelig: () => "œ",
 	ofcir: () => "⦿",
-	ofr: () => KO,
+	ofr: () => ck,
 	ogon: () => "˛",
 	ograve: () => "ò",
 	ogt: () => "⧁",
@@ -21358,7 +21454,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	omicron: () => "ο",
 	omid: () => "⦶",
 	ominus: () => "⊖",
-	oopf: () => JO,
+	oopf: () => uk,
 	opar: () => "⦷",
 	operp: () => "⦹",
 	oplus: () => "⊕",
@@ -21393,7 +21489,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	permil: () => "‰",
 	perp: () => "⊥",
 	pertenk: () => "‱",
-	pfr: () => ZO,
+	pfr: () => pk,
 	phi: () => "φ",
 	phiv: () => "ϕ",
 	phmmat: () => "ℳ",
@@ -21416,7 +21512,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	plustwo: () => "⨧",
 	pm: () => "±",
 	pointint: () => "⨕",
-	popf: () => QO,
+	popf: () => mk,
 	pound: () => "£",
 	pr: () => "≺",
 	prE: () => "⪳",
@@ -21444,14 +21540,14 @@ var bT = /* @__PURE__ */ E(((e) => {
 	propto: () => "∝",
 	prsim: () => "≾",
 	prurel: () => "⊰",
-	pscr: () => ek,
+	pscr: () => gk,
 	psi: () => "ψ",
 	puncsp: () => " ",
-	qfr: () => nk,
+	qfr: () => vk,
 	qint: () => "⨌",
-	qopf: () => rk,
+	qopf: () => yk,
 	qprime: () => "⁗",
-	qscr: () => ak,
+	qscr: () => xk,
 	quaternions: () => "ℍ",
 	quatint: () => "⨖",
 	quest: () => "?",
@@ -21462,7 +21558,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	rAtail: () => "⤜",
 	rBarr: () => "⤏",
 	rHar: () => "⥤",
-	race: () => ok,
+	race: () => Sk,
 	racute: () => "ŕ",
 	radic: () => "√",
 	raemptyv: () => "⦳",
@@ -21511,7 +21607,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	reg: () => "®",
 	rfisht: () => "⥽",
 	rfloor: () => "⌋",
-	rfr: () => sk,
+	rfr: () => Ck,
 	rhard: () => "⇁",
 	rharu: () => "⇀",
 	rharul: () => "⥬",
@@ -21538,7 +21634,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	roarr: () => "⇾",
 	robrk: () => "⟧",
 	ropar: () => "⦆",
-	ropf: () => ck,
+	ropf: () => wk,
 	roplus: () => "⨮",
 	rotimes: () => "⨵",
 	rpar: () => ")",
@@ -21546,7 +21642,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	rppolint: () => "⨒",
 	rrarr: () => "⇉",
 	rsaquo: () => "›",
-	rscr: () => lk,
+	rscr: () => Tk,
 	rsh: () => "↱",
 	rsqb: () => "]",
 	rsquo: () => "’",
@@ -21588,7 +21684,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	setminus: () => "∖",
 	setmn: () => "∖",
 	sext: () => "✶",
-	sfr: () => dk,
+	sfr: () => Dk,
 	sfrown: () => "⌢",
 	sharp: () => "♯",
 	shchcy: () => "щ",
@@ -21618,19 +21714,19 @@ var bT = /* @__PURE__ */ E(((e) => {
 	smile: () => "⌣",
 	smt: () => "⪪",
 	smte: () => "⪬",
-	smtes: () => fk,
+	smtes: () => Ok,
 	softcy: () => "ь",
 	sol: () => "/",
 	solb: () => "⧄",
 	solbar: () => "⌿",
-	sopf: () => mk,
+	sopf: () => Ak,
 	spades: () => "♠",
 	spadesuit: () => "♠",
 	spar: () => "∥",
 	sqcap: () => "⊓",
-	sqcaps: () => hk,
+	sqcaps: () => jk,
 	sqcup: () => "⊔",
-	sqcups: () => gk,
+	sqcups: () => Mk,
 	sqsub: () => "⊏",
 	sqsube: () => "⊑",
 	sqsubset: () => "⊏",
@@ -21644,7 +21740,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	squarf: () => "▪",
 	squf: () => "▪",
 	srarr: () => "→",
-	sscr: () => vk,
+	sscr: () => Pk,
 	ssetmn: () => "∖",
 	ssmile: () => "⌣",
 	sstarf: () => "⋆",
@@ -21719,7 +21815,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	tcy: () => "т",
 	tdot: () => "⃛",
 	telrec: () => "⌕",
-	tfr: () => bk,
+	tfr: () => Ik,
 	there4: () => "∴",
 	therefore: () => "∴",
 	theta: () => "θ",
@@ -21741,7 +21837,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	top: () => "⊤",
 	topbot: () => "⌶",
 	topcir: () => "⫱",
-	topf: () => Ck,
+	topf: () => zk,
 	topfork: () => "⫚",
 	tosa: () => "⤩",
 	tprime: () => "‴",
@@ -21760,7 +21856,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	trisb: () => "⧍",
 	tritime: () => "⨻",
 	trpezium: () => "⏢",
-	tscr: () => Tk,
+	tscr: () => Vk,
 	tscy: () => "ц",
 	tshcy: () => "ћ",
 	tstrok: () => "ŧ",
@@ -21779,7 +21875,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	udblac: () => "ű",
 	udhar: () => "⥮",
 	ufisht: () => "⥾",
-	ufr: () => Dk,
+	ufr: () => Uk,
 	ugrave: () => "ù",
 	uharl: () => "↿",
 	uharr: () => "↾",
@@ -21791,7 +21887,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	umacr: () => "ū",
 	uml: () => "¨",
 	uogon: () => "ų",
-	uopf: () => kk,
+	uopf: () => Gk,
 	uparrow: () => "↑",
 	updownarrow: () => "↕",
 	upharpoonleft: () => "↿",
@@ -21806,7 +21902,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	urcrop: () => "⌎",
 	uring: () => "ů",
 	urtri: () => "◹",
-	uscr: () => jk,
+	uscr: () => qk,
 	utdot: () => "⋰",
 	utilde: () => "ũ",
 	utri: () => "▵",
@@ -21828,10 +21924,10 @@ var bT = /* @__PURE__ */ E(((e) => {
 	varr: () => "↕",
 	varrho: () => "ϱ",
 	varsigma: () => "ς",
-	varsubsetneq: () => Mk,
-	varsubsetneqq: () => Nk,
-	varsupsetneq: () => Pk,
-	varsupsetneqq: () => Fk,
+	varsubsetneq: () => Jk,
+	varsubsetneqq: () => Yk,
+	varsupsetneq: () => Xk,
+	varsupsetneqq: () => Zk,
 	vartheta: () => "ϑ",
 	vartriangleleft: () => "⊲",
 	vartriangleright: () => "⊳",
@@ -21843,35 +21939,35 @@ var bT = /* @__PURE__ */ E(((e) => {
 	vellip: () => "⋮",
 	verbar: () => "|",
 	vert: () => "|",
-	vfr: () => Lk,
+	vfr: () => $k,
 	vltri: () => "⊲",
-	vnsub: () => Rk,
-	vnsup: () => zk,
-	vopf: () => Vk,
+	vnsub: () => eA,
+	vnsup: () => tA,
+	vopf: () => rA,
 	vprop: () => "∝",
 	vrtri: () => "⊳",
-	vscr: () => Uk,
-	vsubnE: () => Wk,
-	vsubne: () => Gk,
-	vsupnE: () => Kk,
-	vsupne: () => qk,
+	vscr: () => aA,
+	vsubnE: () => oA,
+	vsubne: () => sA,
+	vsupnE: () => cA,
+	vsupne: () => lA,
 	vzigzag: () => "⦚",
 	wcirc: () => "ŵ",
 	wedbar: () => "⩟",
 	wedge: () => "∧",
 	wedgeq: () => "≙",
 	weierp: () => "℘",
-	wfr: () => Yk,
-	wopf: () => Zk,
+	wfr: () => dA,
+	wopf: () => pA,
 	wp: () => "℘",
 	wr: () => "≀",
 	wreath: () => "≀",
-	wscr: () => $k,
+	wscr: () => hA,
 	xcap: () => "⋂",
 	xcirc: () => "◯",
 	xcup: () => "⋃",
 	xdtri: () => "▽",
-	xfr: () => tA,
+	xfr: () => _A,
 	xhArr: () => "⟺",
 	xharr: () => "⟷",
 	xi: () => "ξ",
@@ -21880,12 +21976,12 @@ var bT = /* @__PURE__ */ E(((e) => {
 	xmap: () => "⟼",
 	xnis: () => "⋻",
 	xodot: () => "⨀",
-	xopf: () => rA,
+	xopf: () => yA,
 	xoplus: () => "⨁",
 	xotime: () => "⨂",
 	xrArr: () => "⟹",
 	xrarr: () => "⟶",
-	xscr: () => aA,
+	xscr: () => xA,
 	xsqcup: () => "⨆",
 	xuplus: () => "⨄",
 	xutri: () => "△",
@@ -21896,10 +21992,10 @@ var bT = /* @__PURE__ */ E(((e) => {
 	ycirc: () => "ŷ",
 	ycy: () => "ы",
 	yen: () => "¥",
-	yfr: () => sA,
+	yfr: () => CA,
 	yicy: () => "ї",
-	yopf: () => lA,
-	yscr: () => dA,
+	yopf: () => TA,
+	yscr: () => DA,
 	yucy: () => "ю",
 	yuml: () => "ÿ",
 	zacute: () => "ź",
@@ -21908,22 +22004,22 @@ var bT = /* @__PURE__ */ E(((e) => {
 	zdot: () => "ż",
 	zeetrf: () => "ℨ",
 	zeta: () => "ζ",
-	zfr: () => fA,
+	zfr: () => OA,
 	zhcy: () => "ж",
 	zigrarr: () => "⇝",
-	zopf: () => pA,
-	zscr: () => hA,
+	zopf: () => kA,
+	zscr: () => jA,
 	zwj: () => "‍",
 	zwnj: () => "‌"
-}), sE, cE, lE, uE, dE, fE, pE, mE, hE, gE, _E, vE, yE, bE, xE, SE, CE, wE, TE, EE, DE, OE, kE, AE, jE, ME, NE, PE, FE, IE, LE, RE, zE, BE, VE, HE, UE, WE, GE, KE, qE, JE, YE, XE, ZE, QE, $E, eD, tD, nD, rD, iD, aD, oD, sD, cD, lD, uD, dD, fD, pD, mD, hD, gD, _D, vD, yD, bD, xD, SD, CD, wD, TD, ED, DD, OD, kD, AD, jD, MD, ND, PD, FD, ID, LD, RD, zD, BD, VD, HD, UD, WD, GD, KD, qD, JD, YD, XD, ZD, QD, $D, eO, tO, nO, rO, iO, aO, oO, sO, cO, lO, uO, dO, fO, pO, mO, hO, gO, _O, vO, yO, bO, xO, SO, CO, wO, TO, EO, DO, OO, kO, AO, jO, MO, NO, PO, FO, IO, LO, RO, zO, BO, VO, HO, UO, WO, GO, KO, qO, JO, YO, XO, ZO, QO, $O, ek, tk, nk, rk, ik, ak, ok, sk, ck, lk, uk, dk, fk, pk, mk, hk, gk, _k, vk, yk, bk, xk, Sk, Ck, wk, Tk, Ek, Dk, Ok, kk, Ak, jk, Mk, Nk, Pk, Fk, Ik, Lk, Rk, zk, Bk, Vk, Hk, Uk, Wk, Gk, Kk, qk, Jk, Yk, Xk, Zk, Qk, $k, eA, tA, nA, rA, iA, aA, oA, sA, cA, lA, uA, dA, fA, pA, mA, hA, gA, _A = T((() => {
-	sE = "∾̳", cE = "𝔄", lE = "𝔞", uE = "𝔸", dE = "𝕒", fE = "𝒜", pE = "𝒶", mE = "𝔅", hE = "𝔟", gE = "=⃥", _E = "≡⃥", vE = "𝔹", yE = "𝕓", bE = "𝒷", xE = "∩︀", SE = "𝔠", CE = "𝕔", wE = "𝒞", TE = "𝒸", EE = "∪︀", DE = "𝔇", OE = "𝔡", kE = "𝔻", AE = "𝕕", jE = "𝒟", ME = "𝒹", NE = "𝔈", PE = "𝔢", FE = "𝔼", IE = "𝕖", LE = "𝔉", RE = "𝔣", zE = "𝔽", BE = "𝕗", VE = "𝒻", HE = "⋛︀", UE = "𝔊", WE = "𝔤", GE = "𝔾", KE = "𝕘", qE = "𝒢", JE = "≩︀", YE = "≩︀", XE = "𝔥", ZE = "𝕙", QE = "𝒽", $E = "𝔦", eD = "𝕀", tD = "𝕚", nD = "𝒾", rD = "𝔍", iD = "𝔧", aD = "𝕁", oD = "𝕛", sD = "𝒥", cD = "𝒿", lD = "𝔎", uD = "𝔨", dD = "𝕂", fD = "𝕜", pD = "𝒦", mD = "𝓀", hD = "⪭︀", gD = "⋚︀", _D = "𝔏", vD = "𝔩", yD = "𝕃", bD = "𝕝", xD = "𝓁", SD = "≨︀", CD = "≨︀", wD = "𝔐", TD = "𝔪", ED = "𝕄", DD = "𝕞", OD = "𝓂", kD = "∠⃒", AD = "⩰̸", jD = "≋̸", MD = "≎̸", ND = "≏̸", PD = "⩭̸", FD = "≐̸", ID = "≂̸", LD = "𝔑", RD = "𝔫", zD = "≧̸", BD = "≧̸", VD = "⩾̸", HD = "⩾̸", UD = "⋙̸", WD = "≫⃒", GD = "≫̸", KD = "≦̸", qD = "≦̸", JD = "⩽̸", YD = "⩽̸", XD = "⋘̸", ZD = "≪⃒", QD = "≪̸", $D = "𝕟", eO = "≂̸", tO = "≧̸", nO = "≫̸", rO = "⩾̸", iO = "≎̸", aO = "≏̸", oO = "⋵̸", sO = "⋹̸", cO = "⧏̸", lO = "≪̸", uO = "⩽̸", dO = "⪢̸", fO = "⪡̸", pO = "⪯̸", mO = "⧐̸", hO = "⊏̸", gO = "⊐̸", _O = "⊂⃒", vO = "⪰̸", yO = "≿̸", bO = "⊃⃒", xO = "⫽⃥", SO = "∂̸", CO = "⪯̸", wO = "⪯̸", TO = "⤳̸", EO = "↝̸", DO = "⪰̸", OO = "𝒩", kO = "𝓃", AO = "⫅̸", jO = "⊂⃒", MO = "⫅̸", NO = "⪰̸", PO = "⫆̸", FO = "⊃⃒", IO = "⫆̸", LO = "≍⃒", RO = "≥⃒", zO = ">⃒", BO = "≤⃒", VO = "<⃒", HO = "⊴⃒", UO = "⊵⃒", WO = "∼⃒", GO = "𝔒", KO = "𝔬", qO = "𝕆", JO = "𝕠", YO = "𝒪", XO = "𝔓", ZO = "𝔭", QO = "𝕡", $O = "𝒫", ek = "𝓅", tk = "𝔔", nk = "𝔮", rk = "𝕢", ik = "𝒬", ak = "𝓆", ok = "∽̱", sk = "𝔯", ck = "𝕣", lk = "𝓇", uk = "𝔖", dk = "𝔰", fk = "⪬︀", pk = "𝕊", mk = "𝕤", hk = "⊓︀", gk = "⊔︀", _k = "𝒮", vk = "𝓈", yk = "𝔗", bk = "𝔱", xk = "  ", Sk = "𝕋", Ck = "𝕥", wk = "𝒯", Tk = "𝓉", Ek = "𝔘", Dk = "𝔲", Ok = "𝕌", kk = "𝕦", Ak = "𝒰", jk = "𝓊", Mk = "⊊︀", Nk = "⫋︀", Pk = "⊋︀", Fk = "⫌︀", Ik = "𝔙", Lk = "𝔳", Rk = "⊂⃒", zk = "⊃⃒", Bk = "𝕍", Vk = "𝕧", Hk = "𝒱", Uk = "𝓋", Wk = "⫋︀", Gk = "⊊︀", Kk = "⫌︀", qk = "⊋︀", Jk = "𝔚", Yk = "𝔴", Xk = "𝕎", Zk = "𝕨", Qk = "𝒲", $k = "𝓌", eA = "𝔛", tA = "𝔵", nA = "𝕏", rA = "𝕩", iA = "𝒳", aA = "𝓍", oA = "𝔜", sA = "𝔶", cA = "𝕐", lA = "𝕪", uA = "𝒴", dA = "𝓎", fA = "𝔷", pA = "𝕫", mA = "𝒵", hA = "𝓏", gA = {
+}), CE, wE, TE, EE, DE, OE, kE, AE, jE, ME, NE, PE, FE, IE, LE, RE, zE, BE, VE, HE, UE, WE, GE, KE, qE, JE, YE, XE, ZE, QE, $E, eD, tD, nD, rD, iD, aD, oD, sD, cD, lD, uD, dD, fD, pD, mD, hD, gD, _D, vD, yD, bD, xD, SD, CD, wD, TD, ED, DD, OD, kD, AD, jD, MD, ND, PD, FD, ID, LD, RD, zD, BD, VD, HD, UD, WD, GD, KD, qD, JD, YD, XD, ZD, QD, $D, eO, tO, nO, rO, iO, aO, oO, sO, cO, lO, uO, dO, fO, pO, mO, hO, gO, _O, vO, yO, bO, xO, SO, CO, wO, TO, EO, DO, OO, kO, AO, jO, MO, NO, PO, FO, IO, LO, RO, zO, BO, VO, HO, UO, WO, GO, KO, qO, JO, YO, XO, ZO, QO, $O, ek, tk, nk, rk, ik, ak, ok, sk, ck, lk, uk, dk, fk, pk, mk, hk, gk, _k, vk, yk, bk, xk, Sk, Ck, wk, Tk, Ek, Dk, Ok, kk, Ak, jk, Mk, Nk, Pk, Fk, Ik, Lk, Rk, zk, Bk, Vk, Hk, Uk, Wk, Gk, Kk, qk, Jk, Yk, Xk, Zk, Qk, $k, eA, tA, nA, rA, iA, aA, oA, sA, cA, lA, uA, dA, fA, pA, mA, hA, gA, _A, vA, yA, bA, xA, SA, CA, wA, TA, EA, DA, OA, kA, AA, jA, MA, NA = T((() => {
+	CE = "∾̳", wE = "𝔄", TE = "𝔞", EE = "𝔸", DE = "𝕒", OE = "𝒜", kE = "𝒶", AE = "𝔅", jE = "𝔟", ME = "=⃥", NE = "≡⃥", PE = "𝔹", FE = "𝕓", IE = "𝒷", LE = "∩︀", RE = "𝔠", zE = "𝕔", BE = "𝒞", VE = "𝒸", HE = "∪︀", UE = "𝔇", WE = "𝔡", GE = "𝔻", KE = "𝕕", qE = "𝒟", JE = "𝒹", YE = "𝔈", XE = "𝔢", ZE = "𝔼", QE = "𝕖", $E = "𝔉", eD = "𝔣", tD = "𝔽", nD = "𝕗", rD = "𝒻", iD = "⋛︀", aD = "𝔊", oD = "𝔤", sD = "𝔾", cD = "𝕘", lD = "𝒢", uD = "≩︀", dD = "≩︀", fD = "𝔥", pD = "𝕙", mD = "𝒽", hD = "𝔦", gD = "𝕀", _D = "𝕚", vD = "𝒾", yD = "𝔍", bD = "𝔧", xD = "𝕁", SD = "𝕛", CD = "𝒥", wD = "𝒿", TD = "𝔎", ED = "𝔨", DD = "𝕂", OD = "𝕜", kD = "𝒦", AD = "𝓀", jD = "⪭︀", MD = "⋚︀", ND = "𝔏", PD = "𝔩", FD = "𝕃", ID = "𝕝", LD = "𝓁", RD = "≨︀", zD = "≨︀", BD = "𝔐", VD = "𝔪", HD = "𝕄", UD = "𝕞", WD = "𝓂", GD = "∠⃒", KD = "⩰̸", qD = "≋̸", JD = "≎̸", YD = "≏̸", XD = "⩭̸", ZD = "≐̸", QD = "≂̸", $D = "𝔑", eO = "𝔫", tO = "≧̸", nO = "≧̸", rO = "⩾̸", iO = "⩾̸", aO = "⋙̸", oO = "≫⃒", sO = "≫̸", cO = "≦̸", lO = "≦̸", uO = "⩽̸", dO = "⩽̸", fO = "⋘̸", pO = "≪⃒", mO = "≪̸", hO = "𝕟", gO = "≂̸", _O = "≧̸", vO = "≫̸", yO = "⩾̸", bO = "≎̸", xO = "≏̸", SO = "⋵̸", CO = "⋹̸", wO = "⧏̸", TO = "≪̸", EO = "⩽̸", DO = "⪢̸", OO = "⪡̸", kO = "⪯̸", AO = "⧐̸", jO = "⊏̸", MO = "⊐̸", NO = "⊂⃒", PO = "⪰̸", FO = "≿̸", IO = "⊃⃒", LO = "⫽⃥", RO = "∂̸", zO = "⪯̸", BO = "⪯̸", VO = "⤳̸", HO = "↝̸", UO = "⪰̸", WO = "𝒩", GO = "𝓃", KO = "⫅̸", qO = "⊂⃒", JO = "⫅̸", YO = "⪰̸", XO = "⫆̸", ZO = "⊃⃒", QO = "⫆̸", $O = "≍⃒", ek = "≥⃒", tk = ">⃒", nk = "≤⃒", rk = "<⃒", ik = "⊴⃒", ak = "⊵⃒", ok = "∼⃒", sk = "𝔒", ck = "𝔬", lk = "𝕆", uk = "𝕠", dk = "𝒪", fk = "𝔓", pk = "𝔭", mk = "𝕡", hk = "𝒫", gk = "𝓅", _k = "𝔔", vk = "𝔮", yk = "𝕢", bk = "𝒬", xk = "𝓆", Sk = "∽̱", Ck = "𝔯", wk = "𝕣", Tk = "𝓇", Ek = "𝔖", Dk = "𝔰", Ok = "⪬︀", kk = "𝕊", Ak = "𝕤", jk = "⊓︀", Mk = "⊔︀", Nk = "𝒮", Pk = "𝓈", Fk = "𝔗", Ik = "𝔱", Lk = "  ", Rk = "𝕋", zk = "𝕥", Bk = "𝒯", Vk = "𝓉", Hk = "𝔘", Uk = "𝔲", Wk = "𝕌", Gk = "𝕦", Kk = "𝒰", qk = "𝓊", Jk = "⊊︀", Yk = "⫋︀", Xk = "⊋︀", Zk = "⫌︀", Qk = "𝔙", $k = "𝔳", eA = "⊂⃒", tA = "⊃⃒", nA = "𝕍", rA = "𝕧", iA = "𝒱", aA = "𝓋", oA = "⫋︀", sA = "⊊︀", cA = "⫌︀", lA = "⊋︀", uA = "𝔚", dA = "𝔴", fA = "𝕎", pA = "𝕨", mA = "𝒲", hA = "𝓌", gA = "𝔛", _A = "𝔵", vA = "𝕏", yA = "𝕩", bA = "𝒳", xA = "𝓍", SA = "𝔜", CA = "𝔶", wA = "𝕐", TA = "𝕪", EA = "𝒴", DA = "𝓎", OA = "𝔷", kA = "𝕫", AA = "𝒵", jA = "𝓏", MA = {
 		Aacute: "Á",
 		aacute: "á",
 		Abreve: "Ă",
 		abreve: "ă",
 		ac: "∾",
 		acd: "∿",
-		acE: sE,
+		acE: CE,
 		Acirc: "Â",
 		acirc: "â",
 		acute: "´",
@@ -21932,8 +22028,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		AElig: "Æ",
 		aelig: "æ",
 		af: "⁡",
-		Afr: cE,
-		afr: lE,
+		Afr: wE,
+		afr: TE,
 		Agrave: "À",
 		agrave: "à",
 		alefsym: "ℵ",
@@ -21971,8 +22067,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		angzarr: "⍼",
 		Aogon: "Ą",
 		aogon: "ą",
-		Aopf: uE,
-		aopf: dE,
+		Aopf: EE,
+		aopf: DE,
 		apacir: "⩯",
 		ap: "≈",
 		apE: "⩰",
@@ -21984,8 +22080,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		approxeq: "≊",
 		Aring: "Å",
 		aring: "å",
-		Ascr: fE,
-		ascr: pE,
+		Ascr: OE,
+		ascr: kE,
 		Assign: "≔",
 		ast: "*",
 		asymp: "≈",
@@ -22024,8 +22120,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		beta: "β",
 		beth: "ℶ",
 		between: "≬",
-		Bfr: mE,
-		bfr: hE,
+		Bfr: AE,
+		bfr: jE,
 		bigcap: "⋂",
 		bigcirc: "◯",
 		bigcup: "⋃",
@@ -22051,12 +22147,12 @@ var bT = /* @__PURE__ */ E(((e) => {
 		blk14: "░",
 		blk34: "▓",
 		block: "█",
-		bne: gE,
-		bnequiv: _E,
+		bne: ME,
+		bnequiv: NE,
 		bNot: "⫭",
 		bnot: "⌐",
-		Bopf: vE,
-		bopf: yE,
+		Bopf: PE,
+		bopf: FE,
 		bot: "⊥",
 		bottom: "⊥",
 		bowtie: "⋈",
@@ -22108,7 +22204,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 		breve: "˘",
 		Breve: "˘",
 		brvbar: "¦",
-		bscr: bE,
+		bscr: IE,
 		Bscr: "ℬ",
 		bsemi: "⁏",
 		bsim: "∽",
@@ -22133,7 +22229,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 		capcup: "⩇",
 		capdot: "⩀",
 		CapitalDifferentialD: "ⅅ",
-		caps: xE,
+		caps: LE,
 		caret: "⁁",
 		caron: "ˇ",
 		Cayleys: "ℭ",
@@ -22155,7 +22251,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 		cent: "¢",
 		centerdot: "·",
 		CenterDot: "·",
-		cfr: SE,
+		cfr: RE,
 		Cfr: "ℭ",
 		CHcy: "Ч",
 		chcy: "ч",
@@ -22204,7 +22300,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 		conint: "∮",
 		Conint: "∯",
 		ContourIntegral: "∮",
-		copf: CE,
+		copf: zE,
 		Copf: "ℂ",
 		coprod: "∐",
 		Coproduct: "∐",
@@ -22215,8 +22311,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		crarr: "↵",
 		cross: "✗",
 		Cross: "⨯",
-		Cscr: wE,
-		cscr: TE,
+		Cscr: BE,
+		cscr: VE,
 		csub: "⫏",
 		csube: "⫑",
 		csup: "⫐",
@@ -22236,7 +22332,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 		cupcup: "⩊",
 		cupdot: "⊍",
 		cupor: "⩅",
-		cups: EE,
+		cups: HE,
 		curarr: "↷",
 		curarrm: "⤼",
 		curlyeqprec: "⋞",
@@ -22278,8 +22374,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		delta: "δ",
 		demptyv: "⦱",
 		dfisht: "⥿",
-		Dfr: DE,
-		dfr: OE,
+		Dfr: UE,
+		dfr: WE,
 		dHar: "⥥",
 		dharl: "⇃",
 		dharr: "⇂",
@@ -22306,8 +22402,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		dlcorn: "⌞",
 		dlcrop: "⌍",
 		dollar: "$",
-		Dopf: kE,
-		dopf: AE,
+		Dopf: GE,
+		dopf: KE,
 		Dot: "¨",
 		dot: "˙",
 		DotDot: "⃜",
@@ -22353,8 +22449,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		drbkarow: "⤐",
 		drcorn: "⌟",
 		drcrop: "⌌",
-		Dscr: jE,
-		dscr: ME,
+		Dscr: qE,
+		dscr: JE,
 		DScy: "Ѕ",
 		dscy: "ѕ",
 		dsol: "⧶",
@@ -22386,8 +22482,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		eDot: "≑",
 		ee: "ⅇ",
 		efDot: "≒",
-		Efr: NE,
-		efr: PE,
+		Efr: YE,
+		efr: XE,
 		eg: "⪚",
 		Egrave: "È",
 		egrave: "è",
@@ -22414,8 +22510,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		ensp: " ",
 		Eogon: "Ę",
 		eogon: "ę",
-		Eopf: FE,
-		eopf: IE,
+		Eopf: ZE,
+		eopf: QE,
 		epar: "⋕",
 		eparsl: "⧣",
 		eplus: "⩱",
@@ -22463,8 +22559,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		ffilig: "ﬃ",
 		fflig: "ﬀ",
 		ffllig: "ﬄ",
-		Ffr: LE,
-		ffr: RE,
+		Ffr: $E,
+		ffr: eD,
 		filig: "ﬁ",
 		FilledSmallSquare: "◼",
 		FilledVerySmallSquare: "▪",
@@ -22473,8 +22569,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		fllig: "ﬂ",
 		fltns: "▱",
 		fnof: "ƒ",
-		Fopf: zE,
-		fopf: BE,
+		Fopf: tD,
+		fopf: nD,
 		forall: "∀",
 		ForAll: "∀",
 		fork: "⋔",
@@ -22498,7 +22594,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 		frac78: "⅞",
 		frasl: "⁄",
 		frown: "⌢",
-		fscr: VE,
+		fscr: rD,
 		Fscr: "ℱ",
 		gacute: "ǵ",
 		Gamma: "Γ",
@@ -22527,10 +22623,10 @@ var bT = /* @__PURE__ */ E(((e) => {
 		gesdot: "⪀",
 		gesdoto: "⪂",
 		gesdotol: "⪄",
-		gesl: HE,
+		gesl: iD,
 		gesles: "⪔",
-		Gfr: UE,
-		gfr: WE,
+		Gfr: aD,
+		gfr: oD,
 		gg: "≫",
 		Gg: "⋙",
 		ggg: "⋙",
@@ -22548,8 +22644,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		gneq: "⪈",
 		gneqq: "≩",
 		gnsim: "⋧",
-		Gopf: GE,
-		gopf: KE,
+		Gopf: sD,
+		gopf: cD,
 		grave: "`",
 		GreaterEqual: "≥",
 		GreaterEqualLess: "⋛",
@@ -22558,7 +22654,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 		GreaterLess: "≷",
 		GreaterSlantEqual: "⩾",
 		GreaterTilde: "≳",
-		Gscr: qE,
+		Gscr: lD,
 		gscr: "ℊ",
 		gsim: "≳",
 		gsime: "⪎",
@@ -22578,8 +22674,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		gtreqqless: "⪌",
 		gtrless: "≷",
 		gtrsim: "≳",
-		gvertneqq: JE,
-		gvnE: YE,
+		gvertneqq: uD,
+		gvnE: dD,
 		Hacek: "ˇ",
 		hairsp: " ",
 		half: "½",
@@ -22598,7 +22694,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 		heartsuit: "♥",
 		hellip: "…",
 		hercon: "⊹",
-		hfr: XE,
+		hfr: fD,
 		Hfr: "ℌ",
 		HilbertSpace: "ℋ",
 		hksearow: "⤥",
@@ -22607,11 +22703,11 @@ var bT = /* @__PURE__ */ E(((e) => {
 		homtht: "∻",
 		hookleftarrow: "↩",
 		hookrightarrow: "↪",
-		hopf: ZE,
+		hopf: pD,
 		Hopf: "ℍ",
 		horbar: "―",
 		HorizontalLine: "─",
-		hscr: QE,
+		hscr: mD,
 		Hscr: "ℋ",
 		hslash: "ℏ",
 		Hstrok: "Ħ",
@@ -22632,7 +22728,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 		iecy: "е",
 		iexcl: "¡",
 		iff: "⇔",
-		ifr: $E,
+		ifr: hD,
 		Ifr: "ℑ",
 		Igrave: "Ì",
 		igrave: "ì",
@@ -22674,13 +22770,13 @@ var bT = /* @__PURE__ */ E(((e) => {
 		iocy: "ё",
 		Iogon: "Į",
 		iogon: "į",
-		Iopf: eD,
-		iopf: tD,
+		Iopf: gD,
+		iopf: _D,
 		Iota: "Ι",
 		iota: "ι",
 		iprod: "⨼",
 		iquest: "¿",
-		iscr: nD,
+		iscr: vD,
 		Iscr: "ℐ",
 		isin: "∈",
 		isindot: "⋵",
@@ -22699,13 +22795,13 @@ var bT = /* @__PURE__ */ E(((e) => {
 		jcirc: "ĵ",
 		Jcy: "Й",
 		jcy: "й",
-		Jfr: rD,
-		jfr: iD,
+		Jfr: yD,
+		jfr: bD,
 		jmath: "ȷ",
-		Jopf: aD,
-		jopf: oD,
-		Jscr: sD,
-		jscr: cD,
+		Jopf: xD,
+		jopf: SD,
+		Jscr: CD,
+		jscr: wD,
 		Jsercy: "Ј",
 		jsercy: "ј",
 		Jukcy: "Є",
@@ -22717,17 +22813,17 @@ var bT = /* @__PURE__ */ E(((e) => {
 		kcedil: "ķ",
 		Kcy: "К",
 		kcy: "к",
-		Kfr: lD,
-		kfr: uD,
+		Kfr: TD,
+		kfr: ED,
 		kgreen: "ĸ",
 		KHcy: "Х",
 		khcy: "х",
 		KJcy: "Ќ",
 		kjcy: "ќ",
-		Kopf: dD,
-		kopf: fD,
-		Kscr: pD,
-		kscr: mD,
+		Kopf: DD,
+		kopf: OD,
+		Kscr: kD,
+		kscr: AD,
 		lAarr: "⇚",
 		Lacute: "Ĺ",
 		lacute: "ĺ",
@@ -22757,7 +22853,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 		lAtail: "⤛",
 		lat: "⪫",
 		late: "⪭",
-		lates: hD,
+		lates: jD,
 		lbarr: "⤌",
 		lBarr: "⤎",
 		lbbrk: "❲",
@@ -22828,7 +22924,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 		lesdot: "⩿",
 		lesdoto: "⪁",
 		lesdotor: "⪃",
-		lesg: gD,
+		lesg: MD,
 		lesges: "⪓",
 		lessapprox: "⪅",
 		lessdot: "⋖",
@@ -22844,8 +22940,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		LessTilde: "≲",
 		lfisht: "⥼",
 		lfloor: "⌊",
-		Lfr: _D,
-		lfr: vD,
+		Lfr: ND,
+		lfr: PD,
 		lg: "≶",
 		lgE: "⪑",
 		lHar: "⥢",
@@ -22889,8 +22985,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		looparrowleft: "↫",
 		looparrowright: "↬",
 		lopar: "⦅",
-		Lopf: yD,
-		lopf: bD,
+		Lopf: FD,
+		lopf: ID,
 		loplus: "⨭",
 		lotimes: "⨴",
 		lowast: "∗",
@@ -22909,7 +23005,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 		lrm: "‎",
 		lrtri: "⊿",
 		lsaquo: "‹",
-		lscr: xD,
+		lscr: LD,
 		Lscr: "ℒ",
 		lsh: "↰",
 		Lsh: "↰",
@@ -22937,8 +23033,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		ltrPar: "⦖",
 		lurdshar: "⥊",
 		luruhar: "⥦",
-		lvertneqq: SD,
-		lvnE: CD,
+		lvertneqq: RD,
+		lvnE: zD,
 		macr: "¯",
 		male: "♂",
 		malt: "✠",
@@ -22958,8 +23054,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		measuredangle: "∡",
 		MediumSpace: " ",
 		Mellintrf: "ℳ",
-		Mfr: wD,
-		mfr: TD,
+		Mfr: BD,
+		mfr: VD,
 		mho: "℧",
 		micro: "µ",
 		midast: "*",
@@ -22975,10 +23071,10 @@ var bT = /* @__PURE__ */ E(((e) => {
 		mldr: "…",
 		mnplus: "∓",
 		models: "⊧",
-		Mopf: ED,
-		mopf: DD,
+		Mopf: HD,
+		mopf: UD,
 		mp: "∓",
-		mscr: OD,
+		mscr: WD,
 		Mscr: "ℳ",
 		mstpos: "∾",
 		Mu: "Μ",
@@ -22988,25 +23084,25 @@ var bT = /* @__PURE__ */ E(((e) => {
 		nabla: "∇",
 		Nacute: "Ń",
 		nacute: "ń",
-		nang: kD,
+		nang: GD,
 		nap: "≉",
-		napE: AD,
-		napid: jD,
+		napE: KD,
+		napid: qD,
 		napos: "ŉ",
 		napprox: "≉",
 		natural: "♮",
 		naturals: "ℕ",
 		natur: "♮",
 		nbsp: "\xA0",
-		nbump: MD,
-		nbumpe: ND,
+		nbump: JD,
+		nbumpe: YD,
 		ncap: "⩃",
 		Ncaron: "Ň",
 		ncaron: "ň",
 		Ncedil: "Ņ",
 		ncedil: "ņ",
 		ncong: "≇",
-		ncongdot: PD,
+		ncongdot: XD,
 		ncup: "⩂",
 		Ncy: "Н",
 		ncy: "н",
@@ -23016,33 +23112,33 @@ var bT = /* @__PURE__ */ E(((e) => {
 		neArr: "⇗",
 		nearrow: "↗",
 		ne: "≠",
-		nedot: FD,
+		nedot: ZD,
 		NegativeMediumSpace: "​",
 		NegativeThickSpace: "​",
 		NegativeThinSpace: "​",
 		NegativeVeryThinSpace: "​",
 		nequiv: "≢",
 		nesear: "⤨",
-		nesim: ID,
+		nesim: QD,
 		NestedGreaterGreater: "≫",
 		NestedLessLess: "≪",
 		NewLine: "\n",
 		nexist: "∄",
 		nexists: "∄",
-		Nfr: LD,
-		nfr: RD,
-		ngE: zD,
+		Nfr: $D,
+		nfr: eO,
+		ngE: tO,
 		nge: "≱",
 		ngeq: "≱",
-		ngeqq: BD,
-		ngeqslant: VD,
-		nges: HD,
-		nGg: UD,
+		ngeqq: nO,
+		ngeqslant: rO,
+		nges: iO,
+		nGg: aO,
 		ngsim: "≵",
-		nGt: WD,
+		nGt: oO,
 		ngt: "≯",
 		ngtr: "≯",
-		nGtv: GD,
+		nGtv: sO,
 		nharr: "↮",
 		nhArr: "⇎",
 		nhpar: "⫲",
@@ -23055,28 +23151,28 @@ var bT = /* @__PURE__ */ E(((e) => {
 		nlarr: "↚",
 		nlArr: "⇍",
 		nldr: "‥",
-		nlE: KD,
+		nlE: cO,
 		nle: "≰",
 		nleftarrow: "↚",
 		nLeftarrow: "⇍",
 		nleftrightarrow: "↮",
 		nLeftrightarrow: "⇎",
 		nleq: "≰",
-		nleqq: qD,
-		nleqslant: JD,
-		nles: YD,
+		nleqq: lO,
+		nleqslant: uO,
+		nles: dO,
 		nless: "≮",
-		nLl: XD,
+		nLl: fO,
 		nlsim: "≴",
-		nLt: ZD,
+		nLt: pO,
 		nlt: "≮",
 		nltri: "⋪",
 		nltrie: "⋬",
-		nLtv: QD,
+		nLtv: mO,
 		nmid: "∤",
 		NoBreak: "⁠",
 		NonBreakingSpace: "\xA0",
-		nopf: $D,
+		nopf: hO,
 		Nopf: "ℕ",
 		Not: "⫬",
 		not: "¬",
@@ -23085,56 +23181,56 @@ var bT = /* @__PURE__ */ E(((e) => {
 		NotDoubleVerticalBar: "∦",
 		NotElement: "∉",
 		NotEqual: "≠",
-		NotEqualTilde: eO,
+		NotEqualTilde: gO,
 		NotExists: "∄",
 		NotGreater: "≯",
 		NotGreaterEqual: "≱",
-		NotGreaterFullEqual: tO,
-		NotGreaterGreater: nO,
+		NotGreaterFullEqual: _O,
+		NotGreaterGreater: vO,
 		NotGreaterLess: "≹",
-		NotGreaterSlantEqual: rO,
+		NotGreaterSlantEqual: yO,
 		NotGreaterTilde: "≵",
-		NotHumpDownHump: iO,
-		NotHumpEqual: aO,
+		NotHumpDownHump: bO,
+		NotHumpEqual: xO,
 		notin: "∉",
-		notindot: oO,
-		notinE: sO,
+		notindot: SO,
+		notinE: CO,
 		notinva: "∉",
 		notinvb: "⋷",
 		notinvc: "⋶",
-		NotLeftTriangleBar: cO,
+		NotLeftTriangleBar: wO,
 		NotLeftTriangle: "⋪",
 		NotLeftTriangleEqual: "⋬",
 		NotLess: "≮",
 		NotLessEqual: "≰",
 		NotLessGreater: "≸",
-		NotLessLess: lO,
-		NotLessSlantEqual: uO,
+		NotLessLess: TO,
+		NotLessSlantEqual: EO,
 		NotLessTilde: "≴",
-		NotNestedGreaterGreater: dO,
-		NotNestedLessLess: fO,
+		NotNestedGreaterGreater: DO,
+		NotNestedLessLess: OO,
 		notni: "∌",
 		notniva: "∌",
 		notnivb: "⋾",
 		notnivc: "⋽",
 		NotPrecedes: "⊀",
-		NotPrecedesEqual: pO,
+		NotPrecedesEqual: kO,
 		NotPrecedesSlantEqual: "⋠",
 		NotReverseElement: "∌",
-		NotRightTriangleBar: mO,
+		NotRightTriangleBar: AO,
 		NotRightTriangle: "⋫",
 		NotRightTriangleEqual: "⋭",
-		NotSquareSubset: hO,
+		NotSquareSubset: jO,
 		NotSquareSubsetEqual: "⋢",
-		NotSquareSuperset: gO,
+		NotSquareSuperset: MO,
 		NotSquareSupersetEqual: "⋣",
-		NotSubset: _O,
+		NotSubset: NO,
 		NotSubsetEqual: "⊈",
 		NotSucceeds: "⊁",
-		NotSucceedsEqual: vO,
+		NotSucceedsEqual: PO,
 		NotSucceedsSlantEqual: "⋡",
-		NotSucceedsTilde: yO,
-		NotSuperset: bO,
+		NotSucceedsTilde: FO,
+		NotSuperset: IO,
 		NotSupersetEqual: "⊉",
 		NotTilde: "≁",
 		NotTildeEqual: "≄",
@@ -23143,27 +23239,27 @@ var bT = /* @__PURE__ */ E(((e) => {
 		NotVerticalBar: "∤",
 		nparallel: "∦",
 		npar: "∦",
-		nparsl: xO,
-		npart: SO,
+		nparsl: LO,
+		npart: RO,
 		npolint: "⨔",
 		npr: "⊀",
 		nprcue: "⋠",
 		nprec: "⊀",
-		npreceq: CO,
-		npre: wO,
-		nrarrc: TO,
+		npreceq: zO,
+		npre: BO,
+		nrarrc: VO,
 		nrarr: "↛",
 		nrArr: "⇏",
-		nrarrw: EO,
+		nrarrw: HO,
 		nrightarrow: "↛",
 		nRightarrow: "⇏",
 		nrtri: "⋫",
 		nrtrie: "⋭",
 		nsc: "⊁",
 		nsccue: "⋡",
-		nsce: DO,
-		Nscr: OO,
-		nscr: kO,
+		nsce: UO,
+		Nscr: WO,
+		nscr: GO,
 		nshortmid: "∤",
 		nshortparallel: "∦",
 		nsim: "≁",
@@ -23174,19 +23270,19 @@ var bT = /* @__PURE__ */ E(((e) => {
 		nsqsube: "⋢",
 		nsqsupe: "⋣",
 		nsub: "⊄",
-		nsubE: AO,
+		nsubE: KO,
 		nsube: "⊈",
-		nsubset: jO,
+		nsubset: qO,
 		nsubseteq: "⊈",
-		nsubseteqq: MO,
+		nsubseteqq: JO,
 		nsucc: "⊁",
-		nsucceq: NO,
+		nsucceq: YO,
 		nsup: "⊅",
-		nsupE: PO,
+		nsupE: XO,
 		nsupe: "⊉",
-		nsupset: FO,
+		nsupset: ZO,
 		nsupseteq: "⊉",
-		nsupseteqq: IO,
+		nsupseteqq: QO,
 		ntgl: "≹",
 		Ntilde: "Ñ",
 		ntilde: "ñ",
@@ -23200,22 +23296,22 @@ var bT = /* @__PURE__ */ E(((e) => {
 		num: "#",
 		numero: "№",
 		numsp: " ",
-		nvap: LO,
+		nvap: $O,
 		nvdash: "⊬",
 		nvDash: "⊭",
 		nVdash: "⊮",
 		nVDash: "⊯",
-		nvge: RO,
-		nvgt: zO,
+		nvge: ek,
+		nvgt: tk,
 		nvHarr: "⤄",
 		nvinfin: "⧞",
 		nvlArr: "⤂",
-		nvle: BO,
-		nvlt: VO,
-		nvltrie: HO,
+		nvle: nk,
+		nvlt: rk,
+		nvltrie: ik,
 		nvrArr: "⤃",
-		nvrtrie: UO,
-		nvsim: WO,
+		nvrtrie: ak,
+		nvsim: ok,
 		nwarhk: "⤣",
 		nwarr: "↖",
 		nwArr: "⇖",
@@ -23238,8 +23334,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		OElig: "Œ",
 		oelig: "œ",
 		ofcir: "⦿",
-		Ofr: GO,
-		ofr: KO,
+		Ofr: sk,
+		ofr: ck,
 		ogon: "˛",
 		Ograve: "Ò",
 		ograve: "ò",
@@ -23260,8 +23356,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		omicron: "ο",
 		omid: "⦶",
 		ominus: "⊖",
-		Oopf: qO,
-		oopf: JO,
+		Oopf: lk,
+		oopf: uk,
 		opar: "⦷",
 		OpenCurlyDoubleQuote: "“",
 		OpenCurlyQuote: "‘",
@@ -23280,7 +23376,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 		orslope: "⩗",
 		orv: "⩛",
 		oS: "Ⓢ",
-		Oscr: YO,
+		Oscr: dk,
 		oscr: "ℴ",
 		Oslash: "Ø",
 		oslash: "ø",
@@ -23311,8 +23407,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		permil: "‰",
 		perp: "⊥",
 		pertenk: "‱",
-		Pfr: XO,
-		pfr: ZO,
+		Pfr: fk,
+		pfr: pk,
 		Phi: "Φ",
 		phi: "φ",
 		phiv: "ϕ",
@@ -23339,7 +23435,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 		pm: "±",
 		Poincareplane: "ℌ",
 		pointint: "⨕",
-		popf: QO,
+		popf: mk,
 		Popf: "ℙ",
 		pound: "£",
 		prap: "⪷",
@@ -23377,19 +23473,19 @@ var bT = /* @__PURE__ */ E(((e) => {
 		propto: "∝",
 		prsim: "≾",
 		prurel: "⊰",
-		Pscr: $O,
-		pscr: ek,
+		Pscr: hk,
+		pscr: gk,
 		Psi: "Ψ",
 		psi: "ψ",
 		puncsp: " ",
-		Qfr: tk,
-		qfr: nk,
+		Qfr: _k,
+		qfr: vk,
 		qint: "⨌",
-		qopf: rk,
+		qopf: yk,
 		Qopf: "ℚ",
 		qprime: "⁗",
-		Qscr: ik,
-		qscr: ak,
+		Qscr: bk,
+		qscr: xk,
 		quaternions: "ℍ",
 		quatint: "⨖",
 		quest: "?",
@@ -23397,7 +23493,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 		quot: "\"",
 		QUOT: "\"",
 		rAarr: "⇛",
-		race: ok,
+		race: Sk,
 		Racute: "Ŕ",
 		racute: "ŕ",
 		radic: "√",
@@ -23462,7 +23558,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 		ReverseUpEquilibrium: "⥯",
 		rfisht: "⥽",
 		rfloor: "⌋",
-		rfr: sk,
+		rfr: Ck,
 		Rfr: "ℜ",
 		rHar: "⥤",
 		rhard: "⇁",
@@ -23515,7 +23611,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 		roarr: "⇾",
 		robrk: "⟧",
 		ropar: "⦆",
-		ropf: ck,
+		ropf: wk,
 		Ropf: "ℝ",
 		roplus: "⨮",
 		rotimes: "⨵",
@@ -23526,7 +23622,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 		rrarr: "⇉",
 		Rrightarrow: "⇛",
 		rsaquo: "›",
-		rscr: lk,
+		rscr: Tk,
 		Rscr: "ℛ",
 		rsh: "↱",
 		Rsh: "↱",
@@ -23577,8 +23673,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		setminus: "∖",
 		setmn: "∖",
 		sext: "✶",
-		Sfr: uk,
-		sfr: dk,
+		Sfr: Ek,
+		sfr: Dk,
 		sfrown: "⌢",
 		sharp: "♯",
 		SHCHcy: "Щ",
@@ -23616,21 +23712,21 @@ var bT = /* @__PURE__ */ E(((e) => {
 		smile: "⌣",
 		smt: "⪪",
 		smte: "⪬",
-		smtes: fk,
+		smtes: Ok,
 		SOFTcy: "Ь",
 		softcy: "ь",
 		solbar: "⌿",
 		solb: "⧄",
 		sol: "/",
-		Sopf: pk,
-		sopf: mk,
+		Sopf: kk,
+		sopf: Ak,
 		spades: "♠",
 		spadesuit: "♠",
 		spar: "∥",
 		sqcap: "⊓",
-		sqcaps: hk,
+		sqcaps: jk,
 		sqcup: "⊔",
-		sqcups: gk,
+		sqcups: Mk,
 		Sqrt: "√",
 		sqsub: "⊏",
 		sqsube: "⊑",
@@ -23652,8 +23748,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		squ: "□",
 		squf: "▪",
 		srarr: "→",
-		Sscr: _k,
-		sscr: vk,
+		Sscr: Nk,
+		sscr: Pk,
 		ssetmn: "∖",
 		ssmile: "⌣",
 		sstarf: "⋆",
@@ -23747,8 +23843,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		tcy: "т",
 		tdot: "⃛",
 		telrec: "⌕",
-		Tfr: yk,
-		tfr: bk,
+		Tfr: Fk,
+		tfr: Ik,
 		there4: "∴",
 		therefore: "∴",
 		Therefore: "∴",
@@ -23758,7 +23854,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 		thetav: "ϑ",
 		thickapprox: "≈",
 		thicksim: "∼",
-		ThickSpace: xk,
+		ThickSpace: Lk,
 		ThinSpace: " ",
 		thinsp: " ",
 		thkap: "≈",
@@ -23779,8 +23875,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		topbot: "⌶",
 		topcir: "⫱",
 		top: "⊤",
-		Topf: Sk,
-		topf: Ck,
+		Topf: Rk,
+		topf: zk,
 		topfork: "⫚",
 		tosa: "⤩",
 		tprime: "‴",
@@ -23801,8 +23897,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		trisb: "⧍",
 		tritime: "⨻",
 		trpezium: "⏢",
-		Tscr: wk,
-		tscr: Tk,
+		Tscr: Bk,
+		tscr: Vk,
 		TScy: "Ц",
 		tscy: "ц",
 		TSHcy: "Ћ",
@@ -23831,8 +23927,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		udblac: "ű",
 		udhar: "⥮",
 		ufisht: "⥾",
-		Ufr: Ek,
-		ufr: Dk,
+		Ufr: Hk,
+		ufr: Uk,
 		Ugrave: "Ù",
 		ugrave: "ù",
 		uHar: "⥣",
@@ -23854,8 +23950,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		UnionPlus: "⊎",
 		Uogon: "Ų",
 		uogon: "ų",
-		Uopf: Ok,
-		uopf: kk,
+		Uopf: Wk,
+		uopf: Gk,
 		UpArrowBar: "⤒",
 		uparrow: "↑",
 		UpArrow: "↑",
@@ -23884,8 +23980,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		Uring: "Ů",
 		uring: "ů",
 		urtri: "◹",
-		Uscr: Ak,
-		uscr: jk,
+		Uscr: Kk,
+		uscr: qk,
 		utdot: "⋰",
 		Utilde: "Ũ",
 		utilde: "ũ",
@@ -23906,10 +24002,10 @@ var bT = /* @__PURE__ */ E(((e) => {
 		vArr: "⇕",
 		varrho: "ϱ",
 		varsigma: "ς",
-		varsubsetneq: Mk,
-		varsubsetneqq: Nk,
-		varsupsetneq: Pk,
-		varsupsetneqq: Fk,
+		varsubsetneq: Jk,
+		varsubsetneqq: Yk,
+		varsupsetneq: Xk,
+		varsupsetneqq: Zk,
 		vartheta: "ϑ",
 		vartriangleleft: "⊲",
 		vartriangleright: "⊳",
@@ -23937,21 +24033,21 @@ var bT = /* @__PURE__ */ E(((e) => {
 		VerticalSeparator: "❘",
 		VerticalTilde: "≀",
 		VeryThinSpace: " ",
-		Vfr: Ik,
-		vfr: Lk,
+		Vfr: Qk,
+		vfr: $k,
 		vltri: "⊲",
-		vnsub: Rk,
-		vnsup: zk,
-		Vopf: Bk,
-		vopf: Vk,
+		vnsub: eA,
+		vnsup: tA,
+		Vopf: nA,
+		vopf: rA,
 		vprop: "∝",
 		vrtri: "⊳",
-		Vscr: Hk,
-		vscr: Uk,
-		vsubnE: Wk,
-		vsubne: Gk,
-		vsupnE: Kk,
-		vsupne: qk,
+		Vscr: iA,
+		vscr: aA,
+		vsubnE: oA,
+		vsubne: sA,
+		vsupnE: cA,
+		vsupne: lA,
 		Vvdash: "⊪",
 		vzigzag: "⦚",
 		Wcirc: "Ŵ",
@@ -23961,21 +24057,21 @@ var bT = /* @__PURE__ */ E(((e) => {
 		Wedge: "⋀",
 		wedgeq: "≙",
 		weierp: "℘",
-		Wfr: Jk,
-		wfr: Yk,
-		Wopf: Xk,
-		wopf: Zk,
+		Wfr: uA,
+		wfr: dA,
+		Wopf: fA,
+		wopf: pA,
 		wp: "℘",
 		wr: "≀",
 		wreath: "≀",
-		Wscr: Qk,
-		wscr: $k,
+		Wscr: mA,
+		wscr: hA,
 		xcap: "⋂",
 		xcirc: "◯",
 		xcup: "⋃",
 		xdtri: "▽",
-		Xfr: eA,
-		xfr: tA,
+		Xfr: gA,
+		xfr: _A,
 		xharr: "⟷",
 		xhArr: "⟺",
 		Xi: "Ξ",
@@ -23985,14 +24081,14 @@ var bT = /* @__PURE__ */ E(((e) => {
 		xmap: "⟼",
 		xnis: "⋻",
 		xodot: "⨀",
-		Xopf: nA,
-		xopf: rA,
+		Xopf: vA,
+		xopf: yA,
 		xoplus: "⨁",
 		xotime: "⨂",
 		xrarr: "⟶",
 		xrArr: "⟹",
-		Xscr: iA,
-		xscr: aA,
+		Xscr: bA,
+		xscr: xA,
 		xsqcup: "⨆",
 		xuplus: "⨄",
 		xutri: "△",
@@ -24007,14 +24103,14 @@ var bT = /* @__PURE__ */ E(((e) => {
 		Ycy: "Ы",
 		ycy: "ы",
 		yen: "¥",
-		Yfr: oA,
-		yfr: sA,
+		Yfr: SA,
+		yfr: CA,
 		YIcy: "Ї",
 		yicy: "ї",
-		Yopf: cA,
-		yopf: lA,
-		Yscr: uA,
-		yscr: dA,
+		Yopf: wA,
+		yopf: TA,
+		Yscr: EA,
+		yscr: DA,
 		YUcy: "Ю",
 		yucy: "ю",
 		yuml: "ÿ",
@@ -24031,19 +24127,19 @@ var bT = /* @__PURE__ */ E(((e) => {
 		ZeroWidthSpace: "​",
 		Zeta: "Ζ",
 		zeta: "ζ",
-		zfr: fA,
+		zfr: OA,
 		Zfr: "ℨ",
 		ZHcy: "Ж",
 		zhcy: "ж",
 		zigrarr: "⇝",
-		zopf: pA,
+		zopf: kA,
 		Zopf: "ℤ",
-		Zscr: mA,
-		zscr: hA,
+		Zscr: AA,
+		zscr: jA,
 		zwj: "‍",
 		zwnj: "‌"
 	};
-})), vA = /* @__PURE__ */ D({
+})), PA = /* @__PURE__ */ D({
 	AElig: () => "Æ",
 	AMP: () => "&",
 	Aacute: () => "Á",
@@ -24095,7 +24191,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	cent: () => "¢",
 	copy: () => "©",
 	curren: () => "¤",
-	default: () => yA,
+	default: () => FA,
 	deg: () => "°",
 	divide: () => "÷",
 	eacute: () => "é",
@@ -24151,8 +24247,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 	yacute: () => "ý",
 	yen: () => "¥",
 	yuml: () => "ÿ"
-}), yA, bA = T((() => {
-	yA = {
+}), FA, IA = T((() => {
+	FA = {
 		Aacute: "Á",
 		aacute: "á",
 		Acirc: "Â",
@@ -24260,23 +24356,23 @@ var bT = /* @__PURE__ */ E(((e) => {
 		yen: "¥",
 		yuml: "ÿ"
 	};
-})), xA = /* @__PURE__ */ D({
+})), LA = /* @__PURE__ */ D({
 	amp: () => "&",
 	apos: () => "'",
-	default: () => SA,
+	default: () => RA,
 	gt: () => ">",
 	lt: () => "<",
 	quot: () => "\""
-}), SA, CA = T((() => {
-	SA = {
+}), RA, zA = T((() => {
+	RA = {
 		amp: "&",
 		apos: "'",
 		gt: ">",
 		lt: "<",
 		quot: "\""
 	};
-})), wA = /* @__PURE__ */ D({ default: () => TA }), TA, EA = T((() => {
-	TA = {
+})), BA = /* @__PURE__ */ D({ default: () => VA }), VA, HA = T((() => {
+	VA = {
 		0: 65533,
 		128: 8364,
 		130: 8218,
@@ -24306,12 +24402,12 @@ var bT = /* @__PURE__ */ E(((e) => {
 		158: 382,
 		159: 376
 	};
-})), DA = /* @__PURE__ */ E(((e) => {
+})), UA = /* @__PURE__ */ E(((e) => {
 	var t = e && e.__importDefault || function(e) {
 		return e && e.__esModule ? e : { default: e };
 	};
 	Object.defineProperty(e, "__esModule", { value: !0 });
-	var n = t((EA(), ne(wA).default)), r = String.fromCodePoint || function(e) {
+	var n = t((HA(), ne(BA).default)), r = String.fromCodePoint || function(e) {
 		var t = "";
 		return e > 65535 && (e -= 65536, t += String.fromCharCode(e >>> 10 & 1023 | 55296), e = 56320 | e & 1023), t += String.fromCharCode(e), t;
 	};
@@ -24319,12 +24415,12 @@ var bT = /* @__PURE__ */ E(((e) => {
 		return e >= 55296 && e <= 57343 || e > 1114111 ? "�" : (e in n.default && (e = n.default[e]), r(e));
 	}
 	e.default = i;
-})), OA = /* @__PURE__ */ E(((e) => {
+})), WA = /* @__PURE__ */ E(((e) => {
 	var t = e && e.__importDefault || function(e) {
 		return e && e.__esModule ? e : { default: e };
 	};
 	Object.defineProperty(e, "__esModule", { value: !0 }), e.decodeHTML = e.decodeHTMLStrict = e.decodeXML = void 0;
-	var n = t((_A(), ne(oE).default)), r = t((bA(), ne(vA).default)), i = t((CA(), ne(xA).default)), a = t(DA()), o = /&(?:[a-zA-Z0-9]+|#[xX][\da-fA-F]+|#\d+);/g;
+	var n = t((NA(), ne(SE).default)), r = t((IA(), ne(PA).default)), i = t((zA(), ne(LA).default)), a = t(UA()), o = /&(?:[a-zA-Z0-9]+|#[xX][\da-fA-F]+|#\d+);/g;
 	e.decodeXML = s(i.default), e.decodeHTMLStrict = s(n.default);
 	function s(e) {
 		var t = l(e);
@@ -24354,14 +24450,14 @@ var bT = /* @__PURE__ */ E(((e) => {
 			return e[t.slice(1, -1)] || t;
 		};
 	}
-})), kA = /* @__PURE__ */ E(((e) => {
+})), GA = /* @__PURE__ */ E(((e) => {
 	var t = e && e.__importDefault || function(e) {
 		return e && e.__esModule ? e : { default: e };
 	};
 	Object.defineProperty(e, "__esModule", { value: !0 }), e.escapeUTF8 = e.escape = e.encodeNonAsciiHTML = e.encodeHTML = e.encodeXML = void 0;
-	var n = a(t((CA(), ne(xA).default)).default), r = o(n);
+	var n = a(t((zA(), ne(LA).default)).default), r = o(n);
 	e.encodeXML = m(n);
-	var i = a(t((_A(), ne(oE).default)).default);
+	var i = a(t((NA(), ne(SE).default)).default);
 	e.encodeHTML = u(i, o(i)), e.encodeNonAsciiHTML = m(i);
 	function a(e) {
 		return Object.keys(e).sort().reduce(function(t, n) {
@@ -24412,9 +24508,9 @@ var bT = /* @__PURE__ */ E(((e) => {
 			});
 		};
 	}
-})), AA = /* @__PURE__ */ E(((e) => {
+})), KA = /* @__PURE__ */ E(((e) => {
 	Object.defineProperty(e, "__esModule", { value: !0 }), e.decodeXMLStrict = e.decodeHTML5Strict = e.decodeHTML4Strict = e.decodeHTML5 = e.decodeHTML4 = e.decodeHTMLStrict = e.decodeHTML = e.decodeXML = e.encodeHTML5 = e.encodeHTML4 = e.escapeUTF8 = e.escape = e.encodeNonAsciiHTML = e.encodeHTML = e.encodeXML = e.encode = e.decodeStrict = e.decode = void 0;
-	var t = OA(), n = kA();
+	var t = WA(), n = GA();
 	function r(e, n) {
 		return (!n || n <= 0 ? t.decodeXML : t.decodeHTML)(e);
 	}
@@ -24427,7 +24523,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 		return (!t || t <= 0 ? n.encodeXML : n.encodeHTML)(e);
 	}
 	e.encode = a;
-	var o = kA();
+	var o = GA();
 	Object.defineProperty(e, "encodeXML", {
 		enumerable: !0,
 		get: function() {
@@ -24464,7 +24560,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 			return o.encodeHTML;
 		}
 	});
-	var s = OA();
+	var s = WA();
 	Object.defineProperty(e, "decodeXML", {
 		enumerable: !0,
 		get: function() {
@@ -24506,8 +24602,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 			return s.decodeXML;
 		}
 	});
-})), jA = /* @__PURE__ */ E(((e, t) => {
-	var n = t.exports = {}, r = AA(), i = iE();
+})), qA = /* @__PURE__ */ E(((e, t) => {
+	var n = t.exports = {}, r = KA(), i = bE();
 	n.stripHtml = function(e) {
 		return e = e.replace(/([^\n])<\/?(h|br|p|ul|ol|li|blockquote|section|table|tr|div)(?:.|\n)*?>([^\n])/gm, "$1\n$3"), e = e.replace(/<(?:.|\n)*?>/gm, ""), e;
 	}, n.getSnippet = function(e) {
@@ -24552,8 +24648,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		let t = (e.match(o) || [])[2] || "";
 		return t = t.toLowerCase(), t = c[t] || t, (!t || s.indexOf(t) === -1) && (t = a), t;
 	};
-})), MA = /* @__PURE__ */ E(((e, t) => {
-	var n = re("http"), r = re("https"), i = iE(), a = re("url"), o = aE(), s = jA(), c = {
+})), JA = /* @__PURE__ */ E(((e, t) => {
+	var n = re("http"), r = re("https"), i = bE(), a = re("url"), o = xE(), s = qA(), c = {
 		"User-Agent": "rss-parser",
 		Accept: "application/rss+xml"
 	}, l = 5, u = 6e4;
@@ -24698,9 +24794,9 @@ var bT = /* @__PURE__ */ E(((e) => {
 			return e["atom:link"].reduce((e, n) => (!n.$ || !t.includes(n.$.rel) || (e[n.$.rel] = n.$.href), e), {});
 		}
 	};
-})), NA = /* @__PURE__ */ te((/* @__PURE__ */ E(((e, t) => {
-	t.exports = MA();
-})))(), 1), PA = [
+})), YA = /* @__PURE__ */ te((/* @__PURE__ */ E(((e, t) => {
+	t.exports = JA();
+})))(), 1), XA = [
 	{
 		id: "cnbc-finance",
 		label: "CNBC Finance RSS",
@@ -24719,8 +24815,8 @@ var bT = /* @__PURE__ */ E(((e) => {
 		url: "https://news.google.com/rss/search?q=when:1d+(tariffs+OR+Taiwan+OR+Red+Sea+OR+inflation+OR+oil+OR+semiconductor)",
 		sector: "Macro/geopolitics"
 	}
-], FA = class extends v {
-	parser = new NA.default({ timeout: 12e3 });
+], ZA = class extends v {
+	parser = new YA.default({ timeout: 12e3 });
 	feeds;
 	intervalMs;
 	requestTimeoutMs;
@@ -24730,7 +24826,7 @@ var bT = /* @__PURE__ */ E(((e) => {
 	timer = null;
 	running = !1;
 	constructor(e = {}) {
-		super(), this.on("error", () => void 0), this.feeds = e.feeds ?? PA, this.intervalMs = e.intervalMs ?? 3e4, this.requestTimeoutMs = e.requestTimeoutMs ?? 12e3, this.maxSeenTitles = e.maxSeenTitles ?? 5e3;
+		super(), this.on("error", () => void 0), this.feeds = e.feeds ?? XA, this.intervalMs = e.intervalMs ?? 3e4, this.requestTimeoutMs = e.requestTimeoutMs ?? 12e3, this.maxSeenTitles = e.maxSeenTitles ?? 5e3;
 	}
 	on(e, t) {
 		return super.on(e, t);
@@ -24746,9 +24842,9 @@ var bT = /* @__PURE__ */ E(((e) => {
 	}
 	async pollFeed(e) {
 		try {
-			let t = await RA(this.parser.parseURL(e.url), this.requestTimeoutMs, `${e.label} timed out`), n = Array.isArray(t.items) ? t.items : [];
+			let t = await ej(this.parser.parseURL(e.url), this.requestTimeoutMs, `${e.label} timed out`), n = Array.isArray(t.items) ? t.items : [];
 			for (let t of n) {
-				let n = IA(e, t);
+				let n = QA(e, t);
 				!n || this.hasSeen(n.title) || (this.markSeen(n.title), this.emit("headline", n));
 			}
 		} catch (e) {
@@ -24756,26 +24852,26 @@ var bT = /* @__PURE__ */ E(((e) => {
 		}
 	}
 	hasSeen(e) {
-		return this.seenSet.has(iT(e.toLowerCase()));
+		return this.seenSet.has(bT(e.toLowerCase()));
 	}
 	markSeen(e) {
-		let t = iT(e.toLowerCase());
+		let t = bT(e.toLowerCase());
 		for (this.seenSet.add(t), this.seenTitleHashes.push(t); this.seenTitleHashes.length > this.maxSeenTitles;) {
 			let e = this.seenTitleHashes.shift();
 			e && this.seenSet.delete(e);
 		}
 	}
 };
-function IA(e, t) {
+function QA(e, t) {
 	let n = t.title?.trim(), r = t.link?.trim() || e.url;
 	if (!n) return null;
-	let i = LA(t.isoDate ?? t.pubDate) ?? Date.now(), a = [
+	let i = $A(t.isoDate ?? t.pubDate) ?? Date.now(), a = [
 		n,
 		t.contentSnippet,
 		t.content
 	].filter(Boolean).join(" ");
 	return {
-		id: `rss-${e.id}-${iT(`${n}:${r}`)}`,
+		id: `rss-${e.id}-${bT(`${n}:${r}`)}`,
 		title: n,
 		sourceName: e.label,
 		sourceUrl: r,
@@ -24787,12 +24883,12 @@ function IA(e, t) {
 		rawText: a
 	};
 }
-function LA(e) {
+function $A(e) {
 	if (!e) return null;
 	let t = Date.parse(e);
 	return Number.isFinite(t) ? t : null;
 }
-function RA(e, t, n) {
+function ej(e, t, n) {
 	let r = null, i = new Promise((e, i) => {
 		r = setTimeout(() => i(Error(n)), t);
 	});
@@ -24802,7 +24898,7 @@ function RA(e, t, n) {
 }
 //#endregion
 //#region electron/ingest/stocktwitsPulseService.ts
-var zA = [
+var tj = [
 	{
 		symbol: "SPY",
 		stocktwitsSymbol: "SPY"
@@ -24835,7 +24931,7 @@ var zA = [
 		symbol: "KAS",
 		stocktwitsSymbol: "KAS.X"
 	}
-], BA = class extends v {
+], nj = class extends v {
 	targets;
 	intervalMs;
 	requestTimeoutMs;
@@ -24844,7 +24940,7 @@ var zA = [
 	timer = null;
 	running = !1;
 	constructor(e = {}) {
-		super(), this.on("error", () => void 0), this.targets = e.targets ?? zA, this.intervalMs = e.intervalMs ?? 6e4, this.requestTimeoutMs = e.requestTimeoutMs ?? 1e4, this.maxSeenIdsPerSymbol = e.maxSeenIdsPerSymbol ?? 1e3;
+		super(), this.on("error", () => void 0), this.targets = e.targets ?? tj, this.intervalMs = e.intervalMs ?? 6e4, this.requestTimeoutMs = e.requestTimeoutMs ?? 1e4, this.maxSeenIdsPerSymbol = e.maxSeenIdsPerSymbol ?? 1e3;
 	}
 	on(e, t) {
 		return super.on(e, t);
@@ -24887,11 +24983,11 @@ var zA = [
 		}
 		let l = o / a, u = s + c, d = u === 0 ? 0 : (s - c) / u, f = l - i.lastNewMessageCount / a;
 		i.lastPollAt = r, i.lastNewMessageCount = o;
-		let p = aT(38 + l * 8 + Math.max(0, f) * 3 + Math.abs(d) * 16, 0, 100), m = {
+		let p = xT(38 + l * 8 + Math.max(0, f) * 3 + Math.abs(d) * 16, 0, 100), m = {
 			target: e.symbol,
-			pressure: VA(p, 2),
-			mentionVelocity: VA(l, 3),
-			sentimentDivergenceIndex: VA(d, 3),
+			pressure: rj(p, 2),
+			mentionVelocity: rj(l, 3),
+			sentimentDivergenceIndex: rj(d, 3),
 			timestamp: r,
 			source: "stocktwits_public_stream"
 		};
@@ -24901,8 +24997,8 @@ var zA = [
 			sourceUrl: t,
 			messageCount: n.length,
 			newMessageCount: o,
-			velocityPerMinute: VA(l, 3),
-			mutedSentimentIndex: VA(d, 3),
+			velocityPerMinute: rj(l, 3),
+			mutedSentimentIndex: rj(d, 3),
 			bullishCount: s,
 			bearishCount: c,
 			observedAt: r,
@@ -24924,13 +25020,13 @@ var zA = [
 		}
 	}
 };
-function VA(e, t) {
+function rj(e, t) {
 	let n = 10 ** t;
 	return Math.round(e * n) / n;
 }
 //#endregion
 //#region electron/ingest/twitterExploreScraper.ts
-var HA = class {
+var ij = class {
 	enabled;
 	authToken;
 	headless;
@@ -24941,14 +25037,14 @@ var HA = class {
 		if (!this.enabled) return [];
 		throw this.authToken ? Error(`X Explore scraper scaffold is configured (headless=${this.headless}) but no browser automation adapter is installed.`) : Error("X Explore scraper requires ATLASZ_X_AUTH_TOKEN and is disabled by default.");
 	}
-}, UA = [
+}, aj = [
 	"NVDA",
 	"SPY",
 	"QQQ",
 	"XLE",
 	"GLD",
 	"TSM"
-], WA = class extends v {
+], oj = class extends v {
 	symbols;
 	intervalMs;
 	lookbackMinutes;
@@ -24956,7 +25052,7 @@ var HA = class {
 	client = null;
 	running = !1;
 	constructor(e = {}) {
-		super(), this.on("error", () => void 0), this.symbols = e.symbols ?? UA, this.intervalMs = e.intervalMs ?? 6e4, this.lookbackMinutes = e.lookbackMinutes ?? 8;
+		super(), this.on("error", () => void 0), this.symbols = e.symbols ?? aj, this.intervalMs = e.intervalMs ?? 6e4, this.lookbackMinutes = e.lookbackMinutes ?? 8;
 	}
 	on(e, t) {
 		return super.on(e, t);
@@ -24969,7 +25065,7 @@ var HA = class {
 	}
 	async poll() {
 		try {
-			let e = await this.getClient(), t = /* @__PURE__ */ new Date(Date.now() - this.lookbackMinutes * 6e4), n = await Promise.allSettled(this.symbols.map(async (n) => GA(n, await e.chart(n, {
+			let e = await this.getClient(), t = /* @__PURE__ */ new Date(Date.now() - this.lookbackMinutes * 6e4), n = await Promise.allSettled(this.symbols.map(async (n) => sj(n, await e.chart(n, {
 				period1: t,
 				interval: "1m"
 			})))), r = n.map((e) => e.status === "fulfilled" ? e.value : null).filter((e) => e !== null);
@@ -24991,7 +25087,7 @@ var HA = class {
 		return this.client;
 	}
 };
-function GA(e, t) {
+function sj(e, t) {
 	let n = [...t.quotes ?? []].reverse().find((e) => {
 		let t = e.close ?? e.regularMarketPrice;
 		return typeof t == "number" && Number.isFinite(t) && t > 0;
@@ -25002,11 +25098,11 @@ function GA(e, t) {
 		symbol: e,
 		price: r,
 		volume: Number.isFinite(n.volume) && n.volume && n.volume > 0 ? n.volume : 1,
-		timestamp: KA(n.date) ?? Date.now(),
+		timestamp: cj(n.date) ?? Date.now(),
 		source: "yahoo_finance_1m_public"
 	};
 }
-function KA(e) {
+function cj(e) {
 	if (e instanceof Date) return e.getTime();
 	if (typeof e == "number") return e;
 	if (typeof e == "string") {
@@ -25017,25 +25113,25 @@ function KA(e) {
 }
 //#endregion
 //#region electron/ingest/dataIngestOrchestrator.ts
-var qA = 6e4, JA = 12, YA = 35, XA = class extends v {
+var lj = 6e4, uj = 12, dj = 35, fj = class extends v {
 	persistence;
 	realtime;
 	enabled;
-	rss = new FA({ intervalMs: QA("ATLASZ_RSS_POLL_MS", 3e4) });
-	stocktwits = new BA({ intervalMs: QA("ATLASZ_STOCKTWITS_POLL_MS", 6e4) });
-	yahoo = new WA({ intervalMs: QA("ATLASZ_YAHOO_POLL_MS", 6e4) });
-	polymarket = new mT({ intervalMs: QA("ATLASZ_POLYMARKET_POLL_MS", 5 * 6e4) });
-	cognitive = new sT();
-	graphMutator = new Kw({
-		halfLifeMs: QA("ATLASZ_GRAPH_EDGE_HALFLIFE_MS", 360 * 6e4),
-		maxSilenceMs: QA("ATLASZ_GRAPH_EDGE_MAX_SILENCE_MS", 1440 * 6e4)
+	rss = new ZA({ intervalMs: mj("ATLASZ_RSS_POLL_MS", 3e4) });
+	stocktwits = new nj({ intervalMs: mj("ATLASZ_STOCKTWITS_POLL_MS", 6e4) });
+	yahoo = new oj({ intervalMs: mj("ATLASZ_YAHOO_POLL_MS", 6e4) });
+	polymarket = new AT({ intervalMs: mj("ATLASZ_POLYMARKET_POLL_MS", 5 * 6e4) });
+	cognitive = new CT();
+	graphMutator = new cT({
+		halfLifeMs: mj("ATLASZ_GRAPH_EDGE_HALFLIFE_MS", 360 * 6e4),
+		maxSilenceMs: mj("ATLASZ_GRAPH_EDGE_MAX_SILENCE_MS", 1440 * 6e4)
 	});
-	twitterExplore = new HA();
+	twitterExplore = new ij();
 	statusState;
 	narrativeInputTimestamps = [];
 	cognitiveBatch = [];
-	mediumVelocityThreshold = QA("ATLASZ_NARRATIVE_MEDIUM_VELOCITY", JA);
-	highVelocityThreshold = QA("ATLASZ_NARRATIVE_HIGH_VELOCITY", YA);
+	mediumVelocityThreshold = mj("ATLASZ_NARRATIVE_MEDIUM_VELOCITY", uj);
+	highVelocityThreshold = mj("ATLASZ_NARRATIVE_HIGH_VELOCITY", dj);
 	cognitiveMode = process.env.ATLASZ_ENABLE_OLLAMA === "1" ? "deep" : "disabled";
 	cognitiveSkippedCount = 0;
 	cognitiveBatchedCount = 0;
@@ -25075,7 +25171,7 @@ var qA = 6e4, JA = 12, YA = 35, XA = class extends v {
 		}), this.decayTimer = setInterval(() => {
 			let e = this.graphMutator.applyTemporalEdgeDecay();
 			(e.decayed > 0 || e.purged > 0) && this.audit("graph_traversal_triggered", "info", "Adaptive graph edge decay pass completed", e);
-		}, QA("ATLASZ_GRAPH_DECAY_MS", 5 * 6e4)), this.batchTimer = setInterval(() => this.flushCognitiveBatch("timer"), QA("ATLASZ_COGNITIVE_BATCH_MS", 15e3)));
+		}, mj("ATLASZ_GRAPH_DECAY_MS", 5 * 6e4)), this.batchTimer = setInterval(() => this.flushCognitiveBatch("timer"), mj("ATLASZ_COGNITIVE_BATCH_MS", 15e3)));
 	}
 	stop() {
 		this.running && (this.running = !1, this.statusState.running = !1, this.rss.stop(), this.stocktwits.stop(), this.yahoo.stop(), this.polymarket.stop(), this.cognitive.clear(), this.cognitiveBatch.length = 0, this.decayTimer &&= (clearInterval(this.decayTimer), null), this.batchTimer &&= (clearInterval(this.batchTimer), null));
@@ -25110,8 +25206,8 @@ var qA = 6e4, JA = 12, YA = 35, XA = class extends v {
 		}), this.cognitive.on("error", (e) => this.handleError(e, "ollama_local_cognitive_layer"));
 	}
 	handleNewsEvent(e) {
-		this.recordNarrativeInput(1, e.observedAt), this.statusState.lastNewsAt = e.observedAt, this.statusState.rssHeadlineCount += 1, this.saveHeadline(ZA(e));
-		let t = dT(e.rawText || e.title, e.id);
+		this.recordNarrativeInput(1, e.observedAt), this.statusState.lastNewsAt = e.observedAt, this.statusState.rssHeadlineCount += 1, this.saveHeadline(pj(e));
+		let t = DT(e.rawText || e.title, e.id);
 		this.persistExposureMatches(e, t), this.routeCognitiveEvent(e, t), this.emit("news", e), this.updateAdaptiveStatus();
 	}
 	handleProbability(e) {
@@ -25128,8 +25224,8 @@ var qA = 6e4, JA = 12, YA = 35, XA = class extends v {
 			summary: `Public market-implied probability near ${(e.probability * 100).toFixed(1)}%.`,
 			rawText: `${e.title} ${e.tags.join(" ")}`
 		};
-		this.saveHeadline(ZA(t));
-		let n = dT(t.rawText, t.id);
+		this.saveHeadline(pj(t));
+		let n = DT(t.rawText, t.id);
 		this.persistExposureMatches(t, n), this.routeCognitiveEvent(t, n), this.emit("probability", e), this.updateAdaptiveStatus();
 	}
 	handleSocialBatch(e) {
@@ -25147,7 +25243,7 @@ var qA = 6e4, JA = 12, YA = 35, XA = class extends v {
 			r >= .55 ? this.cognitive.enqueue(e, "keyword-priority") : this.cognitiveSkippedCount += 1;
 			return;
 		}
-		r >= .66 ? (this.cognitiveBatch.push(e), this.cognitiveBatchedCount += 1, this.cognitiveBatch.length >= QA("ATLASZ_COGNITIVE_BATCH_SIZE", 5) && this.flushCognitiveBatch("full")) : this.cognitiveSkippedCount += 1;
+		r >= .66 ? (this.cognitiveBatch.push(e), this.cognitiveBatchedCount += 1, this.cognitiveBatch.length >= mj("ATLASZ_COGNITIVE_BATCH_SIZE", 5) && this.flushCognitiveBatch("full")) : this.cognitiveSkippedCount += 1;
 	}
 	flushCognitiveBatch(e) {
 		if (this.cognitiveBatch.length === 0) return;
@@ -25172,7 +25268,7 @@ var qA = 6e4, JA = 12, YA = 35, XA = class extends v {
 		return this.pruneNarrativeWindow(e), this.narrativeInputTimestamps.length;
 	}
 	pruneNarrativeWindow(e) {
-		for (; this.narrativeInputTimestamps.length > 0 && e - this.narrativeInputTimestamps[0] > qA;) this.narrativeInputTimestamps.shift();
+		for (; this.narrativeInputTimestamps.length > 0 && e - this.narrativeInputTimestamps[0] > lj;) this.narrativeInputTimestamps.shift();
 	}
 	updateAdaptiveStatus() {
 		let e = this.cognitive.status();
@@ -25183,9 +25279,9 @@ var qA = 6e4, JA = 12, YA = 35, XA = class extends v {
 		for (let i of t) {
 			this.emit("exposure", e, i);
 			for (let t of i.affectedTickers) {
-				let a = aT(i.confidence, 0, 1);
+				let a = xT(i.confidence, 0, 1);
 				this.saveEntityEdge({
-					id: `exposure:${e.id}:${t}:${iT(i.keyword)}`,
+					id: `exposure:${e.id}:${t}:${bT(i.keyword)}`,
 					source: e.id,
 					target: t,
 					relation: i.reason,
@@ -25193,13 +25289,13 @@ var qA = 6e4, JA = 12, YA = 35, XA = class extends v {
 					createdAt: e.observedAt
 				}), n.push({
 					target: t,
-					pressure: Math.round(aT(45 + a * 45, 0, 100)),
+					pressure: Math.round(xT(45 + a * 45, 0, 100)),
 					mentionVelocity: Number((1 + a * 4).toFixed(3)),
 					sentimentDivergenceIndex: 0,
 					timestamp: e.observedAt,
 					source: "local_exposure_matrix"
 				}), r.push({
-					id: `signal:${e.id}:${t}:${iT(i.keyword)}`,
+					id: `signal:${e.id}:${t}:${bT(i.keyword)}`,
 					type: "narrative_acceleration",
 					assetOrTopicId: t,
 					severity: a >= .72 ? "high" : a >= .64 ? "elevated" : "watch",
@@ -25255,7 +25351,7 @@ var qA = 6e4, JA = 12, YA = 35, XA = class extends v {
 		}
 	}
 };
-function ZA(e) {
+function pj(e) {
 	return {
 		id: e.id,
 		title: e.title,
@@ -25266,33 +25362,33 @@ function ZA(e) {
 		observedAt: e.publishedAt || e.observedAt
 	};
 }
-function QA(e, t) {
+function mj(e, t) {
 	let n = Number(process.env[e]);
 	return Number.isInteger(n) && n > 0 ? n : t;
 }
 //#endregion
 //#region electron/providers/symbolDiscovery.ts
-var $A = [
+var hj = [
 	"KAS",
 	"KASUSDT",
 	"KAS-USD",
 	"KAS/USD",
 	"KAS/USDT",
 	"KAS-USDT"
-], ej = "PRICE_UNAVAILABLE";
-async function tj(e, t) {
+], gj = "PRICE_UNAVAILABLE";
+async function _j(e, t) {
 	let n = await e("https://api.exchange.coinbase.com/products", { signal: t });
 	if (!n.ok) throw Error(`Coinbase products HTTP ${n.status}`);
 	let r = await n.json();
 	return Array.isArray(r) ? r.map((e) => e && typeof e == "object" ? String(e.id ?? "") : "").filter((e) => e.length > 0) : [];
 }
-async function nj(e, t) {
+async function vj(e, t) {
 	let n = await e("https://api.binance.com/api/v3/exchangeInfo", { signal: t });
 	if (!n.ok) throw Error(`Binance exchangeInfo HTTP ${n.status}`);
 	let r = await n.json();
 	return Array.isArray(r.symbols) ? r.symbols.filter((e) => e.status === void 0 || e.status === "TRADING").map((e) => String(e.symbol ?? "")).filter((e) => e.length > 0) : [];
 }
-function rj(e, t, n) {
+function yj(e, t, n) {
 	let r = t.map((e) => e.toUpperCase()), i = [];
 	for (let e of n) {
 		let t = r.find((t) => e.symbols.has(t));
@@ -25306,18 +25402,18 @@ function rj(e, t, n) {
 	return {
 		assetSymbol: e,
 		resolutions: i,
-		status: i.length > 0 ? "available" : ej
+		status: i.length > 0 ? "available" : gj
 	};
 }
-function ij(e) {
-	return rj("KAS", $A, e);
+function bj(e) {
+	return yj("KAS", hj, e);
 }
-function aj(e) {
+function xj(e) {
 	return new Set(e.map((e) => e.toUpperCase()));
 }
 //#endregion
 //#region electron/providers/providerDiscoveryService.ts
-var oj = "atlasz.provider-discovery-cache.json", sj = 2500, cj = class {
+var Sj = "atlasz.provider-discovery-cache.json", Cj = 2500, wj = class {
 	userDataPath;
 	persistence;
 	fetchImpl;
@@ -25325,10 +25421,10 @@ var oj = "atlasz.provider-discovery-cache.json", sj = 2500, cj = class {
 	env;
 	lastSnapshot = null;
 	constructor(e) {
-		this.userDataPath = e.userDataPath, this.persistence = e.persistence, this.fetchImpl = e.fetchImpl ?? hj, this.now = e.now ?? (() => Date.now()), this.env = e.env ?? process.env, this.lastSnapshot = this.readCache();
+		this.userDataPath = e.userDataPath, this.persistence = e.persistence, this.fetchImpl = e.fetchImpl ?? jj, this.now = e.now ?? (() => Date.now()), this.env = e.env ?? process.env, this.lastSnapshot = this.readCache();
 	}
 	snapshot() {
-		return this.lastSnapshot ?? gj();
+		return this.lastSnapshot ?? Mj();
 	}
 	configPath() {
 		return this.env.ATLASZ_PROVIDER_CONFIG || l(this.userDataPath, "atlasz.providers.json");
@@ -25353,11 +25449,11 @@ var oj = "atlasz.provider-discovery-cache.json", sj = 2500, cj = class {
 			t.push(e), e.supportedSymbols.length > 0 && n.push({
 				providerId: e.providerId,
 				feedType: e.feedTypes.includes("WebSocket") ? "WebSocket" : "REST",
-				symbols: aj(e.supportedSymbols)
+				symbols: xj(e.supportedSymbols)
 			});
 		}
 		for (let e of await this.discoverLocalServices(r)) t.push(e);
-		let i = ij(n), a = [...i.resolutions.map((e) => ({
+		let i = bj(n), a = [...i.resolutions.map((e) => ({
 			assetSymbol: i.assetSymbol,
 			providerId: e.providerId,
 			providerSymbol: e.providerSymbol,
@@ -25384,25 +25480,25 @@ var oj = "atlasz.provider-discovery-cache.json", sj = 2500, cj = class {
 		return this.lastSnapshot = c, this.writeCache(c), this.persist(c), c;
 	}
 	async discoverProvider(e, t) {
-		let n = vr(e.providerId), r = yj([...e.envKey ? [e.envKey] : [], ...n.envKeysRequired]), i = r.filter((e) => !!this.env[e]), a = e.authType !== "none" || r.length > 0, o = [], s = new Set(e.supportedSymbols ?? []), c, l = fr(e);
+		let n = vr(e.providerId), r = Fj([...e.envKey ? [e.envKey] : [], ...n.envKeysRequired]), i = r.filter((e) => !!this.env[e]), a = e.authType !== "none" || r.length > 0, o = [], s = new Set(e.supportedSymbols ?? []), c, l = fr(e);
 		if (e.adapter === "disabled") c = "auth-gated";
 		else if (!e.enabled) c = "unsupported";
 		else if (!dr(e, this.env)) c = a ? "missing-config" : "unavailable";
 		else try {
-			let t = pj(e, this.env);
+			let t = kj(e, this.env);
 			if (t && (o.push(t), await this.checkEndpoint(t, e)), n.symbolDiscovery === "coinbase") {
 				o.push("https://api.exchange.coinbase.com/products");
-				for (let e of await tj(this.asFetchLike(), mj(sj))) s.add(e);
+				for (let e of await _j(this.asFetchLike(), Aj(Cj))) s.add(e);
 			}
 			if (n.symbolDiscovery === "binance") {
 				o.push("https://api.binance.com/api/v3/exchangeInfo");
-				for (let e of await nj(this.asFetchLike(), mj(sj))) s.add(e);
+				for (let e of await vj(this.asFetchLike(), Aj(Cj))) s.add(e);
 			}
 			if (e.providerId === "public_market_rest") for (let e of Nt(this.env.ATLASZ_ENABLE_PUBLIC_WS === "1")) s.add(e.symbol), s.add(e.feedSymbol);
 			if (e.providerId === "coingecko_public_rest") for (let e of Nt(!1).filter((e) => e.source === "coingecko")) s.add(e.symbol), s.add(e.feedSymbol);
 			c = "available", l = void 0;
 		} catch (e) {
-			c = _j(e) ? "rate-limited" : "unavailable", l = vj(e);
+			c = Nj(e) ? "rate-limited" : "unavailable", l = Pj(e);
 		}
 		return {
 			providerId: e.providerId,
@@ -25418,7 +25514,7 @@ var oj = "atlasz.provider-discovery-cache.json", sj = 2500, cj = class {
 			authRequired: a,
 			envKeysRequired: r,
 			envKeysPresent: i,
-			endpointsChecked: yj(o),
+			endpointsChecked: Fj(o),
 			lastDiscoveryAt: t,
 			discoveryError: l,
 			provenance: e.provenance,
@@ -25438,7 +25534,7 @@ var oj = "atlasz.provider-discovery-cache.json", sj = 2500, cj = class {
 					try {
 						await this.checkEndpoint(`${r.replace(/\/$/, "")}/api/tags`), a = "available";
 					} catch (e) {
-						a = "unavailable", o = vj(e);
+						a = "unavailable", o = Pj(e);
 					}
 				}
 			}
@@ -25472,15 +25568,15 @@ var oj = "atlasz.provider-discovery-cache.json", sj = 2500, cj = class {
 	async checkEndpoint(e, t) {
 		let n = { accept: "application/json, application/xml, text/xml, */*" };
 		t?.providerId === "sec_edgar_public" && this.env.ATLASZ_SEC_USER_AGENT && (n["user-agent"] = this.env.ATLASZ_SEC_USER_AGENT);
-		let r = t?.providerId === "macro_calendar_fred" && this.env.ATLASZ_FRED_API_KEY ? lj(e, "api_key", this.env.ATLASZ_FRED_API_KEY) : t?.providerId === "bea_public" && this.env.ATLASZ_BEA_API_KEY ? lj(e, "UserID", this.env.ATLASZ_BEA_API_KEY) : t?.providerId === "eia_energy_public" && this.env.ATLASZ_EIA_API_KEY ? lj(e, "api_key", this.env.ATLASZ_EIA_API_KEY) : t?.providerId === "congress_gov_public" ? lj(e, "api_key", this.env.ATLASZ_CONGRESS_API_KEY || "DEMO_KEY") : t?.providerId === "openalex_works_public" && this.env.ATLASZ_OPENALEX_API_KEY ? lj(e, "api_key", this.env.ATLASZ_OPENALEX_API_KEY) : t?.providerId === "crossref_works_public" && this.env.ATLASZ_CROSSREF_MAILTO ? lj(e, "mailto", this.env.ATLASZ_CROSSREF_MAILTO) : e, i = await this.fetchImpl(r, {
-			signal: mj(sj),
+		let r = t?.providerId === "macro_calendar_fred" && this.env.ATLASZ_FRED_API_KEY ? Tj(e, "api_key", this.env.ATLASZ_FRED_API_KEY) : t?.providerId === "bea_public" && this.env.ATLASZ_BEA_API_KEY ? Tj(e, "UserID", this.env.ATLASZ_BEA_API_KEY) : t?.providerId === "eia_energy_public" && this.env.ATLASZ_EIA_API_KEY ? Tj(e, "api_key", this.env.ATLASZ_EIA_API_KEY) : t?.providerId === "congress_gov_public" ? Tj(e, "api_key", this.env.ATLASZ_CONGRESS_API_KEY || "DEMO_KEY") : t?.providerId === "openalex_works_public" && this.env.ATLASZ_OPENALEX_API_KEY ? Tj(e, "api_key", this.env.ATLASZ_OPENALEX_API_KEY) : t?.providerId === "crossref_works_public" && this.env.ATLASZ_CROSSREF_MAILTO ? Tj(e, "mailto", this.env.ATLASZ_CROSSREF_MAILTO) : e, i = await this.fetchImpl(r, {
+			signal: Aj(Cj),
 			headers: n
 		});
 		if (!i.ok) throw Error(`${e} HTTP ${i.status}`);
 	}
 	persist(e) {
 		for (let t of e.providers) try {
-			this.persistence.saveOsintSource(uj(t)), this.persistence.audit({
+			this.persistence.saveOsintSource(Ej(t)), this.persistence.audit({
 				id: `audit-provider-${t.providerId}-${e.lastDiscoveryAt ?? this.now()}`,
 				eventType: t.status === "available" ? "provider_discovered" : "provider_discovery_failed",
 				connectorId: t.providerId,
@@ -25512,25 +25608,25 @@ var oj = "atlasz.provider-discovery-cache.json", sj = 2500, cj = class {
 		} catch {}
 	}
 	cachePath() {
-		return l(this.userDataPath, oj);
+		return l(this.userDataPath, Sj);
 	}
 };
-function lj(e, t, n) {
+function Tj(e, t, n) {
 	let r = new URL(e);
 	return r.searchParams.set(t, n), r.toString();
 }
-function uj(e) {
+function Ej(e) {
 	return {
 		sourceId: `provider:${e.providerId}`,
 		sourceName: e.providerName,
 		sourceType: e.category,
-		endpointType: fj(e.feedTypes[0]),
+		endpointType: Oj(e.feedTypes[0]),
 		endpoint: e.endpointsChecked[0] ?? "local/provider registry",
 		pollIntervalMs: 0,
 		rateLimitMs: 0,
-		timeoutMs: sj,
+		timeoutMs: Cj,
 		enabled: e.autoWired,
-		status: dj(e.status),
+		status: Dj(e.status),
 		provenance: e.provenance,
 		lastSuccessAt: e.status === "available" ? e.lastDiscoveryAt : void 0,
 		lastErrorAt: e.discoveryError ? e.lastDiscoveryAt : void 0,
@@ -25541,20 +25637,20 @@ function uj(e) {
 		parserAdapter: e.adapterId
 	};
 }
-function dj(e) {
+function Dj(e) {
 	return e === "available" ? "online" : e === "rate-limited" ? "rate-limited" : e === "missing-config" || e === "auth-gated" || e === "unsupported" ? "disabled" : "failed";
 }
-function fj(e) {
+function Oj(e) {
 	return e === "RSS" ? "rss" : e === "WebSocket" ? "websocket" : e === "local" || e === "SQLite" ? "local" : "rest";
 }
-function pj(e, t) {
-	return e.providerId === "gdelt_doc_public" ? "https://api.gdeltproject.org/api/v2/doc/doc?query=markets&mode=ArtList&format=json&maxrecords=1" : e.providerId === "macro_calendar_fred" ? `${(t.ATLASZ_FRED_BASE_URL || "https://api.stlouisfed.org/fred").replace(/\/$/, "")}/series?series_id=CPIAUCSL&file_type=json` : e.providerId === "treasury_fiscal_public" ? "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/debt_to_penny?sort=-record_date&page[size]=1&fields=record_date,tot_pub_debt_out_amt" : e.providerId === "eia_energy_public" ? `${(t.ATLASZ_EIA_API_BASE || "https://api.eia.gov/v2").replace(/\/$/, "")}/seriesid/PET.RWTC.D?length=1` : e.providerId === "congress_gov_public" ? "https://api.congress.gov/v3/bill?format=json&limit=1" : e.providerId === "openalex_works_public" ? "https://api.openalex.org/works?search=semiconductors&filter=from_publication_date:2026-01-01&per-page=1&select=id,title,publication_date" : e.providerId === "crossref_works_public" ? "https://api.crossref.org/works?query=semiconductors&filter=from-pub-date:2026-01-01&rows=1" : e.providerId === "public_market_rest" || e.providerId === "yahoo_finance_1m_public" ? "https://query1.finance.yahoo.com/v8/finance/chart/SPY?range=1d&interval=1m" : e.providerId === "coingecko_public_rest" ? "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd" : e.providerId === "stocktwits_public_stream" ? "https://api.stocktwits.com/api/2/streams/symbol/SPY.json" : e.providerId === "polymarket_gamma_public" ? "https://gamma-api.polymarket.com/markets?limit=1" : e.endpoint && /^https?:\/\//i.test(e.endpoint) && !e.endpoint.includes(" ") ? e.endpoint : null;
+function kj(e, t) {
+	return e.providerId === "gdelt_doc_public" ? "https://api.gdeltproject.org/api/v2/doc/doc?query=markets&mode=ArtList&format=json&maxrecords=1" : e.providerId === "macro_calendar_fred" ? t.ATLASZ_FRED_API_KEY ? `${(t.ATLASZ_FRED_BASE_URL || "https://api.stlouisfed.org/fred").replace(/\/$/, "")}/series?series_id=CPIAUCSL&file_type=json` : "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCSL" : e.providerId === "treasury_fiscal_public" ? "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/debt_to_penny?sort=-record_date&page[size]=1&fields=record_date,tot_pub_debt_out_amt" : e.providerId === "eia_energy_public" ? `${(t.ATLASZ_EIA_API_BASE || "https://api.eia.gov/v2").replace(/\/$/, "")}/seriesid/PET.RWTC.D?length=1` : e.providerId === "congress_gov_public" ? "https://api.congress.gov/v3/bill?format=json&limit=1" : e.providerId === "openalex_works_public" ? "https://api.openalex.org/works?search=semiconductors&filter=from_publication_date:2026-01-01&per-page=1&select=id,title,publication_date" : e.providerId === "crossref_works_public" ? "https://api.crossref.org/works?query=semiconductors&filter=from-pub-date:2026-01-01&rows=1" : e.providerId === "public_market_rest" || e.providerId === "yahoo_finance_1m_public" ? "https://query1.finance.yahoo.com/v8/finance/chart/SPY?range=1d&interval=1m" : e.providerId === "coingecko_public_rest" ? "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd" : e.providerId === "stocktwits_public_stream" ? "https://api.stocktwits.com/api/2/streams/symbol/SPY.json" : e.providerId === "polymarket_gamma_public" ? "https://gamma-api.polymarket.com/markets?limit=1" : e.endpoint && /^https?:\/\//i.test(e.endpoint) && !e.endpoint.includes(" ") ? e.endpoint : null;
 }
-function mj(e) {
+function Aj(e) {
 	let t = new AbortController();
 	return setTimeout(() => t.abort(), e).unref?.(), t.signal;
 }
-async function hj(e, t) {
+async function jj(e, t) {
 	return fetch(e, {
 		...t,
 		headers: {
@@ -25563,7 +25659,7 @@ async function hj(e, t) {
 		}
 	});
 }
-function gj() {
+function Mj() {
 	return {
 		status: "unavailable",
 		configErrors: [],
@@ -25572,49 +25668,49 @@ function gj() {
 		lastError: "Provider discovery has not run yet."
 	};
 }
-function _j(e) {
-	return /429|rate/i.test(vj(e));
+function Nj(e) {
+	return /429|rate/i.test(Pj(e));
 }
-function vj(e) {
+function Pj(e) {
 	return e instanceof Error ? e.message : String(e);
 }
-function yj(e) {
+function Fj(e) {
 	return [...new Set(e.filter(Boolean))];
 }
 //#endregion
 //#region electron/main.ts
-var bj = c(u(import.meta.url)), xj = null, Sj = null, Cj = null, wj = null, Tj = null, Ej = null, Dj = null, Oj = null;
+var Ij = c(u(import.meta.url)), Lj = null, Rj = null, zj = null, Bj = null, Vj = null, Hj = null, Uj = null, Wj = null;
 function Q() {
-	return xj ||= O(a.getPath("userData")), xj;
+	return Lj ||= O(a.getPath("userData")), Lj;
 }
 function $() {
-	return Sj ||= new hn({ persistence: Q() }), Sj;
+	return Rj ||= new hn({ persistence: Q() }), Rj;
 }
-function kj() {
-	return Cj ||= new SC(Q()), Cj;
+function Gj() {
+	return zj ||= new IC(Q()), zj;
 }
-function Aj() {
-	return wj ||= new mw(Q()), wj;
+function Kj() {
+	return Bj ||= new Aw(Q()), Bj;
 }
-function jj() {
-	return Tj ||= new kw(Q()), Tj;
+function qj() {
+	return Vj ||= new Gw(Q()), Vj;
 }
-function Mj() {
-	return Ej ||= new Fw(Q()), Ej;
+function Jj() {
+	return Hj ||= new Zw(Q()), Hj;
 }
-function Nj() {
-	return Dj ||= new XA({
+function Yj() {
+	return Uj ||= new fj({
 		persistence: Q(),
 		realtime: $()
-	}), Dj;
+	}), Uj;
 }
-function Pj() {
-	return Oj ||= new cj({
+function Xj() {
+	return Wj ||= new wj({
 		userDataPath: a.getPath("userData"),
 		persistence: Q()
-	}), Oj;
+	}), Wj;
 }
-function Fj() {
+function Zj() {
 	let e = new i({
 		title: "Atlasz Intel",
 		width: 1480,
@@ -25628,13 +25724,13 @@ function Fj() {
 			y: 16
 		},
 		webPreferences: {
-			preload: l(bj, "preload.mjs"),
+			preload: l(Ij, "preload.mjs"),
 			contextIsolation: !0,
 			nodeIntegration: !1,
 			sandbox: !1
 		}
 	});
-	e.webContents.setWindowOpenHandler(({ url: e }) => (s.openExternal(e), { action: "deny" })), process.env.VITE_DEV_SERVER_URL ? e.loadURL(process.env.VITE_DEV_SERVER_URL) : e.loadFile(l(bj, "../dist/index.html"));
+	e.webContents.setWindowOpenHandler(({ url: e }) => (s.openExternal(e), { action: "deny" })), process.env.VITE_DEV_SERVER_URL ? e.loadURL(process.env.VITE_DEV_SERVER_URL) : e.loadFile(l(Ij, "../dist/index.html"));
 }
 o.handle("atlasz:app-meta", () => ({
 	name: a.getName(),
@@ -25643,8 +25739,8 @@ o.handle("atlasz:app-meta", () => ({
 	dataPath: a.getPath("userData")
 })), o.handle("atlasz:open-external", async (e, t) => {
 	await s.openExternal(t);
-}), o.handle("atlasz:db:status", () => ({ mode: Q().mode })), o.handle("atlasz:db:briefs:list", () => Q().listBriefs()), o.handle("atlasz:db:briefs:save", (e, t) => (Q().saveBrief(t), { ok: !0 })), o.handle("atlasz:db:headlines:list", (e, t) => Q().listHeadlines(t)), o.handle("atlasz:db:headlines:save", (e, t) => (Q().saveHeadline(t), { ok: !0 })), o.handle("atlasz:db:decisions:list", () => Q().listDecisions()), o.handle("atlasz:db:decisions:get", (e, t) => Q().getDecision(t)), o.handle("atlasz:db:decisions:save", (e, t) => (Q().saveDecision(t), { ok: !0 })), o.handle("atlasz:db:decisions:delete", (e, t) => (Q().deleteDecision(t), { ok: !0 })), o.handle("atlasz:db:decisions:due", (e, t) => Q().decisionsDueForReview(t)), o.handle("atlasz:realtime:start", () => $().start()), o.handle("atlasz:realtime:stop", () => $().stop()), o.handle("atlasz:realtime:restart", (e, t) => $().restart(t)), o.handle("atlasz:realtime:add-asset", (e, t) => $().addAsset(t)), o.handle("atlasz:realtime:snapshot", () => $().snapshot()), o.handle("atlasz:realtime:status", () => $().status()), o.handle("atlasz:realtime:health", () => $().health()), o.handle("atlasz:realtime:traverse-risk", (e, t) => $().traverseRisk(t)), o.handle("atlasz:realtime:replay:start", (e, t) => $().replayStart(t)), o.handle("atlasz:realtime:replay:pause", () => $().replayPause()), o.handle("atlasz:realtime:replay:resume", () => $().replayResume()), o.handle("atlasz:realtime:replay:stop", () => $().replayStop()), o.handle("atlasz:realtime:replay:speed", (e, t) => $().replaySetSpeed(t)), o.handle("atlasz:realtime:replay:seek", (e, t) => $().replaySeek(t)), o.handle("atlasz:world:snapshot", () => kj().snapshot()), o.handle("atlasz:world:refresh", () => kj().refresh()), o.handle("atlasz:world:favorite", (e, t, n, r) => kj().toggleFavorite(t, n, r)), o.handle("atlasz:quant:snapshot", () => Aj().snapshot()), o.handle("atlasz:intel:playbook", (e, t) => jj().playbookFor(t)), o.handle("atlasz:thesis:save", (e, t) => Mj().save(t)), o.handle("atlasz:thesis:dashboard", () => Mj().dashboard()), o.handle("atlasz:ingest:status", () => Nj().status()), o.handle("atlasz:providers:snapshot", () => Pj().snapshot()), o.handle("atlasz:providers:discover", () => Pj().discover()), o.handle("atlasz:providers:open-config", () => {
-	let e = Pj().ensureConfigTemplate();
+}), o.handle("atlasz:db:status", () => ({ mode: Q().mode })), o.handle("atlasz:db:briefs:list", () => Q().listBriefs()), o.handle("atlasz:db:briefs:save", (e, t) => (Q().saveBrief(t), { ok: !0 })), o.handle("atlasz:db:headlines:list", (e, t) => Q().listHeadlines(t)), o.handle("atlasz:db:headlines:save", (e, t) => (Q().saveHeadline(t), { ok: !0 })), o.handle("atlasz:db:decisions:list", () => Q().listDecisions()), o.handle("atlasz:db:decisions:get", (e, t) => Q().getDecision(t)), o.handle("atlasz:db:decisions:save", (e, t) => (Q().saveDecision(t), { ok: !0 })), o.handle("atlasz:db:decisions:delete", (e, t) => (Q().deleteDecision(t), { ok: !0 })), o.handle("atlasz:db:decisions:due", (e, t) => Q().decisionsDueForReview(t)), o.handle("atlasz:realtime:start", () => $().start()), o.handle("atlasz:realtime:stop", () => $().stop()), o.handle("atlasz:realtime:restart", (e, t) => $().restart(t)), o.handle("atlasz:realtime:add-asset", (e, t) => $().addAsset(t)), o.handle("atlasz:realtime:snapshot", () => $().snapshot()), o.handle("atlasz:realtime:status", () => $().status()), o.handle("atlasz:realtime:health", () => $().health()), o.handle("atlasz:realtime:traverse-risk", (e, t) => $().traverseRisk(t)), o.handle("atlasz:realtime:replay:start", (e, t) => $().replayStart(t)), o.handle("atlasz:realtime:replay:pause", () => $().replayPause()), o.handle("atlasz:realtime:replay:resume", () => $().replayResume()), o.handle("atlasz:realtime:replay:stop", () => $().replayStop()), o.handle("atlasz:realtime:replay:speed", (e, t) => $().replaySetSpeed(t)), o.handle("atlasz:realtime:replay:seek", (e, t) => $().replaySeek(t)), o.handle("atlasz:world:snapshot", () => Gj().snapshot()), o.handle("atlasz:world:refresh", () => Gj().refresh()), o.handle("atlasz:world:favorite", (e, t, n, r) => Gj().toggleFavorite(t, n, r)), o.handle("atlasz:quant:snapshot", () => Kj().snapshot()), o.handle("atlasz:intel:playbook", (e, t) => qj().playbookFor(t)), o.handle("atlasz:thesis:save", (e, t) => Jj().save(t)), o.handle("atlasz:thesis:dashboard", () => Jj().dashboard()), o.handle("atlasz:ingest:status", () => Yj().status()), o.handle("atlasz:providers:snapshot", () => Xj().snapshot()), o.handle("atlasz:providers:discover", () => Xj().discover()), o.handle("atlasz:providers:open-config", () => {
+	let e = Xj().ensureConfigTemplate();
 	return s.showItemInFolder(e.path), e;
 }), a.whenReady().then(() => {
 	Q();
@@ -25653,13 +25749,13 @@ o.handle("atlasz:app-meta", () => ({
 	} catch (e) {
 		console.error("[atlasz] realtime start failed at launch:", e);
 	}
-	kj().refresh(), Pj().discover(), Nj().start(), Fj(), a.on("activate", () => {
-		i.getAllWindows().length === 0 && Fj();
+	Gj().refresh(), Xj().discover(), Yj().start(), Zj(), a.on("activate", () => {
+		i.getAllWindows().length === 0 && Zj();
 	});
 }), a.on("window-all-closed", () => {
 	process.platform !== "darwin" && a.quit();
 }), a.on("before-quit", () => {
-	Dj?.stop(), Dj = null, Sj?.close(), Sj = null, Cj = null, Oj = null, xj?.close(), xj = null;
+	Uj?.stop(), Uj = null, Rj?.close(), Rj = null, zj = null, Wj = null, Lj?.close(), Lj = null;
 });
 //#endregion
 export { ne as i, T as n, D as r, E as t };

@@ -12,10 +12,10 @@
  * appear only when the source provides them. Operator links to a market identity
  * ONLY on an exact curated match. Coordinates source-backed only.
  *
- * SOURCE DISCIPLINE: fail-closed with no default endpoint. Operator pins the
- * official USGS export(s) via ATLASZ_USGS_USMIN_URL / ATLASZ_USGS_MRDS_URL
- * (host validated to usgs.gov); at least one required. Parser is the tested core
- * and accepts CSV (header-mapped) or a JSON array.
+ * SOURCE DISCIPLINE: official USGS exports only. MRDS has a public official CSV
+ * default and is streamed only until the bounded maxRecords slice is satisfied.
+ * Operator-pinned ATLASZ_USGS_USMIN_URL / ATLASZ_USGS_MRDS_URL overrides are
+ * host-validated to usgs.gov. Parser accepts CSV (header-mapped) or a JSON array.
  *
  * provenance: official-api   category: materials
  */
@@ -33,6 +33,7 @@ import type { MineralDatabase, MineralSite, MineralSiteKind, WorldIntelEvent } f
 const SOURCE_ID = 'usgs_minerals_public'
 const SOURCE_NAME = 'USGS Mineral Resources'
 const HUMAN_SOURCE_URL = 'https://mrdata.usgs.gov/'
+const DEFAULT_MRDS_URL = 'https://mrdata.usgs.gov/mrds/mrds.csv'
 const DEFAULT_TIMEOUT_MS = 30_000
 const DEFAULT_MAX_RETRIES = 2
 const DEFAULT_BACKOFF_MS = 1_000
@@ -68,7 +69,7 @@ export function readUsgsMineralConfig(env: NodeJS.ProcessEnv = process.env): Usg
   if (env.ATLASZ_USGS_MINERALS_DISABLE === '1') return null
   const sources: UsgsMineralSource[] = []
   const usmin = asString(env.ATLASZ_USGS_USMIN_URL)
-  const mrds = asString(env.ATLASZ_USGS_MRDS_URL)
+  const mrds = asString(env.ATLASZ_USGS_MRDS_URL) || DEFAULT_MRDS_URL
   if (usmin && isOfficialUsgsUrl(usmin)) sources.push({ database: 'USMIN', url: usmin })
   if (mrds && isOfficialUsgsUrl(mrds)) sources.push({ database: 'MRDS', url: mrds })
   if (sources.length === 0) return null
@@ -89,7 +90,7 @@ export async function fetchUsgsMinerals(signal: AbortSignal, config = readUsgsMi
   for (const source of config.sources) {
     try {
       const body = await fetchWithRetry(
-        (attemptSignal) => fetchMineral(source.url, linkedSignal(signal, attemptSignal)),
+        (attemptSignal) => fetchMineral(source.url, linkedSignal(signal, attemptSignal), config.maxRecords),
         { maxRetries: config.maxRetries, backoffMs: config.backoffMs, timeoutMs: config.timeoutMs },
       )
       records.push(...parseMineralSites(body, { database: source.database, retrievedAt, sourceApiUrl: source.url, maxRecords: config.maxRecords }))
@@ -364,7 +365,7 @@ function normalizeOperator(value: string): string {
   return value.toLowerCase().replace(/[.,]/g, '').replace(/\s+/g, ' ').trim()
 }
 
-async function fetchMineral(url: string, signal: AbortSignal): Promise<unknown> {
+async function fetchMineral(url: string, signal: AbortSignal, maxRecords: number): Promise<unknown> {
   const response = await fetch(url, {
     signal,
     headers: { accept: 'text/csv, application/json, application/geo+json, */*', 'user-agent': 'AtlaszIntel/0.4 (local-first materials intelligence; official USGS Mineral Resources)' },
@@ -372,7 +373,27 @@ async function fetchMineral(url: string, signal: AbortSignal): Promise<unknown> 
   assertOk(response, 'USGS minerals')
   const contentType = response.headers.get('content-type') ?? ''
   if (/json/i.test(contentType)) return (await response.json()) as unknown
+  if (response.body && /csv|text/i.test(contentType)) return await readCsvPrefix(response, maxRecords + 1)
   return await response.text()
+}
+
+async function readCsvPrefix(response: Response, maxLines: number): Promise<string> {
+  const reader = response.body?.getReader()
+  if (!reader) return await response.text()
+  const decoder = new TextDecoder()
+  let text = ''
+  try {
+    while (text.split(/\r?\n/).length <= maxLines) {
+      const { value, done } = await reader.read()
+      if (done) break
+      text += decoder.decode(value, { stream: true })
+    }
+    text += decoder.decode()
+    const lines = text.split(/\r?\n/)
+    return lines.slice(0, Math.max(2, maxLines)).join('\n')
+  } finally {
+    await reader.cancel().catch(() => undefined)
+  }
 }
 
 function clampInteger(value: number, min: number, max: number): number {

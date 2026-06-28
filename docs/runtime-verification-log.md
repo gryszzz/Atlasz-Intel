@@ -1,6 +1,6 @@
 # Runtime Verification Log
 
-**Generated:** 2026-06-28T21:36:09.677Z
+**Generated:** 2026-06-28T22:37:06.490Z
 **Command:** `npx tsx scripts/runtimeVerification.mts`
 **Result:** 13/13 checks passed
 **Persistence:** node:sqlite (with JSON fallback)
@@ -13,7 +13,7 @@
 ## Env keys (names only)
 
 - **present:** ATLASZ_SEC_USER_AGENT
-- **missing:** ATLASZ_ALPACA_API_KEY, ATLASZ_ALPACA_SECRET_KEY, ATLASZ_BEA_API_KEY, ATLASZ_EIA_API_KEY, ATLASZ_EIA_REFINERIES_URL, ATLASZ_FRED_API_KEY, ATLASZ_LNG_TERMINALS_URL, ATLASZ_OPTIONS_UNDERLYINGS, ATLASZ_PATENTSVIEW_API_KEY, ATLASZ_UNLOCODE_URL, ATLASZ_UN_COMTRADE_API_KEY, ATLASZ_USGS_USMIN_URL
+- **missing:** ATLASZ_ALPACA_API_KEY, ATLASZ_ALPACA_SECRET_KEY, ATLASZ_BEA_API_KEY, ATLASZ_EIA_API_KEY, ATLASZ_EIA_REFINERIES_URL, ATLASZ_LNG_TERMINALS_URL, ATLASZ_OPTIONS_UNDERLYINGS, ATLASZ_PATENTSVIEW_API_KEY, ATLASZ_UN_COMTRADE_API_KEY
 
 ## Connector truth table
 
@@ -28,7 +28,7 @@
 | sec-form4 | impl | key-gated | ATLASZ_SEC_USER_AGENT | yes | online | 149 | yes | yes | yes | yes | yes |
 | sec-form13f | impl | key-gated | ATLASZ_SEC_USER_AGENT | yes | online | 400 | yes | yes | yes | partial | yes |
 | etf-holdings | impl | public | - | public | online | 266 | yes | yes | n/a | partial | yes |
-| fred | impl | key-gated | ATLASZ_FRED_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
+| fred | impl | public | - | public | online | 6 | yes | yes | n/a | partial | yes |
 | treasury-fiscal | impl | public | - | public | online | 3 | yes | yes | n/a | partial | yes |
 | bls | impl | public | - | public | configured (empty) | 0 | n/a | n/a | n/a | partial | yes |
 | fed-press-rss | impl | public | - | public | online | 20 | yes | yes | n/a | no | no |
@@ -37,7 +37,7 @@
 | eia | impl | key-gated | ATLASZ_EIA_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
 | noaa-alerts | impl | public | - | public | online | 30 | yes | yes | n/a | partial | yes |
 | federal-register | impl | public | - | public | online | 25 | yes | yes | n/a | partial | yes |
-| ofac-sdn | impl | public | - | public | online | 40 | yes | yes | n/a | identifier-only | yes |
+| ofac-sdn | impl | public | - | public | failed | 0 | n/a | n/a | n/a | identifier-only | yes |
 | congress-gov | impl | public | - | public | online | 20 | yes | yes | n/a | identifier-only | yes |
 | usgs-earthquakes | impl | public | - | public | online | 19 | yes | yes | n/a | partial | yes |
 | un-comtrade | impl | key-gated | ATLASZ_UN_COMTRADE_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | no | no |
@@ -60,9 +60,9 @@
 | eia-nuclear | impl | key-gated | ATLASZ_EIA_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
 | nrc-reactor-status | impl | public | - | public | online | 95 | yes | yes | n/a | no | no |
 | eia-balancing-authorities | impl | key-gated | ATLASZ_EIA_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
-| un-locode | impl | key-gated | ATLASZ_UNLOCODE_URL | no | missing-key | 0 | n/a | n/a | n/a | no | no |
+| un-locode | impl | public | - | public | online | 157 | yes | yes | n/a | no | no |
 | world-port-index | impl | public | - | public | online | 800 | yes | yes | n/a | no | no |
-| usgs-minerals | impl | key-gated | ATLASZ_USGS_USMIN_URL | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
+| usgs-minerals | impl | public | - | public | online | 600 | yes | yes | n/a | partial | yes |
 | crypto-public-realtime | impl | public | - | public | managed-ingest | 0 | n/a | n/a | n/a | no | no |
 | equities-prices | impl | key-gated | ATLASZ_ALPACA_API_KEY,ATLASZ_ALPACA_SECRET_KEY | no | missing-key | 0 | n/a | n/a | n/a | no | no |
 | options-oi | impl | key-gated | ATLASZ_ALPACA_API_KEY,ATLASZ_ALPACA_SECRET_KEY,ATLASZ_OPTIONS_UNDERLYINGS | no | missing-key | 0 | n/a | n/a | n/a | no | no |
@@ -89,13 +89,10 @@ _None — all checks passed._
 - `ATLASZ_BEA_API_KEY`
 - `ATLASZ_EIA_API_KEY`
 - `ATLASZ_EIA_REFINERIES_URL`
-- `ATLASZ_FRED_API_KEY`
 - `ATLASZ_LNG_TERMINALS_URL`
 - `ATLASZ_OPTIONS_UNDERLYINGS`
 - `ATLASZ_PATENTSVIEW_API_KEY`
-- `ATLASZ_UNLOCODE_URL`
 - `ATLASZ_UN_COMTRADE_API_KEY`
-- `ATLASZ_USGS_USMIN_URL`
 
 ## Reproduce
 

@@ -54,13 +54,13 @@ export const RUNTIME_CONFIG_ITEMS: RuntimeConfigItem[] = [
   },
   {
     envNames: ['ATLASZ_FRED_API_KEY'],
-    label: 'FRED API key',
-    unlocks: 'FRED macro series',
-    kind: 'public-free-key',
+    label: 'FRED optional API key',
+    unlocks: 'higher-fidelity FRED REST metadata; public FRED CSV runs by default',
+    kind: 'optional-quota-key',
     signupUrl: 'https://fred.stlouisfed.org/docs/api/api_key.html',
-    expectedBefore: 'missing-key',
+    expectedBefore: 'public FRED graph CSV mode',
     expectedAfter: 'online or rate-limited/failed',
-    required: true,
+    required: false,
   },
   {
     envNames: ['ATLASZ_BEA_API_KEY'],
@@ -164,23 +164,23 @@ export const RUNTIME_CONFIG_ITEMS: RuntimeConfigItem[] = [
   },
   {
     envNames: ['ATLASZ_UNLOCODE_URL'],
-    label: 'Official UNECE UN/LOCODE CSV',
-    unlocks: 'UN/LOCODE port/location registry',
+    label: 'Official UNECE UN/LOCODE override',
+    unlocks: 'alternate official UN/LOCODE package/CSV; public UNECE/UNICC package runs by default',
     kind: 'configured-url',
     signupUrl: 'https://unece.org/trade/cefact/UNLOCODE-Download',
-    expectedBefore: 'missing-key / configured-only URL missing',
+    expectedBefore: 'public UNECE/UNICC package mode',
     expectedAfter: 'online or honest endpoint failure',
-    required: true,
+    required: false,
   },
   {
     envNames: ['ATLASZ_USGS_USMIN_URL', 'ATLASZ_USGS_MRDS_URL'],
-    label: 'Official USGS mineral exports',
-    unlocks: 'USGS USMIN/MRDS mineral sites',
+    label: 'Official USGS mineral export overrides',
+    unlocks: 'USGS USMIN/MRDS mineral sites; MRDS public CSV runs by default',
     kind: 'configured-url',
     signupUrl: 'https://mrdata.usgs.gov/',
-    expectedBefore: 'missing-key / configured-only URL missing',
+    expectedBefore: 'public MRDS legacy-reference mode',
     expectedAfter: 'online or honest endpoint failure',
-    required: true,
+    required: false,
   },
   {
     envNames: ['ATLASZ_WPI_URL'],
@@ -288,7 +288,7 @@ function officialHostOk(envName: string, url: URL): boolean {
         (hostEndsWith(url.hostname, 'arcgis.com') && /Lng_ImportExportTerminals/i.test(url.pathname))
       )
     case 'ATLASZ_UNLOCODE_URL':
-      return hostEndsWith(url.hostname, 'unece.org')
+      return hostEndsWith(url.hostname, 'unece.org') || (url.hostname.toLowerCase() === 'opensource.unicc.org' && /\/un\/unece\/uncefact\/vocab-locode\//i.test(url.pathname))
     case 'ATLASZ_USGS_USMIN_URL':
     case 'ATLASZ_USGS_MRDS_URL':
       return hostEndsWith(url.hostname, 'usgs.gov')
@@ -306,7 +306,7 @@ function allowedHosts(envName: string): string {
     case 'ATLASZ_LNG_TERMINALS_URL':
       return 'eia.gov, ferc.gov, energy.gov, or confirmed EIA ArcGIS LNG service'
     case 'ATLASZ_UNLOCODE_URL':
-      return 'unece.org'
+      return 'unece.org or official UNECE/UNICC package path'
     case 'ATLASZ_USGS_USMIN_URL':
     case 'ATLASZ_USGS_MRDS_URL':
       return 'usgs.gov'

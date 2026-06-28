@@ -47,9 +47,9 @@ export function MineralSiteSourceTrail({ events, limit = 30, now }: { events: Wo
         <div className="eia-fac-empty">
           <strong>{UNAVAILABLE}</strong>
           <p>
-            No official USGS mineral site records are available. This connector is fail-closed: it stays inert until an
-            official USGS export URL is pinned (ATLASZ_USGS_USMIN_URL / ATLASZ_USGS_MRDS_URL), or the source may be
-            unavailable/rate-limited. Atlasz does not fabricate sites or coordinates.
+            No official USGS mineral site records are available. MRDS legacy reference runs by default; optional
+            USMIN/MRDS URLs can pin alternate official exports. The source may be unavailable/rate-limited. Atlasz does
+            not fabricate sites or coordinates.
           </p>
         </div>
       )}

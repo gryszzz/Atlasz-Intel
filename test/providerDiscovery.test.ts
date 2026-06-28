@@ -59,9 +59,9 @@ describe('provider auto-discovery', () => {
     const snapshot = await service.discover()
 
     expect(snapshot.providers.find((provider) => provider.providerId === 'macro_calendar_fred')).toMatchObject({
-      status: 'missing-config',
-      autoWired: false,
-      envKeysRequired: ['ATLASZ_FRED_API_KEY'],
+      status: 'available',
+      autoWired: true,
+      envKeysRequired: [],
       envKeysPresent: [],
     })
     expect(snapshot.providers.find((provider) => provider.providerId === 'bea_public')).toMatchObject({
@@ -122,6 +122,23 @@ describe('provider auto-discovery', () => {
     expect(fred?.endpointsChecked[0]).toContain('/fred/series?series_id=CPIAUCSL')
     expect(fred?.endpointsChecked[0]).not.toContain('secret-fred-key')
     expect(fetchImpl.mock.calls.some(([url]) => String(url).includes('api_key=secret-fred-key'))).toBe(true)
+  })
+
+  it('health-checks FRED public CSV mode without adding an API key', async () => {
+    const fetchImpl = successfulDiscoveryFetch()
+    const { service } = makeService(fetchImpl)
+
+    const snapshot = await service.discover()
+    const fred = snapshot.providers.find((provider) => provider.providerId === 'macro_calendar_fred')
+
+    expect(fred).toMatchObject({
+      status: 'available',
+      autoWired: true,
+      provenance: 'official-api',
+      envKeysRequired: [],
+    })
+    expect(fred?.endpointsChecked[0]).toContain('fredgraph.csv')
+    expect(fetchImpl.mock.calls.some(([url]) => String(url).includes('fredgraph.csv') && String(url).includes('api_key='))).toBe(false)
   })
 
   it('health-checks configured BEA with UserID without storing the key in endpoint trails', async () => {

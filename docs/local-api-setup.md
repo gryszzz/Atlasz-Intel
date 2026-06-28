@@ -16,7 +16,7 @@ The checker prints env-name presence only. It never prints secret values.
 | Env var | Connector unlocked | Source / signup | Type | Before key | After key |
 | --- | --- | --- | --- | --- | --- |
 | `ATLASZ_SEC_USER_AGENT` | SEC EDGAR, Company Facts, Form 4, Form 13F | <https://www.sec.gov/os/accessing-edgar-data> | contact User-Agent | `missing-key` / fail closed | online or honest SEC failure |
-| `ATLASZ_FRED_API_KEY` | FRED macro series | <https://fred.stlouisfed.org/docs/api/api_key.html> | free public key | `missing-key` | online or honest failure |
+| `ATLASZ_FRED_API_KEY` | FRED REST metadata upgrade | <https://fred.stlouisfed.org/docs/api/api_key.html> | optional quota/API key | public FRED CSV mode | online or honest failure |
 | `ATLASZ_BEA_API_KEY` | BEA national accounts | <https://apps.bea.gov/API/signup/> | free public key | `missing-key` | online or honest failure |
 | `ATLASZ_EIA_API_KEY` | EIA energy, power plants, nuclear, grid/BAs | <https://www.eia.gov/opendata/register.php> | free public key | `missing-key` | online or honest failure |
 | `ATLASZ_PATENTSVIEW_API_KEY` | USPTO PatentsView | <https://patentsview.org/apis> | free public key | `missing-key` | online or honest failure |
@@ -32,9 +32,9 @@ The checker prints env-name presence only. It never prints secret values.
 | Env var | Connector unlocked | Accepted hosts | Before config | After config |
 | --- | --- | --- | --- | --- |
 | `ATLASZ_LNG_TERMINALS_URL` | LNG terminal facilities | `eia.gov`, `ferc.gov`, `energy.gov`, or confirmed EIA ArcGIS LNG service | configured-only URL missing | online or honest failure |
-| `ATLASZ_UNLOCODE_URL` | UN/LOCODE registry | `unece.org` | configured-only URL missing | online or honest failure |
-| `ATLASZ_USGS_USMIN_URL` | USGS USMIN minerals | `usgs.gov` | configured-only URL missing | online or honest failure |
-| `ATLASZ_USGS_MRDS_URL` | USGS MRDS minerals | `usgs.gov` | optional companion missing | online or honest failure |
+| `ATLASZ_UNLOCODE_URL` | UN/LOCODE registry override | `unece.org` or official UNECE/UNICC package path | public UNECE/UNICC package mode | online or honest failure |
+| `ATLASZ_USGS_USMIN_URL` | USGS USMIN minerals override/add-on | `usgs.gov` | MRDS legacy-reference mode | online or honest failure |
+| `ATLASZ_USGS_MRDS_URL` | USGS MRDS minerals override | `usgs.gov` | default MRDS CSV used | online or honest failure |
 | `ATLASZ_WPI_URL` | World Port Index override | `nga.mil` | default NGA route used | override accepted |
 | `ATLASZ_EIA_REFINERIES_URL` | EIA refinery source URL | `eia.gov` or ArcGIS refinery FeatureServer | configured-only URL missing | online or honest endpoint failure |
 

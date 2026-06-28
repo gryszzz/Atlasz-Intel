@@ -105,8 +105,9 @@ describe('intelligence source catalog', () => {
       envKeysRequired: ['ATLASZ_SEC_USER_AGENT'],
     })
     expect(lookupIntelligenceSource('fred-economic-data')).toMatchObject({
-      integrationMode: 'auth-gated-adapter',
-      envKeysRequired: ['ATLASZ_FRED_API_KEY'],
+      accessModel: 'public-no-auth',
+      integrationMode: 'runtime-wired',
+      envKeysRequired: [],
     })
     expect(lookupIntelligenceSource('treasury-fiscal-data')).toMatchObject({
       accessModel: 'public-no-auth',

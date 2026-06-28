@@ -126,7 +126,7 @@ Current runtime-capable paths remain public/official/local and fail-closed:
 - GDELT/RSS/official public event feeds where enabled
 - Yahoo/CoinGecko/public exchange metadata where enabled
 - SEC EDGAR when `ATLASZ_SEC_USER_AGENT` is configured
-- FRED when `ATLASZ_FRED_API_KEY` is configured
+- FRED public graph CSV by default; optional `ATLASZ_FRED_API_KEY` upgrades REST metadata
 - Treasury Fiscal Data
 - BLS Public Data API
 - BEA NIPA GDP when `ATLASZ_BEA_API_KEY` is configured

@@ -165,7 +165,7 @@ export function FredMacroContextCards({ observations }: { observations: FredMacr
       ) : (
         <div className="fred-context-unavailable">
           <strong>{QUANT_UNAVAILABLE}</strong>
-          <p>FRED macro observations unavailable. Configure ATLASZ_FRED_API_KEY and refresh public world sources.</p>
+          <p>FRED macro observations unavailable. The public FRED CSV source returned nothing, failed, or rate-limited. Optional ATLASZ_FRED_API_KEY only upgrades REST metadata.</p>
         </div>
       )}
     </section>

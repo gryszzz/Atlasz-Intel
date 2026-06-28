@@ -1,10 +1,11 @@
 /*
  * FRED official macro time-series adapter.
  *
- * Uses the official FRED REST API when ATLASZ_FRED_API_KEY is configured.
- * API keys come ONLY from env and are never embedded in source trails. Missing
- * keys, missing values, malformed metadata, and FRED "." observations fail
- * closed — no fake macro data, no synthetic commentary.
+ * Uses the official no-key FRED graph CSV by default. When
+ * ATLASZ_FRED_API_KEY is configured, Atlasz upgrades to the official FRED REST
+ * API for richer metadata. API keys come ONLY from env and are never embedded in
+ * source trails. Missing values, malformed metadata, and FRED "." observations
+ * fail closed — no fake macro data, no synthetic commentary.
  *
  * provenance: official-api   category: macro-event
  */
@@ -22,6 +23,7 @@ import type { FredMacroObservation, WorldIntelEvent } from '../../../src/worldIn
 const SOURCE_ID = 'macro_calendar_fred'
 const FRED_SOURCE_NAME = 'FRED (Federal Reserve Economic Data)'
 const FRED_BASE = 'https://api.stlouisfed.org/fred'
+const FRED_GRAPH_CSV_URL = 'https://fred.stlouisfed.org/graph/fredgraph.csv'
 const FRED_SERIES_WEB_BASE = 'https://fred.stlouisfed.org/series'
 const DEFAULT_LIMIT = 1
 const DEFAULT_RATE_LIMIT_MS = 1200
@@ -45,7 +47,7 @@ export const MACRO_SERIES: MacroSeriesMeta[] = [
 ]
 
 export type MacroAdapterConfig = {
-  apiKey: string
+  apiKey?: string
   baseUrl: string
   series: MacroSeriesMeta[]
   rateLimitMs: number
@@ -76,9 +78,6 @@ type FredObservationsPayload = {
 
 export function readMacroConfig(env: NodeJS.ProcessEnv = process.env): MacroAdapterConfig | null {
   const apiKey = asString(env.ATLASZ_FRED_API_KEY)
-  if (!apiKey) {
-    return null
-  }
   const baseUrl = asString(env.ATLASZ_FRED_BASE_URL) || FRED_BASE
   const series = parseSeriesAllowlist(env.ATLASZ_FRED_SERIES_IDS) ?? MACRO_SERIES
   const rateLimitMs = Number.isFinite(Number(env.ATLASZ_FRED_RATE_LIMIT_MS))
@@ -99,17 +98,21 @@ export async function fetchMacroCalendar(
     if (signal.aborted) {
       break
     }
-    const seriesPayload = await fetchFredJson<FredSeriesPayload>(seriesMetadataUrl(config.baseUrl, meta.seriesId, config.apiKey), signal)
-    const observationsPayload = await fetchFredJson<FredObservationsPayload>(
-      seriesObservationsUrl(config.baseUrl, meta.seriesId, config.apiKey, DEFAULT_LIMIT),
-      signal,
-    )
+    const seriesPayload: FredSeriesPayload = config.apiKey
+      ? await fetchFredJson<FredSeriesPayload>(seriesMetadataUrl(config.baseUrl, meta.seriesId, config.apiKey), signal)
+      : fallbackSeriesMetadata(meta)
+    const observationsPayload: FredObservationsPayload = config.apiKey
+      ? await fetchFredJson<FredObservationsPayload>(
+        seriesObservationsUrl(config.baseUrl, meta.seriesId, config.apiKey, DEFAULT_LIMIT),
+        signal,
+      )
+      : { observations: [latestFredCsvObservation(await fetchFredCsv(meta.seriesId, signal), meta.seriesId)].filter(Boolean) as FredObservation[] }
     const record = normalizeFredSeriesObservation({
       requestedMeta: meta,
       seriesPayload,
       observationsPayload,
       retrievedAt: Date.now(),
-      sourceApiUrl: sanitizedObservationApiUrl(config.baseUrl, meta.seriesId, DEFAULT_LIMIT),
+      sourceApiUrl: config.apiKey ? sanitizedObservationApiUrl(config.baseUrl, meta.seriesId, DEFAULT_LIMIT) : fredGraphCsvUrl(meta.seriesId),
     })
     if (record) {
       records.push(record)
@@ -313,6 +316,46 @@ async function fetchFredJson<T>(url: URL, signal: AbortSignal): Promise<T> {
   return (await response.json()) as T
 }
 
+async function fetchFredCsv(seriesId: string, signal: AbortSignal): Promise<string> {
+  const response = await fetch(fredGraphCsvUrl(seriesId), {
+    signal,
+    headers: { accept: 'text/csv, text/plain, */*', 'user-agent': 'AtlaszIntel/0.4 (local-first macro intelligence; official FRED graph CSV)' },
+  })
+  assertOk(response, 'FRED graph CSV')
+  return await response.text()
+}
+
+function fallbackSeriesMetadata(meta: MacroSeriesMeta): FredSeriesPayload {
+  return {
+    seriess: [
+      {
+        id: meta.seriesId,
+        title: meta.label,
+        units: meta.defaultUnits,
+        frequency: 'unknown',
+        seasonal_adjustment: 'unknown',
+      },
+    ],
+  }
+}
+
+function latestFredCsvObservation(csv: string, seriesId: string): FredObservation | undefined {
+  const rows = csv.split(/\r?\n/).filter(Boolean)
+  if (rows.length < 2) return undefined
+  const header = rows[0].split(',').map((cell) => cell.trim())
+  const valueIndex = header.findIndex((cell) => cell.toUpperCase() === seriesId)
+  if (valueIndex < 1) return undefined
+  for (let i = rows.length - 1; i >= 1; i -= 1) {
+    const cells = rows[i].split(',').map((cell) => cell.trim())
+    const date = cells[0] ?? ''
+    const value = cells[valueIndex] ?? ''
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date) && value && value !== '.' && Number.isFinite(Number(value))) {
+      return { date, value }
+    }
+  }
+  return undefined
+}
+
 function seriesMetadataUrl(baseUrl: string, seriesId: string, apiKey: string): URL {
   const url = new URL(`${normalizeBaseUrl(baseUrl)}/series`)
   url.searchParams.set('series_id', seriesId)
@@ -337,6 +380,12 @@ function sanitizedObservationApiUrl(baseUrl: string, seriesId: string, limit: nu
   url.searchParams.set('file_type', 'json')
   url.searchParams.set('sort_order', 'desc')
   url.searchParams.set('limit', String(limit))
+  return url.toString()
+}
+
+function fredGraphCsvUrl(seriesId: string): string {
+  const url = new URL(FRED_GRAPH_CSV_URL)
+  url.searchParams.set('id', seriesId)
   return url.toString()
 }
 

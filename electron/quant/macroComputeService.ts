@@ -1,8 +1,8 @@
 /*
  * Macro compute service (Phase 3). Computes the yield curve, DXY momentum, a
  * labelled liquidity PROXY, and a macro risk regime from official rate/series
- * data. Fail-closed: without a FRED key (or with missing series) the regime is
- * `unavailable` and metrics carry explicit reasons — never fabricated levels.
+ * data. Uses FRED public graph CSV by default, or the FRED REST API when a key
+ * is configured. Missing series still fail closed — never fabricated levels.
  *
  * Honesty rules enforced here:
  *  - True 10Y-2Y uses FRED T10Y2Y, or DGS10 - DGS2. We never approximate it
@@ -148,15 +148,13 @@ function round(value: number): number {
 // --- Fail-closed FRED fetch (used by IPC; pure compute above is the tested core) ---
 
 const FRED_BASE = 'https://api.stlouisfed.org/fred'
+const FRED_GRAPH_CSV_URL = 'https://fred.stlouisfed.org/graph/fredgraph.csv'
 
 export async function fetchMacroSeriesInputs(
   signal: AbortSignal,
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<MacroSeriesInputs | null> {
   const apiKey = asString(env.ATLASZ_FRED_API_KEY)
-  if (!apiKey) {
-    return null // fail closed
-  }
   const base = asString(env.ATLASZ_FRED_BASE_URL) || FRED_BASE
   const [t10y2y, dgs10, dgs2, dgs3mo] = await Promise.all([
     latest(base, apiKey, 'T10Y2Y', signal),
@@ -174,6 +172,7 @@ async function latest(base: string, apiKey: string, seriesId: string, signal: Ab
 }
 
 async function recent(base: string, apiKey: string, seriesId: string, limit: number, signal: AbortSignal): Promise<number[]> {
+  if (!apiKey) return recentFromCsv(seriesId, limit, signal)
   const url = new URL(`${base}/series/observations`)
   url.searchParams.set('series_id', seriesId)
   url.searchParams.set('api_key', apiKey)
@@ -190,4 +189,28 @@ async function recent(base: string, apiKey: string, seriesId: string, limit: num
     .filter((value) => Number.isFinite(value))
     .reverse() // ascending
   return values
+}
+
+async function recentFromCsv(seriesId: string, limit: number, signal: AbortSignal): Promise<number[]> {
+  const url = new URL(FRED_GRAPH_CSV_URL)
+  url.searchParams.set('id', seriesId)
+  const response = await fetch(url, {
+    signal,
+    headers: { accept: 'text/csv, text/plain, */*', 'user-agent': 'AtlaszIntel/0.4 (local-first quant macro; official FRED graph CSV)' },
+  })
+  if (!response.ok) {
+    throw new Error(`FRED ${seriesId} CSV HTTP ${response.status}`)
+  }
+  const rows = (await response.text()).split(/\r?\n/).filter(Boolean)
+  if (rows.length < 2) return []
+  const header = rows[0].split(',').map((cell) => cell.trim())
+  const valueIndex = header.findIndex((cell) => cell.toUpperCase() === seriesId)
+  if (valueIndex < 1) return []
+  const values: number[] = []
+  for (let i = rows.length - 1; i >= 1 && values.length < limit; i -= 1) {
+    const cells = rows[i].split(',').map((cell) => cell.trim())
+    const value = Number(cells[valueIndex])
+    if (Number.isFinite(value)) values.push(value)
+  }
+  return values.reverse()
 }

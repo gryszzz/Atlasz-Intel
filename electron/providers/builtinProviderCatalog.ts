@@ -27,7 +27,7 @@ export const PROVIDER_CAPABILITY_META: Record<string, ProviderCapabilityMeta> = 
   sec_form4_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_SEC_USER_AGENT'], supportedEventTypes: ['insider-transaction'], supportedRegions: ['US'] },
   sec_form13f_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_SEC_USER_AGENT'], supportedEventTypes: ['institutional-holding'], supportedRegions: ['US'] },
   etf_holdings_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['etf-holding'], supportedRegions: ['US'] },
-  macro_calendar_fred: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_FRED_API_KEY'], supportedEventTypes: ['macro-event'], supportedRegions: ['US'] },
+  macro_calendar_fred: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['macro-event'], supportedRegions: ['US'] },
   treasury_fiscal_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['fiscal-event'], supportedRegions: ['US'] },
   bls_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['macro-event'], supportedRegions: ['US'] },
   bea_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_BEA_API_KEY'], supportedEventTypes: ['macro-event'], supportedRegions: ['US'] },
