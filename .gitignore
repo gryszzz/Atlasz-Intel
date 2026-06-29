@@ -39,3 +39,6 @@ release-artifacts
 *.njsproj
 *.sln
 *.sw?
+
+# Builder handoff briefs — not product truth, never released
+docs/prompts/
