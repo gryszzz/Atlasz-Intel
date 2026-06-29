@@ -11,6 +11,8 @@ function desktopWorld() {
 export function useWorldIntelSnapshot(): {
   snapshot: WorldIntelSnapshot
   refresh: () => Promise<void>
+  pauseRefresh: () => Promise<void>
+  resumeRefresh: () => Promise<void>
   toggleFavorite: (kind: 'asset' | 'country' | 'event' | 'narrative', targetId: string, label: string) => Promise<void>
   loading: boolean
 } {
@@ -36,6 +38,22 @@ export function useWorldIntelSnapshot(): {
       return
     }
     setSnapshot(await world.favorite(kind, targetId, label))
+  }
+
+  async function pauseRefresh() {
+    const world = desktopWorld()
+    if (!world?.pauseRefresh) {
+      return
+    }
+    setSnapshot(await world.pauseRefresh())
+  }
+
+  async function resumeRefresh() {
+    const world = desktopWorld()
+    if (!world?.resumeRefresh) {
+      return
+    }
+    setSnapshot(await world.resumeRefresh())
   }
 
   useEffect(() => {
@@ -67,5 +85,5 @@ export function useWorldIntelSnapshot(): {
     }
   }, [])
 
-  return { snapshot, refresh, toggleFavorite, loading }
+  return { snapshot, refresh, pauseRefresh, resumeRefresh, toggleFavorite, loading }
 }

@@ -1049,6 +1049,8 @@ function App() {
   const {
     snapshot: worldSnapshot,
     refresh: refreshWorldIntel,
+    pauseRefresh: pauseWorldRefresh,
+    resumeRefresh: resumeWorldRefresh,
     toggleFavorite: toggleWorldFavorite,
     loading: worldIntelLoading,
   } = useWorldIntelSnapshot()
@@ -1881,8 +1883,11 @@ function App() {
               <Suspense fallback={<div><PanelSkeleton rows={4} label="Loading source health" /></div>}>
                 <SourceHealthView
                   sources={worldSnapshot.sources}
+                  refreshControl={worldSnapshot.refreshControl}
                   worldStatus={worldSnapshot.status}
                   onRefresh={refreshWorldIntel}
+                  onPauseRefresh={pauseWorldRefresh}
+                  onResumeRefresh={resumeWorldRefresh}
                 />
               </Suspense>
             </article>

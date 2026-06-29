@@ -47,6 +47,8 @@ contextBridge.exposeInMainWorld('atlaszDesktop', {
   world: {
     snapshot: (): Promise<WorldIntelSnapshot> => ipcRenderer.invoke('atlasz:world:snapshot'),
     refresh: (): Promise<WorldIntelSnapshot> => ipcRenderer.invoke('atlasz:world:refresh'),
+    pauseRefresh: (): Promise<WorldIntelSnapshot> => ipcRenderer.invoke('atlasz:world:pause-refresh'),
+    resumeRefresh: (): Promise<WorldIntelSnapshot> => ipcRenderer.invoke('atlasz:world:resume-refresh'),
     favorite: (kind: 'asset' | 'country' | 'event' | 'narrative', targetId: string, label: string): Promise<WorldIntelSnapshot> =>
       ipcRenderer.invoke('atlasz:world:favorite', kind, targetId, label),
   },

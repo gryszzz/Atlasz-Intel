@@ -33,7 +33,11 @@ export class WorldIntelService {
   private readonly assetIdentity: AssetIdentityService
   private readonly enabled = process.env.ATLASZ_ENABLE_PUBLIC_WORLD !== '0'
   private readonly autoRefreshMs = worldAutoRefreshIntervalMs(process.env)
-  private autoRefreshTimer: ReturnType<typeof setInterval> | null = null
+  private autoRefreshTimer: ReturnType<typeof setTimeout> | null = null
+  private autoRefreshPaused = false
+  private nextAutoRefreshAt: number | undefined
+  private lastRefreshStartedAt: number | undefined
+  private lastRefreshCompletedAt: number | undefined
   private status: WorldIntelSnapshot['status'] = this.enabled ? 'stale' : 'disabled'
   private lastError: string | undefined
   private updatedAt: number | undefined
@@ -53,19 +57,34 @@ export class WorldIntelService {
     if (!this.enabled || this.autoRefreshTimer) {
       return
     }
+    this.autoRefreshPaused = false
     void this.refresh()
-    this.autoRefreshTimer = setInterval(() => {
-      void this.refresh()
-    }, this.autoRefreshMs)
-    this.autoRefreshTimer.unref?.()
+    this.scheduleNextAutoRefresh()
   }
 
   stopAutoRefresh(): void {
     if (!this.autoRefreshTimer) {
       return
     }
-    clearInterval(this.autoRefreshTimer)
+    clearTimeout(this.autoRefreshTimer)
     this.autoRefreshTimer = null
+    this.nextAutoRefreshAt = undefined
+  }
+
+  pauseAutoRefresh(): WorldIntelSnapshot {
+    this.autoRefreshPaused = true
+    this.stopAutoRefresh()
+    return this.buildSnapshot()
+  }
+
+  resumeAutoRefresh(): WorldIntelSnapshot {
+    if (!this.enabled) {
+      this.status = 'disabled'
+      return this.buildSnapshot()
+    }
+    this.autoRefreshPaused = false
+    this.scheduleNextAutoRefresh()
+    return this.buildSnapshot()
   }
 
   refresh(): Promise<WorldIntelSnapshot> {
@@ -76,6 +95,7 @@ export class WorldIntelService {
     if (this.inFlight) {
       return this.inFlight
     }
+    this.lastRefreshStartedAt = Date.now()
     this.status = 'fetching'
     this.inFlight = this.registry
       .pollEnabledSources()
@@ -112,6 +132,7 @@ export class WorldIntelService {
         this.status = events.length > 0 || allEvents.length > 0 ? 'ready' : 'stale'
         this.lastError = sources.find((source) => source.status === 'failed')?.lastError
         this.updatedAt = Date.now()
+        this.lastRefreshCompletedAt = Date.now()
         const snapshot = this.buildSnapshot()
         if (snapshot.worldEvents.length > 0) {
           persistDailyBrief(this.persistence, snapshot)
@@ -121,6 +142,7 @@ export class WorldIntelService {
       .catch((error) => {
         this.lastError = error instanceof Error ? error.message : String(error)
         this.status = this.persistence.listWorldIntelEvents(1).length > 0 || this.persistence.listHeadlines(1).length > 0 ? 'stale' : 'failed'
+        this.lastRefreshCompletedAt = Date.now()
         return this.buildSnapshot()
       })
       .finally(() => {
@@ -177,6 +199,14 @@ export class WorldIntelService {
       eiaEnergyRecords,
       favorites: this.persistence.listFavorites(),
       sources,
+      refreshControl: {
+        autoRefreshEnabled: this.enabled,
+        autoRefreshPaused: this.autoRefreshPaused,
+        cadenceMs: this.autoRefreshMs,
+        nextScheduledRefreshAt: this.nextAutoRefreshAt,
+        lastRefreshStartedAt: this.lastRefreshStartedAt,
+        lastRefreshCompletedAt: this.lastRefreshCompletedAt,
+      },
     })
   }
 
@@ -267,6 +297,21 @@ export class WorldIntelService {
         // Persistence failures must not crash the local intelligence layer.
       }
     }
+  }
+
+  private scheduleNextAutoRefresh(): void {
+    if (!this.enabled || this.autoRefreshPaused || this.autoRefreshTimer) {
+      return
+    }
+    this.nextAutoRefreshAt = Date.now() + this.autoRefreshMs
+    this.autoRefreshTimer = setTimeout(() => {
+      this.autoRefreshTimer = null
+      this.nextAutoRefreshAt = undefined
+      void this.refresh().finally(() => {
+        this.scheduleNextAutoRefresh()
+      })
+    }, this.autoRefreshMs)
+    this.autoRefreshTimer.unref?.()
   }
 }
 

@@ -1342,6 +1342,15 @@ export type UserFavorite = {
   createdAt: number
 }
 
+export type SourceRefreshState =
+  | 'due-now'
+  | 'not-due'
+  | 'backed-off'
+  | 'stale'
+  | 'expired'
+  | 'missing-key'
+  | 'disabled'
+
 export type OsintSourceSnapshot = {
   sourceId: string
   sourceName: string
@@ -1354,9 +1363,15 @@ export type OsintSourceSnapshot = {
   enabled: boolean
   status: 'idle' | 'online' | 'offline' | 'rate-limited' | 'failed' | 'disabled'
   provenance: ProvenanceId
+  lastAttemptAt?: number
   lastSuccessAt?: number
   lastErrorAt?: number
   lastError?: string
+  nextAttemptAt?: number
+  staleAt?: number
+  expiresAt?: number
+  refreshState?: SourceRefreshState
+  refreshReason?: string
   itemCount: number
   sourceReliabilityScore: number
   legalSafetyNote: string
@@ -1366,6 +1381,15 @@ export type OsintSourceSnapshot = {
   authType?: 'none' | 'api-key' | 'bearer-token' | 'env'
   configured?: boolean
   configHint?: string
+}
+
+export type WorldRefreshControlSnapshot = {
+  autoRefreshEnabled: boolean
+  autoRefreshPaused: boolean
+  cadenceMs: number
+  nextScheduledRefreshAt?: number
+  lastRefreshStartedAt?: number
+  lastRefreshCompletedAt?: number
 }
 
 export type WorldIntelConnectorSnapshot = {
@@ -1388,6 +1412,7 @@ export type WorldIntelConnectorSnapshot = {
   eiaEnergyRecords: EiaEnergyRecord[]
   favorites: UserFavorite[]
   sources: OsintSourceSnapshot[]
+  refreshControl: WorldRefreshControlSnapshot
 }
 
 export type DerivedWorldIntel = {
@@ -1527,6 +1552,11 @@ export function buildSeedWorldIntelSnapshot(): WorldIntelSnapshot {
     eiaEnergyRecords: [],
     favorites: [],
     sources: [],
+    refreshControl: {
+      autoRefreshEnabled: false,
+      autoRefreshPaused: true,
+      cadenceMs: 0,
+    },
     events: [],
     signals: [],
     dailyBrief: [],

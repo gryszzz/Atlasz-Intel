@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { sourcePollCooldownMs } from '../electron/osint/sourceRegistry'
+import { sourcePollCooldownMs, sourceRefreshDecision } from '../electron/osint/sourceRegistry'
 
 const RATE = 60_000 // 1 minute base rate limit
+const NOW = Date.parse('2026-06-29T00:00:00Z')
 
 /**
  * A persistently-failing source must not be re-hammered every refresh: the poll
@@ -46,5 +47,69 @@ describe('sourcePollCooldownMs', () => {
 
   it('returns to the base rate limit once failures reset to zero (recovery)', () => {
     expect(sourcePollCooldownMs(RATE, 0)).toBe(RATE)
+  })
+
+  it('classifies healthy connectors inside cadence as not-due, not rate-limited', () => {
+    expect(sourceRefreshDecision({
+      enabled: true,
+      configured: true,
+      status: 'online',
+      pollIntervalMs: 60 * 60_000,
+      rateLimitMs: RATE,
+      lastAttemptAt: NOW - 5 * 60_000,
+      lastSuccessAt: NOW - 5 * 60_000,
+      consecutiveFailures: 0,
+    }, NOW)).toMatchObject({ refreshState: 'not-due' })
+  })
+
+  it('classifies failed connectors inside the failure window as backed-off', () => {
+    expect(sourceRefreshDecision({
+      enabled: true,
+      configured: true,
+      status: 'failed',
+      pollIntervalMs: RATE,
+      rateLimitMs: RATE,
+      lastAttemptAt: NOW - 30_000,
+      lastSuccessAt: NOW - 10 * RATE,
+      consecutiveFailures: 2,
+    }, NOW)).toMatchObject({ refreshState: 'backed-off' })
+  })
+
+  it('classifies missing-key connectors as skipped fail-closed', () => {
+    expect(sourceRefreshDecision({
+      enabled: false,
+      configured: false,
+      configHint: 'missing ATLASZ_TEST_KEY',
+      status: 'disabled',
+      pollIntervalMs: RATE,
+      rateLimitMs: RATE,
+      consecutiveFailures: 0,
+    }, NOW)).toMatchObject({ refreshState: 'missing-key', refreshReason: 'missing ATLASZ_TEST_KEY' })
+  })
+
+  it('surfaces stale and expired source freshness windows', () => {
+    const stale = sourceRefreshDecision({
+      enabled: true,
+      configured: true,
+      status: 'online',
+      pollIntervalMs: RATE,
+      rateLimitMs: RATE,
+      lastAttemptAt: NOW - 2 * RATE,
+      lastSuccessAt: NOW - 2 * RATE,
+      consecutiveFailures: 0,
+    }, NOW)
+    const expired = sourceRefreshDecision({
+      enabled: true,
+      configured: true,
+      status: 'online',
+      pollIntervalMs: RATE,
+      rateLimitMs: RATE,
+      lastAttemptAt: NOW - 4 * RATE,
+      lastSuccessAt: NOW - 4 * RATE,
+      consecutiveFailures: 0,
+    }, NOW)
+
+    expect(stale.refreshState).toBe('stale')
+    expect(expired.refreshState).toBe('expired')
   })
 })

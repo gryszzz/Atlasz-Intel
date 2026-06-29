@@ -1,6 +1,6 @@
 # Runtime Verification Log
 
-**Generated:** 2026-06-29T00:54:38.652Z
+**Generated:** 2026-06-29T01:37:30.739Z
 **Command:** `npx tsx scripts/runtimeVerification.mts`
 **Result:** 13/13 checks passed
 **Persistence:** node:sqlite (with JSON fallback)
@@ -19,14 +19,14 @@
 
 | connector | impl | gating | env required | key? | status | recs | persist | trail | redact | resolver | expose |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| gdelt-doc | impl | public | - | public | rate-limited | 0 | n/a | n/a | n/a | no | no |
+| gdelt-doc | impl | public | - | public | failed | 0 | n/a | n/a | n/a | no | no |
 | wsj-markets-rss | impl | public | - | public | online | 20 | yes | yes | n/a | no | no |
 | sec-edgar | impl | key-gated | ATLASZ_SEC_USER_AGENT | yes | online | 6 | yes | yes | yes | yes | yes |
 | sec-press-rss | impl | public | - | public | online | 25 | yes | yes | n/a | no | no |
 | market-reference-master | impl | public | - | public | online | 8021 | yes | yes | n/a | yes | yes |
 | sec-company-facts | impl | key-gated | ATLASZ_SEC_USER_AGENT | yes | online | 72 | yes | yes | yes | yes | yes |
-| sec-form4 | impl | key-gated | ATLASZ_SEC_USER_AGENT | yes | rate-limited | 0 | n/a | n/a | n/a | yes | yes |
-| sec-form13f | impl | key-gated | ATLASZ_SEC_USER_AGENT | yes | rate-limited | 0 | n/a | n/a | n/a | partial | yes |
+| sec-form4 | impl | key-gated | ATLASZ_SEC_USER_AGENT | yes | online | 149 | yes | yes | yes | yes | yes |
+| sec-form13f | impl | key-gated | ATLASZ_SEC_USER_AGENT | yes | online | 400 | yes | yes | yes | partial | yes |
 | etf-holdings | impl | public | - | public | online | 266 | yes | yes | n/a | partial | yes |
 | fred | impl | public | - | public | online | 6 | yes | yes | n/a | partial | yes |
 | treasury-fiscal | impl | public | - | public | online | 3 | yes | yes | n/a | partial | yes |
@@ -51,7 +51,7 @@
 | nasa-news | impl | public | - | public | online | 10 | yes | yes | n/a | no | no |
 | space-launch-library | impl | public | - | public | online | 15 | yes | yes | n/a | no | no |
 | cisa-kev | impl | public | - | public | online | 25 | yes | yes | n/a | partial | yes |
-| nvd | impl | public | - | public | online | 25 | yes | yes | n/a | partial | yes |
+| nvd | impl | public | - | public | failed | 0 | n/a | n/a | n/a | partial | yes |
 | ghsa | impl | public | - | public | online | 30 | yes | yes | n/a | partial | yes |
 | osv | impl | public | - | public | online | 34 | yes | yes | n/a | partial | yes |
 | cisa-advisories | impl | public | - | public | online | 24 | yes | yes | n/a | partial | yes |

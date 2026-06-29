@@ -196,6 +196,8 @@ ipcMain.handle('atlasz:realtime:replay:seek', (_event, cursor: number) =>
 
 ipcMain.handle('atlasz:world:snapshot', () => requireWorldIntel().snapshot())
 ipcMain.handle('atlasz:world:refresh', () => requireWorldIntel().refresh())
+ipcMain.handle('atlasz:world:pause-refresh', () => requireWorldIntel().pauseAutoRefresh())
+ipcMain.handle('atlasz:world:resume-refresh', () => requireWorldIntel().resumeAutoRefresh())
 ipcMain.handle('atlasz:world:favorite', (_event, kind: 'asset' | 'country' | 'event' | 'narrative', targetId: string, label: string) =>
   requireWorldIntel().toggleFavorite(kind, targetId, label),
 )

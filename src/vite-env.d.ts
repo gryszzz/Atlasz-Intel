@@ -63,6 +63,8 @@ declare global {
     world?: {
       snapshot: () => Promise<WorldIntelSnapshot>
       refresh: () => Promise<WorldIntelSnapshot>
+      pauseRefresh: () => Promise<WorldIntelSnapshot>
+      resumeRefresh: () => Promise<WorldIntelSnapshot>
       favorite: (
         kind: 'asset' | 'country' | 'event' | 'narrative',
         targetId: string,

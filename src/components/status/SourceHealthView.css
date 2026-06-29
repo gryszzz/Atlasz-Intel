@@ -32,6 +32,99 @@
   line-height: 1.25;
 }
 
+/* ===== Refresh control ===== */
+.sh-refresh-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: linear-gradient(135deg, rgba(11, 18, 18, 0.94), rgba(6, 8, 10, 0.92));
+  padding: 14px;
+}
+
+.sh-refresh-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sh-refresh-head h3 {
+  margin: 4px 0 0;
+  color: var(--white);
+  font-size: var(--fs-lg);
+}
+
+.sh-loop-state {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sh-loop-state.running {
+  border-color: rgba(94, 234, 212, 0.34);
+  color: var(--green-strong);
+}
+
+.sh-loop-state.paused,
+.sh-loop-state.disabled {
+  color: var(--faint);
+}
+
+.sh-refresh-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+  gap: 8px;
+}
+
+.sh-refresh-metric {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+  border: 1px solid var(--line-soft);
+  border-left-width: 2px;
+  border-radius: 8px;
+  background: rgba(13, 17, 16, 0.74);
+  padding: 10px 11px;
+}
+
+.sh-refresh-metric header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sh-refresh-metric strong {
+  color: var(--white);
+  font-family: var(--mono);
+  font-size: var(--fs-lg);
+  line-height: 1;
+}
+
+.sh-refresh-metric p {
+  overflow: hidden;
+  color: var(--faint);
+  font-size: var(--fs-2xs);
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sh-refresh-metric.tone-ok { border-left-color: var(--green); }
+.sh-refresh-metric.tone-warn { border-left-color: var(--sev-elevated); }
+.sh-refresh-metric.tone-muted { border-left-color: var(--line); }
+
 /* ===== System service tiles ===== */
 .sh-system {
   display: grid;
@@ -187,6 +280,38 @@
   padding: 3px 7px;
 }
 
+.sh-refresh-pill {
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  padding: 3px 7px;
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.sh-refresh-pill.refresh-due-now,
+.sh-refresh-pill.refresh-stale,
+.sh-refresh-pill.refresh-expired {
+  border-color: rgba(250, 204, 21, 0.34);
+  color: var(--sev-elevated);
+}
+
+.sh-refresh-pill.refresh-not-due {
+  border-color: rgba(94, 234, 212, 0.26);
+  color: var(--green-strong);
+}
+
+.sh-refresh-pill.refresh-backed-off {
+  border-color: rgba(250, 204, 21, 0.32);
+  color: var(--sev-elevated);
+}
+
+.sh-refresh-pill.refresh-missing-key,
+.sh-refresh-pill.refresh-disabled {
+  color: var(--faint);
+}
+
 .sh-config-missing {
   font-family: var(--mono);
   font-size: var(--fs-2xs);
@@ -221,6 +346,17 @@
   color: var(--faint);
   font-size: var(--fs-2xs);
   line-height: 1.45;
+}
+
+.sh-refresh-reason {
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+  padding: 7px 8px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  line-height: 1.4;
 }
 
 .sh-warning {

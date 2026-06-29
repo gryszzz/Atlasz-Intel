@@ -6,10 +6,10 @@
  * Renders state only — all status comes from Node services via bridges.
  */
 import { useMemo } from 'react'
-import { Activity, Copy, Database, FolderOpen, RefreshCw, Server, Signal, Waves } from 'lucide-react'
+import { Activity, Clock, Copy, Database, FolderOpen, Pause, Play, RefreshCw, Server, Signal, Waves } from 'lucide-react'
 import { ProvenanceBadge } from '../ui/ProvenanceBadge'
 import { useSystemHealth } from './useSystemHealth'
-import type { OsintSourceSnapshot } from '../../worldIntel'
+import type { OsintSourceSnapshot, SourceRefreshState, WorldRefreshControlSnapshot } from '../../worldIntel'
 import type { ProviderCapability, ProviderCapabilityStatus } from '../../providerDiscovery'
 import './SourceHealthView.css'
 
@@ -19,6 +19,16 @@ const STATUS_LABEL: Record<string, string> = {
   offline: 'offline',
   'rate-limited': 'rate-limited',
   failed: 'failed',
+  disabled: 'disabled',
+}
+
+const REFRESH_LABEL: Record<SourceRefreshState, string> = {
+  'due-now': 'due now',
+  'not-due': 'not due',
+  'backed-off': 'backed off',
+  stale: 'stale',
+  expired: 'expired',
+  'missing-key': 'missing key',
   disabled: 'disabled',
 }
 
@@ -33,16 +43,23 @@ const PROVIDER_STATUS_LABEL: Record<ProviderCapabilityStatus, string> = {
 
 export function SourceHealthView({
   sources,
+  refreshControl,
   onRefresh,
+  onPauseRefresh,
+  onResumeRefresh,
   worldStatus,
 }: {
   sources: OsintSourceSnapshot[]
+  refreshControl: WorldRefreshControlSnapshot
   onRefresh: () => Promise<void>
+  onPauseRefresh: () => Promise<void>
+  onResumeRefresh: () => Promise<void>
   worldStatus: string
 }) {
   const { health, refresh } = useSystemHealth()
 
   const grouped = useMemo(() => groupSources(sources), [sources])
+  const refreshSummary = useMemo(() => summarizeRefresh(sources), [sources])
   const online = sources.filter((source) => source.status === 'online').length
   const configured = sources.filter((source) => source.enabled).length
   const providerSnapshot = health.providers
@@ -50,8 +67,22 @@ export function SourceHealthView({
   const availableProviderCount = providerSnapshot?.providers.filter((provider) => provider.status === 'available').length ?? 0
 
   async function handleRefresh() {
-    await window.atlaszDesktop?.providers?.discover()
     await onRefresh()
+    await refresh()
+  }
+
+  async function handleProviderDiscover() {
+    await window.atlaszDesktop?.providers?.discover()
+    await refresh()
+  }
+
+  async function handlePauseRefresh() {
+    await onPauseRefresh()
+    await refresh()
+  }
+
+  async function handleResumeRefresh() {
+    await onResumeRefresh()
     await refresh()
   }
 
@@ -84,17 +115,28 @@ export function SourceHealthView({
             }}
           >
             <RefreshCw size={15} />
-            Refresh Providers
+            Refresh Now
           </button>
           <button
             className="ghost-button"
             type="button"
             onClick={() => {
-              void handleRefresh()
+              void handleProviderDiscover()
             }}
           >
             <Signal size={15} />
-            Recheck Symbols
+            Discover Providers
+          </button>
+          <button
+            className="ghost-button"
+            type="button"
+            disabled={!refreshControl.autoRefreshEnabled}
+            onClick={() => {
+              void (refreshControl.autoRefreshPaused ? handleResumeRefresh() : handlePauseRefresh())
+            }}
+          >
+            {refreshControl.autoRefreshPaused ? <Play size={15} /> : <Pause size={15} />}
+            {refreshControl.autoRefreshPaused ? 'Resume Loop' : 'Pause Loop'}
           </button>
           <button
             className="ghost-button"
@@ -119,6 +161,8 @@ export function SourceHealthView({
           </button>
         </div>
       </header>
+
+      <RefreshControlPanel control={refreshControl} summary={refreshSummary} />
 
       <section className="sh-system">
         <SystemTile
@@ -231,6 +275,68 @@ export function SourceHealthView({
   )
 }
 
+function RefreshControlPanel({
+  control,
+  summary,
+}: {
+  control: WorldRefreshControlSnapshot
+  summary: RefreshSummary
+}) {
+  const duePreview = summary.dueNow.slice(0, 4)
+  const backedOffPreview = summary.backedOff.slice(0, 4)
+  const stalePreview = [...summary.stale, ...summary.expired].slice(0, 4)
+  return (
+    <section className="sh-refresh-panel" aria-label="Worldwatch refresh control">
+      <div className="sh-refresh-head">
+        <div>
+          <span className="eyebrow">Refresh Control</span>
+          <h3>Worldwatch freshness loop</h3>
+        </div>
+        <span className={`sh-loop-state ${control.autoRefreshPaused ? 'paused' : control.autoRefreshEnabled ? 'running' : 'disabled'}`}>
+          {control.autoRefreshEnabled ? control.autoRefreshPaused ? 'paused' : 'running' : 'disabled'}
+        </span>
+      </div>
+      <div className="sh-refresh-grid">
+        <RefreshMetric icon={Clock} label="Global cadence" value={formatDuration(control.cadenceMs)} detail="Checks due providers only" />
+        <RefreshMetric icon={Clock} label="Next loop" value={formatFuture(control.nextScheduledRefreshAt)} detail="Background schedule" />
+        <RefreshMetric icon={RefreshCw} label="Last started" value={formatAgeOptional(control.lastRefreshStartedAt)} detail="Manual or background" />
+        <RefreshMetric icon={RefreshCw} label="Last completed" value={formatAgeOptional(control.lastRefreshCompletedAt)} detail="No simulated fallback" />
+        <RefreshMetric icon={Signal} label="Due now" value={String(summary.dueNow.length)} detail={previewNames(duePreview)} tone={summary.dueNow.length > 0 ? 'warn' : 'ok'} />
+        <RefreshMetric icon={Pause} label="Backed off" value={String(summary.backedOff.length)} detail={previewNames(backedOffPreview)} tone={summary.backedOff.length > 0 ? 'warn' : 'ok'} />
+        <RefreshMetric icon={Clock} label="Not due" value={String(summary.notDue.length)} detail="Fresh within cadence/rate guard" />
+        <RefreshMetric icon={Activity} label="Stale / expired" value={`${summary.stale.length}/${summary.expired.length}`} detail={previewNames(stalePreview)} tone={stalePreview.length > 0 ? 'warn' : 'ok'} />
+        <RefreshMetric icon={Server} label="Failed / limited" value={`${summary.failed.length}/${summary.rateLimited.length}`} detail="Visible, never hidden" tone={summary.failed.length + summary.rateLimited.length > 0 ? 'warn' : 'ok'} />
+        <RefreshMetric icon={FolderOpen} label="Skipped config" value={String(summary.missingKey.length)} detail="Missing-key/config-only rows" tone={summary.missingKey.length > 0 ? 'muted' : 'ok'} />
+      </div>
+    </section>
+  )
+}
+
+function RefreshMetric({
+  icon: Icon,
+  label,
+  value,
+  detail,
+  tone = 'muted',
+}: {
+  icon: typeof Database
+  label: string
+  value: string
+  detail: string
+  tone?: 'ok' | 'warn' | 'muted'
+}) {
+  return (
+    <article className={`sh-refresh-metric tone-${tone}`}>
+      <header>
+        <Icon size={14} />
+        <span>{label}</span>
+      </header>
+      <strong>{value}</strong>
+      <p>{detail || '—'}</p>
+    </article>
+  )
+}
+
 function ProviderTile({ provider }: { provider: ProviderCapability }) {
   const envDetail =
     provider.envKeysRequired.length === 0
@@ -313,6 +419,7 @@ function SystemTile({
 
 function ConnectorTile({ source }: { source: OsintSourceSnapshot }) {
   const status = source.enabled ? source.status : 'disabled'
+  const refreshState = source.refreshState ?? (source.enabled ? 'due-now' : 'disabled')
   return (
     <article className={`sh-connector status-${status}`}>
       <header>
@@ -322,6 +429,7 @@ function ConnectorTile({ source }: { source: OsintSourceSnapshot }) {
       <div className="sh-connector-badges">
         <ProvenanceBadge value={source.provenance} size="sm" />
         <span className="sh-endpoint">{source.endpointType}</span>
+        <span className={`sh-refresh-pill refresh-${refreshState}`}>{REFRESH_LABEL[refreshState]}</span>
         {!source.enabled && <span className="sh-config-missing">config missing / fail-closed</span>}
       </div>
       <dl className="sh-connector-meta">
@@ -337,14 +445,47 @@ function ConnectorTile({ source }: { source: OsintSourceSnapshot }) {
           <dt>Last ok</dt>
           <dd>{source.lastSuccessAt ? formatAge(source.lastSuccessAt) : '—'}</dd>
         </div>
+        <div>
+          <dt>Next</dt>
+          <dd>{formatFuture(source.nextAttemptAt)}</dd>
+        </div>
       </dl>
       {source.lastError && <p className="sh-error">{source.lastError}</p>}
+      {source.refreshReason && <p className="sh-refresh-reason">{source.refreshReason}</p>}
       <p className="sh-note">{source.legalSafetyNote}</p>
     </article>
   )
 }
 
 type SourceGroup = { label: string; sources: OsintSourceSnapshot[] }
+type RefreshSummary = {
+  dueNow: OsintSourceSnapshot[]
+  notDue: OsintSourceSnapshot[]
+  backedOff: OsintSourceSnapshot[]
+  stale: OsintSourceSnapshot[]
+  expired: OsintSourceSnapshot[]
+  missingKey: OsintSourceSnapshot[]
+  failed: OsintSourceSnapshot[]
+  rateLimited: OsintSourceSnapshot[]
+}
+
+function summarizeRefresh(sources: OsintSourceSnapshot[]): RefreshSummary {
+  return {
+    dueNow: sources.filter((source) => source.refreshState === 'due-now'),
+    notDue: sources.filter((source) => source.refreshState === 'not-due'),
+    backedOff: sources.filter((source) => source.refreshState === 'backed-off'),
+    stale: sources.filter((source) => source.refreshState === 'stale'),
+    expired: sources.filter((source) => source.refreshState === 'expired'),
+    missingKey: sources.filter((source) => source.refreshState === 'missing-key'),
+    failed: sources.filter((source) => source.status === 'failed'),
+    rateLimited: sources.filter((source) => source.status === 'rate-limited'),
+  }
+}
+
+function previewNames(sources: OsintSourceSnapshot[]): string {
+  if (sources.length === 0) return 'none'
+  return sources.map((source) => source.sourceId).join(' · ')
+}
 
 function groupSources(sources: OsintSourceSnapshot[]): SourceGroup[] {
   const order = ['global-news-events', 'macro-economic', 'regulatory-filings', 'public-disclosure', 'markets', 'markets-crypto', 'markets-probability', 'social-attention']
@@ -383,6 +524,27 @@ function missingEnvKeys(providers: ProviderCapability[]): string[] {
 
 function formatAge(timestamp: number): string {
   const seconds = Math.max(0, Math.round((Date.now() - timestamp) / 1000))
+  if (seconds < 60) return `${seconds}s`
+  const minutes = Math.round(seconds / 60)
+  if (minutes < 60) return `${minutes}m`
+  const hours = Math.round(minutes / 60)
+  if (hours < 48) return `${hours}h`
+  return `${Math.round(hours / 24)}d`
+}
+
+function formatAgeOptional(timestamp: number | undefined): string {
+  return timestamp ? `${formatAge(timestamp)} ago` : '—'
+}
+
+function formatFuture(timestamp: number | undefined): string {
+  if (!timestamp) return '—'
+  const diff = timestamp - Date.now()
+  if (diff <= 0) return 'due'
+  return `in ${formatDuration(diff)}`
+}
+
+function formatDuration(ms: number): string {
+  const seconds = Math.max(0, Math.round(ms / 1000))
   if (seconds < 60) return `${seconds}s`
   const minutes = Math.round(seconds / 60)
   if (minutes < 60) return `${minutes}m`

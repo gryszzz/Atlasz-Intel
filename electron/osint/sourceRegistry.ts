@@ -19,6 +19,7 @@ import { HttpError, fetchWithRetry } from './fetchPolicy'
 const DEFAULT_MAX_RETRIES = 2
 const DEFAULT_BACKOFF_MS = 1_000
 const MAX_FAILURE_BACKOFF_MS = 60 * 60 * 1000
+const EXPIRED_MULTIPLIER = 3
 
 /**
  * How long to wait before re-polling a source. Healthy sources respect the
@@ -40,6 +41,100 @@ export function sourcePollCooldownMs(
 }
 
 type SourceStatus = OsintSourceSnapshot['status']
+
+type SourceRefreshDecisionInput = {
+  enabled: boolean
+  configured: boolean
+  configHint?: string
+  status: SourceStatus
+  pollIntervalMs: number
+  rateLimitMs: number
+  lastAttemptAt?: number
+  lastSuccessAt?: number
+  consecutiveFailures: number
+}
+
+type SourceRefreshDecision = Pick<
+  OsintSourceSnapshot,
+  'nextAttemptAt' | 'staleAt' | 'expiresAt' | 'refreshState' | 'refreshReason'
+>
+
+export function sourceRefreshDecision(input: SourceRefreshDecisionInput, now = Date.now()): SourceRefreshDecision {
+  const staleAt = input.lastSuccessAt && input.pollIntervalMs > 0
+    ? input.lastSuccessAt + input.pollIntervalMs
+    : undefined
+  const expiresAt = input.lastSuccessAt && input.pollIntervalMs > 0
+    ? input.lastSuccessAt + input.pollIntervalMs * EXPIRED_MULTIPLIER
+    : undefined
+
+  if (!input.enabled) {
+    return {
+      staleAt,
+      expiresAt,
+      refreshState: input.configured ? 'disabled' : 'missing-key',
+      refreshReason: input.configured
+        ? 'Connector is disabled and skipped.'
+        : input.configHint ?? 'Connector is missing required configuration and is skipped fail-closed.',
+    }
+  }
+
+  const cooldownMs = sourcePollCooldownMs(
+    input.rateLimitMs,
+    input.consecutiveFailures,
+    MAX_FAILURE_BACKOFF_MS,
+    input.pollIntervalMs,
+  )
+  const nextAttemptAt = input.lastAttemptAt ? input.lastAttemptAt + cooldownMs : undefined
+  const due = !nextAttemptAt || now >= nextAttemptAt
+
+  if ((input.status === 'failed' || input.status === 'rate-limited') && !due) {
+    return {
+      nextAttemptAt,
+      staleAt,
+      expiresAt,
+      refreshState: 'backed-off',
+      refreshReason: `Connector is backed off after ${input.consecutiveFailures} failed/rate-limited attempt(s).`,
+    }
+  }
+
+  if (expiresAt && now > expiresAt) {
+    return {
+      nextAttemptAt,
+      staleAt,
+      expiresAt,
+      refreshState: 'expired',
+      refreshReason: 'Last successful fetch is beyond the expiration window; refresh is due when rate guards allow it.',
+    }
+  }
+
+  if (staleAt && now > staleAt) {
+    return {
+      nextAttemptAt,
+      staleAt,
+      expiresAt,
+      refreshState: 'stale',
+      refreshReason: 'Last successful fetch is past the source cadence; refresh is due when rate guards allow it.',
+    }
+  }
+
+  if (!due) {
+    return {
+      nextAttemptAt,
+      staleAt,
+      expiresAt,
+      refreshState: 'not-due',
+      refreshReason: 'Connector is within its source cadence/rate guard window.',
+    }
+  }
+
+  return {
+    nextAttemptAt,
+    staleAt,
+    expiresAt,
+    refreshState: 'due-now',
+    refreshReason: 'Connector is due for refresh.',
+  }
+}
 
 type SourceDefinition = {
   sourceId: string
@@ -142,6 +237,17 @@ export class OsintSourceRegistry {
 
   private toSnapshot(definition: SourceDefinition): OsintSourceSnapshot {
     const state = this.requireState(definition.sourceId)
+    const refresh = sourceRefreshDecision({
+      enabled: definition.enabled,
+      configured: definition.configured,
+      configHint: definition.configHint,
+      status: definition.enabled ? state.status : 'disabled',
+      pollIntervalMs: definition.pollIntervalMs,
+      rateLimitMs: definition.rateLimitMs,
+      lastAttemptAt: state.lastAttemptAt,
+      lastSuccessAt: state.lastSuccessAt,
+      consecutiveFailures: state.consecutiveFailures,
+    })
     return {
       sourceId: definition.sourceId,
       sourceName: definition.sourceName,
@@ -154,9 +260,15 @@ export class OsintSourceRegistry {
       enabled: definition.enabled,
       status: definition.enabled ? state.status : 'disabled',
       provenance: definition.provenance,
+      lastAttemptAt: state.lastAttemptAt,
       lastSuccessAt: state.lastSuccessAt,
       lastErrorAt: state.lastErrorAt,
       lastError: state.lastError,
+      nextAttemptAt: refresh.nextAttemptAt,
+      staleAt: refresh.staleAt,
+      expiresAt: refresh.expiresAt,
+      refreshState: refresh.refreshState,
+      refreshReason: refresh.refreshReason,
       itemCount: state.itemCount,
       sourceReliabilityScore: state.sourceReliabilityScore,
       legalSafetyNote: definition.legalSafetyNote,
