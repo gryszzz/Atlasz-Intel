@@ -4169,3 +4169,15 @@
   margin: 0;
   max-width: 520px;
 }
+
+/* ===== Command-center cockpit composition (authoritative) =====
+ * Globe goes full-bleed; the outer profiles rail is folded away so the cockpit
+ * (floating layer console left + dossier right over the Earth) owns the width,
+ * matching the mockup. */
+.atlasz-worldwatch-workstation .worldwatch-workstation-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.atlasz-worldwatch-workstation .worldwatch-command-rail {
+  display: none;
+}
