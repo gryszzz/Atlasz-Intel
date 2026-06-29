@@ -4181,3 +4181,245 @@
 .atlasz-worldwatch-workstation .worldwatch-command-rail {
   display: none;
 }
+
+/* ===== Left intel stack: What Changed Today / What To Watch ===== */
+.atlasz-cockpit .cockpit-intel-stack {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  bottom: 96px;
+  z-index: 6;
+  width: clamp(244px, 19vw, 292px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.cockpit-intel-stack .intel-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid rgba(56, 189, 248, 0.16);
+  border-radius: 12px;
+  background: rgba(7, 12, 18, 0.82);
+  backdrop-filter: blur(16px);
+  overflow: hidden;
+}
+
+.cockpit-intel-stack .intel-card:first-child {
+  flex: 1 1 auto;
+}
+
+.intel-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.intel-card-head > span {
+  flex: 1;
+}
+
+.intel-card-head em {
+  color: var(--green-strong);
+  font-style: normal;
+  font-weight: 660;
+}
+
+.intel-event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.intel-empty {
+  margin: 0;
+  padding: 14px 10px;
+  color: var(--faint);
+  font-size: 11px;
+}
+
+.intel-event-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 9px;
+  text-align: left;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.015);
+  transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+
+.intel-event-row:hover {
+  background: rgba(56, 189, 248, 0.07);
+  border-color: rgba(56, 189, 248, 0.22);
+}
+
+.intel-event-row.active {
+  border-color: rgba(45, 212, 191, 0.5);
+  background: rgba(45, 212, 191, 0.08);
+}
+
+.intel-event-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.intel-event-main strong {
+  font-size: 12px;
+  font-weight: 560;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.intel-event-main em {
+  font-size: 10px;
+  color: var(--faint);
+  font-style: normal;
+}
+
+.intel-sev-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+.intel-sev-chip {
+  flex: 0 0 auto;
+  font-size: 9px;
+  font-weight: 660;
+  letter-spacing: 0.05em;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+/* Severity colorways (shared dot + chip) */
+.intel-sev-dot.sev-critical { background: var(--sev-critical); box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
+.intel-sev-dot.sev-elevated { background: var(--sev-high); box-shadow: 0 0 8px rgba(251, 146, 60, 0.55); }
+.intel-sev-dot.sev-watch { background: var(--sev-elevated); }
+.intel-sev-dot.sev-stable { background: var(--sev-moderate); }
+.intel-sev-chip.sev-critical { color: #fca5a5; background: rgba(239, 68, 68, 0.14); }
+.intel-sev-chip.sev-elevated { color: #fdba74; background: rgba(251, 146, 60, 0.14); }
+.intel-sev-chip.sev-watch { color: #fde68a; background: rgba(250, 204, 21, 0.13); }
+.intel-sev-chip.sev-stable { color: #99f6e4; background: rgba(94, 234, 212, 0.12); }
+
+.intel-window-row {
+  display: flex;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.intel-window-row button {
+  flex: 1;
+  padding: 5px 0;
+  font-size: 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: rgba(13, 17, 16, 0.7);
+  color: var(--muted);
+}
+
+.intel-window-row button.active {
+  color: var(--green-strong);
+  border-color: rgba(45, 212, 191, 0.5);
+}
+
+.intel-layer-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.intel-layer-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  font-size: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(13, 17, 16, 0.6);
+  color: var(--muted);
+}
+
+.intel-layer-toggle > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.intel-layer-toggle em {
+  font-style: normal;
+  color: var(--faint);
+}
+
+.intel-layer-toggle.active {
+  color: var(--green-strong);
+  border-color: rgba(45, 212, 191, 0.4);
+  background: rgba(45, 212, 191, 0.06);
+}
+
+/* ===== Overlap / overflow cleanup ===== */
+/* Source radar duplicated the metric strip and collided with the dossier. */
+.atlasz-cockpit .cockpit-source-radar {
+  display: none;
+}
+
+/* Keep the timeline contained — cards scroll horizontally instead of spilling. */
+.worldwatch-intelligence-timeline {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.worldwatch-timeline-track {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* The WebGL globe owns markers now — hide the legacy flat 2D overlay so labels
+ * stop floating over the Earth and the left stack. */
+.atlasz-cockpit .cockpit-map-plane-3d .cockpit-marker,
+.atlasz-cockpit .cockpit-map-plane-3d .cockpit-cluster,
+.atlasz-cockpit .cockpit-map-plane-3d .cockpit-heat-ring,
+.atlasz-cockpit .cockpit-map-plane-3d .cockpit-connection-overlay,
+.atlasz-cockpit .cockpit-map-plane-3d .cockpit-hover-inspector {
+  display: none;
+}
+
+/* Dossier: contain text, never spill past the panel. */
+.atlasz-cockpit .cockpit-dossier {
+  overflow: hidden auto;
+}
+
+.atlasz-cockpit .cockpit-dossier header h4,
+.atlasz-cockpit .cockpit-dossier p {
+  overflow-wrap: anywhere;
+}
+
+/* Guard against horizontal overflow at the view root. */
+.world-intel-view.atlasz-worldwatch-workstation {
+  max-width: 100%;
+  overflow-x: hidden;
+}

@@ -337,11 +337,6 @@ export function WorldIntelligenceView({
     0,
     visibleEvents.findIndex((event) => event.id === selectedCockpitEvent?.id),
   )
-  const toggleWorldwatchLayer = (layerId: WorldwatchLayerId) => {
-    setActiveLayerIds((current) =>
-      current.includes(layerId) ? current.filter((currentLayerId) => currentLayerId !== layerId) : [...current, layerId],
-    )
-  }
   const toggleWorldwatchLayerGroup = (group: WorldwatchLayerGroup) => {
     if (group.sourceLayer) {
       setSourceLayerVisible((current) => !current)
@@ -421,7 +416,6 @@ export function WorldIntelligenceView({
             windows={worldWindows}
             onSelectEvent={selectCockpitEvent}
             onToggleLayerGroup={toggleWorldwatchLayerGroup}
-            onToggleLayer={toggleWorldwatchLayer}
             onWindowChange={(id) => setWindowId(id as WorldWindowId)}
           />
           <Suspense fallback={<div className="world-panel world-quant-strip"><QuantStripSkeleton /></div>}>
@@ -732,6 +726,27 @@ function SourceConstellation({
   )
 }
 
+const SEVERITY_RANK: Record<string, number> = { critical: 4, elevated: 3, watch: 2, stable: 1 }
+const SEVERITY_LABEL: Record<string, string> = {
+  critical: 'Critical',
+  elevated: 'High',
+  watch: 'Watch',
+  stable: 'Low',
+}
+
+function severityRank(severity: string): number {
+  return SEVERITY_RANK[severity] ?? 0
+}
+
+function relativeTimeShort(timestamp: number, now: number): string {
+  const minutes = Math.max(0, Math.round((now - timestamp) / 60_000))
+  if (minutes < 1) return 'now'
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.round(minutes / 60)
+  if (hours < 48) return `${hours}h ago`
+  return `${Math.round(hours / 24)}d ago`
+}
+
 // Globe marker color by provenance trust — official reads brightest; media and
 // structural read dimmer/cooler so an observation never looks like verified fact.
 function globeTrustColor(trust: string, stale: boolean): string {
@@ -760,7 +775,6 @@ function WorldwatchCockpit({
   windows,
   onSelectEvent,
   onToggleLayerGroup,
-  onToggleLayer,
   onWindowChange,
 }: {
   activeLayerIds: WorldwatchLayerId[]
@@ -774,7 +788,6 @@ function WorldwatchCockpit({
   windows: typeof worldWindows
   onSelectEvent: (eventId: string) => void
   onToggleLayerGroup: (group: WorldwatchLayerGroup) => void
-  onToggleLayer: (layerId: WorldwatchLayerId) => void
   onWindowChange: (id: WorldWindowId) => void
 }) {
   const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null)
@@ -840,6 +853,19 @@ function WorldwatchCockpit({
         })),
     [layerEntities],
   )
+  // Left intel stack — real events, most recent first / highest severity first.
+  const whatChangedEvents = useMemo(
+    () => [...events].sort((a, b) => b.timestamp - a.timestamp).slice(0, 6),
+    [events],
+  )
+  const whatToWatchEvents = useMemo(
+    () =>
+      [...events]
+        .filter((event) => event.severity === 'critical' || event.severity === 'elevated')
+        .sort((a, b) => severityRank(b.severity) - severityRank(a.severity) || b.timestamp - a.timestamp)
+        .slice(0, 4),
+    [events],
+  )
   const mapStyle = {
     '--focus-x': `${selectedMarker?.x ?? 50}%`,
     '--focus-y': `${selectedMarker?.y ?? 50}%`,
@@ -856,8 +882,66 @@ function WorldwatchCockpit({
       </header>
 
       <div className="cockpit-body">
-        <aside className="cockpit-layer-console" aria-label="Worldwatch layer console">
-          <div className="cockpit-window-row">
+        <aside className="cockpit-intel-stack" aria-label="What changed and what to watch">
+          <article className="intel-card">
+            <header className="intel-card-head">
+              <Activity size={13} />
+              <span>What changed today</span>
+              <em>{whatChangedEvents.length}</em>
+            </header>
+            <div className="intel-event-list">
+              {whatChangedEvents.length === 0 ? (
+                <p className="intel-empty">No proof-backed changes in this window.</p>
+              ) : (
+                whatChangedEvents.map((event) => (
+                  <button
+                    className={`intel-event-row sev-${event.severity}${selected?.id === event.id ? ' active' : ''}`}
+                    key={event.id}
+                    type="button"
+                    onClick={() => onSelectEvent(event.id)}
+                  >
+                    <span className={`intel-sev-dot sev-${event.severity}`} />
+                    <span className="intel-event-main">
+                      <strong>{event.title}</strong>
+                      <em>{event.region} · {relativeTimeShort(event.timestamp, now)}</em>
+                    </span>
+                    <span className={`intel-sev-chip sev-${event.severity}`}>
+                      {SEVERITY_LABEL[event.severity] ?? event.severity}
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          </article>
+
+          <article className="intel-card">
+            <header className="intel-card-head">
+              <Zap size={13} />
+              <span>What to watch</span>
+            </header>
+            <div className="intel-event-list">
+              {whatToWatchEvents.length === 0 ? (
+                <p className="intel-empty">Nothing elevated in this window.</p>
+              ) : (
+                whatToWatchEvents.map((event) => (
+                  <button
+                    className={`intel-event-row sev-${event.severity}`}
+                    key={event.id}
+                    type="button"
+                    onClick={() => onSelectEvent(event.id)}
+                  >
+                    <span className={`intel-sev-dot sev-${event.severity}`} />
+                    <span className="intel-event-main">
+                      <strong>{event.title}</strong>
+                      <em>{SEVERITY_LABEL[event.severity] ?? event.severity} · {relativeTimeShort(event.timestamp, now)}</em>
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          </article>
+
+          <div className="intel-window-row" aria-label="Replay window">
             {windows.map((windowItem) => (
               <button
                 className={windowItem.id === windowId ? 'active' : ''}
@@ -870,40 +954,23 @@ function WorldwatchCockpit({
             ))}
           </div>
 
-          <div className="cockpit-layer-stack">
-            {layerGroupSummaries.map((group) => {
+          <div className="intel-layer-row" aria-label="Layers">
+            {layerGroupSummaries.slice(0, 6).map((group) => {
               const Icon = group.icon
               return (
                 <button
-                  className={`cockpit-layer-group group-${group.id} layer-status-${group.status} heat-${group.freshnessHeat}${group.active ? ' active' : ''}`}
+                  className={`intel-layer-toggle group-${group.id} layer-status-${group.status}${group.active ? ' active' : ''}`}
                   key={group.id}
                   type="button"
+                  title={`${group.label} · ${group.status}`}
                   onClick={() => onToggleLayerGroup(group)}
                 >
-                  <Icon size={14} />
+                  <Icon size={13} />
                   <span>{group.label}</span>
-                  <strong>{group.entityCount}</strong>
-                  <em>{group.status}</em>
-                  <small>{group.description}</small>
+                  <em>{group.entityCount}</em>
                 </button>
               )
             })}
-          </div>
-
-          <div className="cockpit-sublayer-stack" aria-label="Proof layer detail">
-            {layerSnapshot.layers.slice(0, 9).map((layer) => (
-              <button
-                aria-pressed={activeLayerSet.has(layer.id)}
-                className={activeLayerSet.has(layer.id) ? `active heat-${layer.freshnessHeat}` : `heat-${layer.freshnessHeat}`}
-                disabled={layer.status === 'missing-config'}
-                key={layer.id}
-                type="button"
-                onClick={() => onToggleLayer(layer.id)}
-              >
-                <span>{layer.label}</span>
-                <em>{layer.entityCount}</em>
-              </button>
-            ))}
           </div>
         </aside>
 
