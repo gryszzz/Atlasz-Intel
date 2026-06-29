@@ -40,9 +40,14 @@ import {
 } from './engine/worldwatchLayerRegistry'
 import type { OsintSourceSnapshot, UserFavorite, WorldIntelEvent, WorldIntelSnapshot } from './worldIntel'
 import './WorldIntelligenceView.css'
+import type { GlobePoint } from './components/world/ProofGlobe'
 
 // Lazy child surfaces — kept out of the startup bundle and isolated so future
 // heavy globe / quant libraries load only when this view is open.
+// ProofGlobe pulls in three.js/globe.gl; it must stay behind this lazy boundary.
+const ProofGlobe = lazy(() =>
+  import('./components/world/ProofGlobe').then((m) => ({ default: m.ProofGlobe })),
+)
 const WorldEventTimeline = lazy(() =>
   import('./components/world/WorldEventTimeline.lazy').then((m) => ({ default: m.WorldEventTimeline })),
 )
@@ -372,11 +377,7 @@ export function WorldIntelligenceView({
 
   return (
     <div className="world-intel-view atlasz-worldwatch-workstation">
-      <section className="world-command-band worldwatch-command-deck">
-        <div>
-          <span>Aegis Worldwatch</span>
-          <h3>Living world intelligence: what changed, where it happened, what proves it, and what connects.</h3>
-        </div>
+      <section className="world-command-band worldwatch-command-deck slim">
         <div className="world-command-actions">
           <div className="world-search">
             <Search size={15} />
@@ -731,6 +732,22 @@ function SourceConstellation({
   )
 }
 
+// Globe marker color by provenance trust — official reads brightest; media and
+// structural read dimmer/cooler so an observation never looks like verified fact.
+function globeTrustColor(trust: string, stale: boolean): string {
+  const base =
+    trust === 'official'
+      ? '#38bdf8'
+      : trust === 'public'
+        ? '#5eead4'
+        : trust === 'media'
+          ? '#fb923c'
+          : trust === 'structural'
+            ? '#a78bfa'
+            : '#687a74'
+  return stale ? `${base}88` : base
+}
+
 function WorldwatchCockpit({
   activeLayerIds,
   events,
@@ -806,6 +823,23 @@ function WorldwatchCockpit({
     [activeLayerSet, layerSnapshot.layers, sourceLayerVisible, sources],
   )
   const entityGraph = buildEntityGraph(events, selected, sources)
+  // Real globe markers — ONLY proof-backed entities that carry source-backed
+  // coordinates. No coordinates => no marker (never a synthetic pin).
+  const globePoints = useMemo<GlobePoint[]>(
+    () =>
+      layerEntities
+        .filter((entity) => typeof entity.lat === 'number' && typeof entity.lon === 'number')
+        .map((entity) => ({
+          id: entity.id,
+          lat: entity.lat as number,
+          lng: entity.lon as number,
+          label: entity.label,
+          color: globeTrustColor(entity.visualTrust, entity.stale),
+          size: entity.stale ? 0.2 : 0.32,
+          eventId: entity.eventId,
+        })),
+    [layerEntities],
+  )
   const mapStyle = {
     '--focus-x': `${selectedMarker?.x ?? 50}%`,
     '--focus-y': `${selectedMarker?.y ?? 50}%`,
@@ -813,11 +847,7 @@ function WorldwatchCockpit({
 
   return (
     <article className="atlasz-cockpit" aria-label="Atlasz Worldwatch cockpit">
-      <header className="cockpit-header">
-        <div>
-          <span>Aegis Worldwatch Cockpit</span>
-          <h3>Evidence map, live layers, selected dossier, and source health.</h3>
-        </div>
+      <header className="cockpit-header slim">
         <div className="cockpit-metric-strip">
           <MetricPill icon={ShieldCheck} label="Proof Entities" value={String(layerEntities.length || events.length)} />
           <MetricPill icon={Database} label="Sources Online" value={`${onlineSources}/${sources.length}`} />
@@ -902,17 +932,11 @@ function WorldwatchCockpit({
             </button>
           </div>
 
-          <div className="cockpit-map-plane" style={mapStyle}>
-            <span className="cockpit-starfield" />
+          <div className="cockpit-map-plane cockpit-map-plane-3d" style={mapStyle}>
+            <Suspense fallback={<div className="proof-globe-loading">Loading globe…</div>}>
+              <ProofGlobe points={globePoints} arcs={[]} onSelectPoint={onSelectEvent} />
+            </Suspense>
             <span className="cockpit-earth-glow" />
-            <span className="cockpit-terminator" />
-            <span className="cockpit-cloud-layer cloud-a" />
-            <span className="cockpit-cloud-layer cloud-b" />
-            <span className="cockpit-country-lines" />
-            <span className="cockpit-landmass land-americas" />
-            <span className="cockpit-landmass land-emea" />
-            <span className="cockpit-landmass land-apac" />
-            <span className="cockpit-focus-reticle" />
             {sourceLayerVisible ? (
               <div className="cockpit-source-radar" aria-label="Source health radar">
                 <span className="source-radar-live">{onlineSources} live</span>
@@ -920,9 +944,6 @@ function WorldwatchCockpit({
                 <span className="source-radar-locked">{lockedSources} locked</span>
               </div>
             ) : null}
-            <span className="cockpit-region region-americas">Americas</span>
-            <span className="cockpit-region region-emea">EMEA</span>
-            <span className="cockpit-region region-apac">APAC</span>
             {plottedMarkers.length === 0 ? (
               <div className="cockpit-empty-map">
                 <Globe2 size={20} />

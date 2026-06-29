@@ -1044,7 +1044,7 @@ function App() {
   ])
 
   const [pulseEnabled, setPulseEnabled] = useLocalStorageState('atlasz:intel:pulse', true)
-  const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorageState('atlasz:ui:v2:sidebar-collapsed', true)
+  const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorageState('atlasz:ui:v3:sidebar-collapsed', false)
   const [advancedNavOpen, setAdvancedNavOpen] = useLocalStorageState('atlasz:ui:advanced-nav-open', false)
   const [compactMode, setCompactMode] = useLocalStorageState('atlasz:ui:compact-mode', false)
   const [evidenceDeskOpen, setEvidenceDeskOpen] = useLocalStorageState('atlasz:ui:evidence-desk-open', true)
@@ -1119,6 +1119,23 @@ function App() {
   const socialPressure = calculateAttentionPressure(selectedSocialTopic, selectedSocialPosts)
   const socialVelocity = calculateSocialVelocity(selectedSocialTopic)
   const sourceStatusCounts = useMemo(() => countSourceStatuses(worldSnapshot), [worldSnapshot])
+  // Command-bar status — all derived from real source counts. No fabricated score:
+  // with no sources polled this reads 0/0 · Standby, never a placeholder percentage.
+  const opsScore =
+    sourceStatusCounts.total > 0
+      ? Math.round((sourceStatusCounts.online / sourceStatusCounts.total) * 100)
+      : null
+  const opsHealthy = sourceStatusCounts.failed === 0 && sourceStatusCounts.stale === 0
+  const globalStatus =
+    sourceStatusCounts.total === 0
+      ? 'Standby'
+      : sourceStatusCounts.failed > 0
+        ? 'Elevated'
+        : sourceStatusCounts.stale > 0
+          ? 'Watch'
+          : 'Nominal'
+  const globalStatusTone =
+    globalStatus === 'Elevated' ? 'warn' : globalStatus === 'Watch' ? 'caution' : globalStatus === 'Nominal' ? 'ok' : 'idle'
   const realtimeTrust = canonicalSourceTrust(engineSnapshot.status.health?.sourceTrust)
   const worldTrust = canonicalSourceTrust(worldSnapshot.sourceTrust)
   const externalSocialConnectorEnabled = externalSocialConnectorIsEnabled()
@@ -1300,7 +1317,7 @@ function App() {
     window.location.reload()
   }
   const resetLayout = () => {
-    setSidebarCollapsed(true)
+    setSidebarCollapsed(false)
     setAdvancedNavOpen(false)
     setCompactMode(false)
     setEvidenceDeskOpen(true)
@@ -1409,17 +1426,6 @@ function App() {
       perform: resetLayout,
     },
   ]
-  const spatialSurfaceActive = [
-    'command',
-    'world',
-    'radar',
-    'terminal',
-    'sources',
-    'infrastructure',
-    'dossiers',
-    'coverage',
-    'settings',
-  ].includes(activeView)
   const marketTapeVisible = activeView === 'terminal'
   const legacyCommandSurfaceEnabled = typeof window !== 'undefined' && window.location.search.includes('legacy-command=1')
 
@@ -1532,66 +1538,69 @@ function App() {
       </aside>
 
       <section className="workspace">
-        <header className="topbar">
-          <div>
-            <span className="eyebrow">
-              {spatialSurfaceActive ? 'Atlasz Spatial Terminal' : 'Atlasz Intelligence'}
-            </span>
-            <h2>
-              {spatialSurfaceActive
-                ? 'What changed, where it happened, what proves it, and what to watch next.'
-                : 'Understand events, markets, infrastructure, and source-backed connections.'}
-            </h2>
-          </div>
-          <div className="topbar-actions">
-            <CommandMenuButton />
-            <span className="source-badge health-chip">
+        <header className="topbar command-bar">
+          <div className="command-bar-status">
+            <div className={`ops-score tone-${opsHealthy ? 'ok' : 'warn'}`}>
+              <span className="ops-label">Source Ops</span>
+              <strong className="ops-pct">{opsScore === null ? '—' : `${opsScore}%`}</strong>
+              <span className="ops-bar" aria-hidden="true">
+                <span style={{ width: `${opsScore ?? 0}%` }} />
+              </span>
+            </div>
+            <span className={`cmd-chip tone-${opsHealthy ? 'ok' : 'warn'}`}>
               <CircleDotDashed size={14} />
-              {sourceStatusCounts.online}/{sourceStatusCounts.total} sources
+              {sourceStatusCounts.online}/{sourceStatusCounts.total} online
             </span>
-            <span className="source-badge health-chip">{formatFreshness(worldSnapshot.updatedAt)} refresh</span>
-            <span className="source-badge health-chip">{sourceStatusCounts.disabled} locked</span>
-            <span className={sourceStatusCounts.failed > 0 ? 'source-badge health-chip warn' : 'source-badge health-chip'}>
-              {sourceStatusCounts.failed} failed
+            <span className="cmd-chip muted" title="Last source refresh">
+              <Activity size={13} />
+              {formatFreshness(worldSnapshot.updatedAt)}
+            </span>
+            {sourceStatusCounts.failed > 0 && (
+              <span className="cmd-chip tone-warn">{sourceStatusCounts.failed} failed</span>
+            )}
+            {sourceStatusCounts.disabled > 0 && (
+              <span className="cmd-chip muted">{sourceStatusCounts.disabled} locked</span>
+            )}
+          </div>
+          <div className="command-bar-actions">
+            <span className={`global-status tone-${globalStatusTone}`}>
+              <span>Global status</span>
+              <strong>{globalStatus}</strong>
             </span>
             <PulseIndicator />
+            <CommandMenuButton />
             <button
-              className={compactMode ? 'ghost-button active' : 'ghost-button'}
-              type="button"
-              onClick={() => setCompactMode((value) => !value)}
-            >
-              Compact
-            </button>
-            <button
-              className={globeFocusMode ? 'ghost-button active' : 'ghost-button'}
+              aria-label="Full globe"
+              title="Full globe"
+              className={globeFocusMode ? 'icon-button active' : 'icon-button'}
               type="button"
               onClick={() => {
                 setActiveView('radar')
                 setGlobeFocusMode((value) => !value)
               }}
             >
-              Full Globe
+              <Globe2 size={16} />
             </button>
             <button
-              className={evidenceDeskOpen ? 'ghost-button active' : 'ghost-button'}
+              aria-label="Toggle evidence desk"
+              title="Evidence desk"
+              className={evidenceDeskOpen ? 'icon-button active' : 'icon-button'}
               type="button"
               onClick={() => setEvidenceDeskOpen((value) => !value)}
             >
-              Evidence Desk
+              <Layers3 size={16} />
             </button>
             <button
-              className={rightDrawerOpen ? 'ghost-button active' : 'ghost-button'}
+              aria-label="Toggle dossier drawer"
+              title="Dossier drawer"
+              className={rightDrawerOpen ? 'icon-button active' : 'icon-button'}
               type="button"
               onClick={() => setRightDrawerOpen((value) => !value)}
             >
-              Dossier Drawer
+              <Fingerprint size={16} />
             </button>
-            <button className="ghost-button" type="button" onClick={resetLayout}>
-              Reset Layout
-            </button>
-            <button className="ghost-button" type="button" onClick={() => setActiveView('dossiers')}>
-              <NotebookPen size={16} />
-              Dossiers
+            <button aria-label="Reset layout" title="Reset layout" className="icon-button" type="button" onClick={resetLayout}>
+              <MonitorDot size={16} />
             </button>
           </div>
         </header>
