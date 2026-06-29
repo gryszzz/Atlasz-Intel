@@ -78,7 +78,13 @@ import { MissingMarketDataPanel } from './components/intel/MissingMarketDataPane
 import { MarketQuoteSourceTrail } from './components/intel/MarketQuoteSourceTrail'
 import { OptionsSourceTrail } from './components/intel/OptionsSourceTrail'
 import { ExposureDashboardPanel } from './components/intel/ExposureDashboardPanel'
+import { MarketIdentitySourceTrail } from './components/intel/MarketIdentitySourceTrail'
+import { CompanyFactsSourceTrail } from './components/intel/CompanyFactsSourceTrail'
+import { Form13FSourceTrail } from './components/intel/Form13FSourceTrail'
+import { EtfHoldingsSourceTrail } from './components/intel/EtfHoldingsSourceTrail'
 import { findWorldIntelEvent } from './engine/entityResolver'
+import { buildConnectorAudit } from './engine/runtimeAudit'
+import { buildCoverageAudit } from './engine/coverageAudit'
 import type { WorldIntelSnapshot } from './worldIntel'
 import {
   graphEdges,
@@ -1081,6 +1087,7 @@ function App() {
   const worldSignals = worldSnapshot.signals
   const worldBrief = worldSnapshot.dailyBrief
   const worldRawSourceItems = worldSnapshot.rawSourceItems
+  const [routeNow] = useState(() => Date.now())
 
   const selectedMarket = useMemo(() => {
     const item = resolveAssetQuery(selectedTicker)
@@ -1402,7 +1409,17 @@ function App() {
       perform: resetLayout,
     },
   ]
-  const worldwatchSurfaceActive = activeView === 'command' || activeView === 'world' || activeView === 'radar'
+  const spatialSurfaceActive = [
+    'command',
+    'world',
+    'radar',
+    'terminal',
+    'sources',
+    'infrastructure',
+    'dossiers',
+    'coverage',
+    'settings',
+  ].includes(activeView)
   const marketTapeVisible = activeView === 'terminal'
   const legacyCommandSurfaceEnabled = typeof window !== 'undefined' && window.location.search.includes('legacy-command=1')
 
@@ -1518,10 +1535,10 @@ function App() {
         <header className="topbar">
           <div>
             <span className="eyebrow">
-              {worldwatchSurfaceActive ? 'Aegis Worldwatch' : 'Atlasz Intelligence'}
+              {spatialSurfaceActive ? 'Atlasz Spatial Terminal' : 'Atlasz Intelligence'}
             </span>
             <h2>
-              {worldwatchSurfaceActive
+              {spatialSurfaceActive
                 ? 'What changed, where it happened, what proves it, and what to watch next.'
                 : 'Understand events, markets, infrastructure, and source-backed connections.'}
             </h2>
@@ -1920,94 +1937,167 @@ function App() {
         )}
 
         {activeView === 'terminal' && (
-          <section className="dashboard-grid terminal-grid atlasz-workbench market-workbench">
-            <article className="panel terminal-chart-panel">
-              <PanelHeader icon={LineChart} label="Market / Infrastructure" title={`${selectedMarket.ticker} source-backed movement context`} />
-              <div className="chart-stat-row">
-                <div>
-                  <span>{selectedMarket.name}</span>
-                  <strong>{selectedMarket.price}</strong>
+          <SpatialRouteShell
+            mode="market"
+            icon={LineChart}
+            label="Market"
+            title={`${selectedMarket.ticker} economic evidence workspace`}
+            summary="Price context, SEC disclosures, ETF holdings, and unavailable states stay separated from inference."
+            metrics={[
+              { label: selectedMarket.name, value: selectedMarket.price, tone: 'neutral' },
+              { label: 'Move', value: formatChange(selectedMarket.change), tone: selectedMarket.change >= 0 ? 'ok' : 'warn' },
+              { label: 'SEC identities', value: worldSnapshot.marketIdentities.length, tone: worldSnapshot.marketIdentities.length > 0 ? 'ok' : 'muted' },
+              { label: 'Freshness', value: formatFreshness(worldSnapshot.updatedAt), tone: 'muted' },
+            ]}
+            controls={
+              <>
+                <article className="panel">
+                  <PanelHeader icon={Layers3} label="Watchlist" title="Tracked markets" />
+                  <UniverseSearchPanel
+                    symbols={universeSymbols}
+                    onAdd={addUniverseSymbol}
+                    onSelect={(ticker) => selectTicker(ticker, 'terminal')}
+                  />
+                  <MarketMoverList
+                    movers={tickerTapeItems}
+                    onSelect={(ticker) => selectTicker(ticker, 'terminal')}
+                    selectedTicker={selectedTicker}
+                  />
+                </article>
+                <SpatialLayerConsole
+                  activeLayerIds={activeLayerIds}
+                  eventCount={filteredPulseEvents.length}
+                  onSelectTimeWindow={setSelectedTimeWindow}
+                  onToggleLayer={toggleLayer}
+                  selectedTimeWindow={selectedTimeWindow}
+                  sourceStatusCounts={sourceStatusCounts}
+                />
+              </>
+            }
+            visual={
+              <article className="panel terminal-chart-panel spatial-primary-panel">
+                <PanelHeader icon={LineChart} label="Market Movement" title={`${selectedMarket.ticker} source-backed movement context`} />
+                <div className="chart-stat-row">
+                  <div>
+                    <span>{selectedMarket.name}</span>
+                    <strong>{selectedMarket.price}</strong>
+                  </div>
+                  <em className={changeClass(selectedMarket.change)}>{formatChange(selectedMarket.change)}</em>
+                  <p>{selectedMarket.catalyst}</p>
                 </div>
-                <em className={changeClass(selectedMarket.change)}>{formatChange(selectedMarket.change)}</em>
-                <p>{selectedMarket.catalyst}</p>
-              </div>
-              <LiveMarketReadout symbol={selectedTicker} enabled={pulseEnabled} />
-              <div className="chart-frame">
-                {chartData.length > 0 ? (
-                  <Suspense fallback={<ChartSkeleton />}>
-                    <MarketPriceChart data={chartData} />
-                  </Suspense>
-                ) : (
-                  <div className="empty-state">{CANDLE_HISTORY_UNAVAILABLE}</div>
-                )}
-              </div>
-            </article>
-
-            <article className="panel">
-              <PanelHeader icon={Crosshair} label="Evidence" title="No trading advice, only source context" />
-              <MarketExplanationPanel explanation={selectedMarketExplanation} />
-            </article>
-
-            <article className="panel">
-              <PanelHeader icon={Layers3} label="Watchlist" title="Tracked markets" />
-              <UniverseSearchPanel
-                symbols={universeSymbols}
-                onAdd={addUniverseSymbol}
-                onSelect={(ticker) => selectTicker(ticker, 'terminal')}
-              />
-              <MarketMoverList
-                movers={tickerTapeItems}
-                onSelect={(ticker) => selectTicker(ticker, 'terminal')}
-                selectedTicker={selectedTicker}
-              />
-            </article>
-
-            <article className="panel wide-panel">
-              <PanelHeader icon={Activity} label="Participation" title="Volume is unavailable unless real ticks exist" />
-              <div className="bar-frame">
-                {chartData.length > 0 ? (
-                  <Suspense fallback={<ChartSkeleton />}>
-                    <MarketVolumeChart data={chartData} />
-                  </Suspense>
-                ) : (
-                  <div className="empty-state">{CANDLE_HISTORY_UNAVAILABLE}</div>
-                )}
-              </div>
-            </article>
-          </section>
+                <LiveMarketReadout symbol={selectedTicker} enabled={pulseEnabled} />
+                <div className="chart-frame">
+                  {chartData.length > 0 ? (
+                    <Suspense fallback={<ChartSkeleton />}>
+                      <MarketPriceChart data={chartData} />
+                    </Suspense>
+                  ) : (
+                    <div className="empty-state">{CANDLE_HISTORY_UNAVAILABLE}</div>
+                  )}
+                </div>
+              </article>
+            }
+            dossier={
+              <article className="panel">
+                <PanelHeader icon={Crosshair} label="Dossier" title="Source context only" />
+                <MarketExplanationPanel explanation={selectedMarketExplanation} />
+              </article>
+            }
+            evidence={
+              <article className="panel market-evidence-desk">
+                <PanelHeader icon={Fingerprint} label="Evidence Desk" title="Market identity, SEC facts, 13F, and ETF holdings" />
+                <div className="bar-frame market-volume-frame">
+                  {chartData.length > 0 ? (
+                    <Suspense fallback={<ChartSkeleton />}>
+                      <MarketVolumeChart data={chartData} />
+                    </Suspense>
+                  ) : (
+                    <div className="empty-state">{CANDLE_HISTORY_UNAVAILABLE}</div>
+                  )}
+                </div>
+                <div className="market-source-grid">
+                  <MarketIdentitySourceTrail events={worldSnapshot.worldEvents} identities={worldSnapshot.marketIdentities} now={routeNow} />
+                  <CompanyFactsSourceTrail events={worldSnapshot.worldEvents} now={routeNow} />
+                  <Form13FSourceTrail events={worldSnapshot.worldEvents} now={routeNow} />
+                  <EtfHoldingsSourceTrail events={worldSnapshot.worldEvents} now={routeNow} />
+                </div>
+              </article>
+            }
+          />
         )}
 
         {activeView === 'infrastructure' && (
-          <section className="dashboard-grid infrastructure-workbench atlasz-workbench">
-            <article className="panel wide-panel">
-              <PanelHeader icon={Layers3} label="Infrastructure" title="Facilities, hazards, exposure paths, and what the sources do not prove" />
-              <GlobalPulseScene
-                activeLayerIds={activeLayerIds}
+          <SpatialRouteShell
+            mode="infrastructure"
+            icon={Layers3}
+            label="Infrastructure"
+            title="Facility, route, hazard, and exposure map"
+            summary="Infrastructure context stays map-first: facilities, hazards, regions, and proof gaps are visible before any narrative."
+            metrics={[
+              { label: 'Events', value: filteredPulseEvents.length, tone: filteredPulseEvents.length > 0 ? 'ok' : 'muted' },
+              { label: 'Selected region', value: selectedEvent.region, tone: 'neutral' },
+              { label: 'Active layers', value: activeLayerIds.length, tone: 'ok' },
+              { label: 'Source health', value: `${sourceStatusCounts.online}/${sourceStatusCounts.total}`, tone: sourceStatusCounts.failed > 0 ? 'warn' : 'ok' },
+            ]}
+            controls={
+              <EvidenceLayerMap
                 events={filteredPulseEvents}
-                onSelectEvent={(eventId) => selectEvent(eventId)}
-                onSelectTicker={(ticker) => selectTicker(ticker, 'terminal')}
-                selectedEventId={selectedEvent.id}
                 signals={worldSignals}
+                selectedEventId={selectedEvent.id}
+                selectedTimeWindow={selectedTimeWindow}
+                activeLayerIds={activeLayerIds}
+                graphKinds={graphKindOptions}
+                activeGraphKinds={activeGraphKinds}
+                pinnedSignals={pinnedSignals}
+                onSelectEvent={selectEvent}
+                onSelectTimeWindow={setSelectedTimeWindow}
+                onToggleLayer={toggleLayer}
+                onToggleGraphKind={toggleGraphKind}
+                onTogglePinnedSignal={togglePinnedSignal}
               />
-            </article>
-            <article className="panel">
-              <PanelHeader icon={Crosshair} label="Selected Object" title="Dossier and non-claims" />
-              <IntelDossier
-                graphNode={selectedGraphNode}
-                market={selectedMarket}
-                marketExplanation={selectedMarketExplanation}
-                onAskAnalyst={() => submitQuestion('Explain selected infrastructure context')}
-                onSelectTicker={(ticker) => selectTicker(ticker, 'terminal')}
-                selectedEvent={selectedEvent}
-                signal={selectedSignal}
-              />
-              {selectedWorldEvent && <EventResolutionPanel event={selectedWorldEvent} />}
-            </article>
-            <article className="panel wide-panel">
-              <PanelHeader icon={GitBranch} label="Exposure" title="Structural exposure context, never outage or damage claims without proof" />
-              <ExposureDashboardPanel events={worldSnapshot.worldEvents} />
-            </article>
-          </section>
+            }
+            visual={
+              <article className="panel spatial-primary-panel infrastructure-map-panel">
+                <PanelHeader icon={Layers3} label="Infrastructure Map" title="Facilities, hazards, and exposure paths" />
+                <GlobalPulseScene
+                  activeLayerIds={activeLayerIds}
+                  events={filteredPulseEvents}
+                  onSelectEvent={(eventId) => selectEvent(eventId)}
+                  onSelectTicker={(ticker) => selectTicker(ticker, 'terminal')}
+                  selectedEventId={selectedEvent.id}
+                  signals={worldSignals}
+                />
+                <TimelineControl
+                  events={filteredPulseEvents}
+                  onSelectEvent={(eventId) => selectEvent(eventId)}
+                  selectedEventId={selectedEvent.id}
+                  selectedTimeWindow={selectedTimeWindow}
+                  setSelectedTimeWindow={setSelectedTimeWindow}
+                />
+              </article>
+            }
+            dossier={
+              <article className="panel">
+                <PanelHeader icon={Crosshair} label="Selected Object" title="Dossier and non-claims" />
+                <IntelDossier
+                  graphNode={selectedGraphNode}
+                  market={selectedMarket}
+                  marketExplanation={selectedMarketExplanation}
+                  onAskAnalyst={() => submitQuestion('Explain selected infrastructure context')}
+                  onSelectTicker={(ticker) => selectTicker(ticker, 'terminal')}
+                  selectedEvent={selectedEvent}
+                  signal={selectedSignal}
+                />
+                {selectedWorldEvent && <EventResolutionPanel event={selectedWorldEvent} />}
+              </article>
+            }
+            evidence={
+              <article className="panel">
+                <PanelHeader icon={GitBranch} label="Exposure" title="Structural exposure context, not outage or damage claims" />
+                <ExposureDashboardPanel events={worldSnapshot.worldEvents} />
+              </article>
+            }
+          />
         )}
 
         {activeView === 'quant' && (
@@ -2019,23 +2109,49 @@ function App() {
         )}
 
         {activeView === 'sources' && (
-          <section className="dashboard-grid sources-grid atlasz-workbench sourceops-workbench">
-            <article className="panel wide-panel">
-              <Suspense fallback={<div><PanelSkeleton rows={4} label="Loading source health" /></div>}>
-                <SourceHealthView
-                  sources={worldSnapshot.sources}
-                  refreshControl={worldSnapshot.refreshControl}
-                  worldStatus={worldSnapshot.status}
-                  onRefresh={refreshWorldIntel}
-                  onPauseRefresh={pauseWorldRefresh}
-                  onResumeRefresh={resumeWorldRefresh}
-                />
-              </Suspense>
-            </article>
-            <article className="panel wide-panel">
-              <ConnectorDashboardPanel sources={worldSnapshot.sources} events={worldSnapshot.worldEvents} />
-            </article>
-          </section>
+          <SpatialRouteShell
+            mode="sources"
+            icon={Database}
+            label="Sources"
+            title="Source operations command center"
+            summary="Every connector stays visible by category, health, provenance, freshness, and proof trail."
+            metrics={[
+              { label: 'Online', value: sourceStatusCounts.online, tone: sourceStatusCounts.online > 0 ? 'ok' : 'muted' },
+              { label: 'Locked', value: sourceStatusCounts.disabled, tone: sourceStatusCounts.disabled > 0 ? 'warn' : 'muted' },
+              { label: 'Stale', value: sourceStatusCounts.stale, tone: sourceStatusCounts.stale > 0 ? 'warn' : 'ok' },
+              { label: 'Failed', value: sourceStatusCounts.failed, tone: sourceStatusCounts.failed > 0 ? 'bad' : 'ok' },
+            ]}
+            controls={
+              <SourceConstellation
+                snapshot={worldSnapshot}
+                sourceStatusCounts={sourceStatusCounts}
+              />
+            }
+            visual={
+              <article className="panel source-health-surface" id="source-health-surface">
+                <Suspense fallback={<div><PanelSkeleton rows={4} label="Loading source health" /></div>}>
+                  <SourceHealthView
+                    sources={worldSnapshot.sources}
+                    refreshControl={worldSnapshot.refreshControl}
+                    worldStatus={worldSnapshot.status}
+                    onRefresh={refreshWorldIntel}
+                    onPauseRefresh={pauseWorldRefresh}
+                    onResumeRefresh={resumeWorldRefresh}
+                  />
+                </Suspense>
+              </article>
+            }
+            dossier={
+              <article className="panel">
+                <ConnectorDashboardPanel sources={worldSnapshot.sources} events={worldSnapshot.worldEvents} />
+              </article>
+            }
+            evidence={
+              <article className="panel">
+                <ConnectorActivationPanel sources={worldSnapshot.sources} events={worldSnapshot.worldEvents} />
+              </article>
+            }
+          />
         )}
 
         {activeView === 'radar' && (
@@ -2214,104 +2330,231 @@ function App() {
         )}
 
         {activeView === 'dossiers' && (
-          <section className="dashboard-grid dossier-route-workbench atlasz-workbench dossier-workbench">
-            <article className="panel">
-              <PanelHeader icon={Crosshair} label="Dossier" title="Selected intelligence object" />
-              <IntelDossier
-                graphNode={selectedGraphNode}
-                market={selectedMarket}
-                marketExplanation={selectedMarketExplanation}
-                onAskAnalyst={() => submitQuestion('Explain selected dossier')}
-                onSelectTicker={(ticker) => selectTicker(ticker, 'terminal')}
-                selectedEvent={selectedEvent}
-                signal={selectedSignal}
-              />
-              {selectedWorldEvent && <EventResolutionPanel event={selectedWorldEvent} />}
-            </article>
-            <article className="panel wide-panel evidence-graph-panel">
-              <PanelHeader icon={Fingerprint} label="Evidence Graph" title="Entities proven by connector evidence" />
-              <EntityEvidenceGraphPanel events={worldSnapshot.worldEvents} />
-            </article>
-            <article className="panel wide-panel">
-              <PanelHeader icon={FileText} label="Daily Brief" title="Source-backed brief, unknowns, and source trail" />
-              <div className="daily-brief">
-                {worldBrief.length === 0 && (
-                  <div className="empty-state">Daily brief unavailable until a real public world-event batch is ingested.</div>
-                )}
-                {worldBrief.slice(0, 4).map((item) => (
-                  <div className="brief-row" key={item.id}>
-                    <span className={severityClass(item.severity)}>{severityLabels[item.severity]}</span>
-                    <div>
-                      <h3>{item.headline}</h3>
-                      <p>{item.whyItMatters}</p>
-                      <EvidenceMeta confidence={item.confidence} sourceCount={item.sourceCount} />
-                      <EvidenceNotes notes={item.evidenceTrail.slice(0, 2)} />
-                      <SourceTrail trail={item.sourceTrail.slice(0, 3)} />
+          <SpatialRouteShell
+            mode="dossiers"
+            icon={FileText}
+            label="Dossiers"
+            title="Selected intelligence files"
+            summary="Dossiers keep the selected object, evidence graph, source trail, unknowns, and market links in one investigation frame."
+            metrics={[
+              { label: 'Selected', value: selectedEvent.title, tone: 'neutral' },
+              { label: 'Confidence', value: `${selectedEvent.confidence}%`, tone: selectedEvent.confidence > 0 ? 'ok' : 'muted' },
+              { label: 'Sources', value: selectedEvent.sourceCount, tone: selectedEvent.sourceCount > 0 ? 'ok' : 'muted' },
+              { label: 'Brief items', value: worldBrief.length, tone: worldBrief.length > 0 ? 'ok' : 'muted' },
+            ]}
+            controls={
+              <>
+                <article className="panel">
+                  <PanelHeader icon={RadioTower} label="Investigation Feed" title="Click an event to focus the file" />
+                  <EventFeed
+                    compact
+                    events={filteredPulseEvents}
+                    onSelectEvent={(eventId) => selectEvent(eventId)}
+                    selectedEventId={selectedEvent.id}
+                    signals={worldSignals}
+                  />
+                </article>
+                <SpatialLayerConsole
+                  activeLayerIds={activeLayerIds}
+                  eventCount={filteredPulseEvents.length}
+                  onSelectTimeWindow={setSelectedTimeWindow}
+                  onToggleLayer={toggleLayer}
+                  selectedTimeWindow={selectedTimeWindow}
+                  sourceStatusCounts={sourceStatusCounts}
+                />
+              </>
+            }
+            visual={
+              <article className="panel evidence-graph-panel spatial-primary-panel">
+                <PanelHeader icon={Fingerprint} label="Entity Graph" title="Countries, companies, sources, events, and sectors" />
+                <EntityEvidenceGraphPanel events={worldSnapshot.worldEvents} />
+              </article>
+            }
+            dossier={
+              <article className="panel">
+                <PanelHeader icon={Crosshair} label="Dossier" title="Selected intelligence object" />
+                <IntelDossier
+                  graphNode={selectedGraphNode}
+                  market={selectedMarket}
+                  marketExplanation={selectedMarketExplanation}
+                  onAskAnalyst={() => submitQuestion('Explain selected dossier')}
+                  onSelectTicker={(ticker) => selectTicker(ticker, 'terminal')}
+                  selectedEvent={selectedEvent}
+                  signal={selectedSignal}
+                />
+                {selectedWorldEvent && <EventResolutionPanel event={selectedWorldEvent} />}
+              </article>
+            }
+            evidence={
+              <article className="panel">
+                <PanelHeader icon={FileText} label="Evidence Desk" title="Brief, unknowns, and source trail" />
+                <div className="daily-brief">
+                  {worldBrief.length === 0 && (
+                    <div className="empty-state">Daily brief unavailable until a real public world-event batch is ingested.</div>
+                  )}
+                  {worldBrief.slice(0, 4).map((item) => (
+                    <div className="brief-row" key={item.id}>
+                      <span className={severityClass(item.severity)}>{severityLabels[item.severity]}</span>
+                      <div>
+                        <h3>{item.headline}</h3>
+                        <p>{item.whyItMatters}</p>
+                        <EvidenceMeta confidence={item.confidence} sourceCount={item.sourceCount} />
+                        <EvidenceNotes notes={item.evidenceTrail.slice(0, 2)} />
+                        <SourceTrail trail={item.sourceTrail.slice(0, 3)} />
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </article>
-          </section>
+                  ))}
+                </div>
+              </article>
+            }
+          />
         )}
 
         {activeView === 'coverage' && (
-          <section className="dashboard-grid coverage-workbench atlasz-workbench">
-            <article className="panel wide-panel">
-              <MarketCoverageDashboard sources={worldSnapshot.sources} events={worldSnapshot.worldEvents} />
-            </article>
-            <article className="panel wide-panel">
-              <MissingMarketDataPanel />
-            </article>
-            <article className="panel wide-panel">
-              <ConnectorDashboardPanel sources={worldSnapshot.sources} events={worldSnapshot.worldEvents} />
-            </article>
-          </section>
+          <SpatialRouteShell
+            mode="coverage"
+            icon={CheckCircle2}
+            label="Coverage"
+            title="Coverage truth map"
+            summary="Unlocked, locked, missing, stale, media-only, and curated-only states remain visibly separate."
+            metrics={[
+              { label: 'Sources', value: sourceStatusCounts.total, tone: 'neutral' },
+              { label: 'Online', value: sourceStatusCounts.online, tone: sourceStatusCounts.online > 0 ? 'ok' : 'muted' },
+              { label: 'Locked', value: sourceStatusCounts.disabled, tone: sourceStatusCounts.disabled > 0 ? 'warn' : 'muted' },
+              { label: 'Needs attention', value: sourceStatusCounts.stale + sourceStatusCounts.failed, tone: sourceStatusCounts.stale + sourceStatusCounts.failed > 0 ? 'bad' : 'ok' },
+            ]}
+            controls={
+              <>
+                <CoverageStateConsole snapshot={worldSnapshot} />
+                <SpatialLayerConsole
+                  activeLayerIds={activeLayerIds}
+                  eventCount={filteredPulseEvents.length}
+                  onSelectTimeWindow={setSelectedTimeWindow}
+                  onToggleLayer={toggleLayer}
+                  selectedTimeWindow={selectedTimeWindow}
+                  sourceStatusCounts={sourceStatusCounts}
+                />
+              </>
+            }
+            visual={
+              <article className="panel coverage-map-panel">
+                <MarketCoverageDashboard sources={worldSnapshot.sources} events={worldSnapshot.worldEvents} />
+              </article>
+            }
+            dossier={
+              <article className="panel">
+                <MissingMarketDataPanel />
+              </article>
+            }
+            evidence={
+              <article className="panel">
+                <ConnectorDashboardPanel sources={worldSnapshot.sources} events={worldSnapshot.worldEvents} />
+              </article>
+            }
+          />
         )}
 
         {activeView === 'settings' && (
-          <section className="dashboard-grid settings-workbench atlasz-workbench">
-            <article className="panel wide-panel">
-              <ConnectorActivationPanel sources={worldSnapshot.sources} events={worldSnapshot.worldEvents} />
-            </article>
-            <article className="panel">
-              <PanelHeader icon={Database} label="Local Data" title="Private source history, replay, and saved workspace state" />
-              <DataCorePanel />
-            </article>
-            <article className="panel">
-              <PanelHeader icon={Activity} label="Live Pulse" title="Turn local market and replay updates on or off" />
-              <RealtimePulsePanel enabled={pulseEnabled} />
-            </article>
-            <article className="panel">
-              <PanelHeader icon={MonitorDot} label="About" title="Advanced diagnostics" />
-              <div className="diagnostic-list">
-                <div>
-                  <span>Device</span>
-                  <strong>{desktopMeta ? desktopMeta.platform : 'Browser preview'}</strong>
+          <SpatialRouteShell
+            mode="settings"
+            icon={MonitorDot}
+            label="Settings"
+            title="Workspace controls"
+            summary="Default settings show local data, refresh posture, and trust state. Connector internals stay behind Advanced."
+            metrics={[
+              { label: 'Pulse', value: pulseEnabled ? 'On' : 'Off', tone: pulseEnabled ? 'ok' : 'muted' },
+              { label: 'World evidence', value: worldTrust, tone: worldTrust === 'unavailable' ? 'muted' : 'ok' },
+              { label: 'Live feed', value: realtimeTrust, tone: realtimeTrust === 'unavailable' ? 'muted' : 'ok' },
+              { label: 'Storage', value: persistenceMode.includes('sqlite') ? 'SQLite' : 'Local', tone: 'neutral' },
+            ]}
+            controls={
+              <>
+                <article className="panel">
+                  <PanelHeader icon={Activity} label="Live Pulse" title="Local market and replay updates" />
+                  <RealtimePulsePanel enabled={pulseEnabled} />
+                </article>
+                <article className="panel">
+                  <PanelHeader icon={Database} label="Local Data" title="Private source history and saved workspace state" />
+                  <DataCorePanel />
+                </article>
+              </>
+            }
+            visual={
+              <SettingsStatusConsole
+                pulseEnabled={pulseEnabled}
+                realtimeTrust={realtimeTrust}
+                sourceStatusCounts={sourceStatusCounts}
+                worldSnapshot={worldSnapshot}
+                worldTrust={worldTrust}
+              />
+            }
+            dossier={
+              <article className="panel settings-proof-panel">
+                <PanelHeader icon={Fingerprint} label="Proof" title="Trust and freshness" />
+                <div className="settings-proof-stack">
+                  <div>
+                    <span>World evidence</span>
+                    <ProvenanceBadge value={worldTrust} />
+                    <strong>{formatFreshness(worldSnapshot.updatedAt)}</strong>
+                  </div>
+                  <div>
+                    <span>Live feed</span>
+                    <ProvenanceBadge value={realtimeTrust} />
+                    <strong>{engineSnapshot.frame?.emittedAt ? formatFreshness(engineSnapshot.frame.emittedAt) : 'not observed'}</strong>
+                  </div>
+                  <div>
+                    <span>Source trail</span>
+                    <strong>{worldRawSourceItems.length} records</strong>
+                    <em>{sourceStatusCounts.failed} failed</em>
+                  </div>
                 </div>
-                <div>
-                  <span>Local storage</span>
-                  <strong>
-                    {persistenceMode === 'node:sqlite'
-                      ? 'SQLite local database'
-                      : persistenceMode === 'better-sqlite3'
-                        ? 'SQLite local database'
-                        : persistenceMode === 'json-fallback'
-                          ? 'Local JSON fallback'
-                          : 'Browser local storage'}
-                  </strong>
+              </article>
+            }
+            evidence={
+              <details className="settings-advanced-panel">
+                <summary>
+                  <MonitorDot size={15} />
+                  Advanced
+                </summary>
+                <div className="settings-advanced-grid">
+                  <ConnectorActivationPanel
+                    sources={worldSnapshot.sources}
+                    events={worldSnapshot.worldEvents}
+                    showTechnicalNames
+                  />
+                  <article className="panel">
+                    <PanelHeader icon={MonitorDot} label="Diagnostics" title="Local runtime details" />
+                    <div className="diagnostic-list">
+                      <div>
+                        <span>Device</span>
+                        <strong>{desktopMeta ? desktopMeta.platform : 'Browser preview'}</strong>
+                      </div>
+                      <div>
+                        <span>Local storage</span>
+                        <strong>
+                          {persistenceMode === 'node:sqlite'
+                            ? 'SQLite local database'
+                            : persistenceMode === 'better-sqlite3'
+                              ? 'SQLite local database'
+                              : persistenceMode === 'json-fallback'
+                                ? 'Local JSON fallback'
+                                : 'Browser local storage'}
+                        </strong>
+                      </div>
+                      <div>
+                        <span>World evidence</span>
+                        <strong>{worldTrust}</strong>
+                      </div>
+                      <div>
+                        <span>Live feed trust</span>
+                        <strong>{realtimeTrust}</strong>
+                      </div>
+                    </div>
+                  </article>
                 </div>
-                <div>
-                  <span>World evidence</span>
-                  <strong>{worldTrust}</strong>
-                </div>
-                <div>
-                  <span>Live feed trust</span>
-                  <strong>{realtimeTrust}</strong>
-                </div>
-              </div>
-            </article>
-          </section>
+              </details>
+            }
+          />
         )}
 
         {activeView === 'analyst' && (
@@ -2446,6 +2689,309 @@ function PanelHeader({
       <h2>{title}</h2>
     </header>
   )
+}
+
+type SpatialMetric = {
+  label: string
+  value: ReactNode
+  tone?: 'ok' | 'warn' | 'bad' | 'muted' | 'neutral'
+}
+
+function SpatialRouteShell({
+  controls,
+  dossier,
+  evidence,
+  icon: Icon,
+  label,
+  metrics,
+  mode,
+  summary,
+  title,
+  visual,
+}: {
+  controls: ReactNode
+  dossier: ReactNode
+  evidence: ReactNode
+  icon: typeof MonitorDot
+  label: string
+  metrics: SpatialMetric[]
+  mode: 'sources' | 'market' | 'infrastructure' | 'dossiers' | 'coverage' | 'settings'
+  summary: string
+  title: string
+  visual: ReactNode
+}) {
+  return (
+    <section className={`spatial-route spatial-route-${mode} atlasz-workbench`} aria-label={title}>
+      <header className="spatial-route-head">
+        <div className="spatial-route-title">
+          <span>
+            <Icon size={15} />
+            {label}
+          </span>
+          <h1>{title}</h1>
+          <p>{summary}</p>
+        </div>
+        <div className="spatial-route-metrics" aria-label={`${label} route status`}>
+          {metrics.map((metric) => (
+            <div className={`spatial-route-metric tone-${metric.tone ?? 'neutral'}`} key={metric.label}>
+              <span>{metric.label}</span>
+              <strong>{metric.value}</strong>
+            </div>
+          ))}
+        </div>
+      </header>
+      <aside className="spatial-route-controls">{controls}</aside>
+      <section className="spatial-route-visual">{visual}</section>
+      <aside className="spatial-route-dossier">{dossier}</aside>
+      <section className="spatial-route-evidence">{evidence}</section>
+    </section>
+  )
+}
+
+const spatialLayerControls: Array<{
+  id: string
+  label: string
+  detail: string
+  layerId: LayerId
+  icon: typeof MonitorDot
+}> = [
+  { id: 'events', label: 'Events', detail: 'Normalized event surface', layerId: 'news', icon: RadioTower },
+  { id: 'markets', label: 'Markets', detail: 'Prices, ETFs, and asset links', layerId: 'market', icon: LineChart },
+  { id: 'cyber', label: 'Cyber', detail: 'Vulnerability and risk overlays', layerId: 'risk', icon: ShieldAlert },
+  { id: 'infrastructure', label: 'Infrastructure', detail: 'Facilities and exposure paths', layerId: 'exposure', icon: Layers3 },
+  { id: 'energy', label: 'Energy', detail: 'Commodity and facility context', layerId: 'commodity', icon: Activity },
+  { id: 'supply-chain', label: 'Supply Chain', detail: 'Ports, trade, and route context', layerId: 'trade', icon: GitBranch },
+  { id: 'research', label: 'Research', detail: 'Macro and research context', layerId: 'macro', icon: BookOpen },
+  { id: 'government', label: 'Government', detail: 'Policy and regulatory context', layerId: 'politics', icon: NotebookPen },
+  { id: 'sources', label: 'Sources', detail: 'Evidence and trail opacity', layerId: 'sources', icon: Database },
+]
+
+function SpatialLayerConsole({
+  activeLayerIds,
+  eventCount,
+  onSelectTimeWindow,
+  onToggleLayer,
+  selectedTimeWindow,
+  sourceStatusCounts,
+}: {
+  activeLayerIds: LayerId[]
+  eventCount: number
+  onSelectTimeWindow: (timeWindowId: TimeWindowId) => void
+  onToggleLayer: (layerId: LayerId) => void
+  selectedTimeWindow: TimeWindowId
+  sourceStatusCounts: ReturnType<typeof countSourceStatuses>
+}) {
+  return (
+    <article className="panel spatial-layer-console">
+      <PanelHeader icon={Layers3} label="Layers" title="Operational overlays" />
+      <div className="spatial-layer-stack">
+        {spatialLayerControls.map((layer) => {
+          const Icon = layer.icon
+          const active = activeLayerIds.includes(layer.layerId)
+          return (
+            <button
+              className={active ? 'spatial-layer-control active' : 'spatial-layer-control'}
+              key={layer.id}
+              type="button"
+              onClick={() => onToggleLayer(layer.layerId)}
+            >
+              <Icon size={15} />
+              <strong>{layer.label}</strong>
+              <span>{layer.detail}</span>
+            </button>
+          )
+        })}
+      </div>
+      <div className="spatial-time-console" aria-label="Replay window">
+        {timeWindows.map((window) => (
+          <button
+            className={selectedTimeWindow === window.id ? 'active' : ''}
+            key={window.id}
+            type="button"
+            onClick={() => onSelectTimeWindow(window.id)}
+          >
+            {window.label}
+          </button>
+        ))}
+      </div>
+      <div className="spatial-console-foot">
+        <span>{eventCount} events in view</span>
+        <span>{sourceStatusCounts.online}/{sourceStatusCounts.total} sources online</span>
+      </div>
+    </article>
+  )
+}
+
+function SourceConstellation({
+  sourceStatusCounts,
+  snapshot,
+}: {
+  sourceStatusCounts: ReturnType<typeof countSourceStatuses>
+  snapshot: WorldIntelSnapshot
+}) {
+  const [selectedSourceId, setSelectedSourceId] = useState(snapshot.sources[0]?.sourceId ?? '')
+  const selectedSource = snapshot.sources.find((source) => source.sourceId === selectedSourceId) ?? snapshot.sources[0]
+  const groups = useMemo(() => groupSourcesForConstellation(snapshot.sources), [snapshot.sources])
+
+  return (
+    <article className="panel source-constellation">
+      <PanelHeader icon={CircleDotDashed} label="Source Ops" title="Health by source category" />
+      <div className="source-constellation-summary">
+        <strong>{sourceStatusCounts.online}/{sourceStatusCounts.total}</strong>
+        <span>online</span>
+        <em>{sourceStatusCounts.stale + sourceStatusCounts.failed} need attention</em>
+      </div>
+      <div className="source-orbit" aria-label="Source constellation">
+        {groups.length === 0 && (
+          <div className="empty-state">No source registry is available from current sources.</div>
+        )}
+        {groups.map((group) => (
+          <div className="source-orbit-group" key={group.category}>
+            <span>{group.category}</span>
+            <div>
+              {group.sources.map((source) => (
+                <button
+                  aria-label={`Inspect ${source.sourceName}`}
+                  className={`source-star status-${source.status}${selectedSource?.sourceId === source.sourceId ? ' active' : ''}`}
+                  key={source.sourceId}
+                  title={`${source.sourceName} · ${source.status}`}
+                  type="button"
+                  onClick={() => setSelectedSourceId(source.sourceId)}
+                >
+                  <span />
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      {selectedSource && (
+        <div className="source-proof-card">
+          <header>
+            <strong>{selectedSource.sourceName}</strong>
+            <ProvenanceBadge value={selectedSource.provenance} size="sm" />
+          </header>
+          <div className="source-proof-grid">
+            <span>Status</span>
+            <strong>{selectedSource.status}</strong>
+            <span>Freshness</span>
+            <strong>{formatFreshness(selectedSource.lastSuccessAt ?? selectedSource.lastAttemptAt)}</strong>
+            <span>Records</span>
+            <strong>{selectedSource.itemCount}</strong>
+            <span>Proof</span>
+            <strong>{selectedSource.sourceType}</strong>
+          </div>
+          {selectedSource.lastError && <p>{selectedSource.lastError}</p>}
+        </div>
+      )}
+    </article>
+  )
+}
+
+function CoverageStateConsole({ snapshot }: { snapshot: WorldIntelSnapshot }) {
+  const audit = useMemo(() => {
+    const connectorRows = buildConnectorAudit({ sources: snapshot.sources, events: snapshot.worldEvents })
+    return buildCoverageAudit({ connectorRows })
+  }, [snapshot.sources, snapshot.worldEvents])
+  const states: SpatialMetric[] = [
+    { label: 'Unlocked', value: audit.summary.covered, tone: 'ok' },
+    { label: 'Locked', value: audit.summary.keyGatedUnconfigured, tone: 'warn' },
+    { label: 'Missing', value: audit.summary.missing, tone: 'bad' },
+    { label: 'Stale', value: audit.summary.staleOrFailed, tone: 'bad' },
+    { label: 'Media-only', value: audit.summary.mediaObservation, tone: 'muted' },
+    { label: 'Curated-only', value: audit.summary.curatedReference, tone: 'muted' },
+  ]
+
+  return (
+    <article className="panel coverage-state-console">
+      <PanelHeader icon={CheckCircle2} label="Coverage" title="Truth-state legend" />
+      <div className="coverage-state-grid">
+        {states.map((state) => (
+          <div className={`coverage-state tone-${state.tone ?? 'neutral'}`} key={state.label}>
+            <strong>{state.value}</strong>
+            <span>{state.label}</span>
+          </div>
+        ))}
+      </div>
+      <div className="coverage-state-note">
+        <span>{audit.summary.realtime} realtime or near-realtime</span>
+        <span>{audit.summary.highRelevanceMissing} high-impact missing</span>
+      </div>
+    </article>
+  )
+}
+
+function SettingsStatusConsole({
+  pulseEnabled,
+  realtimeTrust,
+  sourceStatusCounts,
+  worldSnapshot,
+  worldTrust,
+}: {
+  pulseEnabled: boolean
+  realtimeTrust: string
+  sourceStatusCounts: ReturnType<typeof countSourceStatuses>
+  worldSnapshot: WorldIntelSnapshot
+  worldTrust: string
+}) {
+  return (
+    <article className="panel settings-status-console">
+      <PanelHeader icon={MonitorDot} label="Workspace" title="Local intelligence terminal status" />
+      <div className="settings-status-radar" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+      <div className="settings-status-grid">
+        <div>
+          <span>World evidence</span>
+          <ProvenanceBadge value={worldTrust} />
+          <strong>{formatFreshness(worldSnapshot.updatedAt)}</strong>
+        </div>
+        <div>
+          <span>Live pulse</span>
+          <ProvenanceBadge value={realtimeTrust} />
+          <strong>{pulseEnabled ? 'On' : 'Off'}</strong>
+        </div>
+        <div>
+          <span>Sources</span>
+          <strong>{sourceStatusCounts.online}/{sourceStatusCounts.total}</strong>
+          <em>{sourceStatusCounts.disabled} locked</em>
+        </div>
+        <div>
+          <span>Events</span>
+          <strong>{worldSnapshot.worldEvents.length}</strong>
+          <em>{worldSnapshot.rawSourceItems.length} source records</em>
+        </div>
+      </div>
+    </article>
+  )
+}
+
+function groupSourcesForConstellation(sources: WorldIntelSnapshot['sources']) {
+  const groups = new Map<string, WorldIntelSnapshot['sources']>()
+  for (const source of sources) {
+    const category = sourceCategoryLabelForRoute(source)
+    groups.set(category, [...(groups.get(category) ?? []), source])
+  }
+
+  return [...groups.entries()]
+    .map(([category, categorySources]) => ({
+      category,
+      sources: categorySources.sort((a, b) => a.sourceName.localeCompare(b.sourceName)),
+    }))
+    .sort((a, b) => a.category.localeCompare(b.category))
+}
+
+function sourceCategoryLabelForRoute(source: WorldIntelSnapshot['sources'][number]) {
+  const raw = `${source.category ?? source.sourceType}`.trim()
+  if (!raw) return 'Sources'
+  return raw
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .slice(0, 3)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
 }
 
 function GlobalOverview({

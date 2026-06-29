@@ -48,10 +48,12 @@ export function ConnectorActivationPanel({
   sources,
   events,
   now,
+  showTechnicalNames = false,
 }: {
   sources: OsintSourceSnapshot[]
   events: WorldIntelEvent[]
   now?: number
+  showTechnicalNames?: boolean
 }) {
   const rows = useMemo(() => buildConnectorAudit({ sources, events, now }), [events, now, sources])
   const activationRows = useMemo(
@@ -77,24 +79,24 @@ export function ConnectorActivationPanel({
         <div className="activation-summary" aria-label="Connector activation summary">
           <ActivationPill label="online" value={summary.online} tone="ok" />
           <ActivationPill label="configured" value={summary.configured} tone="neutral" />
-          <ActivationPill label="needs config" value={summary.missing} tone="warn" />
+          <ActivationPill label="needs setup" value={summary.missing} tone="warn" />
           <ActivationPill label="failing" value={summary.failing} tone="bad" />
         </div>
       </header>
 
       <div className="activation-rule">
         <ShieldCheck size={14} />
-        <span>Keys stay local in .env. This panel shows env names and connector state only; values are never displayed.</span>
+        <span>Keys stay local. This panel shows connector state only; values are never displayed.</span>
       </div>
 
       <div className="activation-grid">
         {activationRows.map((row) => (
-          <ActivationRow key={row.id} row={row} />
+          <ActivationRow key={row.id} row={row} showTechnicalNames={showTechnicalNames} />
         ))}
       </div>
 
       <div className="activation-optional">
-        <h3>Configured-only / optional endpoints</h3>
+        <h3>Optional source overrides</h3>
         <div className="activation-grid">
           {OPTIONAL_ENDPOINTS.map((item) => (
             <article className="activation-row activation-row-optional" key={item.id}>
@@ -103,10 +105,10 @@ export function ConnectorActivationPanel({
                 <span>{item.expectedState}</span>
               </header>
               <div className="activation-env-list">
-                <code>{item.envName}</code>
+                <code>{showTechnicalNames ? item.envName : 'optional local source'}</code>
               </div>
               <p>{item.unlocks}</p>
-              <small>Accepted config: {item.officialHosts}</small>
+              <small>Accepted source: {item.officialHosts}</small>
             </article>
           ))}
         </div>
@@ -115,7 +117,17 @@ export function ConnectorActivationPanel({
   )
 }
 
-function ActivationRow({ row }: { row: ConnectorAuditRow }) {
+function ActivationRow({
+  row,
+  showTechnicalNames,
+}: {
+  row: ConnectorAuditRow
+  showTechnicalNames: boolean
+}) {
+  const keyLabels = showTechnicalNames
+    ? row.requiredEnv
+    : row.requiredEnv.map((_, index) => `local key ${index + 1}`)
+
   return (
     <article className={`activation-row activation-status-${row.status}`}>
       <header>
@@ -126,7 +138,7 @@ function ActivationRow({ row }: { row: ConnectorAuditRow }) {
         <em>{statusLabel(row.status, row.requiredEnv)}</em>
       </header>
       <div className="activation-env-list">
-        {row.requiredEnv.length > 0 ? row.requiredEnv.map((envName) => <code key={envName}>{envName}</code>) : <code>no key</code>}
+        {keyLabels.length > 0 ? keyLabels.map((label) => <code key={label}>{label}</code>) : <code>no key required</code>}
       </div>
       <p>{row.notes}</p>
       <footer>
@@ -137,7 +149,7 @@ function ActivationRow({ row }: { row: ConnectorAuditRow }) {
         <span>{row.sourceTrailUi}</span>
         <span>{row.recordCount} records</span>
       </footer>
-      {row.missingReason ? <small>{row.missingReason}</small> : null}
+      {row.missingReason ? <small>{showTechnicalNames ? row.missingReason : operatorActivationText(row.missingReason)}</small> : null}
     </article>
   )
 }
@@ -169,16 +181,23 @@ function summarizeActivation(rows: ConnectorAuditRow[]) {
 }
 
 function statusLabel(status: ConnectorRuntimeStatus, requiredEnv: string[]): string {
-  if (status === 'missing-key') return requiredEnv.some((envName) => envName.endsWith('_URL')) ? 'configured-only URL missing' : 'missing-key'
+  if (status === 'missing-key') return requiredEnv.some((envName) => envName.endsWith('_URL')) ? 'needs source URL' : 'needs key'
   if (status === 'pending-first-fetch') return 'configured'
   if (status === 'rate-limited') return 'rate-limited'
-  if (status === 'not-wired') return 'not wired'
+  if (status === 'not-wired') return 'not connected'
   return status
 }
 
 function accessLabel(row: ConnectorAuditRow): string {
-  if (row.access === 'user-agent-gated') return 'requires contact User-Agent'
-  if (row.access === 'key-gated') return 'requires local config'
+  if (row.access === 'user-agent-gated') return 'requires contact identity'
+  if (row.access === 'key-gated') return 'requires local setup'
   if (row.access === 'optional-key') return 'optional key'
   return 'public'
+}
+
+function operatorActivationText(value: string): string {
+  return value
+    .replace(/ATLASZ_[A-Z0-9_]+(?:,\s*ATLASZ_[A-Z0-9_]+)*/g, 'local provider keys')
+    .replace(/ATLASZ_[A-Z0-9_]+/g, 'local provider key')
+    .replace(/\bconfig\b/gi, 'setup')
 }

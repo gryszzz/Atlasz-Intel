@@ -34,7 +34,7 @@ export function ConnectorDashboardPanel({
           <SummaryPill label="pending poll" value={summary.pending} tone="neutral" />
           <SummaryPill label="needs key" value={summary.missingKey} tone="warn" />
           <SummaryPill label="stale/fail" value={summary.staleOrFailed} tone="bad" />
-          <SummaryPill label="not wired" value={summary.notWired} tone="muted" />
+          <SummaryPill label="not connected" value={summary.notWired} tone="muted" />
         </div>
       </header>
 
@@ -43,8 +43,8 @@ export function ConnectorDashboardPanel({
           <span role="columnheader">Source</span>
           <span role="columnheader">Status</span>
           <span role="columnheader">Records</span>
-          <span role="columnheader">Persistence</span>
-          <span role="columnheader">Resolver / Exposure</span>
+          <span role="columnheader">Storage</span>
+          <span role="columnheader">Context / Exposure</span>
           <span role="columnheader">Trail</span>
         </div>
         {rows.map((row) => (
@@ -56,6 +56,9 @@ export function ConnectorDashboardPanel({
 }
 
 function ConnectorRow({ row }: { row: ConnectorAuditRow }) {
+  const requiredKeyLabel =
+    row.requiredEnv.length === 0 ? null : `${row.requiredEnv.length} local key${row.requiredEnv.length === 1 ? '' : 's'} required`
+
   return (
     <article className={`connector-table-row connector-status-${row.status}`} role="row">
       <div className="connector-source" role="cell">
@@ -68,22 +71,20 @@ function ConnectorRow({ row }: { row: ConnectorAuditRow }) {
             <ProvenanceBadge value={row.trust} size="sm" />
           )}
           <span>{accessLabel(row.access)}</span>
-          {row.requiredEnv.length > 0 && <code>{row.requiredEnv.join(' · ')}</code>}
+          {requiredKeyLabel && <code>{requiredKeyLabel}</code>}
         </div>
       </div>
       <div className="connector-state" role="cell">
         <span className="connector-state-chip">{statusLabel(row.status)}</span>
-        <small>{row.lastSuccessfulFetch ? `last ${formatAge(row.lastSuccessfulFetch)}` : row.missingReason ?? 'no successful fetch yet'}</small>
-        {row.lastError && <em title={row.lastError}>{row.lastError}</em>}
+        <small>{row.lastSuccessfulFetch ? `last ${formatAge(row.lastSuccessfulFetch)}` : row.missingReason ? operatorConnectorText(row.missingReason) : 'no successful fetch yet'}</small>
+        {row.lastError && <em title={operatorConnectorText(row.lastError)}>{operatorConnectorText(row.lastError)}</em>}
       </div>
       <div className="connector-count" role="cell">
         <strong>{row.recordCount}</strong>
         <small>{row.activeSourceCount} source snapshot{row.activeSourceCount === 1 ? '' : 's'}</small>
       </div>
       <div className="connector-list" role="cell">
-        {row.persistenceTables.map((table) => (
-          <code key={table}>{table}</code>
-        ))}
+        <span>{row.persistenceTables.length > 0 ? `${row.persistenceTables.length} storage surface${row.persistenceTables.length === 1 ? '' : 's'}` : 'not stored yet'}</span>
       </div>
       <div className="connector-list" role="cell">
         <span>{row.resolverSupport}</span>
@@ -130,7 +131,7 @@ function summarize(rows: ConnectorAuditRow[]) {
 
 function statusLabel(status: ConnectorRuntimeStatus): string {
   if (status === 'missing-key') return 'missing key'
-  if (status === 'not-wired') return 'not wired'
+  if (status === 'not-wired') return 'not connected'
   if (status === 'pending-first-fetch') return 'pending poll'
   if (status === 'rate-limited') return 'rate limited'
   return status
@@ -142,6 +143,13 @@ function accessLabel(access: ConnectorAuditRow['access']): string {
   if (access === 'optional-key') return 'optional key'
   if (access === 'candidate') return 'candidate'
   return 'public'
+}
+
+function operatorConnectorText(value: string): string {
+  return value
+    .replace(/ATLASZ_[A-Z0-9_]+(?:,\s*ATLASZ_[A-Z0-9_]+)*/g, 'local provider keys')
+    .replace(/ATLASZ_[A-Z0-9_]+/g, 'local provider key')
+    .replace(/\bconfig\b/gi, 'setup')
 }
 
 function formatAge(timestamp: number): string {

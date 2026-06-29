@@ -1,6 +1,6 @@
 # Runtime Verification Log
 
-**Generated:** 2026-06-29T19:31:41.970Z
+**Generated:** 2026-06-29T20:34:02.279Z
 **Command:** `npx tsx scripts/runtimeVerification.mts`
 **Result:** 13/13 checks passed
 **Persistence:** node:sqlite (with JSON fallback)
@@ -43,7 +43,7 @@
 | usgs-earthquakes | impl | public | - | public | online | 19 | yes | yes | n/a | partial | yes |
 | un-comtrade | impl | key-gated | ATLASZ_UN_COMTRADE_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | no | no |
 | openalex-works | impl | public | - | public | rate-limited | 0 | n/a | n/a | n/a | no | no |
-| crossref-works | impl | public | - | public | failed | 0 | n/a | n/a | n/a | no | no |
+| crossref-works | impl | public | - | public | online | 22 | yes | yes | n/a | no | no |
 | uspto | impl | key-gated | ATLASZ_PATENTSVIEW_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
 | github-releases | impl | public | - | public | online | 15 | yes | yes | n/a | yes | yes |
 | arxiv-ai | impl | public | - | public | online | 20 | yes | yes | n/a | no | no |

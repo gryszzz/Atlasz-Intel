@@ -36,7 +36,7 @@ const PROVIDER_STATUS_LABEL: Record<ProviderCapabilityStatus, string> = {
   available: 'available',
   unavailable: 'unavailable',
   'auth-gated': 'auth-gated',
-  'missing-config': 'missing-config',
+  'missing-config': 'needs setup',
   'rate-limited': 'rate-limited',
   unsupported: 'unsupported',
 }
@@ -125,7 +125,7 @@ export function SourceHealthView({
             }}
           >
             <Signal size={15} />
-            Discover Providers
+            Check Providers
           </button>
           <button
             className="ghost-button"
@@ -136,7 +136,7 @@ export function SourceHealthView({
             }}
           >
             {refreshControl.autoRefreshPaused ? <Play size={15} /> : <Pause size={15} />}
-            {refreshControl.autoRefreshPaused ? 'Resume Loop' : 'Pause Loop'}
+            {refreshControl.autoRefreshPaused ? 'Resume Refresh' : 'Pause Refresh'}
           </button>
           <button
             className="ghost-button"
@@ -147,7 +147,7 @@ export function SourceHealthView({
             }}
           >
             <FolderOpen size={15} />
-            Open Config
+            Open Local Keys
           </button>
           <button
             className="ghost-button"
@@ -157,7 +157,7 @@ export function SourceHealthView({
             }}
           >
             <Copy size={15} />
-            Copy Missing Env
+            Copy Required Keys
           </button>
         </div>
       </header>
@@ -193,7 +193,7 @@ export function SourceHealthView({
           detail={
             providerSnapshot
               ? `${providerSnapshot.status} · ${providerSnapshot.lastDiscoveryAt ? formatAge(providerSnapshot.lastDiscoveryAt) : 'not checked'}`
-              : 'Auto-wiring registry'
+              : 'Provider catalog'
           }
           tone={availableProviderCount > 0 ? 'ok' : 'muted'}
         />
@@ -220,9 +220,9 @@ export function SourceHealthView({
       {providerSnapshot && (
         <section className="sh-group">
           <div className="sh-group-row">
-            <h3 className="sh-group-title">Provider auto-discovery</h3>
+            <h3 className="sh-group-title">Provider discovery</h3>
             <span className="sh-group-meta">
-              {providerSnapshot.configPath ? `config ${providerSnapshot.configPath}` : 'built-in catalog'}
+              {providerSnapshot.configPath ? 'local provider catalog' : 'built-in catalog'}
             </span>
           </div>
           {providerSnapshot.configErrors.length > 0 && (
@@ -238,7 +238,7 @@ export function SourceHealthView({
             ))}
           </div>
           <div className="sh-asset-availability">
-            <strong>Symbol auto-wiring</strong>
+            <strong>Symbol coverage</strong>
             {providerSnapshot.assetAvailability.length === 0 ? (
               <span>No discovered symbol mappings yet.</span>
             ) : (
@@ -300,13 +300,13 @@ function RefreshControlPanel({
         <RefreshMetric icon={Clock} label="Global cadence" value={formatDuration(control.cadenceMs)} detail="Checks due providers only" />
         <RefreshMetric icon={Clock} label="Next loop" value={formatFuture(control.nextScheduledRefreshAt)} detail="Background schedule" />
         <RefreshMetric icon={RefreshCw} label="Last started" value={formatAgeOptional(control.lastRefreshStartedAt)} detail="Manual or background" />
-        <RefreshMetric icon={RefreshCw} label="Last completed" value={formatAgeOptional(control.lastRefreshCompletedAt)} detail="No simulated fallback" />
+        <RefreshMetric icon={RefreshCw} label="Last completed" value={formatAgeOptional(control.lastRefreshCompletedAt)} detail="No substitute data" />
         <RefreshMetric icon={Signal} label="Due now" value={String(summary.dueNow.length)} detail={previewNames(duePreview)} tone={summary.dueNow.length > 0 ? 'warn' : 'ok'} />
         <RefreshMetric icon={Pause} label="Backed off" value={String(summary.backedOff.length)} detail={previewNames(backedOffPreview)} tone={summary.backedOff.length > 0 ? 'warn' : 'ok'} />
         <RefreshMetric icon={Clock} label="Not due" value={String(summary.notDue.length)} detail="Fresh within cadence/rate guard" />
         <RefreshMetric icon={Activity} label="Stale / expired" value={`${summary.stale.length}/${summary.expired.length}`} detail={previewNames(stalePreview)} tone={stalePreview.length > 0 ? 'warn' : 'ok'} />
         <RefreshMetric icon={Server} label="Failed / limited" value={`${summary.failed.length}/${summary.rateLimited.length}`} detail="Visible, never hidden" tone={summary.failed.length + summary.rateLimited.length > 0 ? 'warn' : 'ok'} />
-        <RefreshMetric icon={FolderOpen} label="Skipped config" value={String(summary.missingKey.length)} detail="Missing-key/config-only rows" tone={summary.missingKey.length > 0 ? 'muted' : 'ok'} />
+        <RefreshMetric icon={FolderOpen} label="Locked" value={String(summary.missingKey.length)} detail="Keys or setup required" tone={summary.missingKey.length > 0 ? 'muted' : 'ok'} />
       </div>
     </section>
   )
@@ -340,8 +340,8 @@ function RefreshMetric({
 function ProviderTile({ provider }: { provider: ProviderCapability }) {
   const envDetail =
     provider.envKeysRequired.length === 0
-      ? 'no credentials'
-      : `${provider.envKeysPresent.length}/${provider.envKeysRequired.length} env present`
+      ? 'no key required'
+      : `${provider.envKeysPresent.length}/${provider.envKeysRequired.length} keys present`
   const symbolPreview = provider.supportedSymbols.slice(0, 8)
 
   return (
@@ -360,7 +360,7 @@ function ProviderTile({ provider }: { provider: ProviderCapability }) {
           </span>
         ))}
         <span className={provider.autoWired ? 'sh-auto-wired' : 'sh-config-missing'}>
-          {provider.autoWired ? 'auto-wired' : envDetail}
+          {provider.autoWired ? 'ready' : envDetail}
         </span>
       </div>
       <dl className="sh-connector-meta">
@@ -430,7 +430,7 @@ function ConnectorTile({ source }: { source: OsintSourceSnapshot }) {
         <ProvenanceBadge value={source.provenance} size="sm" />
         <span className="sh-endpoint">{source.endpointType}</span>
         <span className={`sh-refresh-pill refresh-${refreshState}`}>{REFRESH_LABEL[refreshState]}</span>
-        {!source.enabled && <span className="sh-config-missing">config missing / fail-closed</span>}
+        {!source.enabled && <span className="sh-config-missing">locked / fail-closed</span>}
       </div>
       <dl className="sh-connector-meta">
         <div>
@@ -484,7 +484,7 @@ function summarizeRefresh(sources: OsintSourceSnapshot[]): RefreshSummary {
 
 function previewNames(sources: OsintSourceSnapshot[]): string {
   if (sources.length === 0) return 'none'
-  return sources.map((source) => source.sourceId).join(' · ')
+  return sources.map((source) => source.sourceName).join(' · ')
 }
 
 function groupSources(sources: OsintSourceSnapshot[]): SourceGroup[] {

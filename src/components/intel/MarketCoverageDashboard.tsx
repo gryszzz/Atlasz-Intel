@@ -219,7 +219,7 @@ function buildDataCatalogRows(connectorRows: ConnectorAuditRow[], items: Coverag
       entities: unique(linkedItems.flatMap((item) => item.entityKinds)),
       proofFields: unique(linkedItems.flatMap((item) => item.expectedProofFields)).slice(0, 6),
       cadence: unique(linkedItems.map((item) => item.cadence)).join('/') || row.cadence,
-      configState: row.requiredEnv.length > 0 ? row.requiredEnv.join(' + ') : accessLabel(row.access),
+      configState: row.requiredEnv.length > 0 ? `${row.requiredEnv.length} local key${row.requiredEnv.length === 1 ? '' : 's'} required` : accessLabel(row.access),
       surfaces,
       status: row.status,
     }
@@ -253,10 +253,19 @@ function CoverageRow({ item }: { item: CoverageAuditItem }) {
       </div>
       <div className="cov-row-detail">
         {item.connectors.length > 0 ? <span className="cov-conn">{item.connectors.join(', ')}</span> : null}
-        {item.missingReason ? <em className="cov-missing">{item.missingReason}</em> : <span className="cov-note">{item.notes}</span>}
+        {item.missingReason ? <em className="cov-missing">{operatorCoverageText(item.missingReason)}</em> : <span className="cov-note">{operatorCoverageText(item.notes)}</span>}
       </div>
     </li>
   )
+}
+
+function operatorCoverageText(value: string): string {
+  return value
+    .replace(/ATLASZ_[A-Z0-9_]+(?:\s*\+\s*ATLASZ_[A-Z0-9_]+)*/g, 'local provider keys')
+    .replace(/Fail-closed\s*->/g, 'Fail-closed:')
+    .replace(/\bprovider wired\b/gi, 'source connected')
+    .replace(/\bproviders? wired\b/gi, 'sources connected')
+    .replace(/\bprovider\b/gi, 'source')
 }
 
 function Chip({ label, value, tone }: { label: string; value: number; tone: string }) {

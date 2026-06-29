@@ -4226,6 +4226,755 @@ body {
   white-space: nowrap;
 }
 
+/* Route-wide spatial terminal shell. */
+.spatial-route {
+  position: relative;
+  display: grid;
+  grid-template-areas:
+    "head head head"
+    "controls visual dossier"
+    "evidence evidence evidence";
+  grid-template-columns: minmax(220px, 0.24fr) minmax(0, 1fr) minmax(286px, 0.3fr);
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background:
+    linear-gradient(90deg, rgba(94, 234, 212, 0.045), transparent 24%, rgba(59, 130, 246, 0.04) 72%, transparent),
+    radial-gradient(circle at 50% 24%, rgba(59, 130, 246, 0.14), transparent 34%),
+    #040706;
+  padding: 10px;
+}
+
+.spatial-route::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background-image:
+    linear-gradient(rgba(94, 234, 212, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(94, 234, 212, 0.03) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 82%);
+}
+
+.spatial-route > * {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.spatial-route-head {
+  grid-area: head;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.58fr);
+  gap: 10px;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.spatial-route-title,
+.spatial-route-metrics,
+.spatial-route-controls,
+.spatial-route-visual,
+.spatial-route-dossier,
+.spatial-route-evidence {
+  min-width: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: rgba(6, 10, 9, 0.88);
+}
+
+.spatial-route-title {
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  padding: 12px;
+}
+
+.spatial-route-title span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.spatial-route-title h1 {
+  margin: 0;
+  color: var(--white);
+  font-size: clamp(20px, 2.2vw, 32px);
+  line-height: 1.05;
+}
+
+.spatial-route-title p {
+  max-width: 74ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.spatial-route-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+}
+
+.spatial-route-metric {
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  min-width: 0;
+  border-left: 1px solid var(--line-soft);
+  padding: 10px;
+}
+
+.spatial-route-metric span,
+.coverage-state span,
+.spatial-console-foot span,
+.source-constellation-summary span,
+.source-constellation-summary em,
+.source-proof-grid span,
+.settings-status-grid span,
+.settings-proof-stack span {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.spatial-route-metric strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tone-ok strong,
+.tone-ok > strong {
+  color: var(--green);
+}
+
+.tone-warn strong,
+.tone-warn > strong {
+  color: var(--yellow);
+}
+
+.tone-bad strong,
+.tone-bad > strong {
+  color: var(--red);
+}
+
+.tone-muted strong,
+.tone-muted > strong {
+  color: var(--muted);
+}
+
+.spatial-route-controls {
+  grid-area: controls;
+}
+
+.spatial-route-visual {
+  grid-area: visual;
+}
+
+.spatial-route-dossier {
+  grid-area: dossier;
+}
+
+.spatial-route-evidence {
+  grid-area: evidence;
+}
+
+.spatial-route-controls,
+.spatial-route-dossier {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  max-height: calc(100dvh - 190px);
+  overflow: auto;
+  padding: 10px;
+}
+
+.spatial-route-visual {
+  display: grid;
+  min-height: min(620px, calc(100dvh - 190px));
+  overflow: hidden;
+  padding: 10px;
+}
+
+.spatial-route-evidence {
+  display: grid;
+  gap: 10px;
+  max-height: min(42dvh, 430px);
+  overflow: auto;
+  padding: 10px;
+}
+
+.spatial-route .panel,
+.spatial-route .source-health,
+.spatial-route .connector-dashboard,
+.spatial-route .activation-panel,
+.spatial-route .cov-dash {
+  border-color: rgba(94, 234, 212, 0.14);
+  background: rgba(7, 11, 10, 0.92);
+}
+
+.spatial-route-visual > .panel,
+.spatial-primary-panel {
+  height: 100%;
+}
+
+.spatial-primary-panel .chart-frame,
+.infrastructure-map-panel .pulse-stage,
+.infrastructure-map-panel .globe-viewport {
+  min-height: clamp(420px, 54dvh, 680px);
+}
+
+.spatial-route .layer-matrix {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: rgba(7, 11, 10, 0.92);
+  padding: 10px;
+}
+
+.spatial-route .layer-chip-grid {
+  grid-template-columns: 1fr;
+}
+
+.spatial-route .event-layer-stack {
+  max-height: 280px;
+  overflow: auto;
+}
+
+.spatial-layer-console {
+  gap: 10px;
+}
+
+.spatial-layer-stack {
+  display: grid;
+  gap: 7px;
+}
+
+.spatial-layer-control {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 3px 8px;
+  align-items: center;
+  min-width: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: #0b100f;
+  color: var(--text);
+  padding: 9px;
+  text-align: left;
+}
+
+.spatial-layer-control svg {
+  color: var(--muted);
+}
+
+.spatial-layer-control strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--white);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spatial-layer-control span {
+  grid-column: 2;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.spatial-layer-control.active {
+  border-color: rgba(94, 234, 212, 0.5);
+  background: #10201c;
+}
+
+.spatial-layer-control.active svg {
+  color: var(--green);
+}
+
+.spatial-time-console {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.spatial-time-console button {
+  min-width: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: #0b100f;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  padding: 7px 6px;
+}
+
+.spatial-time-console button.active {
+  border-color: rgba(94, 234, 212, 0.5);
+  color: var(--green);
+}
+
+.spatial-console-foot {
+  display: grid;
+  gap: 5px;
+  border-top: 1px solid var(--line-soft);
+  padding-top: 8px;
+}
+
+.source-constellation {
+  gap: 10px;
+}
+
+.source-constellation-summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 8px;
+  align-items: end;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: #08100e;
+  padding: 10px;
+}
+
+.source-constellation-summary strong {
+  color: var(--green);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.source-constellation-summary em {
+  grid-column: 1 / -1;
+  color: var(--yellow);
+  font-style: normal;
+}
+
+.source-orbit {
+  display: grid;
+  gap: 9px;
+}
+
+.source-orbit-group {
+  display: grid;
+  gap: 6px;
+}
+
+.source-orbit-group > span {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.source-orbit-group > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background:
+    linear-gradient(90deg, rgba(94, 234, 212, 0.08), transparent),
+    #080d0c;
+  padding: 8px;
+}
+
+.source-star {
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 50%;
+  background: #111614;
+  padding: 0;
+}
+
+.source-star span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.source-star.status-online {
+  border-color: rgba(94, 234, 212, 0.55);
+}
+
+.source-star.status-online span {
+  background: var(--green);
+}
+
+.source-star.status-failed span {
+  background: var(--red);
+}
+
+.source-star.status-disabled span {
+  background: var(--muted);
+}
+
+.source-star.status-offline span,
+.source-star.status-rate-limited span {
+  background: var(--yellow);
+}
+
+.source-star.active {
+  box-shadow: 0 0 0 2px rgba(94, 234, 212, 0.24);
+}
+
+.source-proof-card {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: #0b100f;
+  padding: 10px;
+}
+
+.source-proof-card header {
+  display: grid;
+  gap: 7px;
+}
+
+.source-proof-card header strong,
+.settings-status-grid strong,
+.settings-proof-stack strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--white);
+}
+
+.source-proof-grid {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px 10px;
+}
+
+.source-proof-card p {
+  margin: 0;
+  color: var(--red);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.coverage-state-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.coverage-state {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: #0b100f;
+  padding: 9px;
+}
+
+.coverage-state strong {
+  font-size: 22px;
+}
+
+.coverage-state-note {
+  display: grid;
+  gap: 6px;
+  border-top: 1px solid var(--line-soft);
+  padding-top: 9px;
+}
+
+.coverage-state-note span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.market-evidence-desk {
+  align-content: start;
+}
+
+.market-volume-frame {
+  min-height: 220px;
+}
+
+.market-source-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.market-source-grid > * {
+  min-width: 0;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.settings-status-console {
+  position: relative;
+  overflow: hidden;
+}
+
+.settings-status-radar {
+  position: relative;
+  min-height: 220px;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background:
+    linear-gradient(90deg, transparent 49%, rgba(94, 234, 212, 0.2) 50%, transparent 51%),
+    linear-gradient(0deg, transparent 49%, rgba(94, 234, 212, 0.16) 50%, transparent 51%),
+    radial-gradient(circle at center, transparent 0 28%, rgba(94, 234, 212, 0.18) 29% 30%, transparent 31% 52%, rgba(59, 130, 246, 0.18) 53% 54%, transparent 55%),
+    #050908;
+}
+
+.settings-status-radar span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 46%;
+  height: 1px;
+  transform-origin: left center;
+  background: linear-gradient(90deg, rgba(94, 234, 212, 0.8), transparent);
+}
+
+.settings-status-radar span:nth-child(1) {
+  transform: rotate(16deg);
+}
+
+.settings-status-radar span:nth-child(2) {
+  transform: rotate(128deg);
+}
+
+.settings-status-radar span:nth-child(3) {
+  transform: rotate(248deg);
+}
+
+.settings-status-grid,
+.settings-proof-stack {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.settings-status-grid div,
+.settings-proof-stack div {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  min-width: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: #0b100f;
+  padding: 10px;
+}
+
+.settings-status-grid em,
+.settings-proof-stack em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.settings-advanced-panel {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: rgba(7, 11, 10, 0.92);
+  padding: 10px;
+}
+
+.settings-advanced-panel summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  cursor: pointer;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: #0b100f;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  list-style: none;
+  padding: 8px 10px;
+  text-transform: uppercase;
+}
+
+.settings-advanced-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+.settings-advanced-panel[open] summary {
+  border-color: rgba(94, 234, 212, 0.42);
+  color: var(--green);
+}
+
+.settings-advanced-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.45fr);
+  gap: 10px;
+  min-width: 0;
+}
+
+.drawer-collapsed .spatial-route {
+  grid-template-areas:
+    "head head"
+    "controls visual"
+    "evidence evidence";
+  grid-template-columns: minmax(220px, 0.26fr) minmax(0, 1fr);
+}
+
+.drawer-collapsed .spatial-route-dossier {
+  display: none;
+}
+
+.evidence-desk-collapsed .spatial-route-evidence {
+  display: none;
+}
+
+@media (max-width: 1180px) {
+  .spatial-route {
+    grid-template-areas:
+      "head head"
+      "controls visual"
+      "dossier dossier"
+      "evidence evidence";
+    grid-template-columns: minmax(210px, 0.32fr) minmax(0, 1fr);
+  }
+
+  .spatial-route-head,
+  .settings-advanced-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .spatial-route-dossier,
+  .spatial-route-evidence {
+    max-height: none;
+  }
+
+  .drawer-collapsed .spatial-route {
+    grid-template-areas:
+      "head head"
+      "controls visual"
+      "evidence evidence";
+    grid-template-columns: minmax(210px, 0.32fr) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 820px) {
+  .spatial-route,
+  .drawer-collapsed .spatial-route {
+    grid-template-areas:
+      "head"
+      "visual"
+      "controls"
+      "dossier"
+      "evidence";
+    grid-template-columns: minmax(0, 1fr);
+    padding: 8px;
+  }
+
+  .spatial-route-head,
+  .spatial-route-metrics,
+  .market-source-grid,
+  .settings-status-grid,
+  .settings-proof-stack {
+    grid-template-columns: 1fr;
+  }
+
+  .spatial-route-title h1 {
+    font-size: 22px;
+  }
+
+  .spatial-route-controls,
+  .spatial-route-dossier,
+  .spatial-route-evidence,
+  .spatial-route-visual {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .spatial-route-visual {
+    min-height: 0;
+  }
+
+  .spatial-primary-panel .chart-frame,
+  .infrastructure-map-panel .pulse-stage,
+  .infrastructure-map-panel .globe-viewport {
+    min-height: 340px;
+  }
+
+  .spatial-time-console,
+  .coverage-state-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.ticker-tile,
+.ticker-tile > * {
+  min-width: 0;
+}
+
+.ticker-tile strong {
+  overflow-wrap: anywhere;
+  font-size: clamp(11px, 1.1vw, 15px);
+  line-height: 1.12;
+}
+
+.spatial-route-market .chart-stat-row {
+  grid-template-columns: minmax(0, 0.9fr) auto minmax(0, 1.5fr);
+}
+
+.spatial-route-market .chart-stat-row strong,
+.spatial-route-market .dossier-lead h3 {
+  overflow-wrap: anywhere;
+  font-size: clamp(20px, 2vw, 28px);
+  line-height: 1.14;
+}
+
+.spatial-route-dossier .connector-dashboard-head,
+.spatial-route-dossier .activation-head {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.spatial-route-dossier .connector-dashboard-head h2,
+.spatial-route-dossier .activation-head h2 {
+  overflow-wrap: anywhere;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.spatial-route .connector-badges code,
+.spatial-route .activation-env-list code {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
 @media (max-width: 1440px) {
   .topbar-actions {
     max-width: min(620px, 48vw);
