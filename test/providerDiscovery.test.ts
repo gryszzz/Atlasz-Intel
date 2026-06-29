@@ -76,6 +76,12 @@ describe('provider auto-discovery', () => {
       envKeysRequired: ['ATLASZ_EIA_API_KEY'],
       envKeysPresent: [],
     })
+    expect(snapshot.providers.find((provider) => provider.providerId === 'eia_bulk_public')).toMatchObject({
+      status: 'available',
+      autoWired: true,
+      envKeysRequired: [],
+      envKeysPresent: [],
+    })
     expect(snapshot.providers.find((provider) => provider.providerId === 'congress_gov_public')).toMatchObject({
       status: 'available',
       autoWired: true,

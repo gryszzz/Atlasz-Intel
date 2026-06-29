@@ -252,6 +252,23 @@ export const BUILTIN_PROVIDERS: ProviderDefinition[] = [
     legalSafetyNote: 'Official EIA Open Data API for allowlisted energy/commodity series. Requires ATLASZ_EIA_API_KEY; fail-closed without it. The api_key is never persisted in source trails.',
   },
   {
+    providerId: 'eia_bulk_public',
+    providerName: 'U.S. EIA public bulk reference',
+    category: 'macro',
+    adapter: 'eia-bulk-public',
+    enabled: true,
+    endpoint: 'https://www.eia.gov/opendata/bulk/manifest.txt',
+    authType: 'none',
+    pollIntervalMs: 6 * 60 * 60_000,
+    rateLimitGuardMs: 300_000,
+    timeoutMs: 12_000,
+    maxRetries: 0,
+    backoffMs: 1_000,
+    provenance: 'official-api',
+    legalSafetyNote:
+      'Official EIA public bulk files. No API key required, but this is a bounded public bulk reference subset only — not full EIA API coverage, not a facility/grid connector, and not a fake fallback for ATLASZ_EIA_API_KEY. ZIP streams are line-scanned with max row/byte guards; staleAt is explicit.',
+  },
+  {
     providerId: 'eia_power_plants_public',
     providerName: 'U.S. EIA power-plant facility inventory',
     category: 'macro',

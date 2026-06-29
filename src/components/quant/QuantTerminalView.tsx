@@ -366,7 +366,7 @@ export function EiaEnergyContextCards({ records }: { records: EiaEnergyRecord[] 
                 </a>
                 <a href={record.sourceApiUrl} target="_blank" rel="noreferrer">
                   <Link2 size={12} />
-                  Official API URL
+                  {record.sourceApiUrl.includes('/opendata/bulk/') ? 'EIA public bulk URL' : 'Official API URL'}
                 </a>
               </div>
             </article>
@@ -375,7 +375,7 @@ export function EiaEnergyContextCards({ records }: { records: EiaEnergyRecord[] 
       ) : (
         <div className="eia-context-unavailable">
           <strong>{QUANT_UNAVAILABLE}</strong>
-          <p>EIA energy records unavailable. Configure ATLASZ_EIA_API_KEY; no energy data or commodity alerts are simulated.</p>
+          <p>EIA energy records unavailable; no energy data or commodity alerts are simulated. Public bulk reference may be bounded or stale; authenticated API coverage still requires ATLASZ_EIA_API_KEY.</p>
         </div>
       )}
     </section>

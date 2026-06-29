@@ -27,6 +27,10 @@ The checker prints env-name presence only. It never prints secret values.
 | `ATLASZ_OPTIONS_UNDERLYINGS` | Options chain scope | <https://alpaca.markets/options> | local allowlist | deferred / missing scope | configured scope |
 | `ATLASZ_CROSSREF_MAILTO` | Crossref polite pool | <https://www.crossref.org/documentation/retrieve-metadata/rest-api/tips-for-using-the-crossref-rest-api/> | optional contact | public pool | polite pool; stripped from trails |
 
+EIA public bulk reference runs without an API key through `eia-bulk-public`.
+It is a bounded official ZIP/manifest subset only; it does not unlock the
+authenticated EIA API, power-plant, nuclear, grid, refinery, or LNG connectors.
+
 ## Configured Official URLs
 
 | Env var | Connector unlocked | Accepted hosts | Before config | After config |

@@ -130,7 +130,8 @@ Current runtime-capable paths remain public/official/local and fail-closed:
 - Treasury Fiscal Data
 - BLS Public Data API
 - BEA NIPA GDP when `ATLASZ_BEA_API_KEY` is configured
-- EIA energy series when `ATLASZ_EIA_API_KEY` is configured
+- EIA public bulk reference by default for a bounded no-key series subset
+- EIA authenticated API/facility/grid series when `ATLASZ_EIA_API_KEY` is configured
 - NOAA/NWS active alerts and USGS earthquake events
 - CISA KEV, NVD, GHSA, OSV, and CISA advisory defensive feeds
 - GitHub Releases for configured public repositories

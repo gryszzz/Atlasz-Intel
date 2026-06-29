@@ -32,6 +32,7 @@ export const PROVIDER_CAPABILITY_META: Record<string, ProviderCapabilityMeta> = 
   bls_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['macro-event'], supportedRegions: ['US'] },
   bea_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_BEA_API_KEY'], supportedEventTypes: ['macro-event'], supportedRegions: ['US'] },
   eia_energy_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_EIA_API_KEY'], supportedEventTypes: ['energy-event'], supportedRegions: ['US'] },
+  eia_bulk_public: { feedTypes: ['REST'], envKeysRequired: [], supportedEventTypes: ['energy-event'], supportedRegions: ['US'] },
   politician_disclosure_public: { feedTypes: ['REST'], envKeysRequired: ['ATLASZ_POLITICIAN_DISCLOSURE_URL'], supportedEventTypes: ['public-disclosure'], supportedRegions: ['US'] },
   rss_public_radar: { feedTypes: ['RSS'], envKeysRequired: [], supportedEventTypes: ['news'] },
   public_market_rest: { feedTypes: ['REST'], envKeysRequired: [], realtimeFeedType: 'REST' },

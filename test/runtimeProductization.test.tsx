@@ -103,14 +103,14 @@ describe('runtime productization audit', () => {
     const rows = buildConnectorAudit({ now: NOW, sources: [], events: [] })
 
     // Public implemented connectors that simply have not polled yet -> pending-first-fetch.
-    for (const id of ['fred', 'usgs-earthquakes', 'cisa-kev', 'nvd', 'treasury-fiscal', 'noaa-alerts', 'federal-register', 'ofac-sdn', 'gdelt-doc', 'crossref-works', 'market-reference-master', 'un-locode', 'usgs-minerals']) {
+    for (const id of ['fred', 'eia-bulk-public', 'usgs-earthquakes', 'cisa-kev', 'nvd', 'treasury-fiscal', 'noaa-alerts', 'federal-register', 'ofac-sdn', 'gdelt-doc', 'crossref-works', 'market-reference-master', 'un-locode', 'usgs-minerals']) {
       const row = rows.find((r) => r.id === id)
       expect(row?.status, id).toBe('pending-first-fetch')
       expect(row?.missingReason, id).toMatch(/waiting for first poll/i)
     }
 
     // Key-gated with no env key -> missing-key.
-    for (const id of ['eia', 'bea', 'uspto', 'un-comtrade', 'sec-form13f']) {
+    for (const id of ['eia', 'eia-power-plants', 'eia-nuclear', 'eia-balancing-authorities', 'bea', 'uspto', 'un-comtrade', 'sec-form13f']) {
       expect(rows.find((r) => r.id === id)?.status, id).toBe('missing-key')
     }
     for (const id of ['congress-gov', 'openalex-works']) {

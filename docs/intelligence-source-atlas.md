@@ -39,6 +39,7 @@ because it is listed here.
 | Government fiscal | Treasury Fiscal Data, Debt to the Penny | Official API -> fiscal record -> source trail -> macro/fiscal card -> graph. |
 | Labor/economic | BLS Public Data API | Official API -> BLS observation -> source trail -> macro-series graph node. |
 | Energy/commodities | EIA first energy allowlist | Official API -> energy record -> source trail -> commodity/energy graph node. |
+| Energy/commodities | EIA public bulk reference | Official no-key bulk ZIP/manifest -> bounded allowlisted energy record -> source trail -> commodity graph node. Not full EIA API coverage. |
 | Weather/natural events | NOAA/NWS active alerts, USGS earthquakes | Official APIs -> weather/quake event -> source trail -> timeline/evidence graph; unresolved exposure remains explicit. |
 | Cyber/vulnerability | CISA KEV, NVD, GHSA, OSV, CISA advisories | Defensive advisory/vulnerability records -> evidence graph/dossier/source trails. |
 | OSS technology | GitHub Releases | Official GitHub release metadata -> OSS technology timeline/source trail. |

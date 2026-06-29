@@ -26,6 +26,7 @@ import { fetchTreasuryFiscalData, readTreasuryFiscalConfig } from './adapters/tr
 import { fetchBlsObservations, readBlsConfig } from './adapters/blsAdapter'
 import { fetchBeaObservations, readBeaConfig } from './adapters/beaAdapter'
 import { fetchEiaEnergyRecords, readEiaEnergyConfig } from './adapters/eiaEnergyAdapter'
+import { fetchEiaBulkEnergyRecords, readEiaBulkConfig } from './adapters/eiaBulkAdapter'
 import { fetchEiaFacilities, readEiaFacilityConfig } from './adapters/eiaFacilityAdapter'
 import { fetchEiaRefineries, readEiaRefineryConfig } from './adapters/eiaRefineryAdapter'
 import { fetchLngTerminals, readLngTerminalConfig } from './adapters/lngTerminalAdapter'
@@ -76,6 +77,7 @@ export const KNOWN_ADAPTERS = [
   'bls',
   'bea',
   'eia-energy',
+  'eia-bulk-public',
   'eia-power-plants',
   'eia-refineries',
   'lng-terminals',
@@ -175,6 +177,10 @@ export function resolveAdapter(provider: ProviderDefinition, env: NodeJS.Process
     case 'eia-energy': {
       const config = readEiaEnergyConfig(env)
       return { fetcher: config ? (signal) => fetchEiaEnergyRecords(signal, config) : undefined, configured: config !== null, managed: false }
+    }
+    case 'eia-bulk-public': {
+      const config = readEiaBulkConfig(env)
+      return { fetcher: config ? (signal) => fetchEiaBulkEnergyRecords(signal, config) : undefined, configured: config !== null, managed: false }
     }
     case 'eia-power-plants': {
       const config = readEiaFacilityConfig(env)

@@ -860,6 +860,7 @@ export type EiaEnergyRecord = {
   sourceApiUrl: string
   sourceName: string
   retrievedAt: number
+  staleAt?: number
   provenance: ProvenanceId
   confidence: number
   rawPayloadHash: string

@@ -425,6 +425,9 @@ function endpointFor(provider: ProviderDefinition, env: NodeJS.ProcessEnv): stri
     const base = env.ATLASZ_EIA_API_BASE || 'https://api.eia.gov/v2'
     return `${base.replace(/\/$/, '')}/seriesid/PET.RWTC.D?length=1`
   }
+  if (provider.providerId === 'eia_bulk_public') {
+    return 'https://www.eia.gov/opendata/bulk/manifest.txt'
+  }
   if (provider.providerId === 'congress_gov_public') {
     return 'https://api.congress.gov/v3/bill?format=json&limit=1'
   }
