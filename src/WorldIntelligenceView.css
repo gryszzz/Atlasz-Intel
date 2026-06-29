@@ -2879,3 +2879,616 @@
     width: min(78vw, 720px);
   }
 }
+
+/* ===== Visual Pass 2: living Earth command layer ===== */
+.atlasz-worldwatch-workstation {
+  background:
+    radial-gradient(circle at 52% 46%, rgba(45, 212, 191, 0.11), transparent 23%),
+    radial-gradient(circle at 72% 15%, rgba(56, 189, 248, 0.10), transparent 18%),
+    radial-gradient(circle at 16% 70%, rgba(129, 140, 248, 0.07), transparent 20%),
+    linear-gradient(180deg, #020403, #06100e 48%, #020403);
+}
+
+.cockpit-body {
+  min-height: clamp(680px, calc(100dvh - 230px), 940px);
+}
+
+.cockpit-map-plane {
+  top: 52%;
+  width: min(66vw, 900px);
+  border-color: rgba(103, 232, 249, 0.20);
+  background:
+    radial-gradient(circle at var(--focus-x, 50%) var(--focus-y, 50%), rgba(94, 234, 212, 0.24), transparent 6%),
+    radial-gradient(circle at 32% 25%, rgba(255, 255, 255, 0.16), transparent 6%),
+    radial-gradient(circle at 37% 32%, rgba(94, 234, 212, 0.19), transparent 15%),
+    radial-gradient(circle at 60% 60%, rgba(14, 165, 233, 0.16), transparent 22%),
+    radial-gradient(circle at 48% 48%, rgba(2, 20, 27, 0.86), rgba(1, 8, 12, 0.96) 60%, #020504 73%),
+    linear-gradient(124deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.68) 70%);
+  box-shadow:
+    inset -86px -40px 110px rgba(0, 0, 0, 0.72),
+    inset 32px 18px 52px rgba(94, 234, 212, 0.11),
+    0 0 0 22px rgba(94, 234, 212, 0.015),
+    0 0 130px rgba(14, 165, 233, 0.22),
+    0 0 240px rgba(45, 212, 191, 0.08);
+  transition: background 420ms var(--ease-out), box-shadow 420ms var(--ease-out);
+}
+
+.cockpit-starfield,
+.cockpit-earth-glow,
+.cockpit-terminator,
+.cockpit-cloud-layer,
+.cockpit-country-lines,
+.cockpit-focus-reticle {
+  position: absolute;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.cockpit-starfield {
+  inset: -28%;
+  z-index: -3;
+  border-radius: 0;
+  background-image:
+    radial-gradient(circle, rgba(214, 239, 232, 0.55) 0 1px, transparent 1.6px),
+    radial-gradient(circle, rgba(94, 234, 212, 0.32) 0 1px, transparent 1.8px);
+  background-position: 0 0, 38px 64px;
+  background-size: 96px 96px, 142px 142px;
+  opacity: 0.42;
+  animation: worldStarDrift 48s linear infinite;
+}
+
+.cockpit-earth-glow {
+  inset: -7%;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 48% 46%, rgba(103, 232, 249, 0.20), transparent 57%),
+    radial-gradient(circle at 46% 48%, rgba(94, 234, 212, 0.12), transparent 68%);
+  filter: blur(3px);
+}
+
+.cockpit-terminator {
+  inset: -1%;
+  z-index: 1;
+  background: linear-gradient(116deg, transparent 0 39%, rgba(0, 0, 0, 0.08) 47%, rgba(0, 0, 0, 0.54) 82%);
+  mix-blend-mode: multiply;
+}
+
+.cockpit-cloud-layer {
+  inset: 4%;
+  z-index: 3;
+  opacity: 0.28;
+  mask-image: radial-gradient(circle, #000 0 67%, transparent 69%);
+}
+
+.cockpit-cloud-layer.cloud-a {
+  background:
+    radial-gradient(ellipse at 22% 38%, rgba(255, 255, 255, 0.23), transparent 10%),
+    radial-gradient(ellipse at 45% 28%, rgba(255, 255, 255, 0.16), transparent 12%),
+    radial-gradient(ellipse at 66% 52%, rgba(255, 255, 255, 0.18), transparent 14%);
+  animation: worldCloudDrift 36s linear infinite;
+}
+
+.cockpit-cloud-layer.cloud-b {
+  background:
+    radial-gradient(ellipse at 34% 56%, rgba(255, 255, 255, 0.12), transparent 15%),
+    radial-gradient(ellipse at 58% 37%, rgba(255, 255, 255, 0.13), transparent 10%),
+    radial-gradient(ellipse at 72% 64%, rgba(255, 255, 255, 0.10), transparent 12%);
+  animation: worldCloudDrift 58s linear reverse infinite;
+}
+
+.cockpit-country-lines {
+  inset: 6%;
+  z-index: 2;
+  background:
+    radial-gradient(ellipse at 27% 44%, transparent 0 13%, rgba(94, 234, 212, 0.18) 13.2% 13.7%, transparent 14%),
+    radial-gradient(ellipse at 50% 37%, transparent 0 10%, rgba(103, 232, 249, 0.15) 10.2% 10.7%, transparent 11%),
+    radial-gradient(ellipse at 66% 49%, transparent 0 14%, rgba(94, 234, 212, 0.13) 14.2% 14.7%, transparent 15%),
+    repeating-linear-gradient(0deg, transparent 0 37px, rgba(94, 234, 212, 0.07) 38px 39px),
+    repeating-linear-gradient(90deg, transparent 0 46px, rgba(94, 234, 212, 0.052) 47px 48px);
+  filter: drop-shadow(0 0 9px rgba(94, 234, 212, 0.12));
+  mask-image: radial-gradient(circle, #000 0 68%, transparent 70%);
+  opacity: 0.76;
+}
+
+.cockpit-focus-reticle {
+  left: var(--focus-x, 50%);
+  top: var(--focus-y, 50%);
+  z-index: 9;
+  width: 84px;
+  height: 84px;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(94, 234, 212, 0.22);
+  box-shadow: 0 0 32px rgba(94, 234, 212, 0.14);
+  opacity: 0.72;
+  transition: left 440ms var(--ease-out), top 440ms var(--ease-out);
+}
+
+.cockpit-focus-reticle::before,
+.cockpit-focus-reticle::after {
+  position: absolute;
+  background: rgba(94, 234, 212, 0.38);
+  content: "";
+}
+
+.cockpit-focus-reticle::before {
+  top: 50%;
+  left: 14px;
+  right: 14px;
+  height: 1px;
+}
+
+.cockpit-focus-reticle::after {
+  top: 14px;
+  bottom: 14px;
+  left: 50%;
+  width: 1px;
+}
+
+.cockpit-connection-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.cockpit-connection-overlay line {
+  stroke: rgba(94, 234, 212, 0.22);
+  stroke-dasharray: 4 5;
+  stroke-linecap: round;
+  stroke-width: 0.22;
+  vector-effect: non-scaling-stroke;
+  animation: evidenceEdgeFlow 3.4s linear infinite;
+}
+
+.cockpit-connection-overlay .connection-strength-primary {
+  stroke: rgba(94, 234, 212, 0.42);
+  stroke-width: 0.32;
+}
+
+.cockpit-marker {
+  z-index: 12;
+  transition: left 440ms var(--ease-out), top 440ms var(--ease-out), opacity var(--dur-base) ease, transform var(--dur-base) ease;
+}
+
+.cockpit-marker > .marker-core {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 12px;
+  height: 12px;
+}
+
+.cockpit-marker .marker-ring {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 28px;
+  height: 28px;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(94, 234, 212, 0.20);
+  border-radius: 999px;
+  opacity: 0.72;
+  animation: markerPulse 2.7s ease-out infinite;
+}
+
+.cockpit-marker.active {
+  z-index: 18;
+  transform: translate(-7px, -7px) scale(1.04);
+}
+
+.cockpit-marker.active .marker-ring {
+  border-color: rgba(94, 234, 212, 0.52);
+  animation-duration: 1.6s;
+}
+
+.cockpit-marker.severity-critical .marker-ring {
+  border-color: rgba(239, 68, 68, 0.42);
+}
+
+.cockpit-marker.severity-elevated .marker-ring {
+  border-color: rgba(250, 204, 21, 0.40);
+}
+
+.cockpit-marker.category-markets > .marker-core,
+.cockpit-marker.category-macro > .marker-core,
+.timeline-node.category-markets,
+.timeline-node.category-macro,
+.density-segment.category-markets,
+.density-segment.category-macro {
+  border-color: #38bdf8;
+}
+
+.cockpit-marker.category-infrastructure > .marker-core,
+.cockpit-marker.category-commodities > .marker-core,
+.density-segment.category-infrastructure,
+.density-segment.category-commodities {
+  border-color: #facc15;
+}
+
+.cockpit-marker.category-geopolitics > .marker-core,
+.density-segment.category-geopolitics {
+  border-color: #fb923c;
+}
+
+.cockpit-marker.category-social-attention > .marker-core,
+.cockpit-marker.category-other > .marker-core,
+.density-segment.category-social-attention,
+.density-segment.category-other {
+  border-color: #a78bfa;
+}
+
+.cockpit-cluster {
+  position: absolute;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  width: 31px;
+  height: 31px;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(94, 234, 212, 0.28);
+  border-radius: 999px;
+  background: rgba(2, 8, 7, 0.72);
+  color: var(--white);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  box-shadow: 0 0 22px rgba(94, 234, 212, 0.18);
+  backdrop-filter: blur(8px);
+}
+
+.cockpit-hover-inspector {
+  position: absolute;
+  z-index: 24;
+  display: grid;
+  gap: 4px;
+  width: min(240px, 24vw);
+  transform: translate(12px, -50%);
+  border: 1px solid rgba(94, 234, 212, 0.20);
+  border-radius: 8px;
+  background: rgba(3, 8, 7, 0.92);
+  padding: 9px;
+  box-shadow: var(--elev-2);
+  backdrop-filter: blur(12px);
+  pointer-events: none;
+}
+
+.cockpit-hover-inspector span,
+.cockpit-proof-card span,
+.cockpit-dossier-section span,
+.source-constellation-detail span {
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.cockpit-hover-inspector strong,
+.cockpit-proof-card strong,
+.source-constellation-detail strong {
+  overflow: hidden;
+  color: var(--white);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cockpit-hover-inspector p,
+.cockpit-proof-card p,
+.source-constellation-detail p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.cockpit-proof-card,
+.cockpit-dossier-section {
+  display: grid;
+  gap: 5px;
+  border: 1px solid rgba(94, 234, 212, 0.11);
+  border-radius: 8px;
+  background: rgba(8, 16, 14, 0.72);
+  padding: 8px;
+}
+
+.cockpit-dossier-section ul {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding-left: 15px;
+}
+
+.cockpit-dossier-section li {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.cockpit-tag-grid {
+  align-content: start;
+}
+
+.source-orbit-field {
+  min-height: 190px;
+  background:
+    radial-gradient(circle at 62% 42%, rgba(56, 189, 248, 0.10), transparent 17%),
+    radial-gradient(circle at 36% 66%, rgba(250, 204, 21, 0.08), transparent 18%),
+    radial-gradient(circle at center, rgba(94, 234, 212, 0.10), transparent 30%),
+    #030605;
+}
+
+.source-node {
+  border-width: 2px;
+  background: rgba(5, 17, 15, 0.96);
+  padding: 0;
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) ease, opacity var(--dur-base) ease;
+  animation: sourceNodeFloat 6s ease-in-out infinite;
+  animation-delay: calc(var(--source-index, 0) * -140ms);
+}
+
+.source-node:hover,
+.source-node.active {
+  transform: translate(-50%, -50%) scale(1.45);
+}
+
+.source-node.active {
+  box-shadow: 0 0 0 8px rgba(94, 234, 212, 0.10), 0 0 22px rgba(94, 234, 212, 0.55);
+}
+
+.source-node.refresh-due-now,
+.source-node.refresh-stale,
+.source-node.refresh-expired {
+  animation-name: sourceNodePulse;
+  animation-duration: 2s;
+}
+
+.source-constellation-detail {
+  display: grid;
+  gap: 3px;
+  border: 1px solid rgba(94, 234, 212, 0.12);
+  border-radius: 8px;
+  background: rgba(8, 16, 14, 0.74);
+  padding: 8px;
+}
+
+.worldwatch-intelligence-timeline header > div {
+  display: grid;
+  gap: 2px;
+}
+
+.worldwatch-density-band {
+  display: flex;
+  gap: 4px;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.density-segment {
+  min-width: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.10);
+  border-radius: inherit;
+  background: rgba(148, 163, 184, 0.08);
+  opacity: 0.55;
+}
+
+.density-segment.active {
+  background: currentColor;
+  opacity: 0.70;
+}
+
+.density-segment.category-markets,
+.density-segment.category-macro {
+  color: #38bdf8;
+}
+
+.density-segment.category-infrastructure,
+.density-segment.category-commodities {
+  color: #facc15;
+}
+
+.density-segment.category-geopolitics {
+  color: #fb923c;
+}
+
+.density-segment.category-country,
+.density-segment.category-other {
+  color: #a78bfa;
+}
+
+.worldwatch-timeline-track {
+  grid-auto-columns: minmax(156px, 0.86fr);
+}
+
+.timeline-node {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(94, 234, 212, 0.10) 0 var(--freshness, 50%), transparent var(--freshness, 50%)),
+    #08100e;
+  transition: transform var(--dur-base) var(--ease-out), border-color var(--dur-base) ease, background var(--dur-base) ease;
+}
+
+.timeline-node::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--freshness, 50%) - 1px);
+  width: 1px;
+  background: rgba(247, 255, 251, 0.18);
+  content: "";
+}
+
+.timeline-node:hover,
+.timeline-node.active {
+  transform: translateY(-2px);
+}
+
+.timeline-node.active::before {
+  position: absolute;
+  top: 5px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--green);
+  box-shadow: 0 0 14px rgba(94, 234, 212, 0.75);
+  content: "";
+}
+
+@keyframes markerPulse {
+  0% {
+    opacity: 0.72;
+    transform: translate(-50%, -50%) scale(0.72);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.72);
+  }
+}
+
+@keyframes evidenceEdgeFlow {
+  to {
+    stroke-dashoffset: -18;
+  }
+}
+
+@keyframes sourceNodeFloat {
+  0%,
+  100% {
+    margin-top: 0;
+  }
+  50% {
+    margin-top: -3px;
+  }
+}
+
+@keyframes sourceNodePulse {
+  0%,
+  100% {
+    box-shadow: 0 0 12px rgba(94, 234, 212, 0.34);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(94, 234, 212, 0.10), 0 0 20px rgba(94, 234, 212, 0.50);
+  }
+}
+
+@keyframes worldCloudDrift {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes worldStarDrift {
+  to {
+    background-position: 96px 96px, 180px 206px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cockpit-starfield,
+  .cockpit-cloud-layer,
+  .cockpit-marker .marker-ring,
+  .source-node,
+  .cockpit-connection-overlay line {
+    animation: none;
+  }
+}
+
+@media (min-width: 1500px) {
+  .cockpit-map-plane {
+    width: min(68vw, 1040px);
+  }
+}
+
+@media (max-width: 1280px) {
+  .cockpit-map-plane {
+    width: min(80vw, 760px);
+  }
+
+  .cockpit-hover-inspector {
+    width: min(220px, 42vw);
+  }
+}
+
+.worldwatch-workstation-grid {
+  padding-bottom: 92px;
+}
+
+.worldwatch-intelligence-timeline {
+  position: absolute;
+  right: 22px;
+  bottom: clamp(20px, 8dvh, 78px);
+  left: clamp(332px, 25vw, 430px);
+  z-index: 18;
+  box-shadow: 0 -18px 60px rgba(0, 0, 0, 0.24);
+}
+
+.cockpit-map-toolbar {
+  bottom: 110px;
+}
+
+.cockpit-landmass {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  border: 1px solid rgba(94, 234, 212, 0.16);
+  background:
+    linear-gradient(135deg, rgba(94, 234, 212, 0.16), rgba(14, 165, 233, 0.05)),
+    rgba(4, 42, 36, 0.34);
+  box-shadow: inset 0 0 26px rgba(94, 234, 212, 0.08), 0 0 18px rgba(94, 234, 212, 0.05);
+  filter: drop-shadow(0 0 10px rgba(94, 234, 212, 0.08));
+  opacity: 0.78;
+}
+
+.land-americas {
+  top: 28%;
+  left: 18%;
+  width: 24%;
+  height: 36%;
+  border-radius: 54% 38% 48% 42%;
+  clip-path: polygon(18% 3%, 56% 6%, 74% 22%, 61% 37%, 77% 52%, 60% 70%, 50% 96%, 35% 72%, 18% 63%, 24% 44%, 8% 27%);
+  transform: rotate(-19deg);
+}
+
+.land-emea {
+  top: 25%;
+  left: 44%;
+  width: 25%;
+  height: 31%;
+  border-radius: 46% 54% 45% 50%;
+  clip-path: polygon(4% 28%, 23% 8%, 47% 15%, 58% 4%, 91% 20%, 79% 42%, 95% 66%, 62% 75%, 52% 98%, 34% 78%, 12% 84%, 24% 54%);
+  transform: rotate(7deg);
+}
+
+.land-apac {
+  top: 38%;
+  left: 62%;
+  width: 22%;
+  height: 29%;
+  border-radius: 48% 42% 52% 40%;
+  clip-path: polygon(10% 17%, 39% 5%, 61% 18%, 88% 18%, 79% 42%, 95% 57%, 73% 73%, 55% 62%, 41% 91%, 20% 70%, 5% 51%);
+  transform: rotate(16deg);
+}
+
+@media (max-width: 1280px) {
+  .worldwatch-workstation-grid {
+    padding-bottom: 0;
+  }
+
+  .worldwatch-intelligence-timeline {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    left: auto;
+  }
+
+  .cockpit-map-toolbar {
+    bottom: 20px;
+  }
+}
