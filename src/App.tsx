@@ -109,6 +109,11 @@ type ViewId =
   | 'brief'
   | 'decision'
   | 'sources'
+  | 'infrastructure'
+  | 'research'
+  | 'dossiers'
+  | 'coverage'
+  | 'settings'
 type LayerId =
   | 'market'
   | 'news'
@@ -195,20 +200,26 @@ type DefensiveReferenceEntry = {
   engineeringLesson: string
 }
 
-const views: Array<{ id: ViewId; label: string; icon: typeof MonitorDot }> = [
-  { id: 'command', label: 'Worldwatch Command', icon: MonitorDot },
-  { id: 'world', label: 'Globe / Layers', icon: Globe2 },
-  { id: 'graph', label: 'Intelligence Graph', icon: Network },
-  { id: 'radar', label: 'Event Timelines', icon: RadioTower },
-  { id: 'terminal', label: 'Market / Infra', icon: LineChart },
-  { id: 'cyber', label: 'Cyber / OPSEC', icon: ShieldAlert },
-  { id: 'sources', label: 'Source Ops', icon: Database },
-  { id: 'quant', label: 'Quant Context', icon: Crosshair },
-  { id: 'social', label: 'Attention Pulse', icon: Activity },
-  { id: 'analyst', label: 'Analysis Desk', icon: BrainCircuit },
-  { id: 'brief', label: 'Daily Brief', icon: FileText },
-  { id: 'decision', label: 'Decision Journal', icon: BookOpen },
+const primaryViews: Array<{ id: ViewId; label: string; icon: typeof MonitorDot }> = [
+  { id: 'world', label: 'Worldwatch', icon: MonitorDot },
+  { id: 'radar', label: 'Globe', icon: Globe2 },
+  { id: 'sources', label: 'Sources', icon: Database },
+  { id: 'terminal', label: 'Market', icon: LineChart },
+  { id: 'infrastructure', label: 'Infrastructure', icon: Layers3 },
+  { id: 'dossiers', label: 'Dossiers', icon: Fingerprint },
+  { id: 'coverage', label: 'Coverage', icon: CheckCircle2 },
+  { id: 'settings', label: 'Settings', icon: Database },
 ]
+
+const advancedViews: Array<{ id: ViewId; label: string; icon: typeof MonitorDot }> = [
+  { id: 'cyber', label: 'Cyber', icon: ShieldAlert },
+  { id: 'research', label: 'Research', icon: BookOpen },
+  { id: 'quant', label: 'Replay', icon: Activity },
+  { id: 'brief', label: 'Notes', icon: NotebookPen },
+  { id: 'decision', label: 'Local Ledger', icon: Database },
+]
+
+const views = [...primaryViews, ...advancedViews]
 
 const defensiveReferenceEntries: DefensiveReferenceEntry[] = [
   {
@@ -1027,6 +1038,12 @@ function App() {
   ])
 
   const [pulseEnabled, setPulseEnabled] = useLocalStorageState('atlasz:intel:pulse', true)
+  const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorageState('atlasz:ui:v2:sidebar-collapsed', true)
+  const [advancedNavOpen, setAdvancedNavOpen] = useLocalStorageState('atlasz:ui:advanced-nav-open', false)
+  const [compactMode, setCompactMode] = useLocalStorageState('atlasz:ui:compact-mode', false)
+  const [evidenceDeskOpen, setEvidenceDeskOpen] = useLocalStorageState('atlasz:ui:evidence-desk-open', true)
+  const [rightDrawerOpen, setRightDrawerOpen] = useLocalStorageState('atlasz:ui:right-drawer-open', true)
+  const [globeFocusMode, setGlobeFocusMode] = useLocalStorageState('atlasz:ui:globe-focus-mode', false)
   const [persistenceMode, setPersistenceMode] = useState<
     'node:sqlite' | 'better-sqlite3' | 'json-fallback' | 'localstorage'
   >('localstorage')
@@ -1263,7 +1280,7 @@ function App() {
       { id: `${Date.now()}-analyst`, role: 'analyst', text: 'Evidence-constrained response', answer },
     ])
     setQuestion('')
-    setActiveView('analyst')
+    setActiveView('research')
   }
 
   const resetWorkspace = () => {
@@ -1274,6 +1291,14 @@ function App() {
       .filter((key) => key.startsWith('atlasz:'))
       .forEach((key) => window.localStorage.removeItem(key))
     window.location.reload()
+  }
+  const resetLayout = () => {
+    setSidebarCollapsed(true)
+    setAdvancedNavOpen(false)
+    setCompactMode(false)
+    setEvidenceDeskOpen(true)
+    setRightDrawerOpen(true)
+    setGlobeFocusMode(false)
   }
 
   const paletteActions: CommandAction[] = [
@@ -1303,7 +1328,7 @@ function App() {
       hint: `${asset.type} / ${asset.exchangeOrSource}`,
       keywords: [asset.name, asset.type, asset.exchangeOrSource, ...asset.aliases, ...asset.watchlistTags].join(' '),
       icon: LineChart,
-      perform: () => selectTicker(asset.symbol, 'world'),
+      perform: () => selectTicker(asset.symbol, 'terminal'),
     })),
     {
       id: 'act:create-decision',
@@ -1311,7 +1336,7 @@ function App() {
       group: 'Intelligence',
       hint: 'Context note',
       icon: BookOpen,
-      perform: () => setActiveView('decision'),
+      perform: () => setActiveView('research'),
     },
     {
       id: 'act:search-entity',
@@ -1319,11 +1344,11 @@ function App() {
       group: 'Intelligence',
       hint: 'Entity graph',
       icon: Network,
-      perform: () => setActiveView('graph'),
+      perform: () => setActiveView('dossiers'),
     },
     {
       id: 'act:search-market',
-      label: 'Open Market / Infrastructure View',
+      label: 'Open Market View',
       group: 'Intelligence',
       hint: 'Market terminal',
       icon: LineChart,
@@ -1331,7 +1356,7 @@ function App() {
     },
     {
       id: 'act:inspect-sources',
-      label: 'Inspect Source Trails',
+      label: 'Inspect Source Operations',
       group: 'Intelligence',
       hint: 'Freshness and lineage',
       icon: Database,
@@ -1368,21 +1393,51 @@ function App() {
       icon: Database,
       perform: resetWorkspace,
     },
+    {
+      id: 'act:reset-layout',
+      label: 'Reset Workspace Layout',
+      group: 'Workspace',
+      hint: 'Restore panels and navigation',
+      icon: MonitorDot,
+      perform: resetLayout,
+    },
   ]
-  const worldwatchSurfaceActive = activeView === 'command' || activeView === 'world'
+  const worldwatchSurfaceActive = activeView === 'command' || activeView === 'world' || activeView === 'radar'
+  const marketTapeVisible = activeView === 'terminal'
   const legacyCommandSurfaceEnabled = typeof window !== 'undefined' && window.location.search.includes('legacy-command=1')
 
+  const advancedActive = advancedViews.some((view) => view.id === activeView)
+  const shellClassName = [
+    'app-shell',
+    sidebarCollapsed ? 'sidebar-collapsed' : '',
+    compactMode ? 'compact-mode' : '',
+    rightDrawerOpen ? '' : 'drawer-collapsed',
+    evidenceDeskOpen ? '' : 'evidence-desk-collapsed',
+    globeFocusMode ? 'globe-focus-mode' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
-    <main className="app-shell">
+    <main className={shellClassName}>
       <CommandPalette actions={paletteActions} />
       <aside className="sidebar" aria-label="Atlasz Intel sections">
         <div className="brand-lockup brand-lockup-banner">
-          <img className="brand-banner" src="/atlasz-logo.png" alt="Atlasz Intel" />
-          <span className="eyebrow">Local-first terminal</span>
+          <img className="brand-banner" src="atlasz-logo.png" alt="Atlasz Intel" />
+          <span className="eyebrow">World intelligence</span>
         </div>
+        <button
+          aria-label={sidebarCollapsed ? 'Expand navigation rail' : 'Collapse navigation rail'}
+          className="rail-toggle"
+          type="button"
+          onClick={() => setSidebarCollapsed((value) => !value)}
+        >
+          <MonitorDot size={15} />
+          <span>{sidebarCollapsed ? 'Expand' : 'Collapse'}</span>
+        </button>
 
         <nav className="nav-stack">
-          {views.map((view) => {
+          {primaryViews.map((view) => {
             const Icon = view.icon
             return (
               <button
@@ -1396,47 +1451,65 @@ function App() {
               </button>
             )
           })}
+          <button
+            aria-expanded={advancedNavOpen || advancedActive}
+            className={advancedActive ? 'nav-item nav-advanced-toggle active' : 'nav-item nav-advanced-toggle'}
+            type="button"
+            onClick={() => setAdvancedNavOpen((value) => !value)}
+          >
+            <Layers3 size={17} />
+            <span>Advanced</span>
+          </button>
+          {(advancedNavOpen || advancedActive) && (
+            <div className="advanced-nav-stack" aria-label="Advanced sections">
+              {advancedViews.map((view) => {
+                const Icon = view.icon
+                return (
+                  <button
+                    className={activeView === view.id ? 'nav-item advanced-nav-item active' : 'nav-item advanced-nav-item'}
+                    key={view.id}
+                    type="button"
+                    onClick={() => setActiveView(view.id)}
+                  >
+                    <Icon size={16} />
+                    <span>{view.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </nav>
 
         <div className="sidebar-module">
-          <span className="module-label">Workspace</span>
-          <p>Local evidence ledger, watchlists, decision notes, source status, and replay state stay on this machine.</p>
+          <span className="module-label">Private Workspace</span>
+          <p>Your watchlists, notes, source history, and replay state stay on this device.</p>
           <div className="storage-pill">
             <Database size={14} />
-            <span>
-              {desktopMeta ? desktopMeta.platform : 'Browser preview'} ·{' '}
-              {persistenceMode === 'node:sqlite'
-                ? 'node:sqlite WAL'
-                : persistenceMode === 'better-sqlite3'
-                  ? 'better-sqlite3 WAL'
-                  : persistenceMode === 'json-fallback'
-                    ? 'JSON fallback'
-                    : 'localStorage'}
-            </span>
+            <span>Local Data</span>
           </div>
         </div>
 
         <div className="sidebar-module status-module">
-          <span className="module-label">Evidence Health</span>
+          <span className="module-label">Source Health</span>
           <div className="status-row">
-            <span>Entity map</span>
+            <span>Entities</span>
             <strong>{graphNodes.length} nodes</strong>
           </div>
           <div className="status-row">
-            <span>Risk events</span>
+            <span>Events</span>
             <strong>{worldEvents.length}</strong>
           </div>
           <div className="status-row">
-            <span>Source items</span>
+            <span>Records</span>
             <strong>{worldRawSourceItems.length}</strong>
           </div>
           <div className="status-row">
-            <span>Stale/failed</span>
+            <span>Needs attention</span>
             <strong>{sourceStatusCounts.stale + sourceStatusCounts.failed}</strong>
           </div>
           <div className="status-row">
-            <span>World source</span>
-            <strong>{worldTrust}</strong>
+            <span>Local data</span>
+            <strong>Private</strong>
           </div>
         </div>
       </aside>
@@ -1445,31 +1518,69 @@ function App() {
         <header className="topbar">
           <div>
             <span className="eyebrow">
-              {worldwatchSurfaceActive ? 'Aegis Worldwatch workstation' : 'Evidence-first local intelligence terminal'}
+              {worldwatchSurfaceActive ? 'Aegis Worldwatch' : 'Atlasz Intelligence'}
             </span>
             <h2>
               {worldwatchSurfaceActive
-                ? 'Source layers, map context, exposure paths, and proof trails without fake urgency.'
-                : 'Understand what changed, why it matters, what proves it, and which entities connect.'}
+                ? 'What changed, where it happened, what proves it, and what to watch next.'
+                : 'Understand events, markets, infrastructure, and source-backed connections.'}
             </h2>
           </div>
           <div className="topbar-actions">
             <CommandMenuButton />
-            <span className="source-badge">
+            <span className="source-badge health-chip">
               <CircleDotDashed size={14} />
-              No source, no signal
+              {sourceStatusCounts.online}/{sourceStatusCounts.total} sources
             </span>
-            <ProvenanceBadge value={worldTrust} />
-            <ProvenanceBadge value={realtimeTrust} />
+            <span className="source-badge health-chip">{formatFreshness(worldSnapshot.updatedAt)} refresh</span>
+            <span className="source-badge health-chip">{sourceStatusCounts.disabled} locked</span>
+            <span className={sourceStatusCounts.failed > 0 ? 'source-badge health-chip warn' : 'source-badge health-chip'}>
+              {sourceStatusCounts.failed} failed
+            </span>
             <PulseIndicator />
-            <button className="ghost-button" type="button" onClick={() => setActiveView('brief')}>
+            <button
+              className={compactMode ? 'ghost-button active' : 'ghost-button'}
+              type="button"
+              onClick={() => setCompactMode((value) => !value)}
+            >
+              Compact
+            </button>
+            <button
+              className={globeFocusMode ? 'ghost-button active' : 'ghost-button'}
+              type="button"
+              onClick={() => {
+                setActiveView('radar')
+                setGlobeFocusMode((value) => !value)
+              }}
+            >
+              Full Globe
+            </button>
+            <button
+              className={evidenceDeskOpen ? 'ghost-button active' : 'ghost-button'}
+              type="button"
+              onClick={() => setEvidenceDeskOpen((value) => !value)}
+            >
+              Evidence Desk
+            </button>
+            <button
+              className={rightDrawerOpen ? 'ghost-button active' : 'ghost-button'}
+              type="button"
+              onClick={() => setRightDrawerOpen((value) => !value)}
+            >
+              Dossier Drawer
+            </button>
+            <button className="ghost-button" type="button" onClick={resetLayout}>
+              Reset Layout
+            </button>
+            <button className="ghost-button" type="button" onClick={() => setActiveView('dossiers')}>
               <NotebookPen size={16} />
-              Daily brief
+              Dossiers
             </button>
           </div>
         </header>
 
-        {!worldwatchSurfaceActive && (
+        <div className="workspace-scroll">
+        {marketTapeVisible && (
           <section className="ticker-tape" aria-label="Market tape">
             {tickerTapeItems.map((item) => (
               <button
@@ -1866,6 +1977,39 @@ function App() {
           </section>
         )}
 
+        {activeView === 'infrastructure' && (
+          <section className="dashboard-grid infrastructure-workbench atlasz-workbench">
+            <article className="panel wide-panel">
+              <PanelHeader icon={Layers3} label="Infrastructure" title="Facilities, hazards, exposure paths, and what the sources do not prove" />
+              <GlobalPulseScene
+                activeLayerIds={activeLayerIds}
+                events={filteredPulseEvents}
+                onSelectEvent={(eventId) => selectEvent(eventId)}
+                onSelectTicker={(ticker) => selectTicker(ticker, 'terminal')}
+                selectedEventId={selectedEvent.id}
+                signals={worldSignals}
+              />
+            </article>
+            <article className="panel">
+              <PanelHeader icon={Crosshair} label="Selected Object" title="Dossier and non-claims" />
+              <IntelDossier
+                graphNode={selectedGraphNode}
+                market={selectedMarket}
+                marketExplanation={selectedMarketExplanation}
+                onAskAnalyst={() => submitQuestion('Explain selected infrastructure context')}
+                onSelectTicker={(ticker) => selectTicker(ticker, 'terminal')}
+                selectedEvent={selectedEvent}
+                signal={selectedSignal}
+              />
+              {selectedWorldEvent && <EventResolutionPanel event={selectedWorldEvent} />}
+            </article>
+            <article className="panel wide-panel">
+              <PanelHeader icon={GitBranch} label="Exposure" title="Structural exposure context, never outage or damage claims without proof" />
+              <ExposureDashboardPanel events={worldSnapshot.worldEvents} />
+            </article>
+          </section>
+        )}
+
         {activeView === 'quant' && (
           <section className="atlasz-workbench quant-workbench">
             <Suspense fallback={<div className="panel"><ChartSkeleton /></div>}>
@@ -1877,9 +2021,6 @@ function App() {
         {activeView === 'sources' && (
           <section className="dashboard-grid sources-grid atlasz-workbench sourceops-workbench">
             <article className="panel wide-panel">
-              <ConnectorActivationPanel sources={worldSnapshot.sources} events={worldSnapshot.worldEvents} />
-            </article>
-            <article className="panel wide-panel">
               <Suspense fallback={<div><PanelSkeleton rows={4} label="Loading source health" /></div>}>
                 <SourceHealthView
                   sources={worldSnapshot.sources}
@@ -1890,6 +2031,9 @@ function App() {
                   onResumeRefresh={resumeWorldRefresh}
                 />
               </Suspense>
+            </article>
+            <article className="panel wide-panel">
+              <ConnectorDashboardPanel sources={worldSnapshot.sources} events={worldSnapshot.worldEvents} />
             </article>
           </section>
         )}
@@ -2044,6 +2188,132 @@ function App() {
           </section>
         )}
 
+        {activeView === 'research' && (
+          <section className="dashboard-grid research-workbench atlasz-workbench dossier-workbench">
+            <article className="panel wide-panel">
+              <PanelHeader icon={NotebookPen} label="Research" title="Local notes, evidence questions, and decision follow-through" />
+              <Suspense fallback={<PanelSkeleton rows={3} label="Loading research notes" />}>
+                <ResearchNotePanel defaultSymbol={selectedTicker} />
+              </Suspense>
+            </article>
+            <article className="panel wide-panel">
+              <PanelHeader icon={BookOpen} label="Research Journal" title="Observation, evidence, follow-up, and outcome context" />
+              <DecisionJournal />
+            </article>
+            <article className="panel">
+              <PanelHeader icon={BrainCircuit} label="Analysis Desk" title="Evidence-constrained local reasoning surface" />
+              <AnalystContextBanner
+                graphNode={selectedGraphNode}
+                market={selectedMarket}
+                onAskSelected={() => submitQuestion('Explain selected view')}
+                selectedEvent={selectedEvent}
+                signal={selectedSignal}
+              />
+            </article>
+          </section>
+        )}
+
+        {activeView === 'dossiers' && (
+          <section className="dashboard-grid dossier-route-workbench atlasz-workbench dossier-workbench">
+            <article className="panel">
+              <PanelHeader icon={Crosshair} label="Dossier" title="Selected intelligence object" />
+              <IntelDossier
+                graphNode={selectedGraphNode}
+                market={selectedMarket}
+                marketExplanation={selectedMarketExplanation}
+                onAskAnalyst={() => submitQuestion('Explain selected dossier')}
+                onSelectTicker={(ticker) => selectTicker(ticker, 'terminal')}
+                selectedEvent={selectedEvent}
+                signal={selectedSignal}
+              />
+              {selectedWorldEvent && <EventResolutionPanel event={selectedWorldEvent} />}
+            </article>
+            <article className="panel wide-panel evidence-graph-panel">
+              <PanelHeader icon={Fingerprint} label="Evidence Graph" title="Entities proven by connector evidence" />
+              <EntityEvidenceGraphPanel events={worldSnapshot.worldEvents} />
+            </article>
+            <article className="panel wide-panel">
+              <PanelHeader icon={FileText} label="Daily Brief" title="Source-backed brief, unknowns, and source trail" />
+              <div className="daily-brief">
+                {worldBrief.length === 0 && (
+                  <div className="empty-state">Daily brief unavailable until a real public world-event batch is ingested.</div>
+                )}
+                {worldBrief.slice(0, 4).map((item) => (
+                  <div className="brief-row" key={item.id}>
+                    <span className={severityClass(item.severity)}>{severityLabels[item.severity]}</span>
+                    <div>
+                      <h3>{item.headline}</h3>
+                      <p>{item.whyItMatters}</p>
+                      <EvidenceMeta confidence={item.confidence} sourceCount={item.sourceCount} />
+                      <EvidenceNotes notes={item.evidenceTrail.slice(0, 2)} />
+                      <SourceTrail trail={item.sourceTrail.slice(0, 3)} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </article>
+          </section>
+        )}
+
+        {activeView === 'coverage' && (
+          <section className="dashboard-grid coverage-workbench atlasz-workbench">
+            <article className="panel wide-panel">
+              <MarketCoverageDashboard sources={worldSnapshot.sources} events={worldSnapshot.worldEvents} />
+            </article>
+            <article className="panel wide-panel">
+              <MissingMarketDataPanel />
+            </article>
+            <article className="panel wide-panel">
+              <ConnectorDashboardPanel sources={worldSnapshot.sources} events={worldSnapshot.worldEvents} />
+            </article>
+          </section>
+        )}
+
+        {activeView === 'settings' && (
+          <section className="dashboard-grid settings-workbench atlasz-workbench">
+            <article className="panel wide-panel">
+              <ConnectorActivationPanel sources={worldSnapshot.sources} events={worldSnapshot.worldEvents} />
+            </article>
+            <article className="panel">
+              <PanelHeader icon={Database} label="Local Data" title="Private source history, replay, and saved workspace state" />
+              <DataCorePanel />
+            </article>
+            <article className="panel">
+              <PanelHeader icon={Activity} label="Live Pulse" title="Turn local market and replay updates on or off" />
+              <RealtimePulsePanel enabled={pulseEnabled} />
+            </article>
+            <article className="panel">
+              <PanelHeader icon={MonitorDot} label="About" title="Advanced diagnostics" />
+              <div className="diagnostic-list">
+                <div>
+                  <span>Device</span>
+                  <strong>{desktopMeta ? desktopMeta.platform : 'Browser preview'}</strong>
+                </div>
+                <div>
+                  <span>Local storage</span>
+                  <strong>
+                    {persistenceMode === 'node:sqlite'
+                      ? 'SQLite local database'
+                      : persistenceMode === 'better-sqlite3'
+                        ? 'SQLite local database'
+                        : persistenceMode === 'json-fallback'
+                          ? 'Local JSON fallback'
+                          : 'Browser local storage'}
+                  </strong>
+                </div>
+                <div>
+                  <span>World evidence</span>
+                  <strong>{worldTrust}</strong>
+                </div>
+                <div>
+                  <span>Live feed trust</span>
+                  <strong>{realtimeTrust}</strong>
+                </div>
+              </div>
+            </article>
+          </section>
+        )}
+
         {activeView === 'analyst' && (
           <section className="dashboard-grid analyst-grid atlasz-workbench dossier-workbench">
             <article className="panel analyst-panel">
@@ -2152,6 +2422,7 @@ function App() {
           </section>
         )}
         </ViewErrorBoundary>
+        </div>
       </section>
     </main>
   )

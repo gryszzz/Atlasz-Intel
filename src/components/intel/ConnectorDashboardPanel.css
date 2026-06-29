@@ -76,8 +76,9 @@
 
 .connector-table-row {
   display: grid;
-  grid-template-columns: minmax(170px, 1.25fr) minmax(130px, 0.9fr) minmax(80px, 0.55fr) minmax(150px, 1fr) minmax(130px, 0.85fr) minmax(140px, 0.9fr);
-  gap: 10px;
+  grid-template-columns: minmax(150px, 1.2fr) minmax(118px, 0.82fr) minmax(68px, 0.48fr) minmax(118px, 0.82fr) minmax(112px, 0.74fr) minmax(116px, 0.78fr);
+  gap: 8px;
+  min-width: 0;
   align-items: start;
   padding: 9px 10px;
   background: rgba(18, 24, 23, 0.78);
@@ -229,6 +230,10 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  width: fit-content;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--green);
   font-family: var(--mono);
   font-size: var(--fs-2xs);

@@ -34,27 +34,31 @@ function a(e, t, n = 6e4) {
 	return e <= 0 ? 0 : Math.min(n, e * 2 ** t);
 }
 async function o(t, n, r = {}) {
-	let o = r.sleep ?? s, c = 0;
+	let o = r.sleep ?? s, c = n.maxRetryWaitMs ?? (n.timeoutMs > 0 ? n.timeoutMs : 6e4), l = 0;
 	for (;;) {
-		let s = new AbortController(), l = n.timeoutMs > 0 ? setTimeout(() => s.abort(), n.timeoutMs) : void 0;
+		let s = new AbortController(), u = n.timeoutMs > 0 ? setTimeout(() => s.abort(), n.timeoutMs) : void 0;
 		try {
 			return await t(s.signal);
 		} catch (t) {
 			let s = t instanceof e ? t.status : void 0;
-			if (c >= n.maxRetries || !i(s)) throw t;
-			let l = (t instanceof e ? t.retryAfterMs : void 0) ?? a(n.backoffMs, c);
+			if (l >= n.maxRetries || !i(s)) throw t;
+			let u = t instanceof e ? t.retryAfterMs : void 0;
+			if (u !== void 0 && u > c) throw t;
+			let d = u ?? a(n.backoffMs, l);
 			r.onRetry?.({
-				attempt: c,
-				waitMs: l,
+				attempt: l,
+				waitMs: d,
 				status: s
-			}), c += 1, await o(l);
+			}), l += 1, await o(d);
 		} finally {
-			l && clearTimeout(l);
+			u && clearTimeout(u);
 		}
 	}
 }
 function s(e) {
-	return new Promise((t) => setTimeout(t, Math.max(0, e)));
+	return new Promise((t) => {
+		setTimeout(t, Math.max(0, e)).unref?.();
+	});
 }
 //#endregion
 export { t as n, o as r, e as t };

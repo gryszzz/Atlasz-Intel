@@ -49,7 +49,7 @@ export function QuantChartPanel({ snapshot }: { snapshot: QuantSnapshot }) {
   return (
     <div className="quant-chart-wrap">
       <div className="quant-chart-frame">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
           <ComposedChart data={data} margin={{ top: 16, right: 16, left: 0, bottom: 8 }}>
             <defs>
               <linearGradient id="quantPrice" x1="0" x2="0" y1="0" y2="1">

@@ -1,6 +1,6 @@
 # Runtime Verification Log
 
-**Generated:** 2026-06-29T01:37:30.739Z
+**Generated:** 2026-06-29T14:38:10.863Z
 **Command:** `npx tsx scripts/runtimeVerification.mts`
 **Result:** 13/13 checks passed
 **Persistence:** node:sqlite (with JSON fallback)
@@ -39,19 +39,19 @@
 | noaa-alerts | impl | public | - | public | online | 30 | yes | yes | n/a | partial | yes |
 | federal-register | impl | public | - | public | online | 25 | yes | yes | n/a | partial | yes |
 | ofac-sdn | impl | public | - | public | online | 40 | yes | yes | n/a | identifier-only | yes |
-| congress-gov | impl | public | - | public | online | 20 | yes | yes | n/a | identifier-only | yes |
+| congress-gov | impl | public | - | public | rate-limited | 0 | n/a | n/a | n/a | identifier-only | yes |
 | usgs-earthquakes | impl | public | - | public | online | 19 | yes | yes | n/a | partial | yes |
 | un-comtrade | impl | key-gated | ATLASZ_UN_COMTRADE_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | no | no |
-| openalex-works | impl | public | - | public | failed | 0 | n/a | n/a | n/a | no | no |
-| crossref-works | impl | public | - | public | online | 22 | yes | yes | n/a | no | no |
+| openalex-works | impl | public | - | public | rate-limited | 0 | n/a | n/a | n/a | no | no |
+| crossref-works | impl | public | - | public | failed | 0 | n/a | n/a | n/a | no | no |
 | uspto | impl | key-gated | ATLASZ_PATENTSVIEW_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | yes | yes |
 | github-releases | impl | public | - | public | online | 15 | yes | yes | n/a | yes | yes |
 | arxiv-ai | impl | public | - | public | online | 20 | yes | yes | n/a | no | no |
 | github-high-signal-repos | impl | public | - | public | online | 15 | yes | yes | n/a | no | no |
 | nasa-news | impl | public | - | public | online | 10 | yes | yes | n/a | no | no |
-| space-launch-library | impl | public | - | public | online | 15 | yes | yes | n/a | no | no |
+| space-launch-library | impl | public | - | public | failed | 0 | n/a | n/a | n/a | no | no |
 | cisa-kev | impl | public | - | public | online | 25 | yes | yes | n/a | partial | yes |
-| nvd | impl | public | - | public | failed | 0 | n/a | n/a | n/a | partial | yes |
+| nvd | impl | public | - | public | online | 25 | yes | yes | n/a | partial | yes |
 | ghsa | impl | public | - | public | online | 30 | yes | yes | n/a | partial | yes |
 | osv | impl | public | - | public | online | 34 | yes | yes | n/a | partial | yes |
 | cisa-advisories | impl | public | - | public | online | 24 | yes | yes | n/a | partial | yes |

@@ -167,9 +167,9 @@ export function SourceHealthView({
       <section className="sh-system">
         <SystemTile
           icon={Database}
-          label="Local persistence"
-          value={health.persistenceMode ?? (health.desktop ? 'unavailable' : 'desktop only')}
-          detail={health.persistenceMode ? 'SQLite/WAL or JSON fallback' : 'Runs in the desktop app'}
+          label="Local Data"
+          value={health.persistenceMode ? 'available' : health.desktop ? 'unavailable' : 'desktop only'}
+          detail={health.persistenceMode ? 'Source history saved on this device' : 'Runs in the desktop app'}
           tone={health.persistenceMode ? 'ok' : 'muted'}
         />
         <SystemTile

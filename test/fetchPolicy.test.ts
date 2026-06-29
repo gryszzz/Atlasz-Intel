@@ -83,6 +83,23 @@ describe('fetch policy', () => {
     expect(waits).toEqual([7500])
   })
 
+  it('surfaces long Retry-After values instead of blocking beyond the retry budget', async () => {
+    const waits: number[] = []
+    let calls = 0
+    await expect(
+      fetchWithRetry(
+        async () => {
+          calls += 1
+          throw new HttpError('Congress.gov HTTP 429', 429, 30_000)
+        },
+        { maxRetries: 1, backoffMs: 1000, timeoutMs: 10_000 },
+        { sleep: async (ms) => void waits.push(ms) },
+      ),
+    ).rejects.toMatchObject({ status: 429, retryAfterMs: 30_000 })
+    expect(calls).toBe(1)
+    expect(waits).toEqual([])
+  })
+
   it('does not retry non-retryable errors (fail closed)', async () => {
     let calls = 0
     await expect(

@@ -61,7 +61,17 @@ export function backoffDelay(baseMs: number, attempt: number, capMs = 60_000): n
   return Math.min(capMs, baseMs * 2 ** attempt)
 }
 
-export type RetryPolicy = { maxRetries: number; backoffMs: number; timeoutMs: number }
+export type RetryPolicy = {
+  maxRetries: number
+  backoffMs: number
+  timeoutMs: number
+  /**
+   * Retry-After values longer than this are surfaced as the original HTTP error.
+   * That keeps Source Ops honest without blocking the whole refresh loop on a
+   * provider-imposed cooldown.
+   */
+  maxRetryWaitMs?: number
+}
 
 export type RetryDeps = {
   sleep?: (ms: number) => Promise<void>
@@ -79,6 +89,7 @@ export async function fetchWithRetry<T>(
   deps: RetryDeps = {},
 ): Promise<T> {
   const sleep = deps.sleep ?? defaultSleep
+  const maxRetryWaitMs = policy.maxRetryWaitMs ?? (policy.timeoutMs > 0 ? policy.timeoutMs : 60_000)
   let attempt = 0
   for (;;) {
     const controller = new AbortController()
@@ -91,6 +102,9 @@ export async function fetchWithRetry<T>(
         throw error
       }
       const retryAfterMs = error instanceof HttpError ? error.retryAfterMs : undefined
+      if (retryAfterMs !== undefined && retryAfterMs > maxRetryWaitMs) {
+        throw error
+      }
       const waitMs = retryAfterMs ?? backoffDelay(policy.backoffMs, attempt)
       deps.onRetry?.({ attempt, waitMs, status })
       attempt += 1
@@ -102,5 +116,8 @@ export async function fetchWithRetry<T>(
 }
 
 function defaultSleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, Math.max(0, ms)))
+  return new Promise((resolve) => {
+    const timer = setTimeout(resolve, Math.max(0, ms))
+    timer.unref?.()
+  })
 }

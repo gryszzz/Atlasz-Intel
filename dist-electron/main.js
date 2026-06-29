@@ -1,4 +1,4 @@
-import { n as e, r as t, t as n } from "./fetchPolicy-Cdr7Z2Ol.js";
+import { n as e, r as t, t as n } from "./fetchPolicy-BLBFtABc.js";
 import { createRequire as r } from "node:module";
 import { BrowserWindow as i, app as a, ipcMain as o, shell as s } from "electron";
 import { dirname as c, join as l } from "node:path";
@@ -26280,7 +26280,7 @@ function YM() {
 			y: 16
 		},
 		webPreferences: {
-			preload: l(PM, "preload.mjs"),
+			preload: l(PM, "preload.cjs"),
 			contextIsolation: !0,
 			nodeIntegration: !1,
 			sandbox: !1

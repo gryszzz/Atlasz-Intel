@@ -1,4 +1,4 @@
-import { n as e, r as t } from "./fetchPolicy-Cdr7Z2Ol.js";
+import { n as e, r as t } from "./fetchPolicy-BLBFtABc.js";
 import { parentPort as n, workerData as r } from "node:worker_threads";
 import { createHash as i } from "node:crypto";
 //#region electron/microstructure/streamingScreener.ts

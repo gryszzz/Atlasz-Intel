@@ -1,9 +1,8 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from 'react'
-import { Activity, AlertTriangle, Database, Globe2, Layers3, Link2, MapPinned, Search, ShieldCheck } from 'lucide-react'
+import { Suspense, lazy, useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { Activity, AlertTriangle, Database, Globe2, Layers3, Link2, MapPinned, Search, ShieldCheck, Signal } from 'lucide-react'
 import {
   PanelSkeleton,
   QuantStripSkeleton,
-  SourceHealthSkeleton,
 } from './components/ui/Skeletons'
 import { FreshnessBadge } from './components/ui/FreshnessBadge'
 import { ProvenanceBadge } from './components/ui/ProvenanceBadge'
@@ -27,9 +26,6 @@ import './WorldIntelligenceView.css'
 // heavy globe / quant libraries load only when this view is open.
 const WorldEventTimeline = lazy(() =>
   import('./components/world/WorldEventTimeline.lazy').then((m) => ({ default: m.WorldEventTimeline })),
-)
-const WorldSourceHealthPanel = lazy(() =>
-  import('./components/world/WorldSourceHealthPanel.lazy').then((m) => ({ default: m.WorldSourceHealthPanel })),
 )
 const WorldEntityDetailPanel = lazy(() =>
   import('./components/world/WorldEntityDetailPanel.lazy').then((m) => ({ default: m.WorldEntityDetailPanel })),
@@ -246,20 +242,20 @@ export function WorldIntelligenceView({
       <section className="world-command-band worldwatch-command-deck">
         <div>
           <span>Aegis Worldwatch</span>
-          <h3>Global source operations, map layers, exposure context, and proof trails in one workstation.</h3>
+          <h3>Living world intelligence: what changed, where it happened, what proves it, and what connects.</h3>
         </div>
         <div className="world-command-actions">
           <div className="world-search">
             <Search size={15} />
             <input
               aria-label="Search world intelligence"
-              placeholder="Search ticker, country, headline, narrative, infrastructure..."
+              placeholder="Search country, ticker, facility, source, event..."
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />
           </div>
           <button type="button" onClick={() => void onRefresh()} disabled={loading}>
-            {loading ? 'Refreshing' : 'Refresh OSINT'}
+            {loading ? 'Refreshing' : 'Refresh Sources'}
           </button>
         </div>
       </section>
@@ -275,9 +271,7 @@ export function WorldIntelligenceView({
             onActiveProfileChange={onActiveWorldwatchProfileChange}
             onAddEntity={onAddEntityToWorldwatchProfile}
           />
-          <Suspense fallback={<div className="world-panel world-status-panel"><SourceHealthSkeleton /></div>}>
-            <WorldSourceHealthPanel sources={snapshot.sources} status={snapshot.status} />
-          </Suspense>
+          <SourceConstellation sources={snapshot.sources} status={snapshot.status} />
         </aside>
 
         <section className="worldwatch-map-core">
@@ -326,6 +320,28 @@ export function WorldIntelligenceView({
             />
           </Suspense>
         </aside>
+      </section>
+
+      <section className="worldwatch-intelligence-timeline" aria-label="World intelligence timeline">
+        <header>
+          <span>Intelligence Timeline</span>
+          <strong>{visibleEvents.length} events in view</strong>
+        </header>
+        <div className="worldwatch-timeline-track">
+          {visibleEvents.slice(0, 16).map((event, index) => (
+            <button
+              className={selectedCockpitEvent?.id === event.id ? `timeline-node active severity-${event.severity}` : `timeline-node severity-${event.severity}`}
+              key={event.id}
+              style={{ '--timeline-index': index } as CSSProperties}
+              type="button"
+              onClick={() => selectCockpitEvent(event.id)}
+            >
+              <span>{formatEventAge(event.timestamp, now)}</span>
+              <strong>{event.region}</strong>
+              <em>{event.category}</em>
+            </button>
+          ))}
+        </div>
       </section>
 
       <section className="worldwatch-desk">
@@ -456,6 +472,57 @@ export function WorldIntelligenceView({
         </div>
       </section>
     </div>
+  )
+}
+
+function SourceConstellation({
+  sources,
+  status,
+}: {
+  sources: OsintSourceSnapshot[]
+  status: WorldIntelSnapshot['status']
+}) {
+  const online = sources.filter((source) => source.status === 'online').length
+  const attention = sources.filter((source) => ['failed', 'rate-limited', 'offline'].includes(source.status)).length
+  const locked = sources.filter((source) => source.status === 'disabled' || source.refreshState === 'missing-key').length
+  const displayedSources = sources.slice(0, 36)
+
+  return (
+    <section className="source-constellation" aria-label="Source health constellation">
+      <header>
+        <div>
+          <span>Source Constellation</span>
+          <h4>{online}/{sources.length} live sources</h4>
+        </div>
+        <strong className={`source-orbit-state state-${status}`}>{status}</strong>
+      </header>
+      <div className="source-orbit-field">
+        <div className="source-orbit-core">
+          <Signal size={18} />
+          <span>Atlasz</span>
+        </div>
+        {displayedSources.map((source, index) => {
+          const angle = (index / Math.max(1, displayedSources.length)) * Math.PI * 2
+          const radius = 34 + (index % 4) * 12
+          const x = 50 + Math.cos(angle) * radius
+          const y = 50 + Math.sin(angle) * radius * 0.72
+          return (
+            <span
+              aria-label={`${source.sourceName}: ${source.status}`}
+              className={`source-node source-${source.status}`}
+              key={source.sourceId}
+              style={{ left: `${clampPercent(x)}%`, top: `${clampPercent(y)}%` }}
+              title={`${source.sourceName} · ${source.status}`}
+            />
+          )
+        })}
+      </div>
+      <div className="source-constellation-legend">
+        <span><i className="source-online" /> Live {online}</span>
+        <span><i className="source-rate-limited" /> Limited {attention}</span>
+        <span><i className="source-disabled" /> Locked {locked}</span>
+      </div>
+    </section>
   )
 }
 
@@ -698,6 +765,15 @@ function cockpitEntityPosition(entity: WorldwatchEntity, index: number) {
 
 function formatEventConfidence(value: number) {
   return `${Math.round(value <= 1 ? value * 100 : value)}%`
+}
+
+function formatEventAge(timestamp: number, now: number) {
+  const minutes = Math.max(0, Math.round((now - timestamp) / 60_000))
+  if (minutes < 1) return 'now'
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.round(minutes / 60)
+  if (hours < 48) return `${hours}h ago`
+  return `${Math.round(hours / 24)}d ago`
 }
 
 function clampPercent(value: number) {

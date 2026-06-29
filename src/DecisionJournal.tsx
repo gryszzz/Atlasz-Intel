@@ -37,9 +37,9 @@ const evidenceOptions = [
 ]
 
 function persistenceLabel(mode: PersistenceInfo['mode']): string {
-  if (mode === 'node:sqlite' || mode === 'better-sqlite3') return 'Local SQLite · WAL'
+  if (mode === 'node:sqlite' || mode === 'better-sqlite3') return 'Local database'
   if (mode === 'json-fallback') return 'Local file store'
-  return 'Browser localStorage'
+  return 'Browser storage'
 }
 
 function toDateInput(ms: number): string {

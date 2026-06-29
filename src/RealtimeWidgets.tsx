@@ -50,11 +50,10 @@ function formatSourceTrust(value: RealtimeHealth['sourceTrust'] | undefined): st
 }
 
 function formatSqliteMode(value: RealtimeHealth['sqliteMode'] | undefined): string {
-  if (value === 'node:sqlite') return 'node:sqlite'
-  if (value === 'better-sqlite3') return 'better-sqlite3'
-  if (value === 'json-fallback') return 'json fallback'
-  if (value === 'localstorage') return 'localStorage'
-  return 'unknown'
+  if (value === 'node:sqlite' || value === 'better-sqlite3') return 'Local database'
+  if (value === 'json-fallback') return 'Local file store'
+  if (value === 'localstorage') return 'Browser storage'
+  return 'Unknown'
 }
 
 function sourceTrustLabel(source?: string, trust?: RealtimeHealth['sourceTrust']): string {
@@ -303,7 +302,7 @@ export function DataCorePanel() {
         <Metric label="Dropped" value={`${health?.droppedPackets ?? 0}`} tone={(health?.droppedPackets ?? 0) > 0 ? 'warn' : undefined} />
         <Metric label="Reconnects" value={`${health?.reconnectCount ?? 0}`} />
         <Metric label="Last frame" value={formatTimestamp(health?.lastFrameTimestamp ?? snapshot.frame?.emittedAt)} />
-        <Metric label="SQLite" value={formatSqliteMode(health?.sqliteMode ?? snapshot.status.sqliteMode)} />
+        <Metric label="Local store" value={formatSqliteMode(health?.sqliteMode ?? snapshot.status.sqliteMode)} />
       </div>
 
       <div className="rt-liquidity-grid">
@@ -398,7 +397,7 @@ export function DataCorePanel() {
         </div>
         <p className="rt-micro-note">
           {microstructure?.note ??
-            'Microstructure context is disabled in this runtime. Public trade-flow data is never labeled as verified depth.'}
+            'Depth-style context is unavailable. Public trade-flow data is never labeled as verified order-book depth.'}
         </p>
         {microSignals.length > 0 ? (
           <ul className="rt-micro-list" aria-label="Top microstructure signals">

@@ -2188,3 +2188,694 @@
     justify-content: flex-start;
   }
 }
+
+/* Worldwatch fit hardening: container-first desktop behavior. */
+.atlasz-worldwatch-workstation,
+.worldwatch-command-deck,
+.worldwatch-workstation-grid,
+.worldwatch-command-rail,
+.worldwatch-map-core,
+.worldwatch-intel-rail,
+.worldwatch-desk,
+.worldwatch-desk-grid,
+.atlasz-cockpit,
+.cockpit-body,
+.cockpit-layer-console,
+.cockpit-map-stage,
+.cockpit-dossier,
+.cockpit-map-plane {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.worldwatch-command-deck {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.48fr);
+}
+
+.worldwatch-workstation-grid {
+  grid-template-columns: minmax(220px, 0.52fr) minmax(0, 1.48fr);
+}
+
+.worldwatch-intel-rail {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.55fr);
+  max-height: none;
+}
+
+.worldwatch-command-rail {
+  max-height: calc(100dvh - 142px);
+}
+
+.cockpit-body {
+  grid-template-columns: minmax(150px, 0.26fr) minmax(0, 1fr) minmax(220px, 0.34fr);
+  min-height: clamp(460px, 54dvh, 570px);
+}
+
+.cockpit-map-plane {
+  min-height: clamp(390px, 48dvh, 500px);
+}
+
+.cockpit-marker {
+  width: min(112px, 24vw);
+}
+
+.cockpit-layer-stack button,
+.worldwatch-context-row,
+.world-event-card,
+.source-registry-row,
+.asset-identity-card,
+.country-intel-card {
+  overflow-wrap: anywhere;
+}
+
+.worldwatch-desk-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr));
+}
+
+.worldwatch-desk-grid > .world-trade-overview,
+.worldwatch-desk-grid > .world-panel {
+  grid-column: auto;
+}
+
+@media (min-width: 1500px) {
+  .worldwatch-workstation-grid {
+    grid-template-columns: minmax(240px, 0.55fr) minmax(0, 1.5fr) minmax(300px, 0.72fr);
+  }
+
+  .worldwatch-intel-rail {
+    grid-column: auto;
+    grid-template-columns: 1fr;
+    max-height: calc(100dvh - 142px);
+  }
+}
+
+@media (max-width: 1280px) {
+  .worldwatch-command-deck,
+  .worldwatch-workstation-grid,
+  .worldwatch-intel-rail,
+  .cockpit-body {
+    grid-template-columns: 1fr;
+  }
+
+  .worldwatch-command-rail,
+  .worldwatch-intel-rail,
+  .cockpit-dossier {
+    max-height: none;
+  }
+
+  .cockpit-layer-console {
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  }
+}
+
+/* ===== Atlasz World OS reboot ===== */
+.atlasz-worldwatch-workstation {
+  position: relative;
+  isolation: isolate;
+  min-height: calc(100dvh - 92px);
+  overflow: hidden;
+  border: 1px solid rgba(94, 234, 212, 0.14);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(14, 165, 233, 0.12), transparent 26%),
+    radial-gradient(circle at 72% 18%, rgba(94, 234, 212, 0.08), transparent 18%),
+    linear-gradient(180deg, #030504, #07100e 48%, #030504);
+  padding: 10px;
+}
+
+.atlasz-worldwatch-workstation::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(94, 234, 212, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(94, 234, 212, 0.035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(circle at center, #000 0 54%, transparent 86%);
+  content: "";
+}
+
+.worldwatch-command-deck {
+  position: relative;
+  z-index: 4;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.54fr);
+  border-color: rgba(94, 234, 212, 0.16);
+  background: rgba(4, 8, 7, 0.78);
+  backdrop-filter: blur(16px);
+}
+
+.worldwatch-command-deck h3 {
+  max-width: 900px;
+  font-size: clamp(18px, 1.4vw, 24px);
+  letter-spacing: 0;
+}
+
+.worldwatch-workstation-grid {
+  position: relative;
+  z-index: 2;
+  grid-template-columns: minmax(220px, 0.34fr) minmax(0, 1fr) minmax(270px, 0.38fr);
+  min-height: clamp(650px, calc(100dvh - 250px), 920px);
+  align-items: stretch;
+}
+
+.worldwatch-command-rail,
+.worldwatch-intel-rail {
+  border-color: rgba(94, 234, 212, 0.12);
+  background: rgba(5, 9, 8, 0.72);
+  backdrop-filter: blur(16px);
+  box-shadow: none;
+}
+
+.worldwatch-command-rail {
+  max-height: min(860px, calc(100dvh - 160px));
+}
+
+.worldwatch-intel-rail {
+  max-height: min(860px, calc(100dvh - 160px));
+}
+
+.worldwatch-intel-rail .world-events-panel {
+  display: none;
+}
+
+.worldwatch-map-core {
+  align-content: stretch;
+}
+
+.worldwatch-map-core .world-quant-strip {
+  display: none;
+}
+
+.atlasz-cockpit {
+  position: relative;
+  min-height: 100%;
+  overflow: hidden;
+  border-color: rgba(94, 234, 212, 0.15);
+  background: transparent;
+  padding: 0;
+}
+
+.cockpit-header {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  left: 24px;
+  z-index: 5;
+  border: 0;
+  padding: 0;
+  pointer-events: none;
+}
+
+.cockpit-header h3 {
+  max-width: 620px;
+  color: rgba(242, 255, 249, 0.92);
+  font-size: 16px;
+}
+
+.cockpit-metric-strip {
+  justify-content: flex-end;
+  pointer-events: auto;
+}
+
+.cockpit-metric {
+  min-width: 104px;
+  border-color: rgba(94, 234, 212, 0.18);
+  background: rgba(5, 10, 9, 0.74);
+  backdrop-filter: blur(12px);
+}
+
+.cockpit-body {
+  position: relative;
+  display: block;
+  min-height: clamp(620px, calc(100dvh - 245px), 900px);
+}
+
+.cockpit-layer-console {
+  position: absolute;
+  top: 94px;
+  bottom: 84px;
+  left: 16px;
+  z-index: 6;
+  width: clamp(176px, 14vw, 238px);
+  max-height: none;
+  border-color: rgba(94, 234, 212, 0.16);
+  background: rgba(5, 9, 8, 0.76);
+  backdrop-filter: blur(14px);
+}
+
+.cockpit-dossier {
+  position: absolute;
+  top: 94px;
+  right: 16px;
+  bottom: 84px;
+  z-index: 6;
+  width: clamp(250px, 18vw, 340px);
+  max-height: none;
+  border-color: rgba(94, 234, 212, 0.16);
+  background: rgba(5, 9, 8, 0.78);
+  backdrop-filter: blur(16px);
+}
+
+.cockpit-map-stage {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.cockpit-map-toolbar {
+  position: absolute;
+  right: 24px;
+  bottom: 20px;
+  left: 24px;
+  z-index: 7;
+  border-color: rgba(94, 234, 212, 0.15);
+  background: rgba(5, 10, 9, 0.78);
+  backdrop-filter: blur(14px);
+}
+
+.cockpit-map-plane {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(72vw, 960px);
+  aspect-ratio: 1;
+  min-height: 0;
+  overflow: visible;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(94, 234, 212, 0.18);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.14), transparent 7%),
+    radial-gradient(circle at 37% 32%, rgba(94, 234, 212, 0.18), transparent 16%),
+    radial-gradient(circle at 65% 58%, rgba(14, 165, 233, 0.15), transparent 20%),
+    radial-gradient(circle at 58% 48%, rgba(4, 17, 22, 0.78), rgba(1, 8, 12, 0.96) 58%, #020504 72%),
+    linear-gradient(110deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.66) 68%);
+  box-shadow:
+    inset -72px -32px 90px rgba(0, 0, 0, 0.68),
+    inset 28px 18px 46px rgba(94, 234, 212, 0.08),
+    0 0 0 18px rgba(94, 234, 212, 0.018),
+    0 0 90px rgba(14, 165, 233, 0.18);
+}
+
+.cockpit-map-plane::before {
+  inset: 4%;
+  border: 0;
+  border-radius: inherit;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 34px, rgba(94, 234, 212, 0.08) 35px 36px),
+    repeating-linear-gradient(90deg, transparent 0 42px, rgba(94, 234, 212, 0.055) 43px 44px),
+    radial-gradient(circle at 31% 42%, rgba(94, 234, 212, 0.11), transparent 12%),
+    radial-gradient(circle at 54% 37%, rgba(94, 234, 212, 0.10), transparent 10%),
+    radial-gradient(circle at 70% 46%, rgba(94, 234, 212, 0.08), transparent 14%);
+  mask-image: radial-gradient(circle, #000 0 69%, transparent 70%);
+  transform: none;
+}
+
+.cockpit-map-plane::after {
+  inset: -8%;
+  border: 1px solid rgba(94, 234, 212, 0.16);
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 42% 24%, rgba(255, 255, 255, 0.12), transparent 8%),
+    radial-gradient(circle at 44% 30%, rgba(255, 255, 255, 0.07), transparent 13%),
+    radial-gradient(circle at 66% 40%, rgba(255, 255, 255, 0.055), transparent 10%);
+  filter: blur(0.2px);
+  opacity: 0.72;
+  transform: none;
+}
+
+.cockpit-region {
+  z-index: 2;
+  color: rgba(214, 239, 232, 0.42);
+  text-shadow: 0 0 12px rgba(94, 234, 212, 0.22);
+}
+
+.region-americas {
+  left: 21%;
+  top: 34%;
+}
+
+.region-emea {
+  left: 48%;
+  top: 31%;
+}
+
+.region-apac {
+  right: 17%;
+  top: 42%;
+}
+
+.cockpit-marker {
+  z-index: 8;
+  width: min(132px, 14vw);
+  transform: translate(-7px, -7px);
+  filter: drop-shadow(0 0 12px rgba(94, 234, 212, 0.18));
+}
+
+.cockpit-marker > span {
+  width: 12px;
+  height: 12px;
+  background: #03100d;
+  box-shadow: 0 0 0 7px rgba(94, 234, 212, 0.08), 0 0 18px rgba(94, 234, 212, 0.28);
+}
+
+.cockpit-marker.active > span {
+  outline: 0;
+  box-shadow: 0 0 0 11px rgba(94, 234, 212, 0.16), 0 0 28px rgba(94, 234, 212, 0.44);
+}
+
+.cockpit-marker strong {
+  max-width: 100%;
+  border: 1px solid rgba(94, 234, 212, 0.1);
+  border-radius: 999px;
+  background: rgba(2, 6, 5, 0.72);
+  padding: 2px 6px;
+  backdrop-filter: blur(8px);
+}
+
+.source-constellation {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  border: 1px solid rgba(94, 234, 212, 0.14);
+  border-radius: 8px;
+  background: rgba(5, 9, 8, 0.78);
+  padding: 10px;
+}
+
+.source-constellation header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.source-constellation header span,
+.worldwatch-intelligence-timeline header span {
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.source-constellation h4 {
+  margin: 3px 0 0;
+  color: var(--white);
+  font-size: 14px;
+}
+
+.source-orbit-state {
+  border: 1px solid rgba(94, 234, 212, 0.18);
+  border-radius: 999px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 4px 7px;
+  text-transform: uppercase;
+}
+
+.source-orbit-field {
+  position: relative;
+  aspect-ratio: 1.25;
+  min-height: 190px;
+  overflow: hidden;
+  border: 1px solid rgba(94, 234, 212, 0.1);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at center, rgba(94, 234, 212, 0.10), transparent 28%),
+    radial-gradient(circle at center, rgba(94, 234, 212, 0.02), transparent 62%),
+    #030605;
+}
+
+.source-orbit-field::before,
+.source-orbit-field::after {
+  position: absolute;
+  inset: 17%;
+  border: 1px solid rgba(94, 234, 212, 0.10);
+  border-radius: 999px;
+  content: "";
+}
+
+.source-orbit-field::after {
+  inset: 28% 8%;
+  border-color: rgba(148, 163, 184, 0.10);
+  transform: rotate(-16deg);
+}
+
+.source-orbit-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  gap: 3px;
+  width: 62px;
+  height: 62px;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(94, 234, 212, 0.26);
+  border-radius: 999px;
+  background: rgba(6, 18, 15, 0.9);
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.source-node {
+  position: absolute;
+  z-index: 3;
+  width: 9px;
+  height: 9px;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--green);
+  border-radius: 999px;
+  background: #05110f;
+  box-shadow: 0 0 12px rgba(94, 234, 212, 0.45);
+}
+
+.source-online,
+.source-node.source-online {
+  border-color: var(--green);
+  box-shadow: 0 0 14px rgba(94, 234, 212, 0.48);
+}
+
+.source-rate-limited,
+.source-node.source-rate-limited,
+.source-node.source-offline {
+  border-color: var(--yellow);
+  box-shadow: 0 0 14px rgba(250, 204, 21, 0.34);
+}
+
+.source-failed,
+.source-node.source-failed {
+  border-color: var(--red);
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.38);
+}
+
+.source-disabled,
+.source-node.source-disabled {
+  border-color: rgba(148, 163, 184, 0.46);
+  opacity: 0.55;
+  box-shadow: none;
+}
+
+.source-constellation-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.source-constellation-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.source-constellation-legend i {
+  width: 8px;
+  height: 8px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+}
+
+.worldwatch-intelligence-timeline {
+  position: relative;
+  z-index: 5;
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(94, 234, 212, 0.12);
+  border-radius: 8px;
+  background: rgba(5, 9, 8, 0.78);
+  padding: 9px;
+  backdrop-filter: blur(14px);
+}
+
+.worldwatch-intelligence-timeline header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.worldwatch-intelligence-timeline header strong {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.worldwatch-timeline-track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(148px, 1fr);
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.timeline-node {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  border: 1px solid rgba(94, 234, 212, 0.12);
+  border-radius: 7px;
+  background: #08100e;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+  text-align: left;
+}
+
+.timeline-node.active {
+  border-color: rgba(94, 234, 212, 0.5);
+  background: #10211d;
+}
+
+.timeline-node span,
+.timeline-node em {
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-style: normal;
+  text-transform: uppercase;
+}
+
+.timeline-node strong {
+  overflow: hidden;
+  color: var(--white);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timeline-node.severity-critical {
+  border-left: 2px solid var(--red);
+}
+
+.timeline-node.severity-elevated {
+  border-left: 2px solid var(--yellow);
+}
+
+.worldwatch-desk {
+  position: relative;
+  z-index: 4;
+  max-height: 36dvh;
+  overflow: auto;
+  border-color: rgba(94, 234, 212, 0.12);
+  background: rgba(5, 9, 8, 0.82);
+  backdrop-filter: blur(14px);
+}
+
+@media (max-width: 1500px) {
+  .worldwatch-workstation-grid {
+    grid-template-columns: minmax(210px, 0.32fr) minmax(0, 1fr);
+  }
+
+  .worldwatch-intel-rail {
+    display: none;
+  }
+
+  .cockpit-map-plane {
+    width: min(76vw, 860px);
+  }
+}
+
+@media (max-width: 1280px) {
+  .worldwatch-workstation-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .worldwatch-command-rail {
+    display: none;
+  }
+
+  .cockpit-layer-console,
+  .cockpit-dossier {
+    width: min(260px, 26vw);
+  }
+
+  .cockpit-map-plane {
+    width: min(78vw, 780px);
+  }
+}
+
+/* Globe legibility pass: the world must read before the panels do. */
+.cockpit-map-plane {
+  top: 53%;
+  width: min(64vw, 760px);
+}
+
+.cockpit-layer-console {
+  width: clamp(150px, 11vw, 190px);
+}
+
+.cockpit-dossier {
+  width: clamp(240px, 17vw, 310px);
+}
+
+.cockpit-layer-stack button {
+  min-height: 38px;
+  padding: 6px 7px;
+}
+
+.cockpit-layer-stack em {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.worldwatch-command-rail {
+  width: clamp(205px, 16vw, 250px);
+}
+
+.source-orbit-field {
+  min-height: 160px;
+}
+
+@media (min-width: 1500px) {
+  .cockpit-map-plane {
+    width: min(62vw, 880px);
+  }
+
+  .cockpit-layer-console {
+    width: clamp(170px, 12vw, 220px);
+  }
+}
+
+@media (max-width: 1280px) {
+  .cockpit-map-plane {
+    width: min(78vw, 720px);
+  }
+}

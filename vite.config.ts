@@ -28,6 +28,17 @@ export default defineConfig(async ({ mode }) => ({
         },
         preload: {
           input: 'electron/preload.ts',
+          vite: {
+            build: {
+              rolldownOptions: {
+                output: {
+                  format: 'cjs',
+                  entryFileNames: '[name].cjs',
+                  chunkFileNames: '[name].cjs',
+                },
+              },
+            },
+          },
         },
       })),
   ],

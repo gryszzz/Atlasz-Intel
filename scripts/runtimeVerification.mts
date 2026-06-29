@@ -39,6 +39,13 @@ import type { WorldIntelEvent } from '../src/worldIntel'
 const PER_FETCH_TIMEOUT_MS = 12_000
 const COMMAND = 'npx tsx scripts/runtimeVerification.mts'
 
+class ConnectorTimeoutError extends Error {
+  constructor(ms: number) {
+    super(`connector timed out after ${ms}ms`)
+    this.name = 'ConnectorTimeoutError'
+  }
+}
+
 const checks: Array<{ name: string; pass: boolean; detail: string }> = []
 function check(name: string, pass: boolean, detail: string) {
   checks.push({ name, pass, detail })
@@ -125,7 +132,10 @@ async function driveConnector(def: ConnectorAuditDefinition, env: NodeJS.Process
   }
 
   try {
-    const events = await resolved.fetcher(timeoutSignal(PER_FETCH_TIMEOUT_MS))
+    const events = await withConnectorTimeout(
+      resolved.fetcher(timeoutSignal(PER_FETCH_TIMEOUT_MS)),
+      PER_FETCH_TIMEOUT_MS + 1_000,
+    )
     row.records = events.length
     row.status = events.length > 0 ? 'online' : 'configured (empty)'
     row.sampleEvent = events[0]
@@ -139,10 +149,21 @@ async function driveConnector(def: ConnectorAuditDefinition, env: NodeJS.Process
     }
   } catch (err) {
     const status = (err as { status?: number }).status
-    row.status = status === 429 ? 'rate-limited' : status && status >= 500 ? 'unavailable' : 'failed'
+    row.status = err instanceof ConnectorTimeoutError || (status && status >= 500) ? 'unavailable' : status === 429 ? 'rate-limited' : 'failed'
     row.lastError = truncateError((err as Error).message)
   }
   return row
+}
+
+function withConnectorTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  let timer: NodeJS.Timeout | undefined
+  const timeout = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(() => reject(new ConnectorTimeoutError(ms)), ms)
+    timer.unref?.()
+  })
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timer) clearTimeout(timer)
+  })
 }
 
 function truncateError(message: string): string {
