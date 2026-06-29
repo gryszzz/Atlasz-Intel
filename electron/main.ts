@@ -226,7 +226,7 @@ app.whenReady().then(() => {
   } catch (error) {
     console.error('[atlasz] realtime start failed at launch:', error)
   }
-  void requireWorldIntel().refresh()
+  requireWorldIntel().startAutoRefresh()
   void requireProviderDiscovery().discover()
   requireDataIngest().start()
   createWindow()
@@ -249,6 +249,7 @@ app.on('before-quit', () => {
   dataIngest = null
   realtime?.close()
   realtime = null
+  worldIntel?.stopAutoRefresh()
   worldIntel = null
   providerDiscovery = null
   persistence?.close()

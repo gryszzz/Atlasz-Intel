@@ -216,6 +216,9 @@ Copy `.env.example` to `.env` only to opt into external public feeds, keyed offi
 
 ```bash
 ATLASZ_ENABLE_PUBLIC_WORLD=1
+# Background Worldwatch refresh loop; due providers still respect their own
+# source cadence/rate guards.
+ATLASZ_WORLD_REFRESH_MS=600000
 ATLASZ_SEC_USER_AGENT="Atlasz Intel research (you@example.com)"
 ATLASZ_EIA_API_KEY="..."
 # No-key EIA public bulk reference is enabled by default; this key is still

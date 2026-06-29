@@ -11,6 +11,14 @@ npx tsx scripts/checkRuntimeConfig.mts
 
 The checker prints env-name presence only. It never prints secret values.
 
+## Freshness Cadence
+
+`ATLASZ_WORLD_REFRESH_MS` controls the desktop Worldwatch background refresh
+loop while the app is open. The loop only checks due providers; each connector
+still respects its own `pollIntervalMs`, `rateLimitGuardMs`, failure backoff,
+and source-provided `staleAt`/freshness boundary. This keeps daily sources
+fresh without scraping, hammering, or styling stale data as current.
+
 ## Activation Matrix
 
 | Env var | Connector unlocked | Source / signup | Type | Before key | After key |

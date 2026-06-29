@@ -21,19 +21,22 @@ const DEFAULT_BACKOFF_MS = 1_000
 const MAX_FAILURE_BACKOFF_MS = 60 * 60 * 1000
 
 /**
- * How long to wait before re-polling a source. Normally the source's own
- * `rateLimitMs`; once it has consecutive failures, a bounded exponential backoff
- * extends the window so a persistently-failing source is not re-hammered (and
- * re-charged its full timeout) on every refresh. Capped, deterministic, pure.
+ * How long to wait before re-polling a source. Healthy sources respect the
+ * larger of their freshness cadence (`pollIntervalMs`) and anti-hammer guard
+ * (`rateLimitMs`). Once a source has consecutive failures, a bounded exponential
+ * backoff extends the window so it is not re-hammered on every refresh.
+ * Capped, deterministic, pure.
  */
 export function sourcePollCooldownMs(
   rateLimitMs: number,
   consecutiveFailures: number,
   capMs = MAX_FAILURE_BACKOFF_MS,
+  pollIntervalMs = 0,
 ): number {
-  if (consecutiveFailures <= 0) return rateLimitMs
-  const backoff = rateLimitMs * 2 ** Math.min(consecutiveFailures, 6)
-  return Math.min(Math.max(rateLimitMs, backoff), capMs)
+  const baseMs = Math.max(0, rateLimitMs, pollIntervalMs)
+  if (consecutiveFailures <= 0) return baseMs
+  const backoff = baseMs * 2 ** Math.min(consecutiveFailures, 6)
+  return Math.min(Math.max(baseMs, backoff), capMs)
 }
 
 type SourceStatus = OsintSourceSnapshot['status']
@@ -98,14 +101,16 @@ export class OsintSourceRegistry {
         continue
       }
       const state = this.requireState(definition.sourceId)
-      const cooldownMs = sourcePollCooldownMs(definition.rateLimitMs, state.consecutiveFailures)
+      const cooldownMs = sourcePollCooldownMs(
+        definition.rateLimitMs,
+        state.consecutiveFailures,
+        MAX_FAILURE_BACKOFF_MS,
+        definition.pollIntervalMs,
+      )
       if (state.lastAttemptAt && now - state.lastAttemptAt < cooldownMs) {
-        // Within the cooldown window. If the source is in a failure backoff,
-        // keep its honest failed/rate-limited status; otherwise it is simply
-        // not due yet (reported as rate-limited, as before).
-        if (state.consecutiveFailures === 0) {
-          state.status = 'rate-limited'
-        }
+        // Within the source's cadence or failure-backoff window. Keep the last
+        // honest status: online stays online until staleAt/freshness says
+        // otherwise; failed/rate-limited stays visible while backed off.
         continue
       }
       state.lastAttemptAt = now

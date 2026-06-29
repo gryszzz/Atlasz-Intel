@@ -13,6 +13,17 @@ describe('sourcePollCooldownMs', () => {
     expect(sourcePollCooldownMs(RATE, -1)).toBe(RATE)
   })
 
+  it('respects the source freshness cadence when it is slower than the rate guard', () => {
+    const hourlyCadence = 60 * 60_000
+    expect(sourcePollCooldownMs(RATE, 0, 60 * 60_000, hourlyCadence)).toBe(hourlyCadence)
+  })
+
+  it('uses the cadence-aware base for failure backoff', () => {
+    const dailyCadence = 24 * 60 * 60_000
+    const twoDayCap = 2 * dailyCadence
+    expect(sourcePollCooldownMs(RATE, 1, twoDayCap, dailyCadence)).toBe(twoDayCap)
+  })
+
   it('extends the window exponentially with consecutive failures', () => {
     expect(sourcePollCooldownMs(RATE, 1)).toBe(RATE * 2)
     expect(sourcePollCooldownMs(RATE, 2)).toBe(RATE * 4)

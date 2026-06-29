@@ -23,11 +23,17 @@ import {
   type WorldIntelSnapshot,
 } from '../src/worldIntel'
 
+const DEFAULT_WORLD_REFRESH_MS = 10 * 60_000
+const MIN_WORLD_REFRESH_MS = 60_000
+const MAX_WORLD_REFRESH_MS = 24 * 60 * 60_000
+
 export class WorldIntelService {
   private readonly persistence: IntelPersistence
   private readonly registry = new OsintSourceRegistry()
   private readonly assetIdentity: AssetIdentityService
   private readonly enabled = process.env.ATLASZ_ENABLE_PUBLIC_WORLD !== '0'
+  private readonly autoRefreshMs = worldAutoRefreshIntervalMs(process.env)
+  private autoRefreshTimer: ReturnType<typeof setInterval> | null = null
   private status: WorldIntelSnapshot['status'] = this.enabled ? 'stale' : 'disabled'
   private lastError: string | undefined
   private updatedAt: number | undefined
@@ -41,6 +47,25 @@ export class WorldIntelService {
 
   snapshot(): WorldIntelSnapshot {
     return this.buildSnapshot()
+  }
+
+  startAutoRefresh(): void {
+    if (!this.enabled || this.autoRefreshTimer) {
+      return
+    }
+    void this.refresh()
+    this.autoRefreshTimer = setInterval(() => {
+      void this.refresh()
+    }, this.autoRefreshMs)
+    this.autoRefreshTimer.unref?.()
+  }
+
+  stopAutoRefresh(): void {
+    if (!this.autoRefreshTimer) {
+      return
+    }
+    clearInterval(this.autoRefreshTimer)
+    this.autoRefreshTimer = null
   }
 
   refresh(): Promise<WorldIntelSnapshot> {
@@ -243,6 +268,12 @@ export class WorldIntelService {
       }
     }
   }
+}
+
+export function worldAutoRefreshIntervalMs(env: NodeJS.ProcessEnv = process.env): number {
+  const configured = Number(env.ATLASZ_WORLD_REFRESH_MS ?? DEFAULT_WORLD_REFRESH_MS)
+  if (!Number.isFinite(configured)) return DEFAULT_WORLD_REFRESH_MS
+  return Math.max(MIN_WORLD_REFRESH_MS, Math.min(MAX_WORLD_REFRESH_MS, Math.round(configured)))
 }
 
 function persistDailyBrief(persistence: IntelPersistence, snapshot: WorldIntelSnapshot): void {
