@@ -3492,3 +3492,571 @@
     bottom: 20px;
   }
 }
+
+/* Real-world visualization inspiration pass: globe-first layers, arcs, graph, source health. */
+.cockpit-layer-group {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.cockpit-layer-group svg {
+  color: var(--green);
+}
+
+.cockpit-layer-group em {
+  grid-column: 2 / 4;
+}
+
+.cockpit-layer-group small {
+  grid-column: 1 / -1;
+  display: block;
+  overflow: hidden;
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 9px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+}
+
+.cockpit-layer-group.heat-mixed svg,
+.cockpit-layer-group.layer-status-attention svg {
+  color: var(--yellow);
+}
+
+.cockpit-layer-group.heat-stale svg,
+.cockpit-layer-group.layer-status-missing-config svg {
+  color: var(--red);
+}
+
+.cockpit-sublayer-stack {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+  border-top: 1px solid rgba(94, 234, 212, 0.10);
+  padding-top: 8px;
+}
+
+.cockpit-sublayer-stack button {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 6px;
+  background: rgba(8, 16, 14, 0.66);
+  color: var(--text);
+  cursor: pointer;
+  padding: 5px;
+  text-align: left;
+}
+
+.cockpit-sublayer-stack button.active {
+  border-color: rgba(94, 234, 212, 0.42);
+  background: rgba(20, 32, 28, 0.88);
+}
+
+.cockpit-sublayer-stack span,
+.cockpit-sublayer-stack em {
+  overflow: hidden;
+  font-family: var(--mono);
+  font-size: 8px;
+  font-style: normal;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cockpit-sublayer-stack span {
+  color: var(--muted);
+}
+
+.cockpit-sublayer-stack em {
+  color: var(--white);
+}
+
+.cockpit-map-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.cockpit-tool-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(94, 234, 212, 0.14);
+  border-radius: 7px;
+  background: rgba(8, 16, 14, 0.72);
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  padding: 5px 8px;
+  text-transform: uppercase;
+}
+
+.cockpit-tool-button.active,
+.cockpit-tool-button:hover {
+  border-color: rgba(94, 234, 212, 0.45);
+  color: var(--white);
+}
+
+.cockpit-source-radar {
+  position: absolute;
+  top: 16%;
+  right: 11%;
+  z-index: 13;
+  display: grid;
+  gap: 5px;
+  min-width: 106px;
+  border: 1px solid rgba(94, 234, 212, 0.14);
+  border-radius: 8px;
+  background: rgba(2, 8, 7, 0.74);
+  padding: 7px;
+  backdrop-filter: blur(10px);
+}
+
+.cockpit-source-radar span {
+  border-left: 2px solid currentColor;
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 900;
+  padding-left: 6px;
+  text-transform: uppercase;
+}
+
+.cockpit-source-radar .source-radar-attention {
+  color: var(--yellow);
+}
+
+.cockpit-source-radar .source-radar-locked {
+  color: #a78bfa;
+}
+
+.cockpit-connection-overlay path {
+  fill: none;
+  stroke: rgba(94, 234, 212, 0.24);
+  stroke-dasharray: 4 5;
+  stroke-linecap: round;
+  stroke-width: 0.24;
+  vector-effect: non-scaling-stroke;
+  animation: evidenceEdgeFlow 3.4s linear infinite;
+}
+
+.cockpit-connection-overlay .connection-strength-primary {
+  stroke: rgba(94, 234, 212, 0.48);
+  stroke-width: 0.36;
+}
+
+.cockpit-heat-ring {
+  position: absolute;
+  z-index: 5;
+  width: var(--heat-size, 64px);
+  height: var(--heat-size, 64px);
+  transform: translate(-50%, -50%);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  color: rgba(94, 234, 212, var(--heat-opacity, 0.3));
+  background: radial-gradient(circle, currentColor 0 1px, transparent 62%);
+  box-shadow: 0 0 26px currentColor;
+  opacity: var(--heat-opacity, 0.3);
+  pointer-events: none;
+}
+
+.cockpit-heat-ring.category-markets,
+.cockpit-heat-ring.category-macro {
+  color: rgba(56, 189, 248, var(--heat-opacity, 0.3));
+}
+
+.cockpit-heat-ring.category-infrastructure,
+.cockpit-heat-ring.category-commodities {
+  color: rgba(250, 204, 21, var(--heat-opacity, 0.3));
+}
+
+.cockpit-heat-ring.category-geopolitics {
+  color: rgba(251, 146, 60, var(--heat-opacity, 0.3));
+}
+
+.cockpit-marker {
+  opacity: var(--marker-opacity, 1);
+}
+
+.cockpit-marker.active,
+.cockpit-marker:hover {
+  opacity: 1;
+}
+
+.cockpit-marker > .marker-core {
+  display: grid;
+  place-items: center;
+  color: #04100d;
+}
+
+.cockpit-marker > .marker-core svg {
+  stroke-width: 3;
+}
+
+.cockpit-proof-grid,
+.source-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.cockpit-proof-grid span,
+.source-detail-grid span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  border: 1px solid rgba(148, 163, 184, 0.10);
+  border-radius: 6px;
+  background: rgba(3, 8, 7, 0.48);
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 8px;
+  padding: 5px;
+  text-transform: uppercase;
+}
+
+.cockpit-proof-grid strong,
+.source-detail-grid strong {
+  overflow: hidden;
+  color: var(--white);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cockpit-connection-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.cockpit-connection-grid section {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  border: 1px solid rgba(94, 234, 212, 0.10);
+  border-radius: 8px;
+  background: rgba(8, 16, 14, 0.56);
+  padding: 7px;
+}
+
+.cockpit-connection-grid section > span {
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.source-filter-grid {
+  display: grid;
+  gap: 6px;
+}
+
+.source-filter-grid div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.source-filter-grid button {
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 999px;
+  background: rgba(8, 16, 14, 0.72);
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 900;
+  padding: 4px 7px;
+  text-transform: uppercase;
+}
+
+.source-filter-grid button.active,
+.source-filter-grid button:hover {
+  border-color: rgba(94, 234, 212, 0.45);
+  color: var(--white);
+}
+
+.entity-graph-overlay {
+  position: absolute;
+  inset: 6%;
+  z-index: 21;
+  overflow: hidden;
+  border: 1px solid rgba(94, 234, 212, 0.18);
+  border-radius: 999px;
+  background: radial-gradient(circle at center, rgba(2, 8, 7, 0.60), rgba(2, 8, 7, 0.12) 54%, transparent 72%);
+  pointer-events: auto;
+}
+
+.entity-graph-overlay svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.entity-graph-overlay line {
+  stroke: rgba(94, 234, 212, 0.28);
+  stroke-linecap: round;
+  stroke-width: 0.2;
+  vector-effect: non-scaling-stroke;
+}
+
+.entity-graph-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 7px;
+  padding: 24px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.entity-graph-empty svg {
+  color: var(--green);
+}
+
+.entity-graph-empty p {
+  margin: 0;
+  font-size: 12px;
+}
+
+.entity-graph-node {
+  position: absolute;
+  display: grid;
+  gap: 2px;
+  width: min(116px, 18vw);
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(94, 234, 212, 0.18);
+  border-radius: 7px;
+  background: rgba(3, 8, 7, 0.86);
+  color: var(--text);
+  cursor: pointer;
+  padding: 5px 6px;
+  text-align: left;
+  backdrop-filter: blur(10px);
+}
+
+.entity-graph-node span {
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.entity-graph-node strong {
+  overflow: hidden;
+  color: var(--white);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.entity-graph-node.active {
+  border-color: rgba(94, 234, 212, 0.62);
+  box-shadow: 0 0 0 6px rgba(94, 234, 212, 0.08), 0 0 24px rgba(94, 234, 212, 0.25);
+}
+
+.entity-graph-node.node-market {
+  border-color: rgba(56, 189, 248, 0.34);
+}
+
+.entity-graph-node.node-commodity {
+  border-color: rgba(250, 204, 21, 0.34);
+}
+
+.entity-graph-node.node-source {
+  border-color: rgba(167, 139, 250, 0.34);
+}
+
+.worldwatch-timeline-track {
+  position: relative;
+}
+
+.timeline-replay-cursor {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  left: calc((100% / var(--cursor-count, 1)) * var(--cursor-index, 0));
+  z-index: 4;
+  width: 2px;
+  border-radius: 999px;
+  background: var(--green);
+  box-shadow: 0 0 18px rgba(94, 234, 212, 0.70);
+  pointer-events: none;
+  transition: left 280ms var(--ease-out);
+}
+
+@media (max-width: 1280px) {
+  .cockpit-source-radar {
+    top: 13%;
+    right: 8%;
+  }
+
+  .cockpit-proof-grid,
+  .source-detail-grid,
+  .cockpit-connection-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .entity-graph-node {
+    width: min(106px, 24vw);
+  }
+}
+
+@media (max-width: 760px) {
+  .cockpit-sublayer-stack {
+    grid-template-columns: 1fr;
+  }
+
+  .cockpit-source-radar {
+    display: none;
+  }
+
+  .entity-graph-overlay {
+    inset: 4%;
+  }
+
+  .entity-graph-node {
+    width: 92px;
+  }
+}
+
+@media (max-width: 760px) {
+  .atlasz-worldwatch-workstation {
+    min-height: auto;
+    overflow: visible;
+    padding: 8px;
+  }
+
+  .worldwatch-command-deck {
+    grid-template-columns: 1fr;
+  }
+
+  .worldwatch-command-deck h3 {
+    font-size: 17px;
+    line-height: 1.25;
+  }
+
+  .world-command-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .world-search {
+    min-width: 0;
+  }
+
+  .worldwatch-workstation-grid {
+    min-height: auto;
+    padding-bottom: 0;
+  }
+
+  .atlasz-cockpit {
+    overflow: visible;
+  }
+
+  .cockpit-header,
+  .cockpit-layer-console,
+  .cockpit-map-stage,
+  .cockpit-dossier,
+  .cockpit-map-toolbar,
+  .cockpit-map-plane {
+    position: static;
+    inset: auto;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    width: auto;
+    max-width: 100%;
+    transform: none;
+  }
+
+  .cockpit-header {
+    display: grid;
+    gap: 8px;
+    padding: 8px;
+    pointer-events: auto;
+  }
+
+  .cockpit-header h3 {
+    font-size: 15px;
+  }
+
+  .cockpit-metric-strip {
+    justify-content: flex-start;
+  }
+
+  .cockpit-body {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    min-height: auto;
+  }
+
+  .cockpit-layer-console,
+  .cockpit-dossier {
+    width: auto;
+    max-height: none;
+  }
+
+  .cockpit-map-stage {
+    order: 1;
+  }
+
+  .cockpit-layer-console {
+    order: 2;
+  }
+
+  .cockpit-map-stage {
+    display: grid;
+    gap: 8px;
+    padding: 0;
+  }
+
+  .cockpit-map-toolbar {
+    order: 2;
+    margin: 0;
+  }
+
+  .cockpit-map-plane {
+    order: 1;
+    width: 100%;
+    aspect-ratio: 1;
+    min-height: 320px;
+    overflow: hidden;
+  }
+
+  .cockpit-dossier {
+    order: 3;
+  }
+
+  .cockpit-hover-inspector {
+    width: min(210px, 70vw);
+  }
+
+  .worldwatch-intelligence-timeline,
+  .worldwatch-desk {
+    max-height: none;
+  }
+
+  .worldwatch-timeline-track {
+    grid-auto-flow: row;
+    grid-auto-columns: unset;
+    grid-template-columns: 1fr;
+    overflow-x: visible;
+  }
+
+  .timeline-replay-cursor {
+    display: none;
+  }
+}

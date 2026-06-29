@@ -1,5 +1,24 @@
 import { Suspense, lazy, useEffect, useMemo, useState, type CSSProperties } from 'react'
-import { Activity, AlertTriangle, Database, Globe2, Layers3, Link2, MapPinned, Search, ShieldCheck, Signal } from 'lucide-react'
+import {
+  Activity,
+  AlertTriangle,
+  BookOpen,
+  Database,
+  Factory,
+  Globe2,
+  Landmark,
+  Layers3,
+  Link2,
+  MapPinned,
+  Network,
+  RadioTower,
+  Route,
+  Search,
+  Server,
+  ShieldCheck,
+  Signal,
+  Zap,
+} from 'lucide-react'
 import {
   PanelSkeleton,
   QuantStripSkeleton,
@@ -114,6 +133,35 @@ const MarketIdentitySourceTrail = lazy(() =>
 
 type WorldWindowId = 'now' | '1h' | '6h' | '24h' | '7d'
 type WorldDeskMode = 'overview' | 'proof' | 'markets' | 'infrastructure'
+type WorldwatchLayerGroupId =
+  | 'events'
+  | 'markets'
+  | 'cyber'
+  | 'infrastructure'
+  | 'energy'
+  | 'supply-chain'
+  | 'research'
+  | 'government'
+  | 'sources'
+
+type WorldwatchLayerGroup = {
+  id: WorldwatchLayerGroupId
+  label: string
+  description: string
+  icon: typeof ShieldCheck
+  layerIds: WorldwatchLayerId[]
+  sourceLayer?: boolean
+}
+
+type WorldwatchLayerGroupSummary = WorldwatchLayerGroup & {
+  active: boolean
+  entityCount: number
+  onlineCount: number
+  sourceCount: number
+  staleCount: number
+  status: string
+  freshnessHeat: 'fresh' | 'mixed' | 'stale' | 'empty'
+}
 
 const worldWindows: Array<{ id: WorldWindowId; label: string; durationMs: number }> = [
   { id: 'now', label: 'Now', durationMs: 30 * 60_000 },
@@ -128,6 +176,73 @@ const worldDeskModes: Array<{ id: WorldDeskMode; label: string; description: str
   { id: 'proof', label: 'Proof', description: 'Source trails, media boundary, policy, CVE' },
   { id: 'markets', label: 'Markets', description: 'SEC facts, Form 4, 13F, ETF exposure' },
   { id: 'infrastructure', label: 'Infrastructure', description: 'Facilities, ports, grid, minerals' },
+]
+
+const worldwatchLayerGroups: WorldwatchLayerGroup[] = [
+  {
+    id: 'events',
+    label: 'Events',
+    description: 'Live event overlays, hazards, policy changes, and media observations with trust boundaries.',
+    icon: RadioTower,
+    layerIds: ['weather-alerts', 'earthquakes', 'policy', 'sanctions', 'media-observations'],
+  },
+  {
+    id: 'markets',
+    label: 'Markets',
+    description: 'SEC, market identity, and issuer-published holding evidence as context only.',
+    icon: Activity,
+    layerIds: ['market-evidence', 'etf-holdings'],
+  },
+  {
+    id: 'cyber',
+    label: 'Cyber',
+    description: 'CVE, KEV, GHSA, OSV, and advisory metadata for defensive awareness.',
+    icon: ShieldCheck,
+    layerIds: ['vulnerabilities'],
+  },
+  {
+    id: 'infrastructure',
+    label: 'Infrastructure',
+    description: 'Facilities, ports, grids, refineries, terminals, and minerals from public records.',
+    icon: Factory,
+    layerIds: ['power-plants', 'refineries', 'lng-terminals', 'nuclear-plants', 'reactor-status', 'grid-regions', 'ports-locode', 'ports-world-index', 'minerals'],
+  },
+  {
+    id: 'energy',
+    label: 'Energy',
+    description: 'Power, refinery, LNG, nuclear, and grid context from source-backed records.',
+    icon: Zap,
+    layerIds: ['power-plants', 'refineries', 'lng-terminals', 'nuclear-plants', 'reactor-status', 'grid-regions'],
+  },
+  {
+    id: 'supply-chain',
+    label: 'Supply Chain',
+    description: 'Ports, commodity flow records, and mineral-site context without company exposure invention.',
+    icon: Route,
+    layerIds: ['trade-flows', 'ports-locode', 'ports-world-index', 'minerals'],
+  },
+  {
+    id: 'research',
+    label: 'Research',
+    description: 'Patent, OpenAlex, and Crossref metadata as source-bounded research context.',
+    icon: BookOpen,
+    layerIds: ['research'],
+  },
+  {
+    id: 'government',
+    label: 'Government',
+    description: 'Policy, sanctions, Congress, Federal Register, and regulator records.',
+    icon: Landmark,
+    layerIds: ['policy', 'sanctions', 'reactor-status'],
+  },
+  {
+    id: 'sources',
+    label: 'Sources',
+    description: 'Connector health, freshness, and proof availability as an operational layer.',
+    icon: Server,
+    layerIds: [],
+    sourceLayer: true,
+  },
 ]
 
 export function WorldIntelligenceView({
@@ -157,6 +272,7 @@ export function WorldIntelligenceView({
   const [query, setQuery] = useState('')
   const [now, setNow] = useState(() => Date.now())
   const [activeLayerIds, setActiveLayerIds] = useState<WorldwatchLayerId[]>(() => DEFAULT_WORLDWATCH_LAYER_IDS)
+  const [sourceLayerVisible, setSourceLayerVisible] = useState(true)
   const [deskMode, setDeskMode] = useState<WorldDeskMode>('overview')
   const [selectedCockpitEventId, setSelectedCockpitEventId] = useState<string | null>(null)
   useEffect(() => {
@@ -212,10 +328,26 @@ export function WorldIntelligenceView({
     [layerRegistry, now, snapshot, visibleEvents],
   )
   const timelineDensityBands = useMemo(() => buildTimelineDensityBands(visibleEvents, now), [now, visibleEvents])
+  const selectedTimelineIndex = Math.max(
+    0,
+    visibleEvents.findIndex((event) => event.id === selectedCockpitEvent?.id),
+  )
   const toggleWorldwatchLayer = (layerId: WorldwatchLayerId) => {
     setActiveLayerIds((current) =>
       current.includes(layerId) ? current.filter((currentLayerId) => currentLayerId !== layerId) : [...current, layerId],
     )
+  }
+  const toggleWorldwatchLayerGroup = (group: WorldwatchLayerGroup) => {
+    if (group.sourceLayer) {
+      setSourceLayerVisible((current) => !current)
+      return
+    }
+    setActiveLayerIds((current) => {
+      const groupLayerIds = new Set(group.layerIds)
+      const allActive = group.layerIds.every((layerId) => current.includes(layerId))
+      if (allActive) return current.filter((layerId) => !groupLayerIds.has(layerId))
+      return [...new Set([...current, ...group.layerIds])]
+    })
   }
 
   const quantMetrics = useMemo(() => {
@@ -282,10 +414,12 @@ export function WorldIntelligenceView({
             layerSnapshot={layerSnapshot}
             now={now}
             selectedEvent={selectedCockpitEvent}
+            sourceLayerVisible={sourceLayerVisible}
             sources={snapshot.sources}
             windowId={windowId}
             windows={worldWindows}
             onSelectEvent={selectCockpitEvent}
+            onToggleLayerGroup={toggleWorldwatchLayerGroup}
             onToggleLayer={toggleWorldwatchLayer}
             onWindowChange={(id) => setWindowId(id as WorldWindowId)}
           />
@@ -341,7 +475,14 @@ export function WorldIntelligenceView({
             />
           ))}
         </div>
-        <div className="worldwatch-timeline-track">
+        <div
+          className="worldwatch-timeline-track"
+          style={{
+            '--cursor-count': Math.max(1, visibleEvents.slice(0, 16).length),
+            '--cursor-index': Math.min(selectedTimelineIndex, 15),
+          } as CSSProperties}
+        >
+          <span className="timeline-replay-cursor" aria-hidden="true" />
           {visibleEvents.slice(0, 16).map((event, index) => (
             <button
               className={selectedCockpitEvent?.id === event.id ? `timeline-node active severity-${event.severity} category-${categoryClass(event.category)}` : `timeline-node severity-${event.severity} category-${categoryClass(event.category)}`}
@@ -497,10 +638,18 @@ function SourceConstellation({
   status: WorldIntelSnapshot['status']
 }) {
   const [selectedSourceId, setSelectedSourceId] = useState<string | null>(null)
+  const [sourceCategoryFilter, setSourceCategoryFilter] = useState('all')
+  const [sourceStatusFilter, setSourceStatusFilter] = useState('all')
   const online = sources.filter((source) => source.status === 'online').length
   const attention = sources.filter((source) => ['failed', 'rate-limited', 'offline'].includes(source.status)).length
   const locked = sources.filter((source) => source.status === 'disabled' || source.refreshState === 'missing-key').length
-  const displayedSources = sources.slice(0, 36)
+  const sourceCategories = useMemo(() => sourceConstellationCategories(sources), [sources])
+  const filteredSources = sources.filter((source) => {
+    const categoryMatch = sourceCategoryFilter === 'all' || sourceCategoryLabel(source) === sourceCategoryFilter
+    const statusMatch = sourceStatusFilter === 'all' || sourceStatusGroup(source) === sourceStatusFilter
+    return categoryMatch && statusMatch
+  })
+  const displayedSources = filteredSources.slice(0, 36)
   const selectedSource = displayedSources.find((source) => source.sourceId === selectedSourceId) ?? displayedSources[0]
 
   return (
@@ -512,6 +661,32 @@ function SourceConstellation({
         </div>
         <strong className={`source-orbit-state state-${status}`}>{status}</strong>
       </header>
+      <div className="source-filter-grid" aria-label="Source filters">
+        <div>
+          {sourceCategories.map((category) => (
+            <button
+              className={sourceCategoryFilter === category ? 'active' : ''}
+              key={category}
+              type="button"
+              onClick={() => setSourceCategoryFilter(category)}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+        <div>
+          {['all', 'live', 'attention', 'locked'].map((filter) => (
+            <button
+              className={sourceStatusFilter === filter ? 'active' : ''}
+              key={filter}
+              type="button"
+              onClick={() => setSourceStatusFilter(filter)}
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="source-orbit-field">
         <div className="source-orbit-core">
           <Signal size={18} />
@@ -539,6 +714,12 @@ function SourceConstellation({
           <p>
             {humanSourceStatus(selectedSource)} · {selectedSource.itemCount} records · {formatOptionalTime(selectedSource.lastSuccessAt)}
           </p>
+          <div className="source-detail-grid">
+            <span>Last ok <strong>{formatOptionalTime(selectedSource.lastSuccessAt)}</strong></span>
+            <span>Attempt <strong>{formatOptionalTime(selectedSource.lastAttemptAt)}</strong></span>
+            <span>Next <strong>{formatOptionalTime(selectedSource.nextAttemptAt)}</strong></span>
+            <span>Proof <strong>{selectedSource.provenance}</strong></span>
+          </div>
         </div>
       ) : null}
       <div className="source-constellation-legend">
@@ -556,10 +737,12 @@ function WorldwatchCockpit({
   layerSnapshot,
   now,
   selectedEvent,
+  sourceLayerVisible,
   sources,
   windowId,
   windows,
   onSelectEvent,
+  onToggleLayerGroup,
   onToggleLayer,
   onWindowChange,
 }: {
@@ -568,17 +751,21 @@ function WorldwatchCockpit({
   layerSnapshot: WorldwatchLayerSnapshot
   now: number
   selectedEvent?: WorldIntelEvent
+  sourceLayerVisible: boolean
   sources: OsintSourceSnapshot[]
   windowId: WorldWindowId
   windows: typeof worldWindows
   onSelectEvent: (eventId: string) => void
+  onToggleLayerGroup: (group: WorldwatchLayerGroup) => void
   onToggleLayer: (layerId: WorldwatchLayerId) => void
   onWindowChange: (id: WorldWindowId) => void
 }) {
   const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null)
+  const [graphOpen, setGraphOpen] = useState(false)
   const activeLayerSet = useMemo(() => new Set(activeLayerIds), [activeLayerIds])
   const onlineSources = sources.filter((source) => source.status === 'online').length
   const attentionSources = sources.filter((source) => ['failed', 'rate-limited', 'offline'].includes(source.status)).length
+  const lockedSources = sources.filter((source) => source.status === 'disabled' || source.refreshState === 'missing-key').length
   const layerEntities = useMemo(
     () =>
       layerSnapshot.entities
@@ -591,8 +778,8 @@ function WorldwatchCockpit({
     [events, layerEntities.length],
   )
   const plottedMarkers = useMemo(
-    () => buildCockpitMarkers(layerEntities, eventFallbackMarkers, events),
-    [eventFallbackMarkers, events, layerEntities],
+    () => buildCockpitMarkers(layerEntities, eventFallbackMarkers, events, now),
+    [eventFallbackMarkers, events, layerEntities, now],
   )
   const requestedSelected = selectedEvent ?? events[0]
   const selected =
@@ -604,11 +791,21 @@ function WorldwatchCockpit({
   const selectedMarker = plottedMarkers.find((marker) => marker.eventId === selected?.id) ?? plottedMarkers[0]
   const hoveredMarker = plottedMarkers.find((marker) => marker.id === hoveredMarkerId)
   const markerClusters = useMemo(() => buildMarkerClusters(plottedMarkers), [plottedMarkers])
+  const heatRings = useMemo(() => buildRegionalHeatRings(plottedMarkers), [plottedMarkers])
   const connectionEdges = useMemo(() => buildCockpitConnections(selectedMarker, plottedMarkers), [plottedMarkers, selectedMarker])
   const selectedEntity = selected ? layerEntities.find((entity) => entity.eventId === selected.id) : undefined
   const selectedSource = selected ? sources.find((source) => source.sourceId === selected.sourceId) : undefined
+  const selectedProof = selectedEntity?.proof
   const connectedChips = selected ? buildConnectedChips(selected, selectedEntity, connectionEdges) : []
+  const connectedRegions = selected ? buildConnectedRegions(selected, connectionEdges) : []
+  const connectedMarkets = selected ? buildConnectedMarkets(selected, selectedEntity) : []
   const whyThisMatters = selected ? buildWhyThisMatters(selected, selectedEntity) : []
+  const whatChanged = selected ? buildWhatChanged(selected, selectedEntity, now) : []
+  const layerGroupSummaries = useMemo(
+    () => summarizeLayerGroups(layerSnapshot.layers, activeLayerSet, sourceLayerVisible, sources),
+    [activeLayerSet, layerSnapshot.layers, sourceLayerVisible, sources],
+  )
+  const entityGraph = buildEntityGraph(events, selected, sources)
   const mapStyle = {
     '--focus-x': `${selectedMarker?.x ?? 50}%`,
     '--focus-y': `${selectedMarker?.y ?? 50}%`,
@@ -644,17 +841,37 @@ function WorldwatchCockpit({
           </div>
 
           <div className="cockpit-layer-stack">
-            {layerSnapshot.layers.map((layer) => (
+            {layerGroupSummaries.map((group) => {
+              const Icon = group.icon
+              return (
+                <button
+                  className={`cockpit-layer-group group-${group.id} layer-status-${group.status} heat-${group.freshnessHeat}${group.active ? ' active' : ''}`}
+                  key={group.id}
+                  type="button"
+                  onClick={() => onToggleLayerGroup(group)}
+                >
+                  <Icon size={14} />
+                  <span>{group.label}</span>
+                  <strong>{group.entityCount}</strong>
+                  <em>{group.status}</em>
+                  <small>{group.description}</small>
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="cockpit-sublayer-stack" aria-label="Proof layer detail">
+            {layerSnapshot.layers.slice(0, 9).map((layer) => (
               <button
-                className={activeLayerSet.has(layer.id) ? 'active' : ''}
+                aria-pressed={activeLayerSet.has(layer.id)}
+                className={activeLayerSet.has(layer.id) ? `active heat-${layer.freshnessHeat}` : `heat-${layer.freshnessHeat}`}
                 disabled={layer.status === 'missing-config'}
                 key={layer.id}
                 type="button"
                 onClick={() => onToggleLayer(layer.id)}
               >
                 <span>{layer.label}</span>
-                <strong>{layer.entityCount}</strong>
-                <em>{layer.status}</em>
+                <em>{layer.entityCount}</em>
               </button>
             ))}
           </div>
@@ -668,8 +885,21 @@ function WorldwatchCockpit({
             </div>
             <div>
               <Layers3 size={15} />
-              <span>{activeLayerIds.length} active layers</span>
+              <span>{layerGroupSummaries.filter((group) => group.active).length} visible layers</span>
             </div>
+            <div>
+              <Database size={15} />
+              <span>{onlineSources}/{sources.length} sources live</span>
+            </div>
+            <button
+              aria-pressed={graphOpen}
+              className={graphOpen ? 'cockpit-tool-button active' : 'cockpit-tool-button'}
+              type="button"
+              onClick={() => setGraphOpen((current) => !current)}
+            >
+              <Network size={15} />
+              <span>{graphOpen ? 'Hide graph' : 'Entity graph'}</span>
+            </button>
           </div>
 
           <div className="cockpit-map-plane" style={mapStyle}>
@@ -683,6 +913,13 @@ function WorldwatchCockpit({
             <span className="cockpit-landmass land-emea" />
             <span className="cockpit-landmass land-apac" />
             <span className="cockpit-focus-reticle" />
+            {sourceLayerVisible ? (
+              <div className="cockpit-source-radar" aria-label="Source health radar">
+                <span className="source-radar-live">{onlineSources} live</span>
+                <span className="source-radar-attention">{attentionSources} attention</span>
+                <span className="source-radar-locked">{lockedSources} locked</span>
+              </div>
+            ) : null}
             <span className="cockpit-region region-americas">Americas</span>
             <span className="cockpit-region region-emea">EMEA</span>
             <span className="cockpit-region region-apac">APAC</span>
@@ -695,16 +932,26 @@ function WorldwatchCockpit({
               <>
                 <svg className="cockpit-connection-overlay" aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none">
                   {connectionEdges.map((edge) => (
-                    <line
+                    <path
                       className={`connection-strength-${edge.strength}`}
                       key={`${edge.source.id}:${edge.target.id}`}
-                      x1={edge.source.x}
-                      y1={edge.source.y}
-                      x2={edge.target.x}
-                      y2={edge.target.y}
+                      d={connectionArcPath(edge)}
                     />
                   ))}
                 </svg>
+                {heatRings.map((ring) => (
+                  <span
+                    className={`cockpit-heat-ring category-${categoryClass(ring.category)}`}
+                    key={ring.id}
+                    style={{
+                      left: `${ring.x}%`,
+                      top: `${ring.y}%`,
+                      '--heat-size': `${ring.size}px`,
+                      '--heat-opacity': ring.opacity,
+                    } as CSSProperties}
+                    title={`${ring.count} source-backed markers near ${ring.region}`}
+                  />
+                ))}
                 {markerClusters.map((cluster) => (
                   <button
                     aria-label={`Focus ${cluster.count} related markers near ${cluster.region}`}
@@ -723,7 +970,12 @@ function WorldwatchCockpit({
                     aria-label={`Select ${marker.label}`}
                     className={`cockpit-marker marker-${marker.trust} severity-${marker.severity} category-${categoryClass(marker.category)}${marker.stale ? ' stale' : ''}${selected?.id === marker.eventId ? ' active' : ''}`}
                     key={marker.id}
-                    style={{ left: `${marker.x}%`, top: `${marker.y}%`, '--marker-index': index } as CSSProperties}
+                    style={{
+                      left: `${marker.x}%`,
+                      top: `${marker.y}%`,
+                      '--marker-index': index,
+                      '--marker-opacity': marker.visualOpacity,
+                    } as CSSProperties}
                     type="button"
                     onClick={() => onSelectEvent(marker.eventId)}
                     onMouseEnter={() => setHoveredMarkerId(marker.id)}
@@ -731,7 +983,9 @@ function WorldwatchCockpit({
                     onFocus={() => setHoveredMarkerId(marker.id)}
                     onBlur={() => setHoveredMarkerId(null)}
                   >
-                    <span className="marker-core" />
+                    <span className="marker-core">
+                      <CategoryGlyph category={marker.category} />
+                    </span>
                     <i className="marker-ring" />
                     <strong>{marker.label}</strong>
                   </button>
@@ -748,6 +1002,9 @@ function WorldwatchCockpit({
                 ) : null}
               </>
             )}
+            {graphOpen ? (
+              <EntityGraphOverlay graph={entityGraph} onSelectEvent={onSelectEvent} />
+            ) : null}
           </div>
         </section>
 
@@ -761,15 +1018,26 @@ function WorldwatchCockpit({
               <p>{selected.summary}</p>
               <div className="cockpit-proof-strip">
                 <ProvenanceBadge value={selected.provenance} size="sm" />
-                <FreshnessBadge now={now} retrievedAt={selected.timestamp} size="sm" />
+                <FreshnessBadge now={now} retrievedAt={selectedProof?.retrievedAt ?? selected.timestamp} size="sm" />
                 <span>{formatEventConfidence(selected.confidence)} confidence</span>
               </div>
               <div className="cockpit-proof-card">
-                <span>Source Trail</span>
+                <span>Evidence Trail</span>
                 <strong>{selectedSource?.sourceName ?? selected.sourceId}</strong>
-                <p>
-                  {selected.rawPayloadHash ? `Payload ${shortHash(selected.rawPayloadHash)}` : 'Payload hash unavailable'} · {formatOptionalTime(selected.timestamp)}
-                </p>
+                <div className="cockpit-proof-grid">
+                  <span>Retrieved <strong>{formatOptionalTime(selectedProof?.retrievedAt ?? selected.timestamp)}</strong></span>
+                  <span>Payload <strong>{shortHash(selectedProof?.rawPayloadHash ?? selected.rawPayloadHash)}</strong></span>
+                  <span>Records <strong>{selectedSource?.itemCount ?? 0}</strong></span>
+                  <span>State <strong>{selectedSource ? humanSourceStatus(selectedSource) : selected.provenance}</strong></span>
+                </div>
+              </div>
+              <div className="cockpit-dossier-section">
+                <span>What changed</span>
+                <ul>
+                  {whatChanged.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
               </div>
               <div className="cockpit-dossier-section">
                 <span>Why this matters</span>
@@ -779,10 +1047,31 @@ function WorldwatchCockpit({
                   ))}
                 </ul>
               </div>
-              <div className="cockpit-tag-grid">
-                {connectedChips.slice(0, 12).map((item) => (
-                  <span key={item}>{item}</span>
-                ))}
+              <div className="cockpit-connection-grid">
+                <section>
+                  <span>Connected regions</span>
+                  <div className="cockpit-tag-grid">
+                    {connectedRegions.map((item) => (
+                      <span key={item}>{item}</span>
+                    ))}
+                  </div>
+                </section>
+                <section>
+                  <span>Connected markets</span>
+                  <div className="cockpit-tag-grid">
+                    {connectedMarkets.map((item) => (
+                      <span key={item}>{item}</span>
+                    ))}
+                  </div>
+                </section>
+              </div>
+              <div className="cockpit-dossier-section">
+                <span>Related entities</span>
+                <div className="cockpit-tag-grid">
+                  {connectedChips.slice(0, 12).map((item) => (
+                    <span key={item}>{item}</span>
+                  ))}
+                </div>
               </div>
               <div className="cockpit-dossier-section">
                 <span>Unknowns</span>
@@ -830,6 +1119,9 @@ type CockpitVisualMarker = {
   category: string
   region: string
   timestamp: number
+  confidence: number
+  freshness: number
+  visualOpacity: number
 }
 
 type CockpitConnection = {
@@ -844,6 +1136,42 @@ type TimelineDensityBand = {
   label: string
   category: string
   count: number
+}
+
+type CockpitHeatRing = {
+  id: string
+  x: number
+  y: number
+  count: number
+  size: number
+  opacity: number
+  region: string
+  category: string
+}
+
+type EntityGraphNodeKind = 'event' | 'country' | 'market' | 'source' | 'sector' | 'commodity'
+
+type EntityGraphNode = {
+  id: string
+  label: string
+  kind: EntityGraphNodeKind
+  eventId: string
+  x: number
+  y: number
+  active: boolean
+}
+
+type EntityGraphEdge = {
+  id: string
+  sourceId: string
+  targetId: string
+  source: EntityGraphNode
+  target: EntityGraphNode
+}
+
+type EntityGraphModel = {
+  nodes: EntityGraphNode[]
+  edges: EntityGraphEdge[]
 }
 
 function MetricPill({
@@ -864,16 +1192,134 @@ function MetricPill({
   )
 }
 
+function summarizeLayerGroups(
+  layers: WorldwatchLayerSnapshot['layers'],
+  activeLayerSet: Set<WorldwatchLayerId>,
+  sourceLayerVisible: boolean,
+  sources: OsintSourceSnapshot[],
+): WorldwatchLayerGroupSummary[] {
+  const layerById = new Map(layers.map((layer) => [layer.id, layer]))
+  return worldwatchLayerGroups.map((group) => {
+    if (group.sourceLayer) {
+      const onlineCount = sources.filter((source) => source.status === 'online').length
+      const staleCount = sources.filter((source) => source.refreshState === 'stale' || source.refreshState === 'expired').length
+      return {
+        ...group,
+        active: sourceLayerVisible,
+        entityCount: sources.length,
+        onlineCount,
+        sourceCount: sources.length,
+        staleCount,
+        status: sourceGroupStatus(sources),
+        freshnessHeat: sources.length === 0 ? 'empty' : staleCount > 0 ? 'mixed' : 'fresh',
+      }
+    }
+
+    const groupLayers = group.layerIds.map((layerId) => layerById.get(layerId)).filter((layer): layer is WorldwatchLayerSnapshot['layers'][number] => Boolean(layer))
+    const entityCount = groupLayers.reduce((sum, layer) => sum + layer.entityCount, 0)
+    const staleCount = groupLayers.reduce((sum, layer) => sum + layer.staleEntityCount, 0)
+    const sourceIds = new Set(groupLayers.flatMap((layer) => layer.sourceIds))
+    const onlineCount = groupLayers.reduce((sum, layer) => sum + layer.onlineSourceCount, 0)
+    return {
+      ...group,
+      active: group.layerIds.some((layerId) => activeLayerSet.has(layerId)),
+      entityCount,
+      onlineCount,
+      sourceCount: sourceIds.size,
+      staleCount,
+      status: layerGroupStatus(groupLayers),
+      freshnessHeat: layerGroupFreshness(entityCount, staleCount),
+    }
+  })
+}
+
+function sourceGroupStatus(sources: OsintSourceSnapshot[]) {
+  if (sources.length === 0) return 'inactive'
+  if (sources.some((source) => source.status === 'failed' || source.status === 'rate-limited' || source.status === 'offline')) return 'attention'
+  if (sources.some((source) => source.status === 'disabled' || source.refreshState === 'missing-key')) return 'missing-config'
+  return sources.some((source) => source.status === 'online') ? 'online' : 'inactive'
+}
+
+function layerGroupStatus(layers: WorldwatchLayerSnapshot['layers']) {
+  if (layers.some((layer) => layer.status === 'online')) return 'online'
+  if (layers.some((layer) => layer.status === 'attention')) return 'attention'
+  if (layers.some((layer) => layer.status === 'missing-config')) return 'missing-config'
+  return 'inactive'
+}
+
+function layerGroupFreshness(entityCount: number, staleCount: number): WorldwatchLayerGroupSummary['freshnessHeat'] {
+  if (entityCount === 0) return 'empty'
+  if (staleCount === 0) return 'fresh'
+  if (staleCount === entityCount) return 'stale'
+  return 'mixed'
+}
+
+function CategoryGlyph({ category }: { category: string }) {
+  const normalized = categoryClass(category)
+  if (normalized.includes('market') || normalized.includes('macro')) return <Activity aria-hidden="true" size={8} />
+  if (normalized.includes('cyber') || normalized.includes('vulnerab')) return <ShieldCheck aria-hidden="true" size={8} />
+  if (normalized.includes('infrastructure')) return <Factory aria-hidden="true" size={8} />
+  if (normalized.includes('commodit') || normalized.includes('energy')) return <Zap aria-hidden="true" size={8} />
+  if (normalized.includes('geopolitic') || normalized.includes('country') || normalized.includes('policy')) return <Landmark aria-hidden="true" size={8} />
+  if (normalized.includes('research')) return <BookOpen aria-hidden="true" size={8} />
+  return <RadioTower aria-hidden="true" size={8} />
+}
+
+function EntityGraphOverlay({
+  graph,
+  onSelectEvent,
+}: {
+  graph: EntityGraphModel
+  onSelectEvent: (eventId: string) => void
+}) {
+  return (
+    <div className="entity-graph-overlay" aria-label="Entity relationship graph">
+      {graph.nodes.length === 0 ? (
+        <div className="entity-graph-empty">
+          <Network size={18} />
+          <p>No connected entities in this view.</p>
+        </div>
+      ) : null}
+      <svg aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none">
+        {graph.edges.map((edge) => (
+          <line
+            key={edge.id}
+            x1={edge.source.x}
+            x2={edge.target.x}
+            y1={edge.source.y}
+            y2={edge.target.y}
+          />
+        ))}
+      </svg>
+      {graph.nodes.map((node) => (
+        <button
+          className={`entity-graph-node node-${node.kind}${node.active ? ' active' : ''}`}
+          key={node.id}
+          style={{ left: `${node.x}%`, top: `${node.y}%` }}
+          type="button"
+          onClick={() => onSelectEvent(node.eventId)}
+        >
+          <span>{node.kind}</span>
+          <strong>{node.label}</strong>
+        </button>
+      ))}
+    </div>
+  )
+}
+
 function buildCockpitMarkers(
   layerEntities: WorldwatchEntity[],
   eventFallbackMarkers: WorldIntelEvent[],
   events: WorldIntelEvent[],
+  now: number,
 ): CockpitVisualMarker[] {
   const eventById = new Map(events.map((event) => [event.id, event]))
   if (layerEntities.length > 0) {
     return layerEntities.map((entity, index) => {
       const event = eventById.get(entity.eventId)
       const position = cockpitEntityPosition(entity, index)
+      const confidence = normalizeConfidence(entity.proof.confidence)
+      const freshness = timelineFreshness(entity.timestamp, now) / 100
       return {
         id: entity.id,
         eventId: entity.eventId,
@@ -889,12 +1335,17 @@ function buildCockpitMarkers(
         category: event?.category ?? entity.kind,
         region: entity.region,
         timestamp: entity.timestamp,
+        confidence,
+        freshness,
+        visualOpacity: visualOpacityFor(confidence, freshness, entity.stale),
       }
     })
   }
 
   return eventFallbackMarkers.map((event, index) => {
     const position = cockpitMarkerPosition(event, index)
+    const confidence = normalizeConfidence(event.confidence)
+    const freshness = timelineFreshness(event.timestamp, now) / 100
     return {
       id: event.id,
       eventId: event.id,
@@ -909,6 +1360,9 @@ function buildCockpitMarkers(
       category: event.category,
       region: event.region,
       timestamp: event.timestamp,
+      confidence,
+      freshness,
+      visualOpacity: visualOpacityFor(confidence, freshness, false),
     }
   })
 }
@@ -968,6 +1422,59 @@ function buildMarkerClusters(markers: CockpitVisualMarker[]) {
     .slice(0, 12)
 }
 
+function buildRegionalHeatRings(markers: CockpitVisualMarker[]): CockpitHeatRing[] {
+  const buckets = new Map<
+    string,
+    {
+      xTotal: number
+      yTotal: number
+      count: number
+      region: string
+      category: string
+      confidenceTotal: number
+    }
+  >()
+
+  for (const marker of markers) {
+    const region = regionClusterKey(marker.region)
+    const key = `${region}:${categoryClass(marker.category)}`
+    const current = buckets.get(key)
+    if (!current) {
+      buckets.set(key, {
+        xTotal: marker.x,
+        yTotal: marker.y,
+        count: 1,
+        region,
+        category: marker.category,
+        confidenceTotal: marker.confidence,
+      })
+      continue
+    }
+    current.xTotal += marker.x
+    current.yTotal += marker.y
+    current.count += 1
+    current.confidenceTotal += marker.confidence
+  }
+
+  return [...buckets.entries()]
+    .filter(([, bucket]) => bucket.count >= 2)
+    .map(([id, bucket]) => {
+      const confidence = bucket.confidenceTotal / bucket.count
+      return {
+        id,
+        x: clampPercent(bucket.xTotal / bucket.count),
+        y: clampPercent(bucket.yTotal / bucket.count),
+        count: bucket.count,
+        size: Math.min(132, 38 + bucket.count * 14),
+        opacity: Number(Math.min(0.62, 0.2 + confidence * 0.32).toFixed(2)),
+        region: bucket.region,
+        category: bucket.category,
+      }
+    })
+    .sort((left, right) => right.count - left.count)
+    .slice(0, 10)
+}
+
 function buildCockpitConnections(
   selected: CockpitVisualMarker | undefined,
   markers: CockpitVisualMarker[],
@@ -1021,6 +1528,13 @@ function buildCockpitConnections(
     }))
 }
 
+function connectionArcPath(edge: CockpitConnection) {
+  const midX = (edge.source.x + edge.target.x) / 2
+  const midY = (edge.source.y + edge.target.y) / 2
+  const lift = Math.min(14, Math.max(5, Math.hypot(edge.source.x - edge.target.x, edge.source.y - edge.target.y) * 0.16))
+  return `M ${edge.source.x} ${edge.source.y} Q ${midX} ${midY - lift} ${edge.target.x} ${edge.target.y}`
+}
+
 function buildConnectedChips(
   selected: WorldIntelEvent,
   entity: WorldwatchEntity | undefined,
@@ -1037,6 +1551,153 @@ function buildConnectedChips(
     ...edges.slice(0, 3).map((edge) => `${edge.reason}: ${edge.target.label}`),
   ]
   return [...new Set(chips.filter(Boolean))].slice(0, 14)
+}
+
+function buildConnectedRegions(selected: WorldIntelEvent, edges: CockpitConnection[]) {
+  const regions = [selected.region, ...selected.countryCodes, ...edges.map((edge) => edge.target.region)]
+  const uniqueRegions = [...new Set(regions.filter(Boolean))]
+  return uniqueRegions.length > 0 ? uniqueRegions.slice(0, 8) : ['No connected region in current window']
+}
+
+function buildConnectedMarkets(selected: WorldIntelEvent, entity: WorldwatchEntity | undefined) {
+  const markets = [
+    ...selected.affectedAssets,
+    ...selected.affectedCurrencies,
+    ...selected.affectedCommodities,
+    ...(entity?.exposureContext ?? []),
+  ]
+  const uniqueMarkets = [...new Set(markets.filter(Boolean))]
+  return uniqueMarkets.length > 0 ? uniqueMarkets.slice(0, 8) : ['No connected market evidence']
+}
+
+function buildWhatChanged(selected: WorldIntelEvent, entity: WorldwatchEntity | undefined, now: number) {
+  const changes = [
+    `${formatEventAge(selected.timestamp, now)} source-backed record entered this view.`,
+    entity?.layerId ? `Source proof is present for the ${entity.layerId.replaceAll('-', ' ')} layer.` : undefined,
+    entity?.stale ? 'Freshness is stale or expired; Atlasz keeps it visible as stale evidence.' : undefined,
+    selected.narrativeTags.length ? `Tags in view: ${selected.narrativeTags.slice(0, 3).join(', ')}.` : undefined,
+    selected.extractedEntities.length ? `Entities in the record: ${selected.extractedEntities.slice(0, 3).join(', ')}.` : undefined,
+  ].filter((change): change is string => Boolean(change))
+  return changes.slice(0, 4)
+}
+
+function buildEntityGraph(
+  events: WorldIntelEvent[],
+  selected: WorldIntelEvent | undefined,
+  sources: OsintSourceSnapshot[],
+): EntityGraphModel {
+  const sourceNameById = new Map(sources.map((source) => [source.sourceId, source.sourceName]))
+  const scopedEvents = selected
+    ? [
+        selected,
+        ...events
+          .filter((event) => event.id !== selected.id)
+          .filter((event) => graphEventRelatedness(selected, event) > 0)
+          .sort((left, right) => graphEventRelatedness(selected, right) - graphEventRelatedness(selected, left) || right.timestamp - left.timestamp)
+          .slice(0, 8),
+      ]
+    : events.slice(0, 9)
+  const nodes = new Map<string, EntityGraphNode>()
+  const edges: EntityGraphEdge[] = []
+  const kindCounts = new Map<EntityGraphNodeKind, number>()
+
+  const addNode = (kind: EntityGraphNodeKind, id: string, label: string, eventId: string, active: boolean) => {
+    const existing = nodes.get(id)
+    if (existing) {
+      if (active) existing.active = true
+      return existing
+    }
+    const order = kindCounts.get(kind) ?? 0
+    kindCounts.set(kind, order + 1)
+    const position = entityGraphNodePosition(kind, order, active)
+    const node: EntityGraphNode = {
+      id,
+      kind,
+      label: compactLabel(label),
+      eventId,
+      active,
+      ...position,
+    }
+    nodes.set(id, node)
+    return node
+  }
+
+  const addEdge = (source: EntityGraphNode, target: EntityGraphNode) => {
+    const id = `${source.id}->${target.id}`
+    if (edges.some((edge) => edge.id === id)) return
+    edges.push({ id, sourceId: source.id, targetId: target.id, source, target })
+  }
+
+  for (const event of scopedEvents) {
+    const active = event.id === selected?.id
+    const eventNode = addNode('event', `event:${event.id}`, event.title, event.id, active)
+    const sourceNode = addNode('source', `source:${event.sourceId}`, sourceNameById.get(event.sourceId) ?? event.sourceId, event.id, active)
+    addEdge(eventNode, sourceNode)
+
+    for (const code of event.countryCodes.slice(0, 4)) {
+      addEdge(eventNode, addNode('country', `country:${code}`, code, event.id, active))
+    }
+    for (const asset of [...event.affectedAssets, ...event.extractedEntities].slice(0, 5)) {
+      addEdge(eventNode, addNode('market', `market:${asset}`, asset, event.id, active))
+    }
+    for (const sector of event.affectedSectors.slice(0, 3)) {
+      addEdge(eventNode, addNode('sector', `sector:${sector}`, sector, event.id, active))
+    }
+    for (const commodity of event.affectedCommodities.slice(0, 3)) {
+      addEdge(eventNode, addNode('commodity', `commodity:${commodity}`, commodity, event.id, active))
+    }
+  }
+
+  const orderedNodes = [...nodes.values()]
+    .sort((left, right) => Number(right.active) - Number(left.active) || graphKindOrder(left.kind) - graphKindOrder(right.kind))
+    .slice(0, 34)
+  const visibleNodeIds = new Set(orderedNodes.map((node) => node.id))
+  return {
+    nodes: orderedNodes,
+    edges: edges.filter((edge) => visibleNodeIds.has(edge.sourceId) && visibleNodeIds.has(edge.targetId)).slice(0, 48),
+  }
+}
+
+function graphEventRelatedness(selected: WorldIntelEvent, event: WorldIntelEvent) {
+  const selectedCountries = new Set(selected.countryCodes)
+  const selectedAssets = new Set(selected.affectedAssets)
+  return (
+    Number(selected.sourceId === event.sourceId) +
+    Number(categoryClass(selected.category) === categoryClass(event.category)) +
+    Number(selected.region === event.region) +
+    Number(event.countryCodes.some((code) => selectedCountries.has(code))) +
+    Number(event.affectedAssets.some((asset) => selectedAssets.has(asset)))
+  )
+}
+
+function entityGraphNodePosition(kind: EntityGraphNodeKind, order: number, active: boolean) {
+  if (active && kind === 'event') return { x: 50, y: 50 }
+  const anchors: Record<EntityGraphNodeKind, { x: number; y: number; radius: number }> = {
+    event: { x: 50, y: 50, radius: 18 },
+    country: { x: 28, y: 34, radius: 16 },
+    market: { x: 70, y: 34, radius: 18 },
+    source: { x: 50, y: 73, radius: 16 },
+    sector: { x: 70, y: 63, radius: 15 },
+    commodity: { x: 30, y: 63, radius: 15 },
+  }
+  const anchor = anchors[kind]
+  const angle = order * 1.9 + graphKindOrder(kind) * 0.42
+  return {
+    x: clampPercent(anchor.x + Math.cos(angle) * anchor.radius),
+    y: clampPercent(anchor.y + Math.sin(angle) * anchor.radius * 0.72),
+  }
+}
+
+function graphKindOrder(kind: EntityGraphNodeKind) {
+  const order: Record<EntityGraphNodeKind, number> = {
+    event: 0,
+    source: 1,
+    country: 2,
+    market: 3,
+    sector: 4,
+    commodity: 5,
+  }
+  return order[kind]
 }
 
 function buildWhyThisMatters(selected: WorldIntelEvent, entity: WorldwatchEntity | undefined) {
@@ -1091,6 +1752,39 @@ function timelineFreshness(timestamp: number, now: number) {
   const age = Math.max(0, now - timestamp)
   const dayMs = 24 * 60 * 60_000
   return Math.round(Math.max(8, 100 - (age / dayMs) * 92))
+}
+
+function normalizeConfidence(value: number) {
+  if (!Number.isFinite(value)) return 0.35
+  return Math.max(0.08, Math.min(1, value <= 1 ? value : value / 100))
+}
+
+function visualOpacityFor(confidence: number, freshness: number, stale: boolean) {
+  const opacity = Math.max(0.34, Math.min(1, 0.28 + confidence * 0.52 + freshness * 0.2))
+  return Number((stale ? opacity * 0.58 : opacity).toFixed(2))
+}
+
+function sourceConstellationCategories(sources: OsintSourceSnapshot[]) {
+  const categories = [...new Set(sources.map(sourceCategoryLabel))]
+  return ['all', ...categories.slice(0, 5)]
+}
+
+function sourceCategoryLabel(source: OsintSourceSnapshot) {
+  const raw = `${source.category ?? source.sourceType}`.trim().toLowerCase()
+  if (raw.includes('market') || raw.includes('sec')) return 'markets'
+  if (raw.includes('cyber') || raw.includes('vulnerab') || raw.includes('cve')) return 'cyber'
+  if (raw.includes('weather') || raw.includes('earth') || raw.includes('hazard')) return 'events'
+  if (raw.includes('policy') || raw.includes('government') || raw.includes('regulator')) return 'government'
+  if (raw.includes('trade') || raw.includes('port') || raw.includes('logistics')) return 'supply'
+  if (raw.includes('research') || raw.includes('patent') || raw.includes('crossref') || raw.includes('openalex')) return 'research'
+  return raw || 'other'
+}
+
+function sourceStatusGroup(source: OsintSourceSnapshot) {
+  if (source.status === 'online') return 'live'
+  if (source.status === 'disabled' || source.refreshState === 'missing-key') return 'locked'
+  if (source.status === 'failed' || source.status === 'rate-limited' || source.status === 'offline') return 'attention'
+  return 'attention'
 }
 
 function sourceNodePosition(source: OsintSourceSnapshot, index: number, total: number) {

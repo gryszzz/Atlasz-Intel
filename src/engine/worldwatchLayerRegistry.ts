@@ -19,9 +19,10 @@ export type WorldwatchLayerId =
   | 'etf-holdings'
   | 'trade-flows'
   | 'vulnerabilities'
+  | 'research'
   | 'media-observations'
 
-export type WorldwatchLayerKind = 'hazard' | 'facility' | 'policy' | 'market' | 'trade' | 'cyber' | 'media'
+export type WorldwatchLayerKind = 'hazard' | 'facility' | 'policy' | 'market' | 'trade' | 'cyber' | 'research' | 'media'
 export type WorldwatchLayerStatus = 'online' | 'attention' | 'missing-config' | 'inactive'
 export type WorldwatchGeometryKind = 'point' | 'region' | 'arc' | 'context'
 export type WorldwatchVisualTrust = 'official' | 'public' | 'media' | 'structural' | 'unavailable'
@@ -171,6 +172,7 @@ const LAYER_METADATA: Record<WorldwatchLayerId, WorldwatchLayerMetadata> = {
   'etf-holdings': metadata('public-disclosure', 'daily', 'context-row', 'stale-context-row', 'EtfHoldingsSourceTrail'),
   'trade-flows': metadata('official-api', 'annual', 'arc-path', 'stale-context-row', 'ComtradeSourceTrail'),
   vulnerabilities: metadata('mixed', 'daily', 'context-row', 'stale-context-row', 'CveSourceTrailPanel'),
+  research: metadata('mixed', 'daily', 'context-row', 'stale-context-row', 'OpenAlexSourceTrail/CrossrefSourceTrail/PatentSourceTrail'),
   'media-observations': metadata('media-observation', 'near-realtime', 'region-overlay', 'dashed-region', 'GdeltSourceTrail'),
 }
 
@@ -361,6 +363,17 @@ const WORLDWATCH_LAYER_BASE_DEFINITIONS: WorldwatchLayerDefinitionInput[] = [
     defaultEnabled: true,
     maxEntities: 100,
     nonClaims: ['Defensive metadata only; no exploit guidance or exploitation claim.'],
+  },
+  {
+    id: 'research',
+    label: 'Research',
+    kind: 'research',
+    description: 'OpenAlex, Crossref, and patent records rendered as source-bounded research context.',
+    sourceIds: ['openalex_works_public', 'crossref_works_public', 'uspto_patentsview_public'],
+    geometry: 'context',
+    defaultEnabled: false,
+    maxEntities: 80,
+    nonClaims: ['Research record only; no novelty, efficacy, ownership, patent-strength, or market-impact claim.'],
   },
   {
     id: 'media-observations',
@@ -576,6 +589,7 @@ function classifyEventLayers(event: WorldIntelEvent): WorldwatchLayerId[] {
   if (event.kevVulnerability || event.nvdCve || event.ghsaAdvisory || event.osvVulnerability || event.cisaAdvisory) {
     layerIds.push('vulnerabilities')
   }
+  if (event.openAlexWork || event.crossrefWork || event.patentRecord) layerIds.push('research')
   if (event.gdeltArticle) layerIds.push('media-observations')
   return layerIds
 }
@@ -742,6 +756,8 @@ function entityLabel(event: WorldIntelEvent, layerId: WorldwatchLayerId): string
         event.osvVulnerability?.osvId ??
         event.cisaAdvisory?.advisoryId
       )
+    case 'research':
+      return event.openAlexWork?.title ?? event.crossrefWork?.title ?? event.patentRecord?.title
     case 'media-observations':
       return event.gdeltArticle?.title
   }
@@ -756,6 +772,9 @@ function entitySummary(event: WorldIntelEvent, layerId: WorldwatchLayerId): stri
   }
   if (layerId === 'etf-holdings' && event.etfHolding) {
     return `${event.etfHolding.holdingName} appears in ${event.etfHolding.fundName} source holdings dated ${event.etfHolding.sourceDate}.`
+  }
+  if (layerId === 'research') {
+    return event.summary || 'Source-backed research record surfaced as context.'
   }
   return event.summary || event.title
 }
@@ -814,6 +833,9 @@ function buildUnknowns(
   if (event.comtradeRecord) unknowns.push('Comtrade records do not identify companies or supply-chain counterparties.')
   if (event.etfHolding) unknowns.push('ETF holdings can lag and may not describe current portfolio exposure.')
   if (event.form13fHolding) unknowns.push('13F holdings are delayed quarterly disclosures, not current positions.')
+  if (event.openAlexWork || event.crossrefWork || event.patentRecord) {
+    unknowns.push('Research records are context only and do not verify market impact or operational exposure.')
+  }
   return unknowns.length > 0 ? unknowns : ['No additional source-backed detail is available until the entity source trail is opened.']
 }
 
@@ -836,6 +858,14 @@ function exposureContextFor(event: WorldIntelEvent, layerId: WorldwatchLayerId):
     return [event.comtradeRecord.commodityDescription, event.comtradeRecord.reporterIso3, event.comtradeRecord.partnerIso3].filter(
       (value): value is string => Boolean(value),
     )
+  }
+  if (layerId === 'research') {
+    return [
+      event.openAlexWork?.sourceName,
+      event.crossrefWork?.sourceName,
+      ...(event.patentRecord?.assignees ?? []),
+      ...event.extractedEntities,
+    ].filter((value): value is string => Boolean(value))
   }
   return event.affectedAssets.slice(0, 6)
 }

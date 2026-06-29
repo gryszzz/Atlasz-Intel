@@ -1,6 +1,6 @@
 # Runtime Verification Log
 
-**Generated:** 2026-06-29T15:05:10.377Z
+**Generated:** 2026-06-29T19:31:41.970Z
 **Command:** `npx tsx scripts/runtimeVerification.mts`
 **Result:** 13/13 checks passed
 **Persistence:** node:sqlite (with JSON fallback)
@@ -30,7 +30,7 @@
 | etf-holdings | impl | public | - | public | online | 266 | yes | yes | n/a | partial | yes |
 | fred | impl | public | - | public | online | 6 | yes | yes | n/a | partial | yes |
 | treasury-fiscal | impl | public | - | public | online | 3 | yes | yes | n/a | partial | yes |
-| bls | impl | public | - | public | online | 5 | yes | yes | n/a | partial | yes |
+| bls | impl | public | - | public | configured (empty) | 0 | n/a | n/a | n/a | partial | yes |
 | fed-press-rss | impl | public | - | public | online | 20 | yes | yes | n/a | no | no |
 | ecb-press-rss | impl | public | - | public | online | 15 | yes | yes | n/a | no | no |
 | bea | impl | key-gated | ATLASZ_BEA_API_KEY | no | missing-key | 0 | n/a | n/a | n/a | partial | yes |
@@ -49,7 +49,7 @@
 | arxiv-ai | impl | public | - | public | online | 20 | yes | yes | n/a | no | no |
 | github-high-signal-repos | impl | public | - | public | online | 15 | yes | yes | n/a | no | no |
 | nasa-news | impl | public | - | public | online | 10 | yes | yes | n/a | no | no |
-| space-launch-library | impl | public | - | public | failed | 0 | n/a | n/a | n/a | no | no |
+| space-launch-library | impl | public | - | public | online | 15 | yes | yes | n/a | no | no |
 | cisa-kev | impl | public | - | public | online | 25 | yes | yes | n/a | partial | yes |
 | nvd | impl | public | - | public | online | 25 | yes | yes | n/a | partial | yes |
 | ghsa | impl | public | - | public | online | 30 | yes | yes | n/a | partial | yes |

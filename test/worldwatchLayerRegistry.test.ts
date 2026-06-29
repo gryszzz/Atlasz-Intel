@@ -41,6 +41,7 @@ function ev(partial: Partial<WorldIntelEvent> & { sourceId: string }): WorldInte
     gdeltArticle: partial.gdeltArticle,
     etfHolding: partial.etfHolding,
     marketIdentity: partial.marketIdentity,
+    patentRecord: partial.patentRecord,
   } as WorldIntelEvent
 }
 
@@ -194,6 +195,38 @@ describe('Worldwatch layer registry', () => {
     expect(entity.visualTrust).toBe('media')
     expect(entity.proof.provenance).toBe('media-observation')
     expect(entity.nonClaims.join(' ')).toMatch(/not verified fact/i)
+  })
+
+  it('renders research records as source-bounded context only', () => {
+    const research = ev({
+      id: 'research',
+      sourceId: 'uspto_patentsview_public',
+      provenance: 'official-api',
+      patentRecord: {
+        id: 'patent-1',
+        patentId: 'US123',
+        title: 'Source-backed battery patent',
+        abstract: 'Patent metadata abstract.',
+        patentDate: '2026-06-27',
+        grantTimestamp: NOW,
+        assignees: ['Research Assignee'],
+        cpcCodes: ['H01M'],
+        sourceUrl: 'https://patentsview.org/patent/US123',
+        sourceApiUrl: 'https://api.patentsview.org/patents/query',
+        sourceName: 'PatentsView',
+        retrievedAt: NOW,
+        provenance: 'official-api',
+        confidence: 91,
+        rawPayloadHash: 'patent-hash',
+      },
+    })
+
+    const [entity] = adaptWorldwatchEventsToEntities([research], { now: NOW })
+
+    expect(entity.layerId).toBe('research')
+    expect(entity.geometry).toBe('context')
+    expect(entity.nonClaims.join(' ')).toMatch(/no novelty/i)
+    expect(entity.nonClaims.join(' ')).toMatch(/market-impact claim/i)
   })
 
   it('keeps curated exposure structural and never labels it verified', () => {
