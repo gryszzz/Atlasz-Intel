@@ -170,6 +170,35 @@ type OsmElement = {
   tags?: Record<string, string>
 }
 
+// Map a plant fuel/source to the market sector(s) it sits in — turns a raw
+// facility into market-relevant exposure context (energy sub-sector), never a
+// price or trading claim.
+function sectorsForSource(energySource?: string): string[] {
+  switch ((energySource ?? '').toLowerCase()) {
+    case 'nuclear':
+      return ['nuclear', 'utilities', 'uranium']
+    case 'coal':
+      return ['coal', 'utilities', 'thermal coal']
+    case 'gas':
+      return ['natural gas', 'utilities', 'LNG']
+    case 'oil':
+      return ['oil', 'utilities']
+    case 'hydro':
+      return ['hydro', 'utilities', 'renewables']
+    case 'solar':
+      return ['solar', 'renewables', 'utilities']
+    case 'wind':
+      return ['wind', 'renewables', 'utilities']
+    case 'geothermal':
+      return ['geothermal', 'renewables', 'utilities']
+    case 'biomass':
+    case 'biogas':
+      return ['biomass', 'renewables', 'utilities']
+    default:
+      return ['power generation', 'utilities']
+  }
+}
+
 function infrastructureEventFromElement(element: OsmElement): WorldIntelEvent | null {
   const lat = element.lat ?? element.center?.lat
   const lon = element.lon ?? element.center?.lon
@@ -179,6 +208,7 @@ function infrastructureEventFromElement(element: OsmElement): WorldIntelEvent | 
   const operator = tags.operator
   const energySource = tags['plant:source']
   const capacity = tags['plant:output:electricity']
+  const sectors = sectorsForSource(energySource)
   const payloadHash = hashString(`osm:${element.id}:${lat}:${lon}:${operator ?? ''}`)
   const sourceUrl = `https://www.openstreetmap.org/node/${element.id}`
   const now = Date.now()
@@ -201,12 +231,13 @@ function infrastructureEventFromElement(element: OsmElement): WorldIntelEvent | 
 
   const ownerClause = operator ? ` Operator/owner: ${operator}.` : ''
   const detail = [energySource ? `${energySource} plant` : 'power plant', capacity].filter(Boolean).join(', ')
+  const sectorClause = ` Market sector exposure: ${sectors.join(' · ')}.`
 
   return {
     id: `osm:${element.id}`,
     timestamp: now,
     title: name,
-    summary: `${detail}.${ownerClause} Community-mapped (OpenStreetMap) location and operator — public, unverified context only; not an official registry, outage, or ownership-percentage claim.`,
+    summary: `${detail}.${ownerClause}${sectorClause} Community-mapped (OpenStreetMap) location, operator, and sector context — public, unverified; not an official registry, outage, ownership-percentage, price, or trading claim.`,
     countryCodes: [],
     region: 'Infrastructure',
     lat: lat as number,
@@ -218,10 +249,12 @@ function infrastructureEventFromElement(element: OsmElement): WorldIntelEvent | 
     sourceUrl,
     provenance: 'public-unauthenticated',
     affectedAssets: [],
-    affectedSectors: ['energy'],
+    affectedSectors: sectors,
     affectedCommodities: [],
     affectedCurrencies: [],
-    extractedEntities: operator ? [operator] : [],
+    // The operating company + its market sectors — the infrastructure -> company
+    // -> sector exposure chain. Exact names only; no fuzzy ticker merge.
+    extractedEntities: operator ? [operator, ...sectors] : sectors,
     narrativeTags: ['infrastructure', 'power', energySource].filter((tag): tag is string => Boolean(tag)),
     rawPayloadHash: payloadHash,
     dedupeHash: payloadHash,
