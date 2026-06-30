@@ -4775,3 +4775,31 @@
   line-height: 1.35;
   color: var(--faint);
 }
+
+/* ===== Relevance profile chips (watchlist-driven ranking) ===== */
+.worldwatch-profile-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.worldwatch-profile-chips button {
+  padding: 5px 11px;
+  font-size: 11px;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  background: rgba(13, 17, 16, 0.6);
+  color: var(--muted);
+}
+
+.worldwatch-profile-chips button:hover {
+  border-color: rgba(94, 234, 212, 0.45);
+  color: var(--text);
+}
+
+.worldwatch-profile-chips button.active {
+  color: var(--green-strong);
+  border-color: rgba(45, 212, 191, 0.5);
+  background: rgba(45, 212, 191, 0.08);
+}

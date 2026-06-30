@@ -373,6 +373,26 @@ export function WorldIntelligenceView({
   return (
     <div className="world-intel-view atlasz-worldwatch-workstation">
       <section className="world-command-band worldwatch-command-deck slim">
+        <div className="worldwatch-profile-chips" aria-label="Relevance profile (affects ranking only)">
+          <button
+            className={activeWorldwatchProfileId === 'all' ? 'active' : ''}
+            type="button"
+            onClick={() => onActiveWorldwatchProfileChange('all')}
+          >
+            All evidence
+          </button>
+          {worldwatchProfiles.map((profile) => (
+            <button
+              className={activeWorldwatchProfileId === profile.id ? 'active' : ''}
+              key={profile.id}
+              type="button"
+              title={`Rank by ${profile.name} (relevance only)`}
+              onClick={() => onActiveWorldwatchProfileChange(profile.id)}
+            >
+              {profile.name}
+            </button>
+          ))}
+        </div>
         <div className="world-command-actions">
           <div className="world-search">
             <Search size={15} />
