@@ -2104,22 +2104,33 @@ function App() {
             }
             visual={
               <article className="panel spatial-primary-panel infrastructure-map-panel">
-                <PanelHeader icon={Layers3} label="Infrastructure Map" title="Facilities, hazards, and exposure paths" />
-                <GlobalPulseScene
-                  activeLayerIds={activeLayerIds}
-                  events={filteredPulseEvents}
-                  onSelectEvent={(eventId) => selectEvent(eventId)}
-                  onSelectTicker={(ticker) => selectTicker(ticker, 'terminal')}
-                  selectedEventId={selectedEvent.id}
-                  signals={worldSignals}
-                />
-                <TimelineControl
-                  events={filteredPulseEvents}
-                  onSelectEvent={(eventId) => selectEvent(eventId)}
-                  selectedEventId={selectedEvent.id}
-                  selectedTimeWindow={selectedTimeWindow}
-                  setSelectedTimeWindow={setSelectedTimeWindow}
-                />
+                <PanelHeader icon={LineChart} label="Energy & Infrastructure Market" title="Sector prices for the facilities in view (TradingView reference)" />
+                <div className="tv-tape-strip">
+                  <TradingViewWidget
+                    height={46}
+                    scriptSrc="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js"
+                    config={{ symbols: TRADINGVIEW_TICKER_TAPE, colorTheme: 'dark', isTransparent: true, displayMode: 'compact', locale: 'en' }}
+                  />
+                </div>
+                <div className="tv-chart-frame">
+                  <TradingViewWidget
+                    scriptSrc="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js"
+                    config={{
+                      symbols: TRADINGVIEW_ENERGY_OVERVIEW,
+                      chartOnly: false,
+                      colorTheme: 'dark',
+                      isTransparent: true,
+                      autosize: true,
+                      showVolume: false,
+                      locale: 'en',
+                      gridLineColor: 'rgba(148,163,184,0.08)',
+                      fontColor: '#92a39d',
+                    }}
+                  />
+                </div>
+                <p className="tv-disclaimer">
+                  Live energy-sector prices via TradingView — third-party reference for the facility sectors mapped on Worldwatch. Not an Atlasz proof, outage, or trading signal. Facility map + operators live on the Worldwatch globe.
+                </p>
               </article>
             }
             dossier={
@@ -2141,6 +2152,25 @@ function App() {
               <article className="panel">
                 <PanelHeader icon={GitBranch} label="Exposure" title="Structural exposure context, not outage or damage claims" />
                 <ExposureDashboardPanel events={worldSnapshot.worldEvents} />
+                <div className="infra-market-link">
+                  <span className="infra-market-label">Energy market reference</span>
+                  <div className="tv-tape-strip">
+                    <TradingViewWidget
+                      height={46}
+                      scriptSrc="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js"
+                      config={{
+                        symbols: TRADINGVIEW_TICKER_TAPE,
+                        colorTheme: 'dark',
+                        isTransparent: true,
+                        displayMode: 'compact',
+                        locale: 'en',
+                      }}
+                    />
+                  </div>
+                  <p className="tv-disclaimer">
+                    Live energy/market prices via TradingView (third-party reference) — context for the facility sectors above. Not an Atlasz proof, outage, or trading signal.
+                  </p>
+                </div>
               </article>
             }
           />

@@ -5279,3 +5279,18 @@ body {
 .tradingview-widget-container {
   width: 100%;
 }
+
+.infra-market-link {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.infra-market-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--green-strong);
+}
