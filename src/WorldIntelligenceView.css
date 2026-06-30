@@ -4440,3 +4440,9 @@
   max-height: 172px;
   overflow: hidden;
 }
+
+/* Cockpit height adapts to the viewport so the globe isn't cut off on short
+ * screens (lower floor than the legacy 620px). */
+.atlasz-cockpit .cockpit-body {
+  min-height: clamp(360px, calc(100dvh - 215px), 820px);
+}

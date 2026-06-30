@@ -76,10 +76,28 @@ export function ProofGlobe({
       .arcDashGap(0.22)
       .arcDashAnimateTime(2400)
 
-    world.controls().autoRotate = true
-    world.controls().autoRotateSpeed = 0.42
-    world.controls().enableZoom = true
-    world.pointOfView({ lat: 20, lng: 12, altitude: 2.4 })
+    const controls = world.controls() as {
+      autoRotate: boolean
+      autoRotateSpeed: number
+      enableZoom: boolean
+      enablePan: boolean
+      enableDamping: boolean
+      dampingFactor: number
+      rotateSpeed: number
+      minDistance: number
+      maxDistance: number
+    }
+    controls.autoRotate = true
+    controls.autoRotateSpeed = 0.32
+    controls.enableZoom = true
+    controls.enablePan = false
+    controls.enableDamping = true
+    controls.dampingFactor = 0.12
+    controls.rotateSpeed = 0.85
+    controls.minDistance = 170
+    controls.maxDistance = 700
+    // Zoom out enough that the whole Earth is visible (not just a hemisphere).
+    world.pointOfView({ lat: 12, lng: 0, altitude: 2.85 })
     globeRef.current = world
 
     const resize = () => {
