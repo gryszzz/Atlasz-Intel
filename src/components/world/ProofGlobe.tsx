@@ -56,13 +56,18 @@ export function ProofGlobe({
       .atmosphereColor('#38bdf8')
       .atmosphereAltitude(0.2)
       .pointsMerge(false)
-      .pointAltitude(0.012)
+      .pointAltitude(0.02)
       .pointRadius('size')
+      .pointResolution(14)
       .pointColor('color')
       .pointLabel('label')
       .onPointClick((p: object) => {
         const point = p as GlobePoint
         onSelectRef.current?.(point.eventId)
+      })
+      .onPointHover((point: object | null) => {
+        const el = (world.controls() as { domElement?: HTMLElement }).domElement
+        if (el) el.style.cursor = point ? 'pointer' : 'grab'
       })
       .arcColor('color')
       .arcAltitudeAutoScale(0.4)

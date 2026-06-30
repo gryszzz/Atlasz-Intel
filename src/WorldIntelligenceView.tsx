@@ -848,7 +848,7 @@ function WorldwatchCockpit({
           lng: entity.lon as number,
           label: entity.label,
           color: globeTrustColor(entity.visualTrust, entity.stale),
-          size: entity.stale ? 0.2 : 0.32,
+          size: entity.stale ? 0.5 : 0.78,
           eventId: entity.eventId,
         })),
     [layerEntities],

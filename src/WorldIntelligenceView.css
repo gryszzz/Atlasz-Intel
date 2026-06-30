@@ -4423,3 +4423,20 @@
   max-width: 100%;
   overflow-x: hidden;
 }
+
+/* ===== Blend as a single page: hide the stacked panels the cockpit replaces ===
+ * The cockpit (What Changed / globe / dossier) + the bottom timeline are the whole
+ * command center. The legacy stacked right rail, quant strip, and trade/evidence
+ * desk pushed the timeline below the fold and broke scroll. Keep the full-bleed
+ * cockpit height intact; just remove the redundant stacked sections. */
+.atlasz-worldwatch-workstation .worldwatch-intel-rail,
+.atlasz-worldwatch-workstation .world-quant-strip,
+.atlasz-worldwatch-workstation .worldwatch-desk {
+  display: none;
+}
+
+/* Bottom timeline: a compact contained band, never overlapping the globe. */
+.atlasz-worldwatch-workstation .worldwatch-intelligence-timeline {
+  max-height: 172px;
+  overflow: hidden;
+}

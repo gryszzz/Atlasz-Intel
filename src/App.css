@@ -5153,3 +5153,53 @@ body {
     min-height: 30px;
   }
 }
+
+/* ===== Sidebar modules: blend into the rail as one continuous page ===== */
+.app-shell .sidebar {
+  background: linear-gradient(180deg, rgba(11, 16, 15, 0.72), rgba(6, 9, 8, 0.5));
+  border-right: 1px solid var(--line-soft);
+}
+
+.app-shell .sidebar-module {
+  border: none;
+  border-top: 1px solid rgba(148, 163, 184, 0.08);
+  border-radius: 0;
+  background: transparent;
+  padding: 12px 8px 10px;
+  box-shadow: none;
+}
+
+.app-shell .sidebar-module .module-label {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.app-shell .sidebar-module p {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.app-shell .status-row {
+  font-size: 11px;
+  padding: 3px 0;
+  color: var(--muted);
+}
+
+.app-shell .status-row strong {
+  color: var(--text);
+}
+
+.app-shell .storage-pill {
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: rgba(13, 17, 16, 0.6);
+  color: var(--muted);
+}
+
+.app-shell .rail-toggle {
+  border: 1px solid var(--line-soft);
+  background: rgba(13, 17, 16, 0.5);
+  color: var(--muted);
+}
