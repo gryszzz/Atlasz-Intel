@@ -5251,3 +5251,31 @@ body {
   font-size: 16px;
   font-variant-numeric: tabular-nums;
 }
+
+/* ===== TradingView market widgets (third-party price reference) ===== */
+.tv-tape-strip {
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.tv-chart-frame {
+  flex: 1 1 auto;
+  min-height: 340px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(7, 12, 18, 0.5);
+}
+
+.tv-disclaimer {
+  margin: 8px 0 4px;
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--faint);
+}
+
+.tradingview-widget-container {
+  width: 100%;
+}

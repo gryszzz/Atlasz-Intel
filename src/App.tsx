@@ -32,6 +32,7 @@ import { DecisionJournal } from './DecisionJournal'
 import { decisionJournal } from './intelClient'
 import { riskChainFor } from './intelGraphData'
 import { DataCorePanel, LiveMarketReadout, PulseIndicator, RealtimePulsePanel } from './RealtimeWidgets'
+import { TradingViewWidget } from './components/market/TradingViewWidget'
 import { ChartSkeleton, GraphSkeleton, GlobeSkeleton, PanelSkeleton } from './components/ui/Skeletons'
 import { ProvenanceBadge } from './components/ui/ProvenanceBadge'
 
@@ -39,9 +40,6 @@ import { ProvenanceBadge } from './components/ui/ProvenanceBadge'
 // view are loaded lazily so they stay out of the app startup chunk.
 const WorldIntelligenceView = lazy(() =>
   import('./WorldIntelligenceView').then((m) => ({ default: m.WorldIntelligenceView })),
-)
-const MarketPriceChart = lazy(() =>
-  import('./components/quant/MarketCharts').then((m) => ({ default: m.MarketPriceChart })),
 )
 const MarketVolumeChart = lazy(() =>
   import('./components/quant/MarketCharts').then((m) => ({ default: m.MarketVolumeChart })),
@@ -328,6 +326,27 @@ function defensiveEntriesByRiskTag(tag: string) {
 function defensiveReferenceIsDefaultSafe(entry: DefensiveReferenceEntry) {
   return entry.runtimePolicy === 'allowed-library' || entry.runtimePolicy === 'study-only'
 }
+
+// Market-relevant symbols (energy / utilities / infrastructure exposure + broad
+// market). Real prices via TradingView's official embed — third-party reference.
+const TRADINGVIEW_TICKER_TAPE = [
+  { proName: 'AMEX:XLE', title: 'Energy' },
+  { proName: 'AMEX:XLU', title: 'Utilities' },
+  { proName: 'TVC:USOIL', title: 'Crude Oil' },
+  { proName: 'AMEX:URA', title: 'Uranium' },
+  { proName: 'AMEX:TAN', title: 'Solar' },
+  { proName: 'AMEX:ICLN', title: 'Clean Energy' },
+  { proName: 'SP:SPX', title: 'S&P 500' },
+  { proName: 'TVC:GOLD', title: 'Gold' },
+]
+
+const TRADINGVIEW_ENERGY_OVERVIEW: string[][] = [
+  ['Energy', 'AMEX:XLE|1D'],
+  ['Utilities', 'AMEX:XLU|1D'],
+  ['Crude Oil', 'TVC:USOIL|1D'],
+  ['Uranium', 'AMEX:URA|1D'],
+  ['Clean Energy', 'AMEX:ICLN|1D'],
+]
 
 const promptChips = [
   'Why is oil moving?',
@@ -1426,7 +1445,10 @@ function App() {
       perform: resetLayout,
     },
   ]
-  const marketTapeVisible = activeView === 'terminal'
+  // Legacy desktop-only price tape is redundant now that the Market route shows
+  // real TradingView prices; keep it hidden so the route doesn't lead with
+  // PRICE_UNAVAILABLE tiles.
+  const marketTapeVisible = false
   const legacyCommandSurfaceEnabled = typeof window !== 'undefined' && window.location.search.includes('legacy-command=1')
 
   const advancedActive = advancedViews.some((view) => view.id === activeView)
@@ -1985,25 +2007,40 @@ function App() {
             }
             visual={
               <article className="panel terminal-chart-panel spatial-primary-panel">
-                <PanelHeader icon={LineChart} label="Market Movement" title={`${selectedMarket.ticker} source-backed movement context`} />
-                <div className="chart-stat-row">
-                  <div>
-                    <span>{selectedMarket.name}</span>
-                    <strong>{selectedMarket.price}</strong>
-                  </div>
-                  <em className={changeClass(selectedMarket.change)}>{formatChange(selectedMarket.change)}</em>
-                  <p>{selectedMarket.catalyst}</p>
+                <PanelHeader icon={LineChart} label="Live Market" title="Energy & market prices (TradingView reference)" />
+                <div className="tv-tape-strip">
+                  <TradingViewWidget
+                    height={46}
+                    scriptSrc="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js"
+                    config={{
+                      symbols: TRADINGVIEW_TICKER_TAPE,
+                      colorTheme: 'dark',
+                      isTransparent: true,
+                      displayMode: 'compact',
+                      locale: 'en',
+                    }}
+                  />
                 </div>
+                <div className="tv-chart-frame">
+                  <TradingViewWidget
+                    scriptSrc="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js"
+                    config={{
+                      symbols: TRADINGVIEW_ENERGY_OVERVIEW,
+                      chartOnly: false,
+                      colorTheme: 'dark',
+                      isTransparent: true,
+                      autosize: true,
+                      showVolume: false,
+                      locale: 'en',
+                      gridLineColor: 'rgba(148,163,184,0.08)',
+                      fontColor: '#92a39d',
+                    }}
+                  />
+                </div>
+                <p className="tv-disclaimer">
+                  Live prices via TradingView — third-party market reference, not an Atlasz source-backed proof. No buy/sell signal or prediction.
+                </p>
                 <LiveMarketReadout symbol={selectedTicker} enabled={pulseEnabled} />
-                <div className="chart-frame">
-                  {chartData.length > 0 ? (
-                    <Suspense fallback={<ChartSkeleton />}>
-                      <MarketPriceChart data={chartData} />
-                    </Suspense>
-                  ) : (
-                    <div className="empty-state">{CANDLE_HISTORY_UNAVAILABLE}</div>
-                  )}
-                </div>
               </article>
             }
             dossier={
