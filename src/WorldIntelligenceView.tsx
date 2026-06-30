@@ -829,6 +829,7 @@ function WorldwatchCockpit({
   const connectedChips = selected ? buildConnectedChips(selected, selectedEntity, connectionEdges) : []
   const connectedRegions = selected ? buildConnectedRegions(selected, connectionEdges) : []
   const connectedMarkets = selected ? buildConnectedMarkets(selected, selectedEntity) : []
+  const exposureChain = selected ? buildExposureChain(selected) : []
   const whyThisMatters = selected ? buildWhyThisMatters(selected, selectedEntity) : []
   const whatChanged = selected ? buildWhatChanged(selected, selectedEntity, now) : []
   const layerGroupSummaries = useMemo(
@@ -1119,6 +1120,25 @@ function WorldwatchCockpit({
                   <span>State <strong>{selectedSource ? humanSourceStatus(selectedSource) : selected.provenance}</strong></span>
                 </div>
               </div>
+              {exposureChain.length > 0 && (
+                <div className="cockpit-exposure-chain" aria-label="Exposure chain">
+                  <span className="exposure-chain-label">Exposure chain</span>
+                  <div className="exposure-chain-flow">
+                    {exposureChain.map((step, index) => (
+                      <div className={`exposure-step step-${step.kind}`} key={step.kind}>
+                        <em>{step.label}</em>
+                        <div className="exposure-step-values">
+                          {step.values.map((value) => (
+                            <span key={value}>{value}</span>
+                          ))}
+                        </div>
+                        {index < exposureChain.length - 1 && <i className="exposure-arrow" aria-hidden="true">→</i>}
+                      </div>
+                    ))}
+                  </div>
+                  <small>Source-backed connection only — operator and fuel-derived sectors. No ticker match, price, or trading signal.</small>
+                </div>
+              )}
               <div className="cockpit-dossier-section">
                 <span>What changed</span>
                 <ul>
@@ -1652,10 +1672,29 @@ function buildConnectedMarkets(selected: WorldIntelEvent, entity: WorldwatchEnti
     ...selected.affectedAssets,
     ...selected.affectedCurrencies,
     ...selected.affectedCommodities,
+    ...selected.affectedSectors,
     ...(entity?.exposureContext ?? []),
   ]
   const uniqueMarkets = [...new Set(markets.filter(Boolean))]
   return uniqueMarkets.length > 0 ? uniqueMarkets.slice(0, 8) : ['No connected market evidence']
+}
+
+/**
+ * The infrastructure -> company -> market-sector exposure chain for the dossier.
+ * Built only from source-backed fields (operator + fuel-derived sectors); empty
+ * when the event has no such chain. No ticker guessing, no price/trading claim.
+ */
+function buildExposureChain(selected: WorldIntelEvent): Array<{ kind: string; label: string; values: string[] }> {
+  const site = selected.infrastructureSite
+  if (!site) return []
+  const steps: Array<{ kind: string; label: string; values: string[] }> = [
+    { kind: 'facility', label: 'Facility', values: [site.name + (site.capacity ? ` · ${site.capacity}` : '')] },
+  ]
+  if (site.operator) steps.push({ kind: 'company', label: 'Operator / owner', values: [site.operator] })
+  if (selected.affectedSectors.length > 0) {
+    steps.push({ kind: 'sector', label: 'Market sectors', values: selected.affectedSectors.slice(0, 5) })
+  }
+  return steps
 }
 
 function buildWhatChanged(selected: WorldIntelEvent, entity: WorldwatchEntity | undefined, now: number) {

@@ -4530,3 +4530,96 @@
   margin-top: 10px;
   max-height: 176px;
 }
+
+/* ===== Exposure chain (Facility -> Operator/company -> Market sectors) ===== */
+.cockpit-exposure-chain {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 11px;
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.06), rgba(7, 12, 18, 0.4));
+}
+
+.exposure-chain-label {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--green-strong);
+}
+
+.exposure-chain-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.exposure-step {
+  position: relative;
+  padding: 7px 9px;
+  border: 1px solid var(--line-soft);
+  border-left-width: 2px;
+  border-radius: 8px;
+  background: rgba(13, 17, 16, 0.55);
+}
+
+.exposure-step.step-facility {
+  border-left-color: var(--cyan);
+}
+.exposure-step.step-company {
+  border-left-color: var(--prov-auth-gated);
+}
+.exposure-step.step-sector {
+  border-left-color: var(--green-strong);
+}
+
+.exposure-step > em {
+  font-style: normal;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.exposure-step-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.exposure-step-values > span {
+  font-size: 11px;
+  color: var(--text);
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.1);
+}
+
+.exposure-step.step-company .exposure-step-values > span {
+  color: #c7d2fe;
+  background: rgba(129, 140, 248, 0.14);
+}
+
+.exposure-step.step-sector .exposure-step-values > span {
+  color: #99f6e4;
+  background: rgba(45, 212, 191, 0.12);
+}
+
+.exposure-arrow {
+  position: absolute;
+  left: 50%;
+  bottom: -11px;
+  transform: translateX(-50%);
+  color: var(--faint);
+  font-size: 12px;
+  font-style: normal;
+  z-index: 1;
+}
+
+.cockpit-exposure-chain small {
+  color: var(--faint);
+  font-size: 10px;
+  line-height: 1.35;
+}
