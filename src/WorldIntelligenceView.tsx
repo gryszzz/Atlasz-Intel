@@ -40,7 +40,7 @@ import {
 } from './engine/worldwatchLayerRegistry'
 import type { OsintSourceSnapshot, UserFavorite, WorldIntelEvent, WorldIntelSnapshot } from './worldIntel'
 import './WorldIntelligenceView.css'
-import type { GlobePoint } from './components/world/ProofGlobe'
+import type { GlobeArc, GlobePoint } from './components/world/ProofGlobe'
 
 // Lazy child surfaces — kept out of the startup bundle and isolated so future
 // heavy globe / quant libraries load only when this view is open.
@@ -826,6 +826,40 @@ function buildDailySynthesis(events: WorldIntelEvent[]): DailySynthesis {
   }
 }
 
+/**
+ * Globe arcs from REAL co-location: each hazard to its nearest facility within
+ * PROXIMITY_RADIUS_KM. Honest "everything connected" — proximity links only, no
+ * causal/impact claim. Capped so the globe stays readable.
+ */
+function buildGlobeProximityArcs(events: WorldIntelEvent[]): GlobeArc[] {
+  const hazards = events.filter((e) => Boolean(e.earthquakeEvent) && typeof e.lat === 'number' && typeof e.lon === 'number')
+  const facilities = events.filter((e) => Boolean(e.infrastructureSite) && typeof e.lat === 'number' && typeof e.lon === 'number')
+  const arcs: GlobeArc[] = []
+  for (const hazard of hazards) {
+    let nearest: WorldIntelEvent | null = null
+    let nearestKm = Infinity
+    for (const facility of facilities) {
+      const km = haversineKm(hazard.lat as number, hazard.lon as number, facility.lat as number, facility.lon as number)
+      if (km <= PROXIMITY_RADIUS_KM && km < nearestKm) {
+        nearestKm = km
+        nearest = facility
+      }
+    }
+    if (nearest) {
+      arcs.push({
+        id: `${hazard.id}:${nearest.id}`,
+        startLat: hazard.lat as number,
+        startLng: hazard.lon as number,
+        endLat: nearest.lat as number,
+        endLng: nearest.lon as number,
+        color: '#fb923c',
+      })
+    }
+    if (arcs.length >= 24) break
+  }
+  return arcs
+}
+
 const SEVERITY_RANK: Record<string, number> = { critical: 4, elevated: 3, watch: 2, stable: 1 }
 const SEVERITY_LABEL: Record<string, string> = {
   critical: 'Critical',
@@ -961,6 +995,7 @@ function WorldwatchCockpit({
     [events],
   )
   const synthesis = useMemo(() => buildDailySynthesis(events), [events])
+  const globeArcs = useMemo(() => buildGlobeProximityArcs(events), [events])
   const whatToWatchEvents = useMemo(
     () =>
       [...events]
@@ -1129,7 +1164,7 @@ function WorldwatchCockpit({
 
           <div className="cockpit-map-plane cockpit-map-plane-3d" style={mapStyle}>
             <Suspense fallback={<div className="proof-globe-loading">Loading globe…</div>}>
-              <ProofGlobe points={globePoints} arcs={[]} onSelectPoint={onSelectEvent} />
+              <ProofGlobe points={globePoints} arcs={globeArcs} onSelectPoint={onSelectEvent} />
             </Suspense>
             <span className="cockpit-earth-glow" />
             {sourceLayerVisible ? (
