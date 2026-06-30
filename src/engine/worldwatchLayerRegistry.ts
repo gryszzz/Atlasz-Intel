@@ -4,6 +4,7 @@ import type { OsintSourceSnapshot, WorldIntelEvent, WorldIntelSnapshot } from '.
 export type WorldwatchLayerId =
   | 'weather-alerts'
   | 'earthquakes'
+  | 'infrastructure'
   | 'power-plants'
   | 'refineries'
   | 'lng-terminals'
@@ -157,6 +158,7 @@ function metadata(
 const LAYER_METADATA: Record<WorldwatchLayerId, WorldwatchLayerMetadata> = {
   'weather-alerts': metadata('official-api', 'near-realtime', 'region-overlay', 'dashed-region', 'WeatherAlertSourceTrail'),
   earthquakes: metadata('official-api', 'near-realtime', 'point-marker', 'dimmed-marker', 'WorldEventTimeline'),
+  infrastructure: metadata('public-unauthenticated', 'static-reference', 'point-marker', 'dimmed-marker', 'EiaFacilitySourceTrail'),
   'power-plants': metadata('official-api', 'monthly', 'point-marker', 'dimmed-marker', 'EiaFacilitySourceTrail'),
   refineries: metadata('official-api', 'static-reference', 'point-marker', 'dimmed-marker', 'EiaRefinerySourceTrail'),
   'lng-terminals': metadata('official-api', 'static-reference', 'point-marker', 'dimmed-marker', 'LngTerminalSourceTrail'),
@@ -198,6 +200,17 @@ const WORLDWATCH_LAYER_BASE_DEFINITIONS: WorldwatchLayerDefinitionInput[] = [
     defaultEnabled: true,
     maxEntities: 80,
     nonClaims: ['Does not prove infrastructure damage, casualty impact, or market impact.'],
+  },
+  {
+    id: 'infrastructure',
+    label: 'Infrastructure',
+    kind: 'facility',
+    description: 'Public (OpenStreetMap) power infrastructure with operator/owner context. Community-sourced, not an official registry.',
+    sourceIds: ['osm-power'],
+    geometry: 'point',
+    defaultEnabled: true,
+    maxEntities: 200,
+    nonClaims: ['Community-mapped location/operator only; not an official registry, outage, attack, damage, or reliability claim.'],
   },
   {
     id: 'power-plants',
@@ -570,6 +583,7 @@ function classifyEventLayers(event: WorldIntelEvent): WorldwatchLayerId[] {
   const layerIds: WorldwatchLayerId[] = []
   if (event.weatherAlert) layerIds.push('weather-alerts')
   if (event.earthquakeEvent) layerIds.push('earthquakes')
+  if (event.infrastructureSite) layerIds.push('infrastructure')
   if (event.eiaFacility) layerIds.push('power-plants')
   if (event.eiaRefinery) layerIds.push('refineries')
   if (event.lngTerminal) layerIds.push('lng-terminals')
@@ -720,6 +734,8 @@ function entityLabel(event: WorldIntelEvent, layerId: WorldwatchLayerId): string
       return event.weatherAlert?.headline ?? event.weatherAlert?.event ?? event.title
     case 'earthquakes':
       return event.earthquakeEvent ? `M${event.earthquakeEvent.magnitude} ${event.earthquakeEvent.place}` : event.title
+    case 'infrastructure':
+      return event.infrastructureSite?.name
     case 'power-plants':
       return event.eiaFacility?.facilityName
     case 'refineries':

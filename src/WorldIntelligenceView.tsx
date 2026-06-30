@@ -210,7 +210,7 @@ const worldwatchLayerGroups: WorldwatchLayerGroup[] = [
     label: 'Infrastructure',
     description: 'Facilities, ports, grids, refineries, terminals, and minerals from public records.',
     icon: Factory,
-    layerIds: ['power-plants', 'refineries', 'lng-terminals', 'nuclear-plants', 'reactor-status', 'grid-regions', 'ports-locode', 'ports-world-index', 'minerals'],
+    layerIds: ['infrastructure', 'power-plants', 'refineries', 'lng-terminals', 'nuclear-plants', 'reactor-status', 'grid-regions', 'ports-locode', 'ports-world-index', 'minerals'],
   },
   {
     id: 'energy',
