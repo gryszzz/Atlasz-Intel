@@ -763,6 +763,49 @@ function buildProximityLinks(
     .slice(0, 6)
 }
 
+export type DailySynthesis = {
+  total: number
+  sourceCount: number
+  hazards: number
+  infrastructure: number
+  nearbyFacilities: number
+  topSectors: Array<[string, number]>
+}
+
+/**
+ * Cross-source roll-up of the current window — the intelligence layer, not a
+ * feed. Counts real events by source, and joins hazards <-> infrastructure by
+ * proximity. Co-location only; never an impact/causation claim.
+ */
+function buildDailySynthesis(events: WorldIntelEvent[]): DailySynthesis {
+  const hazards = events.filter((event) => Boolean(event.earthquakeEvent))
+  const infrastructure = events.filter((event) => Boolean(event.infrastructureSite))
+  const sources = new Set(events.map((event) => event.sourceId))
+  const nearbyFacilityIds = new Set<string>()
+  for (const hazard of hazards) {
+    if (typeof hazard.lat !== 'number' || typeof hazard.lon !== 'number') continue
+    for (const facility of infrastructure) {
+      if (typeof facility.lat !== 'number' || typeof facility.lon !== 'number') continue
+      if (haversineKm(hazard.lat, hazard.lon, facility.lat, facility.lon) <= PROXIMITY_RADIUS_KM) {
+        nearbyFacilityIds.add(facility.id)
+      }
+    }
+  }
+  const sectorCounts = new Map<string, number>()
+  for (const facility of infrastructure) {
+    for (const sector of facility.affectedSectors) sectorCounts.set(sector, (sectorCounts.get(sector) ?? 0) + 1)
+  }
+  const topSectors = [...sectorCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3)
+  return {
+    total: events.length,
+    sourceCount: sources.size,
+    hazards: hazards.length,
+    infrastructure: infrastructure.length,
+    nearbyFacilities: nearbyFacilityIds.size,
+    topSectors,
+  }
+}
+
 const SEVERITY_RANK: Record<string, number> = { critical: 4, elevated: 3, watch: 2, stable: 1 }
 const SEVERITY_LABEL: Record<string, string> = {
   critical: 'Critical',
@@ -897,6 +940,7 @@ function WorldwatchCockpit({
     () => [...events].sort((a, b) => b.timestamp - a.timestamp).slice(0, 6),
     [events],
   )
+  const synthesis = useMemo(() => buildDailySynthesis(events), [events])
   const whatToWatchEvents = useMemo(
     () =>
       [...events]
@@ -922,6 +966,31 @@ function WorldwatchCockpit({
 
       <div className="cockpit-body">
         <aside className="cockpit-intel-stack" aria-label="What changed and what to watch">
+          <article className="synthesis-card">
+            <header className="intel-card-head">
+              <Network size={13} />
+              <span>Today's synthesis</span>
+            </header>
+            <div className="synthesis-stats">
+              <div><strong>{synthesis.total}</strong><em>events · {synthesis.sourceCount} sources</em></div>
+              <div><strong>{synthesis.infrastructure}</strong><em>facilities</em></div>
+              <div><strong>{synthesis.hazards}</strong><em>hazards</em></div>
+            </div>
+            {synthesis.nearbyFacilities > 0 && (
+              <div className="synthesis-link">
+                <strong>{synthesis.nearbyFacilities}</strong>
+                <span>facilities within {PROXIMITY_RADIUS_KM} km of an active hazard</span>
+              </div>
+            )}
+            {synthesis.topSectors.length > 0 && (
+              <div className="synthesis-sectors">
+                {synthesis.topSectors.map(([sector, count]) => (
+                  <span key={sector}>{sector} · {count}</span>
+                ))}
+              </div>
+            )}
+            <small>Cross-source roll-up. Co-location is not impact, and counts are source-backed.</small>
+          </article>
           <article className="intel-card">
             <header className="intel-card-head">
               <Activity size={13} />
