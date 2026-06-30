@@ -32,6 +32,7 @@ import { DecisionJournal } from './DecisionJournal'
 import { decisionJournal } from './intelClient'
 import { riskChainFor } from './intelGraphData'
 import { DataCorePanel, LiveMarketReadout, PulseIndicator, RealtimePulsePanel } from './RealtimeWidgets'
+import { TradingViewWidget } from './components/market/TradingViewWidget'
 import { ChartSkeleton, GraphSkeleton, GlobeSkeleton, PanelSkeleton } from './components/ui/Skeletons'
 import { ProvenanceBadge } from './components/ui/ProvenanceBadge'
 
@@ -39,9 +40,6 @@ import { ProvenanceBadge } from './components/ui/ProvenanceBadge'
 // view are loaded lazily so they stay out of the app startup chunk.
 const WorldIntelligenceView = lazy(() =>
   import('./WorldIntelligenceView').then((m) => ({ default: m.WorldIntelligenceView })),
-)
-const MarketPriceChart = lazy(() =>
-  import('./components/quant/MarketCharts').then((m) => ({ default: m.MarketPriceChart })),
 )
 const MarketVolumeChart = lazy(() =>
   import('./components/quant/MarketCharts').then((m) => ({ default: m.MarketVolumeChart })),
@@ -328,6 +326,27 @@ function defensiveEntriesByRiskTag(tag: string) {
 function defensiveReferenceIsDefaultSafe(entry: DefensiveReferenceEntry) {
   return entry.runtimePolicy === 'allowed-library' || entry.runtimePolicy === 'study-only'
 }
+
+// Market-relevant symbols (energy / utilities / infrastructure exposure + broad
+// market). Real prices via TradingView's official embed — third-party reference.
+const TRADINGVIEW_TICKER_TAPE = [
+  { proName: 'AMEX:XLE', title: 'Energy' },
+  { proName: 'AMEX:XLU', title: 'Utilities' },
+  { proName: 'TVC:USOIL', title: 'Crude Oil' },
+  { proName: 'AMEX:URA', title: 'Uranium' },
+  { proName: 'AMEX:TAN', title: 'Solar' },
+  { proName: 'AMEX:ICLN', title: 'Clean Energy' },
+  { proName: 'SP:SPX', title: 'S&P 500' },
+  { proName: 'TVC:GOLD', title: 'Gold' },
+]
+
+const TRADINGVIEW_ENERGY_OVERVIEW: string[][] = [
+  ['Energy', 'AMEX:XLE|1D'],
+  ['Utilities', 'AMEX:XLU|1D'],
+  ['Crude Oil', 'TVC:USOIL|1D'],
+  ['Uranium', 'AMEX:URA|1D'],
+  ['Clean Energy', 'AMEX:ICLN|1D'],
+]
 
 const promptChips = [
   'Why is oil moving?',
@@ -1044,7 +1063,7 @@ function App() {
   ])
 
   const [pulseEnabled, setPulseEnabled] = useLocalStorageState('atlasz:intel:pulse', true)
-  const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorageState('atlasz:ui:v2:sidebar-collapsed', true)
+  const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorageState('atlasz:ui:v3:sidebar-collapsed', false)
   const [advancedNavOpen, setAdvancedNavOpen] = useLocalStorageState('atlasz:ui:advanced-nav-open', false)
   const [compactMode, setCompactMode] = useLocalStorageState('atlasz:ui:compact-mode', false)
   const [evidenceDeskOpen, setEvidenceDeskOpen] = useLocalStorageState('atlasz:ui:evidence-desk-open', true)
@@ -1119,6 +1138,23 @@ function App() {
   const socialPressure = calculateAttentionPressure(selectedSocialTopic, selectedSocialPosts)
   const socialVelocity = calculateSocialVelocity(selectedSocialTopic)
   const sourceStatusCounts = useMemo(() => countSourceStatuses(worldSnapshot), [worldSnapshot])
+  // Command-bar status — all derived from real source counts. No fabricated score:
+  // with no sources polled this reads 0/0 · Standby, never a placeholder percentage.
+  const opsScore =
+    sourceStatusCounts.total > 0
+      ? Math.round((sourceStatusCounts.online / sourceStatusCounts.total) * 100)
+      : null
+  const opsHealthy = sourceStatusCounts.failed === 0 && sourceStatusCounts.stale === 0
+  const globalStatus =
+    sourceStatusCounts.total === 0
+      ? 'Standby'
+      : sourceStatusCounts.failed > 0
+        ? 'Elevated'
+        : sourceStatusCounts.stale > 0
+          ? 'Watch'
+          : 'Nominal'
+  const globalStatusTone =
+    globalStatus === 'Elevated' ? 'warn' : globalStatus === 'Watch' ? 'caution' : globalStatus === 'Nominal' ? 'ok' : 'idle'
   const realtimeTrust = canonicalSourceTrust(engineSnapshot.status.health?.sourceTrust)
   const worldTrust = canonicalSourceTrust(worldSnapshot.sourceTrust)
   const externalSocialConnectorEnabled = externalSocialConnectorIsEnabled()
@@ -1300,7 +1336,7 @@ function App() {
     window.location.reload()
   }
   const resetLayout = () => {
-    setSidebarCollapsed(true)
+    setSidebarCollapsed(false)
     setAdvancedNavOpen(false)
     setCompactMode(false)
     setEvidenceDeskOpen(true)
@@ -1409,18 +1445,10 @@ function App() {
       perform: resetLayout,
     },
   ]
-  const spatialSurfaceActive = [
-    'command',
-    'world',
-    'radar',
-    'terminal',
-    'sources',
-    'infrastructure',
-    'dossiers',
-    'coverage',
-    'settings',
-  ].includes(activeView)
-  const marketTapeVisible = activeView === 'terminal'
+  // Legacy desktop-only price tape is redundant now that the Market route shows
+  // real TradingView prices; keep it hidden so the route doesn't lead with
+  // PRICE_UNAVAILABLE tiles.
+  const marketTapeVisible = false
   const legacyCommandSurfaceEnabled = typeof window !== 'undefined' && window.location.search.includes('legacy-command=1')
 
   const advancedActive = advancedViews.some((view) => view.id === activeView)
@@ -1532,66 +1560,69 @@ function App() {
       </aside>
 
       <section className="workspace">
-        <header className="topbar">
-          <div>
-            <span className="eyebrow">
-              {spatialSurfaceActive ? 'Atlasz Spatial Terminal' : 'Atlasz Intelligence'}
-            </span>
-            <h2>
-              {spatialSurfaceActive
-                ? 'What changed, where it happened, what proves it, and what to watch next.'
-                : 'Understand events, markets, infrastructure, and source-backed connections.'}
-            </h2>
-          </div>
-          <div className="topbar-actions">
-            <CommandMenuButton />
-            <span className="source-badge health-chip">
+        <header className="topbar command-bar">
+          <div className="command-bar-status">
+            <div className={`ops-score tone-${opsHealthy ? 'ok' : 'warn'}`}>
+              <span className="ops-label">Source Ops</span>
+              <strong className="ops-pct">{opsScore === null ? '—' : `${opsScore}%`}</strong>
+              <span className="ops-bar" aria-hidden="true">
+                <span style={{ width: `${opsScore ?? 0}%` }} />
+              </span>
+            </div>
+            <span className={`cmd-chip tone-${opsHealthy ? 'ok' : 'warn'}`}>
               <CircleDotDashed size={14} />
-              {sourceStatusCounts.online}/{sourceStatusCounts.total} sources
+              {sourceStatusCounts.online}/{sourceStatusCounts.total} online
             </span>
-            <span className="source-badge health-chip">{formatFreshness(worldSnapshot.updatedAt)} refresh</span>
-            <span className="source-badge health-chip">{sourceStatusCounts.disabled} locked</span>
-            <span className={sourceStatusCounts.failed > 0 ? 'source-badge health-chip warn' : 'source-badge health-chip'}>
-              {sourceStatusCounts.failed} failed
+            <span className="cmd-chip muted" title="Last source refresh">
+              <Activity size={13} />
+              {formatFreshness(worldSnapshot.updatedAt)}
+            </span>
+            {sourceStatusCounts.failed > 0 && (
+              <span className="cmd-chip tone-warn">{sourceStatusCounts.failed} failed</span>
+            )}
+            {sourceStatusCounts.disabled > 0 && (
+              <span className="cmd-chip muted">{sourceStatusCounts.disabled} locked</span>
+            )}
+          </div>
+          <div className="command-bar-actions">
+            <span className={`global-status tone-${globalStatusTone}`}>
+              <span>Global status</span>
+              <strong>{globalStatus}</strong>
             </span>
             <PulseIndicator />
+            <CommandMenuButton />
             <button
-              className={compactMode ? 'ghost-button active' : 'ghost-button'}
-              type="button"
-              onClick={() => setCompactMode((value) => !value)}
-            >
-              Compact
-            </button>
-            <button
-              className={globeFocusMode ? 'ghost-button active' : 'ghost-button'}
+              aria-label="Full globe"
+              title="Full globe"
+              className={globeFocusMode ? 'icon-button active' : 'icon-button'}
               type="button"
               onClick={() => {
                 setActiveView('radar')
                 setGlobeFocusMode((value) => !value)
               }}
             >
-              Full Globe
+              <Globe2 size={16} />
             </button>
             <button
-              className={evidenceDeskOpen ? 'ghost-button active' : 'ghost-button'}
+              aria-label="Toggle evidence desk"
+              title="Evidence desk"
+              className={evidenceDeskOpen ? 'icon-button active' : 'icon-button'}
               type="button"
               onClick={() => setEvidenceDeskOpen((value) => !value)}
             >
-              Evidence Desk
+              <Layers3 size={16} />
             </button>
             <button
-              className={rightDrawerOpen ? 'ghost-button active' : 'ghost-button'}
+              aria-label="Toggle dossier drawer"
+              title="Dossier drawer"
+              className={rightDrawerOpen ? 'icon-button active' : 'icon-button'}
               type="button"
               onClick={() => setRightDrawerOpen((value) => !value)}
             >
-              Dossier Drawer
+              <Fingerprint size={16} />
             </button>
-            <button className="ghost-button" type="button" onClick={resetLayout}>
-              Reset Layout
-            </button>
-            <button className="ghost-button" type="button" onClick={() => setActiveView('dossiers')}>
-              <NotebookPen size={16} />
-              Dossiers
+            <button aria-label="Reset layout" title="Reset layout" className="icon-button" type="button" onClick={resetLayout}>
+              <MonitorDot size={16} />
             </button>
           </div>
         </header>
@@ -1976,30 +2007,61 @@ function App() {
             }
             visual={
               <article className="panel terminal-chart-panel spatial-primary-panel">
-                <PanelHeader icon={LineChart} label="Market Movement" title={`${selectedMarket.ticker} source-backed movement context`} />
-                <div className="chart-stat-row">
-                  <div>
-                    <span>{selectedMarket.name}</span>
-                    <strong>{selectedMarket.price}</strong>
-                  </div>
-                  <em className={changeClass(selectedMarket.change)}>{formatChange(selectedMarket.change)}</em>
-                  <p>{selectedMarket.catalyst}</p>
+                <PanelHeader icon={LineChart} label="Live Market" title="Energy & market prices (TradingView reference)" />
+                <div className="tv-tape-strip">
+                  <TradingViewWidget
+                    height={46}
+                    scriptSrc="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js"
+                    config={{
+                      symbols: TRADINGVIEW_TICKER_TAPE,
+                      colorTheme: 'dark',
+                      isTransparent: true,
+                      displayMode: 'compact',
+                      locale: 'en',
+                    }}
+                  />
                 </div>
+                <div className="tv-chart-frame">
+                  <TradingViewWidget
+                    scriptSrc="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js"
+                    config={{
+                      symbols: TRADINGVIEW_ENERGY_OVERVIEW,
+                      chartOnly: false,
+                      colorTheme: 'dark',
+                      isTransparent: true,
+                      autosize: true,
+                      showVolume: false,
+                      locale: 'en',
+                      gridLineColor: 'rgba(148,163,184,0.08)',
+                      fontColor: '#92a39d',
+                    }}
+                  />
+                </div>
+                <p className="tv-disclaimer">
+                  Live prices via TradingView — third-party market reference, not an Atlasz source-backed proof. No buy/sell signal or prediction.
+                </p>
                 <LiveMarketReadout symbol={selectedTicker} enabled={pulseEnabled} />
-                <div className="chart-frame">
-                  {chartData.length > 0 ? (
-                    <Suspense fallback={<ChartSkeleton />}>
-                      <MarketPriceChart data={chartData} />
-                    </Suspense>
-                  ) : (
-                    <div className="empty-state">{CANDLE_HISTORY_UNAVAILABLE}</div>
-                  )}
-                </div>
               </article>
             }
             dossier={
-              <article className="panel">
-                <PanelHeader icon={Crosshair} label="Dossier" title="Source context only" />
+              <article className="panel market-news-panel">
+                <PanelHeader icon={RadioTower} label="Market News" title="Headlines (TradingView reference)" />
+                <div className="tv-news-frame">
+                  <TradingViewWidget
+                    scriptSrc="https://s3.tradingview.com/external-embedding/embed-widget-timeline.js"
+                    config={{
+                      feedMode: 'market',
+                      market: 'stock',
+                      isTransparent: true,
+                      displayMode: 'regular',
+                      colorTheme: 'dark',
+                      locale: 'en',
+                    }}
+                  />
+                </div>
+                <p className="tv-disclaimer">
+                  Headlines via TradingView — third-party media reference, not Atlasz-verified fact. Media observation, never proof.
+                </p>
                 <MarketExplanationPanel explanation={selectedMarketExplanation} />
               </article>
             }
@@ -2058,22 +2120,33 @@ function App() {
             }
             visual={
               <article className="panel spatial-primary-panel infrastructure-map-panel">
-                <PanelHeader icon={Layers3} label="Infrastructure Map" title="Facilities, hazards, and exposure paths" />
-                <GlobalPulseScene
-                  activeLayerIds={activeLayerIds}
-                  events={filteredPulseEvents}
-                  onSelectEvent={(eventId) => selectEvent(eventId)}
-                  onSelectTicker={(ticker) => selectTicker(ticker, 'terminal')}
-                  selectedEventId={selectedEvent.id}
-                  signals={worldSignals}
-                />
-                <TimelineControl
-                  events={filteredPulseEvents}
-                  onSelectEvent={(eventId) => selectEvent(eventId)}
-                  selectedEventId={selectedEvent.id}
-                  selectedTimeWindow={selectedTimeWindow}
-                  setSelectedTimeWindow={setSelectedTimeWindow}
-                />
+                <PanelHeader icon={LineChart} label="Energy & Infrastructure Market" title="Sector prices for the facilities in view (TradingView reference)" />
+                <div className="tv-tape-strip">
+                  <TradingViewWidget
+                    height={46}
+                    scriptSrc="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js"
+                    config={{ symbols: TRADINGVIEW_TICKER_TAPE, colorTheme: 'dark', isTransparent: true, displayMode: 'compact', locale: 'en' }}
+                  />
+                </div>
+                <div className="tv-chart-frame">
+                  <TradingViewWidget
+                    scriptSrc="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js"
+                    config={{
+                      symbols: TRADINGVIEW_ENERGY_OVERVIEW,
+                      chartOnly: false,
+                      colorTheme: 'dark',
+                      isTransparent: true,
+                      autosize: true,
+                      showVolume: false,
+                      locale: 'en',
+                      gridLineColor: 'rgba(148,163,184,0.08)',
+                      fontColor: '#92a39d',
+                    }}
+                  />
+                </div>
+                <p className="tv-disclaimer">
+                  Live energy-sector prices via TradingView — third-party reference for the facility sectors mapped on Worldwatch. Not an Atlasz proof, outage, or trading signal. Facility map + operators live on the Worldwatch globe.
+                </p>
               </article>
             }
             dossier={
@@ -2095,6 +2168,25 @@ function App() {
               <article className="panel">
                 <PanelHeader icon={GitBranch} label="Exposure" title="Structural exposure context, not outage or damage claims" />
                 <ExposureDashboardPanel events={worldSnapshot.worldEvents} />
+                <div className="infra-market-link">
+                  <span className="infra-market-label">Energy market reference</span>
+                  <div className="tv-tape-strip">
+                    <TradingViewWidget
+                      height={46}
+                      scriptSrc="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js"
+                      config={{
+                        symbols: TRADINGVIEW_TICKER_TAPE,
+                        colorTheme: 'dark',
+                        isTransparent: true,
+                        displayMode: 'compact',
+                        locale: 'en',
+                      }}
+                    />
+                  </div>
+                  <p className="tv-disclaimer">
+                    Live energy/market prices via TradingView (third-party reference) — context for the facility sectors above. Not an Atlasz proof, outage, or trading signal.
+                  </p>
+                </div>
               </article>
             }
           />
