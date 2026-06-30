@@ -4803,3 +4803,92 @@
   border-color: rgba(45, 212, 191, 0.5);
   background: rgba(45, 212, 191, 0.08);
 }
+
+/* ===== Source-trail strip (bottom connector chips) ===== */
+.worldwatch-source-strip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: rgba(7, 12, 18, 0.6);
+  overflow: hidden;
+}
+
+.source-strip-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+
+.source-strip-head > span {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--green-strong);
+}
+
+.source-strip-head em {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.source-strip-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  flex: 1 1 auto;
+}
+
+.source-strip-empty {
+  font-size: 11px;
+  color: var(--faint);
+}
+
+.source-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+  padding: 5px 11px;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  background: rgba(13, 17, 16, 0.7);
+  white-space: nowrap;
+}
+
+.source-chip strong {
+  font-size: 11px;
+  font-weight: 540;
+  color: var(--text);
+}
+
+.source-chip em {
+  font-style: normal;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.source-chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--faint);
+}
+
+.source-chip.status-online .source-chip-dot { background: var(--green-strong); box-shadow: 0 0 6px rgba(45, 212, 191, 0.6); }
+.source-chip.status-online { border-color: rgba(45, 212, 191, 0.35); }
+.source-chip.status-rate-limited .source-chip-dot,
+.source-chip.status-offline .source-chip-dot { background: var(--yellow); }
+.source-chip.status-failed .source-chip-dot { background: var(--red); }
+.source-chip.status-disabled .source-chip-dot { background: var(--faint); }

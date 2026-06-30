@@ -514,6 +514,33 @@ export function WorldIntelligenceView({
         </div>
       </section>
 
+      <section className="worldwatch-source-strip" aria-label="Source trail">
+        <div className="source-strip-head">
+          <Database size={13} />
+          <span>Source Trail</span>
+          <em>
+            {snapshot.sources.length} sources · {snapshot.sources.filter((source) => source.status === 'online').length} online
+          </em>
+        </div>
+        <div className="source-strip-chips">
+          {snapshot.sources.length === 0 ? (
+            <span className="source-strip-empty">No live sources in this window — refresh to populate.</span>
+          ) : (
+            snapshot.sources.map((source) => (
+              <div
+                className={`source-chip status-${source.status}`}
+                key={source.sourceId}
+                title={`${source.provenance} · ${source.status}`}
+              >
+                <span className="source-chip-dot" />
+                <strong>{source.sourceName}</strong>
+                <em>{source.status}</em>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+
       <section className="worldwatch-desk">
         <header className="worldwatch-desk-head">
           <div>
