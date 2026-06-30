@@ -2044,8 +2044,24 @@ function App() {
               </article>
             }
             dossier={
-              <article className="panel">
-                <PanelHeader icon={Crosshair} label="Dossier" title="Source context only" />
+              <article className="panel market-news-panel">
+                <PanelHeader icon={RadioTower} label="Market News" title="Headlines (TradingView reference)" />
+                <div className="tv-news-frame">
+                  <TradingViewWidget
+                    scriptSrc="https://s3.tradingview.com/external-embedding/embed-widget-timeline.js"
+                    config={{
+                      feedMode: 'market',
+                      market: 'stock',
+                      isTransparent: true,
+                      displayMode: 'regular',
+                      colorTheme: 'dark',
+                      locale: 'en',
+                    }}
+                  />
+                </div>
+                <p className="tv-disclaimer">
+                  Headlines via TradingView — third-party media reference, not Atlasz-verified fact. Media observation, never proof.
+                </p>
                 <MarketExplanationPanel explanation={selectedMarketExplanation} />
               </article>
             }

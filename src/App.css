@@ -5294,3 +5294,14 @@ body {
   text-transform: uppercase;
   color: var(--green-strong);
 }
+
+.tv-news-frame {
+  height: clamp(280px, 38vh, 460px);
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.market-news-panel .tv-disclaimer {
+  margin: 8px 0;
+}

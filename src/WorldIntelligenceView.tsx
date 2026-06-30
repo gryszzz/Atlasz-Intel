@@ -726,6 +726,43 @@ function SourceConstellation({
   )
 }
 
+const PROXIMITY_RADIUS_KM = 400
+
+/** Great-circle distance in km. */
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const toRad = (deg: number) => (deg * Math.PI) / 180
+  const r = 6371
+  const dLat = toRad(lat2 - lat1)
+  const dLon = toRad(lon2 - lon1)
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
+  return 2 * r * Math.asin(Math.sqrt(a))
+}
+
+/**
+ * Source-backed co-location: other geo events within PROXIMITY_RADIUS_KM. For a
+ * hazard it surfaces nearby infrastructure (and vice-versa) — a real spatial
+ * join, never a causal/impact claim. Both sides carry their own source trail.
+ */
+function buildProximityLinks(
+  selected: WorldIntelEvent,
+  events: WorldIntelEvent[],
+): Array<{ event: WorldIntelEvent; km: number }> {
+  const lat = selected.lat
+  const lon = selected.lon
+  if (typeof lat !== 'number' || typeof lon !== 'number') return []
+  const selfHazard = Boolean(selected.earthquakeEvent)
+  const selfInfra = Boolean(selected.infrastructureSite)
+  return events
+    .filter((event) => event.id !== selected.id && typeof event.lat === 'number' && typeof event.lon === 'number')
+    .filter((event) =>
+      selfHazard ? Boolean(event.infrastructureSite) : selfInfra ? Boolean(event.earthquakeEvent) : true,
+    )
+    .map((event) => ({ event, km: haversineKm(lat, lon, event.lat as number, event.lon as number) }))
+    .filter((link) => link.km <= PROXIMITY_RADIUS_KM)
+    .sort((a, b) => a.km - b.km)
+    .slice(0, 6)
+}
+
 const SEVERITY_RANK: Record<string, number> = { critical: 4, elevated: 3, watch: 2, stable: 1 }
 const SEVERITY_LABEL: Record<string, string> = {
   critical: 'Critical',
@@ -830,6 +867,7 @@ function WorldwatchCockpit({
   const connectedRegions = selected ? buildConnectedRegions(selected, connectionEdges) : []
   const connectedMarkets = selected ? buildConnectedMarkets(selected, selectedEntity) : []
   const exposureChain = selected ? buildExposureChain(selected) : []
+  const proximityLinks = selected ? buildProximityLinks(selected, events) : []
   const whyThisMatters = selected ? buildWhyThisMatters(selected, selectedEntity) : []
   const whatChanged = selected ? buildWhatChanged(selected, selectedEntity, now) : []
   const layerGroupSummaries = useMemo(
@@ -1137,6 +1175,28 @@ function WorldwatchCockpit({
                     ))}
                   </div>
                   <small>Source-backed connection only — operator and fuel-derived sectors. No ticker match, price, or trading signal.</small>
+                </div>
+              )}
+              {proximityLinks.length > 0 && (
+                <div className="cockpit-proximity" aria-label="Source-backed co-location">
+                  <span className="cockpit-proximity-label">
+                    Within {PROXIMITY_RADIUS_KM} km — co-located, source-backed
+                  </span>
+                  <div className="cockpit-proximity-list">
+                    {proximityLinks.map((link) => (
+                      <button
+                        className="cockpit-proximity-row"
+                        key={link.event.id}
+                        type="button"
+                        onClick={() => onSelectEvent(link.event.id)}
+                      >
+                        <strong>{Math.round(link.km)} km</strong>
+                        <span>{link.event.title}</span>
+                        <em>{link.event.infrastructureSite ? 'infrastructure' : link.event.earthquakeEvent ? 'hazard' : link.event.category}</em>
+                      </button>
+                    ))}
+                  </div>
+                  <small>Co-location only — proximity is not an impact, outage, damage, or causation claim. Each item keeps its own source trail.</small>
                 </div>
               )}
               <div className="cockpit-dossier-section">
