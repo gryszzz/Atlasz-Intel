@@ -5203,3 +5203,51 @@ body {
   background: rgba(13, 17, 16, 0.5);
   color: var(--muted);
 }
+
+/* ===== Secondary routes: command-center aesthetic (shared SpatialRouteShell) ===== */
+.spatial-route-head {
+  padding-bottom: 10px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.spatial-route-title > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--green-strong);
+}
+
+.spatial-route-title h1 {
+  margin: 5px 0 0;
+  font-size: 18px;
+  font-weight: 640;
+  line-height: 1.2;
+}
+
+/* Drop the long descriptive sentence — keeps routes dense like the command center. */
+.spatial-route-title p {
+  display: none;
+}
+
+.spatial-route-metric {
+  border: 1px solid var(--line-soft);
+  border-radius: 9px;
+  background: rgba(13, 17, 16, 0.62);
+  padding: 8px 13px;
+}
+
+.spatial-route-metric span {
+  font-size: 9px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.spatial-route-metric strong {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
