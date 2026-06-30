@@ -4446,3 +4446,87 @@
 .atlasz-cockpit .cockpit-body {
   min-height: clamp(360px, calc(100dvh - 215px), 820px);
 }
+
+/* ===== Reference layout: dedicated 3 columns (no overlap) =====
+ * The reference puts What-Changed (left), the globe (center), and the dossier
+ * (right) in their OWN space side by side — the globe is never covered, so it
+ * stays fully draggable. Convert the cockpit from floating overlays to a grid. */
+.atlasz-cockpit .cockpit-body {
+  display: grid;
+  grid-template-columns: minmax(238px, 288px) minmax(0, 1fr) minmax(268px, 330px);
+  gap: 12px;
+  position: relative;
+}
+
+.atlasz-cockpit .cockpit-intel-stack {
+  position: relative;
+  inset: auto;
+  top: auto;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  width: auto;
+  grid-column: 1;
+  z-index: 1;
+}
+
+.atlasz-cockpit .cockpit-map-stage {
+  position: relative;
+  inset: auto;
+  grid-column: 2;
+  min-height: 0;
+}
+
+.atlasz-cockpit .cockpit-dossier {
+  position: relative;
+  inset: auto;
+  top: auto;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  width: auto;
+  grid-column: 3;
+  z-index: 1;
+}
+
+/* Globe fills its own center cell — nothing floats over it. */
+.atlasz-cockpit .cockpit-map-plane-3d {
+  position: absolute;
+  inset: 0;
+  top: 0;
+  left: 0;
+}
+
+/* Map toolbar sits inside the globe cell, not across panels. */
+.atlasz-cockpit .cockpit-map-toolbar {
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+}
+
+/* Metric strip: in-flow compact top row (was an absolute full-width overlay that
+ * collided with the dossier column). */
+.atlasz-cockpit .cockpit-header.slim {
+  position: relative;
+  top: auto;
+  right: auto;
+  left: auto;
+  z-index: 2;
+  pointer-events: auto;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 0 8px;
+}
+
+/* Timeline is its OWN bottom band (was an absolute overlay covering the globe). */
+.atlasz-worldwatch-workstation .worldwatch-intelligence-timeline {
+  position: relative;
+  right: auto;
+  left: auto;
+  bottom: auto;
+  top: auto;
+  z-index: 2;
+  box-shadow: none;
+  margin-top: 10px;
+  max-height: 176px;
+}
