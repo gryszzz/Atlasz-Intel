@@ -8,7 +8,7 @@
 
 **A geospatial intelligence engine for understanding how markets, capital, policy, trade, energy, infrastructure, public blockchains, cyber events, and the physical world connect and change over time.**
 
-[**Open Meridian Web →**](https://gryszzz.github.io/Atlasz-Intel/) · [**Desktop builds →**](https://github.com/gryszzz/Atlasz-Intel/actions/workflows/desktop-release.yml) · [Architecture](docs/atlasz-world-rebuild.md) · [Semantic zoom](docs/semantic-zoom.md) · [Runtime verification](docs/runtime-verification-log.md)
+[**Open Meridian Web →**](https://gryszzz.github.io/Atlasz-Intel/) · [**Download Meridian →**](https://github.com/gryszzz/Atlasz-Intel/releases/tag/meridian-preview) · [Architecture](docs/atlasz-world-rebuild.md) · [Semantic zoom](docs/semantic-zoom.md) · [Runtime verification](docs/runtime-verification-log.md)
 
 </div>
 
@@ -89,7 +89,16 @@ The repository's **Build YSZ Meridian Desktop** workflow packages:
 - Windows (`x64`)
 - Linux AppImage (`x64`)
 
-[**Open desktop build workflow →**](https://github.com/gryszzz/Atlasz-Intel/actions/workflows/desktop-release.yml)
+[**Download Meridian →**](https://github.com/gryszzz/Atlasz-Intel/releases/tag/meridian-preview)
+
+### One-click downloads
+
+Once the release workflow completes, these stable links resolve directly to the latest Meridian preview installers:
+
+- [macOS — Apple Silicon](https://github.com/gryszzz/Atlasz-Intel/releases/download/meridian-preview/YSZ-Meridian-macOS-Apple-Silicon.dmg)
+- [macOS — Intel](https://github.com/gryszzz/Atlasz-Intel/releases/download/meridian-preview/YSZ-Meridian-macOS-Intel.dmg)
+- [Windows x64](https://github.com/gryszzz/Atlasz-Intel/releases/download/meridian-preview/YSZ-Meridian-Windows-x64.exe)
+- [Linux x64](https://github.com/gryszzz/Atlasz-Intel/releases/download/meridian-preview/YSZ-Meridian-Linux-x64.AppImage)
 
 Desktop packaging remains unsigned until Apple Developer ID signing/notarization is explicitly configured.
 
