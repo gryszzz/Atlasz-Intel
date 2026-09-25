@@ -1,47 +1,51 @@
 <div align="center">
 
-<img src="docs/atlasz-intel-banner-transparent.png" alt="Atlasz Intel" width="880" />
+# YSZ // WORLDSTATE
 
-# Atlasz Intel
+**An evidence-first world-state intelligence system.**
 
-**A local-first, real-source intelligence terminal.**
-It turns official and public data into source-trailed events, an evidence graph, and structural exposure context — and refuses to fake the parts it cannot prove.
+YSZ Worldstate maps meaningful change across **markets, capital, policy, trade, infrastructure, energy, public-chain activity, cyber, and the physical world** into one source-trailed geospatial model.
+
+It is built to answer a harder question than “what is happening?”:
+
+> **What changed in the world, where did it happen, what systems does it touch, how material is it, and what actually proves it?**
+
+The surface stays quiet. The system underneath stays deep.
+
+**Worldstate is not a feed. It is a continuously updated model of relationships, flows, exposures, and evidence.**
 
 <br/>
 
-[![Real data only](https://img.shields.io/badge/data-real--source%20only-0b7285?style=flat-square)](docs/runtime-verification-log.md)
-[![Connectors](https://img.shields.io/badge/connectors-38%20wired-1864ab?style=flat-square)](docs/connector-hardening-audit.md)
-[![Local-first](https://img.shields.io/badge/runtime-local--first%20desktop-364fc7?style=flat-square)](#run-locally)
-[![Stack](https://img.shields.io/badge/stack-Electron%20%2B%20React%2019%20%2B%20TS%20%2B%20SQLite-5f3dc4?style=flat-square)](#tech-stack)
-[![Verification](https://img.shields.io/badge/runtime%20verification-13%2F13%20passing-2b8a3e?style=flat-square)](docs/runtime-verification-log.md)
+[![Evidence first](https://img.shields.io/badge/evidence-source--trailed-0b7285?style=flat-square)](docs/runtime-verification-log.md)
+[![World model](https://img.shields.io/badge/model-geospatial%20world%20state-1864ab?style=flat-square)](docs/atlasz-world-rebuild.md)
+[![Local first](https://img.shields.io/badge/runtime-local--first-364fc7?style=flat-square)](#run-locally)
+[![Verification](https://img.shields.io/badge/runtime-verification-enforced-2b8a3e?style=flat-square)](docs/runtime-verification-log.md)
 
 <br/>
 
-[Latest release](https://github.com/gryszzz/Atlasz-Intel/releases/latest)
+[World architecture](docs/atlasz-world-rebuild.md)
 &nbsp;·&nbsp;
-[Runtime verification log](docs/runtime-verification-log.md)
-&nbsp;·&nbsp;
-[Connector hardening audit](docs/connector-hardening-audit.md)
+[Runtime verification](docs/runtime-verification-log.md)
 &nbsp;·&nbsp;
 [Source atlas](docs/intelligence-source-atlas.md)
 &nbsp;·&nbsp;
 [Engineering standards](docs/atlasz-runtime-engineering-standards.md)
 
-</div>
-
 ---
 
-Atlasz is **not** a chatbot, a news clone, a trading bot, or a placeholder dashboard. It is a desktop intelligence workspace built around one discipline: every line on screen traces to live evidence, curated structure, an explicitly-labeled inference, or an honest *unknown*. Nothing is invented to fill a gap.
+YSZ Worldstate is **not** a chatbot, a news clone, a trading bot, or a placeholder dashboard. It is a desktop intelligence workspace built around one discipline: every line on screen traces to live evidence, curated structure, an explicitly-labeled inference, or an honest *unknown*. Nothing is invented to fill a gap.
 
-It exists to answer seven questions, fast and with receipts:
+It exists to answer the questions that matter when systems move:
 
-> **What changed? · Where did it come from? · How fresh is it? · What proves it? · Which entities does it touch? · What structural exposure exists? · What is still unknown?**
+> **What changed? · Where? · Who or what is exposed? · Is the signal unusual? · Where is capital or physical flow changing? · What evidence supports it? · What conflicts with it? · What remains unknown?**
+
+Worldstate treats politics, markets, shipping, infrastructure, energy, public blockchains, ownership, and macro data as connected parts of one system rather than separate dashboards.
 
 ---
 
 ## The Real-Data Contract
 
-This is the core of the product, not a footnote. Atlasz is *allowed to be incomplete*. It is *not allowed to fabricate intelligence*.
+This is the core of the product, not a footnote. Worldstate is *allowed to be incomplete*. It is *not allowed to fabricate intelligence*.
 
 - **No simulated production data.** No fake events, alerts, macro prints, filings, patents, sanctions, prices, or weather.
 - **Fail closed, always.** Failed, stale, malformed, unavailable, or rate-limited sources surface as exactly that — never as silently-substituted data.
@@ -267,7 +271,7 @@ npm run desktop:build
 
 ## Boundaries
 
-Atlasz Intel is **informational research software**. It is:
+YSZ Worldstate is **informational research software**. It is:
 
 - **Not** financial, legal, or sanctions-screening advice.
 - **Not** a trading bot, broker, execution engine, smart order router, or price oracle.
@@ -275,7 +279,7 @@ Atlasz Intel is **informational research software**. It is:
 - **Not** OSINT targeting people — no scraping of private/personal data.
 - **Not** a tool for bypassing authentication, paywalls, CAPTCHAs, or rate limits, and **not** for offensive security automation.
 
-Public unauthenticated data carries no guarantee of completeness, freshness, or verification — and Atlasz labels it as such.
+Public unauthenticated data carries no guarantee of completeness, freshness, or verification — and Worldstate labels it as such.
 
 ---
 
