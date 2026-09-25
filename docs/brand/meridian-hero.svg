@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="520" viewBox="0 0 1400 520" role="img" aria-labelledby="title desc">
+<title id="title">YSZ Meridian</title><desc id="desc">World systems intelligence architecture hero.</desc>
+<defs>
+  <radialGradient id="g" cx="68%" cy="45%" r="52%"><stop offset="0" stop-color="#183f47"/><stop offset=".55" stop-color="#0b1c23"/><stop offset="1" stop-color="#071015"/></radialGradient>
+  <linearGradient id="line" x1="0" x2="1"><stop stop-color="#65d7c0"/><stop offset="1" stop-color="#5f8cff"/></linearGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="1400" height="520" fill="#050b0f"/><rect x="24" y="24" width="1352" height="472" rx="22" fill="url(#g)" stroke="#17323a"/>
+<g opacity=".15" stroke="#6fd7c5" stroke-width=".7"><path d="M40 70 H1360"/><path d="M40 100 H1360"/><path d="M40 130 H1360"/><path d="M40 160 H1360"/><path d="M40 190 H1360"/><path d="M40 220 H1360"/><path d="M40 250 H1360"/><path d="M40 280 H1360"/><path d="M40 310 H1360"/><path d="M40 340 H1360"/><path d="M40 370 H1360"/><path d="M40 400 H1360"/><path d="M40 430 H1360"/><path d="M40 460 H1360"/><path d="M60 42 V478"/><path d="M120 42 V478"/><path d="M180 42 V478"/><path d="M240 42 V478"/><path d="M300 42 V478"/><path d="M360 42 V478"/><path d="M420 42 V478"/><path d="M480 42 V478"/><path d="M540 42 V478"/><path d="M600 42 V478"/><path d="M660 42 V478"/><path d="M720 42 V478"/><path d="M780 42 V478"/><path d="M840 42 V478"/><path d="M900 42 V478"/><path d="M960 42 V478"/><path d="M1020 42 V478"/><path d="M1080 42 V478"/><path d="M1140 42 V478"/><path d="M1200 42 V478"/><path d="M1260 42 V478"/><path d="M1320 42 V478"/></g>
+<g transform="translate(940 260)" fill="none" stroke="#4a8e8a" opacity=".8">
+ <circle r="170" stroke-width="1.2"/><ellipse rx="170" ry="65"/><ellipse rx="170" ry="115"/><ellipse rx="75" ry="170"/><ellipse rx="125" ry="170"/>
+ <path d="M-165 15 C-110-40 -75-30 -25-65 S70-80 145-20" stroke="url(#line)" stroke-width="2.2" filter="url(#glow)"/>
+ <path d="M-135 95 C-70 55 -35 85 20 40 S95 25 155 70" stroke="#d3a85d" stroke-width="1.6"/>
+</g>
+<g fill="#7be0ca" filter="url(#glow)"><circle cx="790" cy="245" r="5"/><circle cx="918" cy="195" r="5"/><circle cx="1040" cy="232" r="5"/><circle cx="1095" cy="330" r="5"/></g>
+<text x="86" y="122" fill="#7be0ca" font-family="Arial,Helvetica,sans-serif" font-size="15" letter-spacing="6">YSZ SYSTEMS</text>
+<text x="82" y="205" fill="#eef7f5" font-family="Arial,Helvetica,sans-serif" font-size="70" font-weight="700" letter-spacing="7">MERIDIAN</text>
+<text x="86" y="250" fill="#91a7a3" font-family="Arial,Helvetica,sans-serif" font-size="20" letter-spacing="2">WORLD SYSTEMS INTELLIGENCE</text>
+<text x="86" y="318" fill="#c3d0cd" font-family="Arial,Helvetica,sans-serif" font-size="18">Markets · Capital · Policy · Trade · Energy · Infrastructure · Public Chains</text>
+<text x="86" y="360" fill="#748985" font-family="Arial,Helvetica,sans-serif" font-size="16">Observe reality. Resolve relationships. Trace exposure. Keep the proof.</text>
+<g transform="translate(86 411)" font-family="Arial,Helvetica,sans-serif" font-size="13" fill="#9bb0ac">
+ <rect width="150" height="38" rx="19" fill="#0d2429" stroke="#24525a"/><text x="22" y="24">EVIDENCE FIRST</text>
+ <rect x="164" width="158" height="38" rx="19" fill="#0d2429" stroke="#24525a"/><text x="187" y="24">SEMANTIC ZOOM</text>
+ <rect x="336" width="156" height="38" rx="19" fill="#0d2429" stroke="#24525a"/><text x="361" y="24">WORLD GRAPH</text>
+</g>
+</svg>

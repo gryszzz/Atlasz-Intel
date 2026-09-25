@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="420" viewBox="0 0 1400 420">
+<rect width="1400" height="420" rx="20" fill="#071015"/>
+<text x="55" y="58" fill="#e8f3f0" font-family="Arial" font-size="25" font-weight="700">FROM OBSERVATION TO WORLD STATE</text>
+<text x="55" y="87" fill="#6f8580" font-family="Arial" font-size="14">Every promoted conclusion preserves its evidence lineage.</text>
+<g font-family="Arial" font-size="14" text-anchor="middle">
+<rect x="8" y="165" width="144" height="72" rx="14" fill="#17363a" stroke="#3f6968"/><text x="80" y="207" fill="#dcebe7">OBSERVATIONS</text><rect x="208" y="165" width="144" height="72" rx="14" fill="#15343b" stroke="#3f6968"/><text x="280" y="207" fill="#dcebe7">ENTITIES</text><rect x="408" y="165" width="144" height="72" rx="14" fill="#173044" stroke="#3f6968"/><text x="480" y="207" fill="#dcebe7">RELATIONSHIPS</text><rect x="608" y="165" width="144" height="72" rx="14" fill="#1c2e43" stroke="#3f6968"/><text x="680" y="207" fill="#dcebe7">EVENTS</text><rect x="808" y="165" width="144" height="72" rx="14" fill="#1b3440" stroke="#3f6968"/><text x="880" y="207" fill="#dcebe7">FLOWS</text><rect x="1008" y="165" width="144" height="72" rx="14" fill="#24343d" stroke="#3f6968"/><text x="1080" y="207" fill="#dcebe7">EXPOSURE</text><rect x="1208" y="165" width="144" height="72" rx="14" fill="#21413d" stroke="#3f6968"/><text x="1280" y="207" fill="#dcebe7">WORLD STATE</text>
+</g>
+<g stroke="url(#a)" stroke-width="2" fill="none"><defs><linearGradient id="a"><stop stop-color="#6ad6c1"/><stop offset="1" stop-color="#5e8cff"/></linearGradient></defs>
+<path d="M152 201 H208"/><path d="M201 195 l9 6 -9 6"/><path d="M352 201 H408"/><path d="M401 195 l9 6 -9 6"/><path d="M552 201 H608"/><path d="M601 195 l9 6 -9 6"/><path d="M752 201 H808"/><path d="M801 195 l9 6 -9 6"/><path d="M952 201 H1008"/><path d="M1001 195 l9 6 -9 6"/><path d="M1152 201 H1208"/><path d="M1201 195 l9 6 -9 6"/></g>
+<g font-family="Arial" font-size="13" fill="#738b86">
+<text x="80" y="285">source-backed</text><text x="280" y="285">resolved identity</text><text x="480" y="285">typed + temporal</text><text x="680" y="285">material change</text><text x="880" y="285">capital + physical</text><text x="1080" y="285">paths, not causation</text><text x="1280" y="285">time-aware projection</text>
+</g>
+<rect x="55" y="330" width="1290" height="44" rx="12" fill="#0b1c21" stroke="#17343a"/>
+<text x="700" y="358" text-anchor="middle" fill="#78a99f" font-family="Arial" font-size="14">OBSERVED  ·  STRUCTURAL  ·  STATISTICAL  ·  INFERRED  ·  UNKNOWN</text>
+</svg>
