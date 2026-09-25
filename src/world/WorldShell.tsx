@@ -197,10 +197,10 @@ export default function WorldShell() {
 
       <header className="atlasz-world-header">
         <div className="atlasz-world-brand">
-          <div className="atlasz-world-mark">A</div>
+          <div className="atlasz-world-mark">M</div>
           <div>
             <div className="atlasz-world-wordmark">YSZ</div>
-            <div className="atlasz-world-subtitle">WORLDSTATE</div>
+            <div className="atlasz-world-subtitle">MERIDIAN</div>
           </div>
         </div>
 
@@ -211,7 +211,7 @@ export default function WorldShell() {
           <button
             className="atlasz-icon-button"
             type="button"
-            aria-label="Refresh world state"
+            aria-label="Refresh Meridian world state"
             onClick={() => void refresh()}
             disabled={loading}
           >
