@@ -1,4 +1,4 @@
-name: Deploy YSZ Worldstate
+name: Deploy YSZ Meridian
 
 on:
   push:
@@ -29,13 +29,15 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Configure Pages
+      - name: Configure and enable Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Install
         run: npm ci
 
-      - name: Build Worldstate web surface
+      - name: Build Meridian web surface
         env:
           VITE_BASE_PATH: /Atlasz-Intel/
         run: npm run web:build
