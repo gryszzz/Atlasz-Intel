@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, session, shell } from 'electron'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createPersistence } from './persistence'
@@ -92,7 +92,35 @@ function requireProviderDiscovery(): ProviderDiscoveryService {
   return providerDiscovery
 }
 
+// Baseline Content-Security-Policy. There was previously none (external scripts
+// loaded unrestricted). This allows the app's own bundle ('self') plus the
+// official TradingView market-widget domains (third-party price reference) and
+// blocks everything else. Connectors run in the main process, so the renderer
+// does not need the data-source domains here.
+// NOTE: only affects the packaged/desktop app, not the web preview. MUST pass the
+// Mac GUI smoke test before release (per docs/release-readiness.md) — if a widget
+// or asset fails to load, widen the matching directive.
+function applyContentSecurityPolicy() {
+  const tv = 'https://*.tradingview.com https://*.tradingview-widget.com'
+  const policy = [
+    "default-src 'self'",
+    `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${tv}`,
+    `style-src 'self' 'unsafe-inline' ${tv}`,
+    `img-src 'self' data: blob: ${tv}`,
+    `font-src 'self' data: ${tv}`,
+    `connect-src 'self' ${tv} wss://*.tradingview.com`,
+    `frame-src 'self' ${tv}`,
+    "worker-src 'self' blob:",
+  ].join('; ')
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: { ...details.responseHeaders, 'Content-Security-Policy': [policy] },
+    })
+  })
+}
+
 function createWindow() {
+  applyContentSecurityPolicy()
   const mainWindow = new BrowserWindow({
     title: 'Atlasz Intel',
     width: 1480,

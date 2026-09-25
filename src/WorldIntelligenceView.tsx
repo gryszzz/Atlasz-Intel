@@ -40,9 +40,14 @@ import {
 } from './engine/worldwatchLayerRegistry'
 import type { OsintSourceSnapshot, UserFavorite, WorldIntelEvent, WorldIntelSnapshot } from './worldIntel'
 import './WorldIntelligenceView.css'
+import type { GlobeArc, GlobePoint } from './components/world/ProofGlobe'
 
 // Lazy child surfaces — kept out of the startup bundle and isolated so future
 // heavy globe / quant libraries load only when this view is open.
+// ProofGlobe pulls in three.js/globe.gl; it must stay behind this lazy boundary.
+const ProofGlobe = lazy(() =>
+  import('./components/world/ProofGlobe').then((m) => ({ default: m.ProofGlobe })),
+)
 const WorldEventTimeline = lazy(() =>
   import('./components/world/WorldEventTimeline.lazy').then((m) => ({ default: m.WorldEventTimeline })),
 )
@@ -205,7 +210,7 @@ const worldwatchLayerGroups: WorldwatchLayerGroup[] = [
     label: 'Infrastructure',
     description: 'Facilities, ports, grids, refineries, terminals, and minerals from public records.',
     icon: Factory,
-    layerIds: ['power-plants', 'refineries', 'lng-terminals', 'nuclear-plants', 'reactor-status', 'grid-regions', 'ports-locode', 'ports-world-index', 'minerals'],
+    layerIds: ['infrastructure', 'power-plants', 'refineries', 'lng-terminals', 'nuclear-plants', 'reactor-status', 'grid-regions', 'ports-locode', 'ports-world-index', 'minerals'],
   },
   {
     id: 'energy',
@@ -332,11 +337,6 @@ export function WorldIntelligenceView({
     0,
     visibleEvents.findIndex((event) => event.id === selectedCockpitEvent?.id),
   )
-  const toggleWorldwatchLayer = (layerId: WorldwatchLayerId) => {
-    setActiveLayerIds((current) =>
-      current.includes(layerId) ? current.filter((currentLayerId) => currentLayerId !== layerId) : [...current, layerId],
-    )
-  }
   const toggleWorldwatchLayerGroup = (group: WorldwatchLayerGroup) => {
     if (group.sourceLayer) {
       setSourceLayerVisible((current) => !current)
@@ -372,10 +372,26 @@ export function WorldIntelligenceView({
 
   return (
     <div className="world-intel-view atlasz-worldwatch-workstation">
-      <section className="world-command-band worldwatch-command-deck">
-        <div>
-          <span>Aegis Worldwatch</span>
-          <h3>Living world intelligence: what changed, where it happened, what proves it, and what connects.</h3>
+      <section className="world-command-band worldwatch-command-deck slim">
+        <div className="worldwatch-profile-chips" aria-label="Relevance profile (affects ranking only)">
+          <button
+            className={activeWorldwatchProfileId === 'all' ? 'active' : ''}
+            type="button"
+            onClick={() => onActiveWorldwatchProfileChange('all')}
+          >
+            All evidence
+          </button>
+          {worldwatchProfiles.map((profile) => (
+            <button
+              className={activeWorldwatchProfileId === profile.id ? 'active' : ''}
+              key={profile.id}
+              type="button"
+              title={`Rank by ${profile.name} (relevance only)`}
+              onClick={() => onActiveWorldwatchProfileChange(profile.id)}
+            >
+              {profile.name}
+            </button>
+          ))}
         </div>
         <div className="world-command-actions">
           <div className="world-search">
@@ -420,7 +436,6 @@ export function WorldIntelligenceView({
             windows={worldWindows}
             onSelectEvent={selectCockpitEvent}
             onToggleLayerGroup={toggleWorldwatchLayerGroup}
-            onToggleLayer={toggleWorldwatchLayer}
             onWindowChange={(id) => setWindowId(id as WorldWindowId)}
           />
           <Suspense fallback={<div className="world-panel world-quant-strip"><QuantStripSkeleton /></div>}>
@@ -496,6 +511,33 @@ export function WorldIntelligenceView({
               <em>{event.category}</em>
             </button>
           ))}
+        </div>
+      </section>
+
+      <section className="worldwatch-source-strip" aria-label="Source trail">
+        <div className="source-strip-head">
+          <Database size={13} />
+          <span>Source Trail</span>
+          <em>
+            {snapshot.sources.length} sources · {snapshot.sources.filter((source) => source.status === 'online').length} online
+          </em>
+        </div>
+        <div className="source-strip-chips">
+          {snapshot.sources.length === 0 ? (
+            <span className="source-strip-empty">No live sources in this window — refresh to populate.</span>
+          ) : (
+            snapshot.sources.map((source) => (
+              <div
+                className={`source-chip status-${source.status}`}
+                key={source.sourceId}
+                title={`${source.provenance} · ${source.status}`}
+              >
+                <span className="source-chip-dot" />
+                <strong>{source.sourceName}</strong>
+                <em>{source.status}</em>
+              </div>
+            ))
+          )}
         </div>
       </section>
 
@@ -731,6 +773,157 @@ function SourceConstellation({
   )
 }
 
+const PROXIMITY_RADIUS_KM = 400
+
+/** Great-circle distance in km. */
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const toRad = (deg: number) => (deg * Math.PI) / 180
+  const r = 6371
+  const dLat = toRad(lat2 - lat1)
+  const dLon = toRad(lon2 - lon1)
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
+  return 2 * r * Math.asin(Math.sqrt(a))
+}
+
+/**
+ * Source-backed co-location: other geo events within PROXIMITY_RADIUS_KM. For a
+ * hazard it surfaces nearby infrastructure (and vice-versa) — a real spatial
+ * join, never a causal/impact claim. Both sides carry their own source trail.
+ */
+function buildProximityLinks(
+  selected: WorldIntelEvent,
+  events: WorldIntelEvent[],
+): Array<{ event: WorldIntelEvent; km: number }> {
+  const lat = selected.lat
+  const lon = selected.lon
+  if (typeof lat !== 'number' || typeof lon !== 'number') return []
+  const selfHazard = Boolean(selected.earthquakeEvent)
+  const selfInfra = Boolean(selected.infrastructureSite)
+  return events
+    .filter((event) => event.id !== selected.id && typeof event.lat === 'number' && typeof event.lon === 'number')
+    .filter((event) =>
+      selfHazard ? Boolean(event.infrastructureSite) : selfInfra ? Boolean(event.earthquakeEvent) : true,
+    )
+    .map((event) => ({ event, km: haversineKm(lat, lon, event.lat as number, event.lon as number) }))
+    .filter((link) => link.km <= PROXIMITY_RADIUS_KM)
+    .sort((a, b) => a.km - b.km)
+    .slice(0, 6)
+}
+
+export type DailySynthesis = {
+  total: number
+  sourceCount: number
+  hazards: number
+  infrastructure: number
+  nearbyFacilities: number
+  topSectors: Array<[string, number]>
+}
+
+/**
+ * Cross-source roll-up of the current window — the intelligence layer, not a
+ * feed. Counts real events by source, and joins hazards <-> infrastructure by
+ * proximity. Co-location only; never an impact/causation claim.
+ */
+function buildDailySynthesis(events: WorldIntelEvent[]): DailySynthesis {
+  const hazards = events.filter((event) => Boolean(event.earthquakeEvent))
+  const infrastructure = events.filter((event) => Boolean(event.infrastructureSite))
+  const sources = new Set(events.map((event) => event.sourceId))
+  const nearbyFacilityIds = new Set<string>()
+  for (const hazard of hazards) {
+    if (typeof hazard.lat !== 'number' || typeof hazard.lon !== 'number') continue
+    for (const facility of infrastructure) {
+      if (typeof facility.lat !== 'number' || typeof facility.lon !== 'number') continue
+      if (haversineKm(hazard.lat, hazard.lon, facility.lat, facility.lon) <= PROXIMITY_RADIUS_KM) {
+        nearbyFacilityIds.add(facility.id)
+      }
+    }
+  }
+  const sectorCounts = new Map<string, number>()
+  for (const facility of infrastructure) {
+    for (const sector of facility.affectedSectors) sectorCounts.set(sector, (sectorCounts.get(sector) ?? 0) + 1)
+  }
+  const topSectors = [...sectorCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3)
+  return {
+    total: events.length,
+    sourceCount: sources.size,
+    hazards: hazards.length,
+    infrastructure: infrastructure.length,
+    nearbyFacilities: nearbyFacilityIds.size,
+    topSectors,
+  }
+}
+
+/**
+ * Globe arcs from REAL co-location: each hazard to its nearest facility within
+ * PROXIMITY_RADIUS_KM. Honest "everything connected" — proximity links only, no
+ * causal/impact claim. Capped so the globe stays readable.
+ */
+function buildGlobeProximityArcs(events: WorldIntelEvent[]): GlobeArc[] {
+  const hazards = events.filter((e) => Boolean(e.earthquakeEvent) && typeof e.lat === 'number' && typeof e.lon === 'number')
+  const facilities = events.filter((e) => Boolean(e.infrastructureSite) && typeof e.lat === 'number' && typeof e.lon === 'number')
+  const arcs: GlobeArc[] = []
+  for (const hazard of hazards) {
+    let nearest: WorldIntelEvent | null = null
+    let nearestKm = Infinity
+    for (const facility of facilities) {
+      const km = haversineKm(hazard.lat as number, hazard.lon as number, facility.lat as number, facility.lon as number)
+      if (km <= PROXIMITY_RADIUS_KM && km < nearestKm) {
+        nearestKm = km
+        nearest = facility
+      }
+    }
+    if (nearest) {
+      arcs.push({
+        id: `${hazard.id}:${nearest.id}`,
+        startLat: hazard.lat as number,
+        startLng: hazard.lon as number,
+        endLat: nearest.lat as number,
+        endLng: nearest.lon as number,
+        color: '#fb923c',
+      })
+    }
+    if (arcs.length >= 24) break
+  }
+  return arcs
+}
+
+const SEVERITY_RANK: Record<string, number> = { critical: 4, elevated: 3, watch: 2, stable: 1 }
+const SEVERITY_LABEL: Record<string, string> = {
+  critical: 'Critical',
+  elevated: 'High',
+  watch: 'Watch',
+  stable: 'Low',
+}
+
+function severityRank(severity: string): number {
+  return SEVERITY_RANK[severity] ?? 0
+}
+
+function relativeTimeShort(timestamp: number, now: number): string {
+  const minutes = Math.max(0, Math.round((now - timestamp) / 60_000))
+  if (minutes < 1) return 'now'
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.round(minutes / 60)
+  if (hours < 48) return `${hours}h ago`
+  return `${Math.round(hours / 24)}d ago`
+}
+
+// Globe marker color by provenance trust — official reads brightest; media and
+// structural read dimmer/cooler so an observation never looks like verified fact.
+function globeTrustColor(trust: string, stale: boolean): string {
+  const base =
+    trust === 'official'
+      ? '#38bdf8'
+      : trust === 'public'
+        ? '#5eead4'
+        : trust === 'media'
+          ? '#fb923c'
+          : trust === 'structural'
+            ? '#a78bfa'
+            : '#687a74'
+  return stale ? `${base}88` : base
+}
+
 function WorldwatchCockpit({
   activeLayerIds,
   events,
@@ -743,7 +936,6 @@ function WorldwatchCockpit({
   windows,
   onSelectEvent,
   onToggleLayerGroup,
-  onToggleLayer,
   onWindowChange,
 }: {
   activeLayerIds: WorldwatchLayerId[]
@@ -757,7 +949,6 @@ function WorldwatchCockpit({
   windows: typeof worldWindows
   onSelectEvent: (eventId: string) => void
   onToggleLayerGroup: (group: WorldwatchLayerGroup) => void
-  onToggleLayer: (layerId: WorldwatchLayerId) => void
   onWindowChange: (id: WorldWindowId) => void
 }) {
   const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null)
@@ -799,6 +990,8 @@ function WorldwatchCockpit({
   const connectedChips = selected ? buildConnectedChips(selected, selectedEntity, connectionEdges) : []
   const connectedRegions = selected ? buildConnectedRegions(selected, connectionEdges) : []
   const connectedMarkets = selected ? buildConnectedMarkets(selected, selectedEntity) : []
+  const exposureChain = selected ? buildExposureChain(selected) : []
+  const proximityLinks = selected ? buildProximityLinks(selected, events) : []
   const whyThisMatters = selected ? buildWhyThisMatters(selected, selectedEntity) : []
   const whatChanged = selected ? buildWhatChanged(selected, selectedEntity, now) : []
   const layerGroupSummaries = useMemo(
@@ -806,6 +999,38 @@ function WorldwatchCockpit({
     [activeLayerSet, layerSnapshot.layers, sourceLayerVisible, sources],
   )
   const entityGraph = buildEntityGraph(events, selected, sources)
+  // Real globe markers — ONLY proof-backed entities that carry source-backed
+  // coordinates. No coordinates => no marker (never a synthetic pin).
+  const globePoints = useMemo<GlobePoint[]>(
+    () =>
+      layerEntities
+        .filter((entity) => typeof entity.lat === 'number' && typeof entity.lon === 'number')
+        .map((entity) => ({
+          id: entity.id,
+          lat: entity.lat as number,
+          lng: entity.lon as number,
+          label: entity.label,
+          color: globeTrustColor(entity.visualTrust, entity.stale),
+          size: entity.stale ? 0.5 : 0.78,
+          eventId: entity.eventId,
+        })),
+    [layerEntities],
+  )
+  // Left intel stack — real events, most recent first / highest severity first.
+  const whatChangedEvents = useMemo(
+    () => [...events].sort((a, b) => b.timestamp - a.timestamp).slice(0, 6),
+    [events],
+  )
+  const synthesis = useMemo(() => buildDailySynthesis(events), [events])
+  const globeArcs = useMemo(() => buildGlobeProximityArcs(events), [events])
+  const whatToWatchEvents = useMemo(
+    () =>
+      [...events]
+        .filter((event) => event.severity === 'critical' || event.severity === 'elevated')
+        .sort((a, b) => severityRank(b.severity) - severityRank(a.severity) || b.timestamp - a.timestamp)
+        .slice(0, 4),
+    [events],
+  )
   const mapStyle = {
     '--focus-x': `${selectedMarker?.x ?? 50}%`,
     '--focus-y': `${selectedMarker?.y ?? 50}%`,
@@ -813,11 +1038,7 @@ function WorldwatchCockpit({
 
   return (
     <article className="atlasz-cockpit" aria-label="Atlasz Worldwatch cockpit">
-      <header className="cockpit-header">
-        <div>
-          <span>Aegis Worldwatch Cockpit</span>
-          <h3>Evidence map, live layers, selected dossier, and source health.</h3>
-        </div>
+      <header className="cockpit-header slim">
         <div className="cockpit-metric-strip">
           <MetricPill icon={ShieldCheck} label="Proof Entities" value={String(layerEntities.length || events.length)} />
           <MetricPill icon={Database} label="Sources Online" value={`${onlineSources}/${sources.length}`} />
@@ -826,8 +1047,91 @@ function WorldwatchCockpit({
       </header>
 
       <div className="cockpit-body">
-        <aside className="cockpit-layer-console" aria-label="Worldwatch layer console">
-          <div className="cockpit-window-row">
+        <aside className="cockpit-intel-stack" aria-label="What changed and what to watch">
+          <article className="synthesis-card">
+            <header className="intel-card-head">
+              <Network size={13} />
+              <span>Today's synthesis</span>
+            </header>
+            <div className="synthesis-stats">
+              <div><strong>{synthesis.total}</strong><em>events · {synthesis.sourceCount} sources</em></div>
+              <div><strong>{synthesis.infrastructure}</strong><em>facilities</em></div>
+              <div><strong>{synthesis.hazards}</strong><em>hazards</em></div>
+            </div>
+            {synthesis.nearbyFacilities > 0 && (
+              <div className="synthesis-link">
+                <strong>{synthesis.nearbyFacilities}</strong>
+                <span>facilities within {PROXIMITY_RADIUS_KM} km of an active hazard</span>
+              </div>
+            )}
+            {synthesis.topSectors.length > 0 && (
+              <div className="synthesis-sectors">
+                {synthesis.topSectors.map(([sector, count]) => (
+                  <span key={sector}>{sector} · {count}</span>
+                ))}
+              </div>
+            )}
+            <small>Cross-source roll-up. Co-location is not impact, and counts are source-backed.</small>
+          </article>
+          <article className="intel-card">
+            <header className="intel-card-head">
+              <Activity size={13} />
+              <span>What changed today</span>
+              <em>{whatChangedEvents.length}</em>
+            </header>
+            <div className="intel-event-list">
+              {whatChangedEvents.length === 0 ? (
+                <p className="intel-empty">No proof-backed changes in this window.</p>
+              ) : (
+                whatChangedEvents.map((event) => (
+                  <button
+                    className={`intel-event-row sev-${event.severity}${selected?.id === event.id ? ' active' : ''}`}
+                    key={event.id}
+                    type="button"
+                    onClick={() => onSelectEvent(event.id)}
+                  >
+                    <span className={`intel-sev-dot sev-${event.severity}`} />
+                    <span className="intel-event-main">
+                      <strong>{event.title}</strong>
+                      <em>{event.region} · {relativeTimeShort(event.timestamp, now)}</em>
+                    </span>
+                    <span className={`intel-sev-chip sev-${event.severity}`}>
+                      {SEVERITY_LABEL[event.severity] ?? event.severity}
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          </article>
+
+          <article className="intel-card">
+            <header className="intel-card-head">
+              <Zap size={13} />
+              <span>What to watch</span>
+            </header>
+            <div className="intel-event-list">
+              {whatToWatchEvents.length === 0 ? (
+                <p className="intel-empty">Nothing elevated in this window.</p>
+              ) : (
+                whatToWatchEvents.map((event) => (
+                  <button
+                    className={`intel-event-row sev-${event.severity}`}
+                    key={event.id}
+                    type="button"
+                    onClick={() => onSelectEvent(event.id)}
+                  >
+                    <span className={`intel-sev-dot sev-${event.severity}`} />
+                    <span className="intel-event-main">
+                      <strong>{event.title}</strong>
+                      <em>{SEVERITY_LABEL[event.severity] ?? event.severity} · {relativeTimeShort(event.timestamp, now)}</em>
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          </article>
+
+          <div className="intel-window-row" aria-label="Replay window">
             {windows.map((windowItem) => (
               <button
                 className={windowItem.id === windowId ? 'active' : ''}
@@ -840,40 +1144,23 @@ function WorldwatchCockpit({
             ))}
           </div>
 
-          <div className="cockpit-layer-stack">
-            {layerGroupSummaries.map((group) => {
+          <div className="intel-layer-row" aria-label="Layers">
+            {layerGroupSummaries.slice(0, 6).map((group) => {
               const Icon = group.icon
               return (
                 <button
-                  className={`cockpit-layer-group group-${group.id} layer-status-${group.status} heat-${group.freshnessHeat}${group.active ? ' active' : ''}`}
+                  className={`intel-layer-toggle group-${group.id} layer-status-${group.status}${group.active ? ' active' : ''}`}
                   key={group.id}
                   type="button"
+                  title={`${group.label} · ${group.status}`}
                   onClick={() => onToggleLayerGroup(group)}
                 >
-                  <Icon size={14} />
+                  <Icon size={13} />
                   <span>{group.label}</span>
-                  <strong>{group.entityCount}</strong>
-                  <em>{group.status}</em>
-                  <small>{group.description}</small>
+                  <em>{group.entityCount}</em>
                 </button>
               )
             })}
-          </div>
-
-          <div className="cockpit-sublayer-stack" aria-label="Proof layer detail">
-            {layerSnapshot.layers.slice(0, 9).map((layer) => (
-              <button
-                aria-pressed={activeLayerSet.has(layer.id)}
-                className={activeLayerSet.has(layer.id) ? `active heat-${layer.freshnessHeat}` : `heat-${layer.freshnessHeat}`}
-                disabled={layer.status === 'missing-config'}
-                key={layer.id}
-                type="button"
-                onClick={() => onToggleLayer(layer.id)}
-              >
-                <span>{layer.label}</span>
-                <em>{layer.entityCount}</em>
-              </button>
-            ))}
           </div>
         </aside>
 
@@ -902,17 +1189,11 @@ function WorldwatchCockpit({
             </button>
           </div>
 
-          <div className="cockpit-map-plane" style={mapStyle}>
-            <span className="cockpit-starfield" />
+          <div className="cockpit-map-plane cockpit-map-plane-3d" style={mapStyle}>
+            <Suspense fallback={<div className="proof-globe-loading">Loading globe…</div>}>
+              <ProofGlobe points={globePoints} arcs={globeArcs} onSelectPoint={onSelectEvent} />
+            </Suspense>
             <span className="cockpit-earth-glow" />
-            <span className="cockpit-terminator" />
-            <span className="cockpit-cloud-layer cloud-a" />
-            <span className="cockpit-cloud-layer cloud-b" />
-            <span className="cockpit-country-lines" />
-            <span className="cockpit-landmass land-americas" />
-            <span className="cockpit-landmass land-emea" />
-            <span className="cockpit-landmass land-apac" />
-            <span className="cockpit-focus-reticle" />
             {sourceLayerVisible ? (
               <div className="cockpit-source-radar" aria-label="Source health radar">
                 <span className="source-radar-live">{onlineSources} live</span>
@@ -920,9 +1201,6 @@ function WorldwatchCockpit({
                 <span className="source-radar-locked">{lockedSources} locked</span>
               </div>
             ) : null}
-            <span className="cockpit-region region-americas">Americas</span>
-            <span className="cockpit-region region-emea">EMEA</span>
-            <span className="cockpit-region region-apac">APAC</span>
             {plottedMarkers.length === 0 ? (
               <div className="cockpit-empty-map">
                 <Globe2 size={20} />
@@ -1031,6 +1309,47 @@ function WorldwatchCockpit({
                   <span>State <strong>{selectedSource ? humanSourceStatus(selectedSource) : selected.provenance}</strong></span>
                 </div>
               </div>
+              {exposureChain.length > 0 && (
+                <div className="cockpit-exposure-chain" aria-label="Exposure chain">
+                  <span className="exposure-chain-label">Exposure chain</span>
+                  <div className="exposure-chain-flow">
+                    {exposureChain.map((step, index) => (
+                      <div className={`exposure-step step-${step.kind}`} key={step.kind}>
+                        <em>{step.label}</em>
+                        <div className="exposure-step-values">
+                          {step.values.map((value) => (
+                            <span key={value}>{value}</span>
+                          ))}
+                        </div>
+                        {index < exposureChain.length - 1 && <i className="exposure-arrow" aria-hidden="true">→</i>}
+                      </div>
+                    ))}
+                  </div>
+                  <small>Source-backed connection only — operator and fuel-derived sectors. No ticker match, price, or trading signal.</small>
+                </div>
+              )}
+              {proximityLinks.length > 0 && (
+                <div className="cockpit-proximity" aria-label="Source-backed co-location">
+                  <span className="cockpit-proximity-label">
+                    Within {PROXIMITY_RADIUS_KM} km — co-located, source-backed
+                  </span>
+                  <div className="cockpit-proximity-list">
+                    {proximityLinks.map((link) => (
+                      <button
+                        className="cockpit-proximity-row"
+                        key={link.event.id}
+                        type="button"
+                        onClick={() => onSelectEvent(link.event.id)}
+                      >
+                        <strong>{Math.round(link.km)} km</strong>
+                        <span>{link.event.title}</span>
+                        <em>{link.event.infrastructureSite ? 'infrastructure' : link.event.earthquakeEvent ? 'hazard' : link.event.category}</em>
+                      </button>
+                    ))}
+                  </div>
+                  <small>Co-location only — proximity is not an impact, outage, damage, or causation claim. Each item keeps its own source trail.</small>
+                </div>
+              )}
               <div className="cockpit-dossier-section">
                 <span>What changed</span>
                 <ul>
@@ -1564,10 +1883,29 @@ function buildConnectedMarkets(selected: WorldIntelEvent, entity: WorldwatchEnti
     ...selected.affectedAssets,
     ...selected.affectedCurrencies,
     ...selected.affectedCommodities,
+    ...selected.affectedSectors,
     ...(entity?.exposureContext ?? []),
   ]
   const uniqueMarkets = [...new Set(markets.filter(Boolean))]
   return uniqueMarkets.length > 0 ? uniqueMarkets.slice(0, 8) : ['No connected market evidence']
+}
+
+/**
+ * The infrastructure -> company -> market-sector exposure chain for the dossier.
+ * Built only from source-backed fields (operator + fuel-derived sectors); empty
+ * when the event has no such chain. No ticker guessing, no price/trading claim.
+ */
+function buildExposureChain(selected: WorldIntelEvent): Array<{ kind: string; label: string; values: string[] }> {
+  const site = selected.infrastructureSite
+  if (!site) return []
+  const steps: Array<{ kind: string; label: string; values: string[] }> = [
+    { kind: 'facility', label: 'Facility', values: [site.name + (site.capacity ? ` · ${site.capacity}` : '')] },
+  ]
+  if (site.operator) steps.push({ kind: 'company', label: 'Operator / owner', values: [site.operator] })
+  if (selected.affectedSectors.length > 0) {
+    steps.push({ kind: 'sector', label: 'Market sectors', values: selected.affectedSectors.slice(0, 5) })
+  }
+  return steps
 }
 
 function buildWhatChanged(selected: WorldIntelEvent, entity: WorldwatchEntity | undefined, now: number) {

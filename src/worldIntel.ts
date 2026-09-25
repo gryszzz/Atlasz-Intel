@@ -87,6 +87,7 @@ export type WorldIntelEvent = {
   cisaAdvisory?: CisaAdvisory
   githubRelease?: GithubRelease
   earthquakeEvent?: EarthquakeEvent
+  infrastructureSite?: InfrastructureSite
   patentRecord?: PatentRecord
   regulatoryDocument?: RegulatoryDocument
   ofacSanctionsRecord?: OfacSanctionsRecord
@@ -1262,6 +1263,26 @@ export type MineralSite = {
   confidence: number
   rawPayloadHash: string
   rawPayloadJson?: string
+}
+
+export type InfrastructureSite = {
+  id: string
+  name: string
+  /** The company/agency that operates (owns) the facility — from the source. */
+  operator?: string
+  /** Fuel/source type, e.g. hydro, nuclear, gas, coal, solar, wind. */
+  energySource?: string
+  capacity?: string
+  lat: number
+  lon: number
+  countryCode?: string
+  region?: string
+  sourceName: string
+  sourceUrl: string
+  retrievedAt: number
+  provenance: ProvenanceId
+  confidence: number
+  rawPayloadHash: string
 }
 
 export type EarthquakeEvent = {

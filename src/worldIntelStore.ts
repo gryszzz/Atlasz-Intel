@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { buildSeedWorldIntelSnapshot, type WorldIntelSnapshot } from './worldIntel'
+import { devRealDataEnabled, fetchDevWorldSnapshot } from './devWorldDataBridge'
 
 function desktopWorld() {
   if (typeof window === 'undefined') {
@@ -22,6 +23,15 @@ export function useWorldIntelSnapshot(): {
   async function refresh() {
     const world = desktopWorld()
     if (!world) {
+      // Dev preview: no desktop bridge — pull real public USGS data in-browser.
+      if (devRealDataEnabled()) {
+        setLoading(true)
+        try {
+          setSnapshot(await fetchDevWorldSnapshot())
+        } finally {
+          setLoading(false)
+        }
+      }
       return
     }
     setLoading(true)
@@ -59,6 +69,16 @@ export function useWorldIntelSnapshot(): {
   useEffect(() => {
     const world = desktopWorld()
     if (!world) {
+      // Dev preview: hydrate from real public USGS data when there is no desktop bridge.
+      if (devRealDataEnabled()) {
+        let active = true
+        void fetchDevWorldSnapshot().then((next) => {
+          if (active) setSnapshot(next)
+        })
+        return () => {
+          active = false
+        }
+      }
       return
     }
     let mounted = true
