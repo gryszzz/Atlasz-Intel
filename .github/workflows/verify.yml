@@ -1,10 +1,9 @@
-name: Atlasz Verify
+name: YSZ Meridian Verify
 
 on:
   push:
     branches:
       - main
-      - atlasz-world-engine
   pull_request:
     branches:
       - main
@@ -30,8 +29,13 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Build
+      - name: Desktop/web build
         run: npm run build
+
+      - name: GitHub Pages web build
+        env:
+          VITE_BASE_PATH: /Atlasz-Intel/
+        run: npm run web:build
 
       - name: Lint
         run: npm run lint

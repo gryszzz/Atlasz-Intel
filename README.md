@@ -8,7 +8,7 @@
 
 **A geospatial intelligence engine for understanding how markets, capital, policy, trade, energy, infrastructure, public blockchains, cyber events, and the physical world connect and change over time.**
 
-[**Open Meridian →**](https://gryszzz.github.io/Meridian-Intel/) · [Architecture](docs/atlasz-world-rebuild.md) · [Semantic zoom](docs/semantic-zoom.md) · [Runtime verification](docs/runtime-verification-log.md)
+[**Open Meridian →**](https://gryszzz.github.io/Atlasz-Intel/) · [Architecture](docs/atlasz-world-rebuild.md) · [Semantic zoom](docs/semantic-zoom.md) · [Runtime verification](docs/runtime-verification-log.md)
 
 </div>
 
@@ -127,7 +127,22 @@ A self-auditing spine: Connector Dashboard, Market Coverage Dashboard, Market Da
 
 ## Interface
 
-Repo-owned previews of the public-facing surfaces and the evidence boundaries they enforce.
+Meridian is designed as a **map-first world-systems operating surface**: calm at global scale, progressively deeper as the operator zooms into regions, infrastructure, markets, entities, and evidence.
+
+![Meridian Market Structure Lens](docs/brand/meridian-market-structure.svg)
+
+The product surface follows the same visual language as the world model:
+
+- **World view** — material change, flows, systemic gravity, uncertainty.
+- **Semantic zoom** — planet → region → country → metro → local → asset.
+- **Market structure** — trend, liquidity, volatility, positioning, flows, event exposure.
+- **Entity / ownership graph** — companies, funds, facilities, operators, dependencies.
+- **Proof layer** — source trail, timestamps, freshness, contradictions, unknowns.
+
+<details>
+<summary><strong>Technical evidence-surface previews</strong></summary>
+
+<br/>
 
 | Connector Dashboard | Exposure Dashboard |
 | --- | --- |
@@ -140,6 +155,8 @@ Repo-owned previews of the public-facing surfaces and the evidence boundaries th
 | Curated Exposure Chains |
 | --- |
 | ![Curated Exposure Chains](docs/screenshots/curated-exposure-chains.svg) |
+
+</details>
 
 ---
 
@@ -228,8 +245,8 @@ LNG terminals · EIA refineries require pinned official URLs unless a trusted de
 ## Quickstart
 
 ```bash
-git clone https://github.com/gryszzz/Meridian-Intel.git
-cd Meridian-Intel
+git clone https://github.com/gryszzz/Atlasz-Intel.git
+cd Atlasz-Intel
 npm install
 npm run dev          # desktop (Electron) dev
 ```
@@ -250,11 +267,11 @@ npm run web:build
 
 The public Meridian surface is designed to deploy from `main` to:
 
-**https://gryszzz.github.io/Meridian-Intel/**
+**https://gryszzz.github.io/Atlasz-Intel/**
 
 The Pages workflow builds in web mode with the repository base path, uploads `dist/`, and deploys through GitHub Pages. Electron remains a separate desktop runtime.
 
-If Pages has never been enabled for the repository, set **Settings → Pages → Build and deployment → Source → GitHub Actions** once.
+The deployment workflow requests Pages enablement automatically. If organization/repository policy blocks API enablement, enable **Settings → Pages → Build and deployment → Source → GitHub Actions** once.
 
 With no `.env`, Meridian starts on safe defaults: public/no-auth paths may run, key-gated providers report `missing-key`, unavailable data stays unavailable, and any simulator/dev data must be explicitly enabled **and** labeled.
 
@@ -339,5 +356,5 @@ Release assets exclude `node_modules`, `.env`, generated databases, logs, caches
 
 <div align="center">
 <br/>
-<sub>Public repo · <a href="https://github.com/gryszzz/Meridian-Intel">github.com/gryszzz/Meridian-Intel</a> · Real data only.</sub>
+<sub>Public repo · <a href="https://github.com/gryszzz/Atlasz-Intel">github.com/gryszzz/Meridian-Intel</a> · Real data only.</sub>
 </div>
