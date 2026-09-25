@@ -23,6 +23,8 @@ The surface stays quiet. The system underneath stays deep.
 
 <br/>
 
+[**Open YSZ Worldstate →**](https://gryszzz.github.io/Atlasz-Intel/)
+&nbsp;·&nbsp;
 [World architecture](docs/atlasz-world-rebuild.md)
 &nbsp;·&nbsp;
 [Runtime verification](docs/runtime-verification-log.md)
@@ -211,6 +213,22 @@ Browser-only preview:
 ```bash
 npm run web:dev
 ```
+
+Production web build:
+
+```bash
+npm run web:build
+```
+
+### GitHub Pages
+
+The public Worldstate surface is designed to deploy from `main` to:
+
+**https://gryszzz.github.io/Atlasz-Intel/**
+
+The Pages workflow builds in web mode with the repository base path, uploads `dist/`, and deploys through GitHub Pages. Electron remains a separate desktop runtime.
+
+If Pages has never been enabled for the repository, set **Settings → Pages → Build and deployment → Source → GitHub Actions** once.
 
 With no `.env`, Atlasz starts on safe defaults: public/no-auth paths may run, key-gated providers report `missing-key`, unavailable data stays unavailable, and any simulator/dev data must be explicitly enabled **and** labeled.
 
