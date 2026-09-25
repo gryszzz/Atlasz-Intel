@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="500" viewBox="0 0 1600 500" role="img" aria-labelledby="t">
+<title id="t">Meridian market structure lens</title>
+<defs><linearGradient id="c" x1="0" x2="1"><stop stop-color="#32e2c5"/><stop offset=".55" stop-color="#2da8ff"/><stop offset="1" stop-color="#875cff"/></linearGradient></defs>
+<rect width="1600" height="500" rx="22" fill="#050b10"/>
+<text x="58" y="58" fill="#edf7f4" font-family="Arial" font-size="27" font-weight="700">MARKET STRUCTURE LENS</text>
+<text x="58" y="88" fill="#6d8580" font-family="Arial" font-size="14">Plain-English structure first. Raw evidence one tap deeper.</text>
+<g transform="translate(55 130)" font-family="Arial">
+  <rect width="1490" height="278" rx="20" fill="#09141b" stroke="#183744"/>
+  <text x="34" y="42" fill="#a8b8b5" font-size="13">STRUCTURE</text>
+  <text x="34" y="78" fill="#edf7f4" font-size="24" font-weight="700">Advancing trend · tightening liquidity · elevated volatility</text>
+  <text x="34" y="112" fill="#f0b66d" font-size="15">Positioning increasingly crowded · observable inflows still positive</text>
+  <g transform="translate(34 158)"><rect width="214" height="78" rx="13" fill="#0c1c23" stroke="#1f4651"/><text x="18" y="27" fill="#667d78" font-size="11">TREND</text><text x="18" y="55" fill="#4ee0bd" font-size="15" font-weight="700">ADVANCING</text></g><g transform="translate(284 158)"><rect width="214" height="78" rx="13" fill="#0c1c23" stroke="#1f4651"/><text x="18" y="27" fill="#667d78" font-size="11">LIQUIDITY</text><text x="18" y="55" fill="#f0b66d" font-size="15" font-weight="700">TIGHTENING</text></g><g transform="translate(534 158)"><rect width="214" height="78" rx="13" fill="#0c1c23" stroke="#1f4651"/><text x="18" y="27" fill="#667d78" font-size="11">VOLATILITY</text><text x="18" y="55" fill="#ff8d73" font-size="15" font-weight="700">ELEVATED</text></g><g transform="translate(784 158)"><rect width="214" height="78" rx="13" fill="#0c1c23" stroke="#1f4651"/><text x="18" y="27" fill="#667d78" font-size="11">POSITIONING</text><text x="18" y="55" fill="#c091ff" font-size="15" font-weight="700">CROWDED</text></g><g transform="translate(1034 158)"><rect width="214" height="78" rx="13" fill="#0c1c23" stroke="#1f4651"/><text x="18" y="27" fill="#667d78" font-size="11">FLOWS</text><text x="18" y="55" fill="#65c8ff" font-size="15" font-weight="700">INFLOW</text></g>
+  <g transform="translate(1280 32)"><rect width="164" height="204" rx="16" fill="#071118" stroke="#274652"/><text x="18" y="30" fill="#6edfd1" font-size="11">WHY NOW</text><text x="18" y="62" fill="#c4d2cf" font-size="12">policy event</text><text x="18" y="88" fill="#c4d2cf" font-size="12">volume anomaly</text><text x="18" y="114" fill="#c4d2cf" font-size="12">flow change</text><text x="18" y="154" fill="#9a7ce3" font-size="11">INVALIDATION</text><text x="18" y="180" fill="#738984" font-size="11">liquidity reverses</text></g>
+</g>
+<path d="M70 448 H1530" stroke="url(#c)" opacity=".5"/>
+<text x="800" y="472" text-anchor="middle" fill="#58716d" font-family="Arial" font-size="11" letter-spacing="3">CONTEXT, NOT A BUY/SELL LIGHT</text>
+</svg>
