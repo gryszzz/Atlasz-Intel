@@ -2,7 +2,7 @@
   "name": "atlasz-intel",
   "private": true,
   "version": "0.2.0",
-  "description": "Local-first world intelligence command center for market context, public event streams, entity graphs, and research notes.",
+  "description": "Evidence-first geospatial world-state intelligence for markets, capital, policy, trade, infrastructure, and public-chain flows.",
   "author": "Atlasz Intel",
   "type": "module",
   "main": "dist-electron/main.js",
@@ -48,7 +48,7 @@
   },
   "build": {
     "appId": "com.atlasz.intel",
-    "productName": "Atlasz Intel",
+    "productName": "YSZ Worldstate",
     "icon": "build/icon.png",
     "npmRebuild": false,
     "directories": {
