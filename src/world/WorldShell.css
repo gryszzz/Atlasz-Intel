@@ -19,10 +19,6 @@ body,
   background: var(--world-bg);
 }
 
-body {
-  overflow: hidden;
-}
-
 .atlasz-world-shell {
   position: relative;
   min-height: 100dvh;
@@ -347,6 +343,10 @@ body {
 .atlasz-world-legend .watch,
 .atlasz-event-dot.watch {
   background: var(--world-accent);
+}
+
+.atlasz-event-dot.stable {
+  background: #61726d;
 }
 
 .atlasz-intel-sheet {
