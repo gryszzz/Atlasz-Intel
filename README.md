@@ -83,9 +83,11 @@ If that URL is not live yet, GitHub Pages still needs to be enabled once under *
 ### Desktop
 Meridian is also a downloadable Electron desktop application.
 
-The repository's **Build YSZ Meridian Desktop** workflow packages both:
+The repository's **Build YSZ Meridian Desktop** workflow packages:
 - macOS Intel (`x64`)
 - macOS Apple Silicon (`arm64`)
+- Windows (`x64`)
+- Linux AppImage (`x64`)
 
 [**Open desktop build workflow →**](https://github.com/gryszzz/Atlasz-Intel/actions/workflows/desktop-release.yml)
 
