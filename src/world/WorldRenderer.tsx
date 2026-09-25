@@ -1,6 +1,7 @@
-import { lazy, Suspense, useMemo } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import type { WorldIntelEvent } from '../worldIntel'
 import { WorldGlobe } from './WorldGlobe'
+import { semanticZoomForAltitude } from './semanticZoom'
 
 const ProofGlobe = lazy(() =>
   import('../components/world/ProofGlobe').then((module) => ({
@@ -34,6 +35,9 @@ export function WorldRenderer({
   selectedEventId,
   onSelectEvent,
 }: WorldRendererProps) {
+  const [altitude, setAltitude] = useState(2.85)
+  const semanticZoom = semanticZoomForAltitude(altitude)
+
   const points = useMemo(
     () =>
       events
@@ -41,6 +45,13 @@ export function WorldRenderer({
           (event): event is WorldIntelEvent & { lat: number; lon: number } =>
             Number.isFinite(event.lat) && Number.isFinite(event.lon),
         )
+        .sort((left, right) => {
+          const severity = { critical: 4, elevated: 3, watch: 2, stable: 1 }
+          const severityDelta = severity[right.severity] - severity[left.severity]
+          if (severityDelta !== 0) return severityDelta
+          return right.confidence - left.confidence
+        })
+        .slice(0, semanticZoom.maxVisibleEntities)
         .map((event) => ({
           id: event.id,
           lat: event.lat,
@@ -57,7 +68,7 @@ export function WorldRenderer({
           size: event.id === selectedEventId ? pointSize(event) * 1.4 : pointSize(event),
           eventId: event.id,
         })),
-    [events, selectedEventId],
+    [events, selectedEventId, semanticZoom.maxVisibleEntities],
   )
 
   return (
@@ -71,7 +82,16 @@ export function WorldRenderer({
       }
     >
       <div className="ysz-world-webgl">
-        <ProofGlobe points={points} arcs={[]} onSelectPoint={onSelectEvent} />
+        <ProofGlobe
+          points={points}
+          arcs={[]}
+          onSelectPoint={onSelectEvent}
+          onViewChange={(view) => setAltitude(view.altitude)}
+        />
+        <div className="ysz-semantic-zoom-indicator">
+          <span>{semanticZoom.level}</span>
+          <small>{semanticZoom.aggregation} · {points.length} visible</small>
+        </div>
       </div>
     </Suspense>
   )
