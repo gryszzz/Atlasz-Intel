@@ -26,6 +26,8 @@ The GitHub Actions workflow **Build YSZ Meridian Desktop** packages:
 
 - macOS Intel (`x64`)
 - macOS Apple Silicon (`arm64`)
+- Windows (`x64`)
+- Linux AppImage (`x64`)
 
 Each run uploads downloadable workflow artifacts.
 
