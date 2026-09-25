@@ -11,6 +11,7 @@ function electronRuntimeEnv(): NodeJS.ProcessEnv {
 }
 
 export default defineConfig(async ({ mode }) => ({
+  base: process.env.VITE_BASE_PATH ?? '/',
   plugins: [
     react(),
     tailwindcss(),
