@@ -23,6 +23,9 @@ import { useWorldIntelSnapshot } from '../worldIntelStore'
 import type { WorldIntelEvent } from '../worldIntel'
 import type { WorldMode } from './model'
 import { WorldGlobe } from './WorldGlobe'
+import { worldEventFromLegacy } from './legacyBridge'
+import { clusterWorldEvents } from './eventClustering'
+import { scoreConvergence } from './convergence'
 import './WorldShell.css'
 
 type ModeSpec = {
@@ -153,6 +156,26 @@ export default function WorldShell() {
     filteredEvents.find((event) => event.id === selectedEventId) ??
     filteredEvents[0]
 
+  const worldEvents = useMemo(
+    () => filteredEvents.map(worldEventFromLegacy),
+    [filteredEvents],
+  )
+  const clusters = useMemo(
+    () => clusterWorldEvents(worldEvents),
+    [worldEvents],
+  )
+  const worldEventMap = useMemo(
+    () => new Map(worldEvents.map((event) => [event.id, event])),
+    [worldEvents],
+  )
+  const selectedCluster = selectedEvent
+    ? clusters.find((cluster) => cluster.eventIds.includes(selectedEvent.id))
+    : undefined
+  const selectedConvergence =
+    selectedCluster && selectedCluster.eventIds.length > 1
+      ? scoreConvergence(selectedCluster, worldEventMap)
+      : undefined
+
   const geocodedCount = filteredEvents.filter(
     (event) => Number.isFinite(event.lat) && Number.isFinite(event.lon),
   ).length
@@ -210,6 +233,11 @@ export default function WorldShell() {
         <div>
           <strong>{sourceCount}</strong>
           <span>active sources</span>
+        </div>
+        <i />
+        <div>
+          <strong>{clusters.length}</strong>
+          <span>event clusters</span>
         </div>
       </section>
 
@@ -308,6 +336,12 @@ export default function WorldShell() {
               <span><Activity size={13} />{selectedEvent.confidence}% confidence</span>
               <span><Database size={13} />{selectedEvent.sourceId}</span>
               <span><Clock3 size={13} />{relativeTime(selectedEvent.timestamp)} ago</span>
+              {selectedConvergence && selectedCluster && (
+                <span className="atlasz-convergence-meta">
+                  <Layers3 size={13} />
+                  {selectedCluster.eventIds.length} linked changes · {selectedConvergence.domains.length} domains
+                </span>
+              )}
             </div>
 
             <div className="atlasz-intel-grid">
@@ -329,6 +363,21 @@ export default function WorldShell() {
                   {selectedEvent.affectedAssets.length === 0 && <em>No source-backed asset link</em>}
                 </div>
               </section>
+
+              {selectedConvergence && selectedCluster && (
+                <section>
+                  <div className="atlasz-section-label">CONVERGENCE</div>
+                  <div className="atlasz-convergence-block">
+                    <strong>{Math.round(selectedConvergence.score * 100)}</strong>
+                    <div>
+                      <span>{selectedConvergence.domains.join(' · ')}</span>
+                      <small>
+                        local-derived ranking · {selectedConvergence.independentSourceCount} source group(s)
+                      </small>
+                    </div>
+                  </div>
+                </section>
+              )}
 
               <section>
                 <div className="atlasz-section-label">EVIDENCE STATE</div>
