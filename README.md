@@ -127,7 +127,22 @@ A self-auditing spine: Connector Dashboard, Market Coverage Dashboard, Market Da
 
 ## Interface
 
-Repo-owned previews of the public-facing surfaces and the evidence boundaries they enforce.
+Meridian is designed as a **map-first world-systems operating surface**: calm at global scale, progressively deeper as the operator zooms into regions, infrastructure, markets, entities, and evidence.
+
+![Meridian Market Structure Lens](docs/brand/meridian-market-structure.svg)
+
+The product surface follows the same visual language as the world model:
+
+- **World view** — material change, flows, systemic gravity, uncertainty.
+- **Semantic zoom** — planet → region → country → metro → local → asset.
+- **Market structure** — trend, liquidity, volatility, positioning, flows, event exposure.
+- **Entity / ownership graph** — companies, funds, facilities, operators, dependencies.
+- **Proof layer** — source trail, timestamps, freshness, contradictions, unknowns.
+
+<details>
+<summary><strong>Technical evidence-surface previews</strong></summary>
+
+<br/>
 
 | Connector Dashboard | Exposure Dashboard |
 | --- | --- |
@@ -140,6 +155,8 @@ Repo-owned previews of the public-facing surfaces and the evidence boundaries th
 | Curated Exposure Chains |
 | --- |
 | ![Curated Exposure Chains](docs/screenshots/curated-exposure-chains.svg) |
+
+</details>
 
 ---
 
