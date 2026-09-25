@@ -1,53 +1,79 @@
 <div align="center">
 
-# YSZ // WORLDSTATE
+![YSZ Meridian](docs/brand/meridian-hero.svg)
 
-**An evidence-first world-state intelligence system.**
+# YSZ // MERIDIAN
 
-YSZ Worldstate maps meaningful change across **markets, capital, policy, trade, infrastructure, energy, public-chain activity, cyber, and the physical world** into one source-trailed geospatial model.
+### World systems intelligence with receipts.
 
-It is built to answer a harder question than “what is happening?”:
+**A geospatial intelligence engine for understanding how markets, capital, policy, trade, energy, infrastructure, public blockchains, cyber events, and the physical world connect and change over time.**
 
-> **What changed in the world, where did it happen, what systems does it touch, how material is it, and what actually proves it?**
+[**Open Meridian →**](https://gryszzz.github.io/Meridian-Intel/) · [Architecture](docs/atlasz-world-rebuild.md) · [Semantic zoom](docs/semantic-zoom.md) · [Runtime verification](docs/runtime-verification-log.md)
 
-The surface stays quiet. The system underneath stays deep.
-
-**Worldstate is not a feed. It is a continuously updated model of relationships, flows, exposures, and evidence.**
-
-<br/>
-
-[![Evidence first](https://img.shields.io/badge/evidence-source--trailed-0b7285?style=flat-square)](docs/runtime-verification-log.md)
-[![World model](https://img.shields.io/badge/model-geospatial%20world%20state-1864ab?style=flat-square)](docs/atlasz-world-rebuild.md)
-[![Local first](https://img.shields.io/badge/runtime-local--first-364fc7?style=flat-square)](#run-locally)
-[![Verification](https://img.shields.io/badge/runtime-verification-enforced-2b8a3e?style=flat-square)](docs/runtime-verification-log.md)
-
-<br/>
-
-[**Open YSZ Worldstate →**](https://gryszzz.github.io/Atlasz-Intel/)
-&nbsp;·&nbsp;
-[World architecture](docs/atlasz-world-rebuild.md)
-&nbsp;·&nbsp;
-[Runtime verification](docs/runtime-verification-log.md)
-&nbsp;·&nbsp;
-[Source atlas](docs/intelligence-source-atlas.md)
-&nbsp;·&nbsp;
-[Engineering standards](docs/atlasz-runtime-engineering-standards.md)
+</div>
 
 ---
 
-YSZ Worldstate is **not** a chatbot, a news clone, a trading bot, or a placeholder dashboard. It is a desktop intelligence workspace built around one discipline: every line on screen traces to live evidence, curated structure, an explicitly-labeled inference, or an honest *unknown*. Nothing is invented to fill a gap.
+Meridian is built around one question:
 
-It exists to answer the questions that matter when systems move:
+> **What changed, where did it happen, what systems does it touch, how material is it, and what proves it?**
 
-> **What changed? · Where? · Who or what is exposed? · Is the signal unusual? · Where is capital or physical flow changing? · What evidence supports it? · What conflicts with it? · What remains unknown?**
+It is not a pile of dashboards. It is a temporal world graph backed by source trails. Observations resolve into entities and relationships; relationships form flows and exposures; events update a time-aware world state.
 
-Worldstate treats politics, markets, shipping, infrastructure, energy, public blockchains, ownership, and macro data as connected parts of one system rather than separate dashboards.
+![Meridian architecture](docs/brand/meridian-architecture.svg)
+
+### One world model, multiple lenses
+
+| Lens | Meridian reveals |
+| --- | --- |
+| **World** | material events, regions, systemic change, uncertainty |
+| **Markets** | structure, volatility, liquidity, positioning, observed reaction |
+| **Capital** | institutional ownership, funds, insiders, financing, concentration |
+| **Trade** | commodities, bilateral flows, ports, chokepoints, route dependencies |
+| **Energy** | generation, grids, oil, gas, LNG, nuclear, storage and refineries |
+| **Infrastructure** | facilities, operators, dependencies, industrial clusters |
+| **Policy** | documented regulation, sanctions, tariffs, fiscal and central-bank actions |
+| **Chain** | public-chain transfers, exchange-associated flows, bridges and treasuries |
+| **Risk** | physical hazards, cyber exposure, conflicts, contradictions and unknowns |
+
+### Zoom changes what Meridian knows how to show
+
+The globe is not decoration. Meridian's semantic zoom progressively changes the information model from global systems to individual assets.
+
+![Meridian semantic zoom](docs/brand/meridian-semantic-zoom.svg)
+
+At planet scale, local noise disappears. At country scale, ports, grids and strategic facilities emerge. At metro/local scale, facilities, vessels, routes and operators become inspectable. At asset scale, the interface can pivot into ownership, market exposure, evidence and timeline.
+
+### The intelligence loop
+
+```text
+SOURCE
+  │
+  ▼
+OBSERVATION ──► ENTITY RESOLUTION ──► RELATIONSHIP GRAPH
+                                           │
+                                           ▼
+                                  EVENT / FLOW / EXPOSURE
+                                           │
+                   ┌───────────────────────┼──────────────────────┐
+                   ▼                       ▼                      ▼
+              GEOSPATIAL              MARKET                 BLOCKCHAIN
+                STATE                STRUCTURE                  STATE
+                   └───────────────────────┬──────────────────────┘
+                                           ▼
+                                     WORLD BRIEF
+                                           │
+                                           ▼
+                                  PROOF + UNKNOWNS
+```
+
+**Meridian separates four things that ordinary dashboards blur together:** what was directly observed, what is structurally connected, what is statistically unusual, and what is inferred. Unknown stays a valid state.
 
 ---
 
 ## The Real-Data Contract
 
-This is the core of the product, not a footnote. Worldstate is *allowed to be incomplete*. It is *not allowed to fabricate intelligence*.
+This is the core of the product, not a footnote. Meridian is *allowed to be incomplete*. It is *not allowed to fabricate intelligence*.
 
 - **No simulated production data.** No fake events, alerts, macro prints, filings, patents, sanctions, prices, or weather.
 - **Fail closed, always.** Failed, stale, malformed, unavailable, or rate-limited sources surface as exactly that — never as silently-substituted data.
@@ -78,7 +104,7 @@ Activation Panel for missing-key, configured, online, failed, rate-limited, and
 stale states without rendering key values.
 
 ### Intelligence Synthesis — "What To Watch Next"
-The forward end of the evidence chain. Atlasz composes briefs that walk:
+The forward end of the evidence chain. Meridian composes briefs that walk:
 `observed change → proof → resolved entities → curated systems → corroboration → conflicts → unknowns → what it does NOT prove → confirmation-seeking watch items` — **every line basis-labeled** so you always know whether you're reading evidence, structure, or inference.
 
 ### Cross-Source Corroboration & Conflict Detection
@@ -202,8 +228,8 @@ LNG terminals · EIA refineries require pinned official URLs unless a trusted de
 ## Quickstart
 
 ```bash
-git clone https://github.com/gryszzz/Atlasz-Intel.git
-cd Atlasz-Intel
+git clone https://github.com/gryszzz/Meridian-Intel.git
+cd Meridian-Intel
 npm install
 npm run dev          # desktop (Electron) dev
 ```
@@ -222,15 +248,15 @@ npm run web:build
 
 ### GitHub Pages
 
-The public Worldstate surface is designed to deploy from `main` to:
+The public Meridian surface is designed to deploy from `main` to:
 
-**https://gryszzz.github.io/Atlasz-Intel/**
+**https://gryszzz.github.io/Meridian-Intel/**
 
 The Pages workflow builds in web mode with the repository base path, uploads `dist/`, and deploys through GitHub Pages. Electron remains a separate desktop runtime.
 
 If Pages has never been enabled for the repository, set **Settings → Pages → Build and deployment → Source → GitHub Actions** once.
 
-With no `.env`, Atlasz starts on safe defaults: public/no-auth paths may run, key-gated providers report `missing-key`, unavailable data stays unavailable, and any simulator/dev data must be explicitly enabled **and** labeled.
+With no `.env`, Meridian starts on safe defaults: public/no-auth paths may run, key-gated providers report `missing-key`, unavailable data stays unavailable, and any simulator/dev data must be explicitly enabled **and** labeled.
 
 ### Configuration
 
@@ -241,7 +267,7 @@ ATLASZ_ENABLE_PUBLIC_WORLD=1
 # Background Worldwatch refresh loop; due providers still respect their own
 # source cadence/rate guards.
 ATLASZ_WORLD_REFRESH_MS=600000
-ATLASZ_SEC_USER_AGENT="Atlasz Intel research (you@example.com)"
+ATLASZ_SEC_USER_AGENT="Meridian Intel research (you@example.com)"
 ATLASZ_EIA_API_KEY="..."
 # No-key EIA public bulk reference is enabled by default; this key is still
 # required for authenticated EIA API/facility/grid coverage.
@@ -289,7 +315,7 @@ npm run desktop:build
 
 ## Boundaries
 
-YSZ Worldstate is **informational research software**. It is:
+YSZ Meridian is **informational research software**. It is:
 
 - **Not** financial, legal, or sanctions-screening advice.
 - **Not** a trading bot, broker, execution engine, smart order router, or price oracle.
@@ -297,7 +323,7 @@ YSZ Worldstate is **informational research software**. It is:
 - **Not** OSINT targeting people — no scraping of private/personal data.
 - **Not** a tool for bypassing authentication, paywalls, CAPTCHAs, or rate limits, and **not** for offensive security automation.
 
-Public unauthenticated data carries no guarantee of completeness, freshness, or verification — and Worldstate labels it as such.
+Public unauthenticated data carries no guarantee of completeness, freshness, or verification — and Meridian labels it as such.
 
 ---
 
@@ -305,7 +331,7 @@ Public unauthenticated data carries no guarantee of completeness, freshness, or 
 
 The OSINT, security, agent, UI, data-engineering, and systems-design corpora in `docs/` are **reference material** unless promoted through the full evidence path: provider registry → adapter tests → source health → persistence → UI.
 
-Private Codex/Claude skills are operator-private agent instructions. They are **not** Atlasz runtime, not required for a public checkout, and not source connectors. The repo docs may describe the engineering doctrine; private skills live in the user/agent skill system.
+Private Codex/Claude skills are operator-private agent instructions. They are **not** Meridian runtime, not required for a public checkout, and not source connectors. The repo docs may describe the engineering doctrine; private skills live in the user/agent skill system.
 
 ## Release Hygiene
 
@@ -313,5 +339,5 @@ Release assets exclude `node_modules`, `.env`, generated databases, logs, caches
 
 <div align="center">
 <br/>
-<sub>Public repo · <a href="https://github.com/gryszzz/Atlasz-Intel">github.com/gryszzz/Atlasz-Intel</a> · Real data only.</sub>
+<sub>Public repo · <a href="https://github.com/gryszzz/Meridian-Intel">github.com/gryszzz/Meridian-Intel</a> · Real data only.</sub>
 </div>
