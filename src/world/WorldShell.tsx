@@ -26,6 +26,7 @@ import { WorldGlobe } from './WorldGlobe'
 import { worldEventFromLegacy } from './legacyBridge'
 import { clusterWorldEvents } from './eventClustering'
 import { scoreConvergence } from './convergence'
+import { buildWorldBrief } from './briefing'
 import './WorldShell.css'
 
 type ModeSpec = {
@@ -167,6 +168,10 @@ export default function WorldShell() {
   const worldEventMap = useMemo(
     () => new Map(worldEvents.map((event) => [event.id, event])),
     [worldEvents],
+  )
+  const brief = useMemo(
+    () => buildWorldBrief(worldEvents, clusters, 5),
+    [clusters, worldEvents],
   )
   const selectedCluster = selectedEvent
     ? clusters.find((cluster) => cluster.eventIds.includes(selectedEvent.id))
@@ -317,6 +322,7 @@ export default function WorldShell() {
             <span className="atlasz-eyebrow">
               <Sparkles size={13} />
               {selectedEvent ? 'CURRENT FOCUS' : 'WORLD BRIEF'}
+              {brief.items.length > 0 && <b>{brief.items.length}</b>}
             </span>
             <h1>{selectedEvent?.title ?? 'No material event selected'}</h1>
           </div>
@@ -408,7 +414,12 @@ export default function WorldShell() {
         )}
 
         <div className="atlasz-event-strip">
-          {filteredEvents.slice(0, 8).map((event) => (
+          {(brief.items.length > 0
+            ? brief.items
+                .map((item) => filteredEvents.find((event) => event.id === item.primaryEventId))
+                .filter((event): event is WorldIntelEvent => Boolean(event))
+            : filteredEvents.slice(0, 8)
+          ).map((event) => (
             <button
               type="button"
               key={event.id}
