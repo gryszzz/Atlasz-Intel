@@ -22,7 +22,7 @@ import {
 import { useWorldIntelSnapshot } from '../worldIntelStore'
 import type { WorldIntelEvent } from '../worldIntel'
 import type { WorldMode } from './model'
-import { WorldGlobe } from './WorldGlobe'
+import { WorldRenderer } from './WorldRenderer'
 import { worldEventFromLegacy } from './legacyBridge'
 import { clusterWorldEvents } from './eventClustering'
 import { scoreConvergence } from './convergence'
@@ -267,7 +267,7 @@ export default function WorldShell() {
       </nav>
 
       <section className="atlasz-world-stage">
-        <WorldGlobe
+        <WorldRenderer
           events={filteredEvents}
           selectedEventId={selectedEvent?.id}
           onSelectEvent={(id) => {
