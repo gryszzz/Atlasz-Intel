@@ -1,0 +1,49 @@
+name: Atlasz Verify
+
+on:
+  push:
+    branches:
+      - main
+      - atlasz-world-engine
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Diff hygiene
+        run: git diff --check
+
+      - name: Runtime config
+        run: npx tsx scripts/checkRuntimeConfig.mts
+
+      - name: Runtime verification
+        run: npx tsx scripts/runtimeVerification.mts

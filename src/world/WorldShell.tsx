@@ -22,7 +22,11 @@ import {
 import { useWorldIntelSnapshot } from '../worldIntelStore'
 import type { WorldIntelEvent } from '../worldIntel'
 import type { WorldMode } from './model'
-import { WorldGlobe } from './WorldGlobe'
+import { WorldRenderer } from './WorldRenderer'
+import { worldEventFromLegacy } from './legacyBridge'
+import { clusterWorldEvents } from './eventClustering'
+import { scoreConvergence } from './convergence'
+import { buildWorldBrief } from './briefing'
 import './WorldShell.css'
 
 type ModeSpec = {
@@ -153,6 +157,30 @@ export default function WorldShell() {
     filteredEvents.find((event) => event.id === selectedEventId) ??
     filteredEvents[0]
 
+  const worldEvents = useMemo(
+    () => filteredEvents.map(worldEventFromLegacy),
+    [filteredEvents],
+  )
+  const clusters = useMemo(
+    () => clusterWorldEvents(worldEvents),
+    [worldEvents],
+  )
+  const worldEventMap = useMemo(
+    () => new Map(worldEvents.map((event) => [event.id, event])),
+    [worldEvents],
+  )
+  const brief = useMemo(
+    () => buildWorldBrief(worldEvents, clusters, 5),
+    [clusters, worldEvents],
+  )
+  const selectedCluster = selectedEvent
+    ? clusters.find((cluster) => cluster.eventIds.includes(selectedEvent.id))
+    : undefined
+  const selectedConvergence =
+    selectedCluster && selectedCluster.eventIds.length > 1
+      ? scoreConvergence(selectedCluster, worldEventMap)
+      : undefined
+
   const geocodedCount = filteredEvents.filter(
     (event) => Number.isFinite(event.lat) && Number.isFinite(event.lon),
   ).length
@@ -171,8 +199,8 @@ export default function WorldShell() {
         <div className="atlasz-world-brand">
           <div className="atlasz-world-mark">A</div>
           <div>
-            <div className="atlasz-world-wordmark">ATLASZ</div>
-            <div className="atlasz-world-subtitle">WORLD STATE</div>
+            <div className="atlasz-world-wordmark">YSZ</div>
+            <div className="atlasz-world-subtitle">WORLDSTATE</div>
           </div>
         </div>
 
@@ -189,7 +217,7 @@ export default function WorldShell() {
           >
             <RefreshCw size={17} className={loading ? 'atlasz-spin' : undefined} />
           </button>
-          <a className="atlasz-legacy-link" href="?legacy=1" aria-label="Open legacy Atlasz">
+          <a className="atlasz-legacy-link" href="?legacy=1" aria-label="Open legacy interface">
             <ArrowLeft size={14} />
             Legacy
           </a>
@@ -210,6 +238,11 @@ export default function WorldShell() {
         <div>
           <strong>{sourceCount}</strong>
           <span>active sources</span>
+        </div>
+        <i />
+        <div>
+          <strong>{clusters.length}</strong>
+          <span>event clusters</span>
         </div>
       </section>
 
@@ -234,7 +267,7 @@ export default function WorldShell() {
       </nav>
 
       <section className="atlasz-world-stage">
-        <WorldGlobe
+        <WorldRenderer
           events={filteredEvents}
           selectedEventId={selectedEvent?.id}
           onSelectEvent={(id) => {
@@ -289,6 +322,7 @@ export default function WorldShell() {
             <span className="atlasz-eyebrow">
               <Sparkles size={13} />
               {selectedEvent ? 'CURRENT FOCUS' : 'WORLD BRIEF'}
+              {brief.items.length > 0 && <b>{brief.items.length}</b>}
             </span>
             <h1>{selectedEvent?.title ?? 'No material event selected'}</h1>
           </div>
@@ -308,6 +342,12 @@ export default function WorldShell() {
               <span><Activity size={13} />{selectedEvent.confidence}% confidence</span>
               <span><Database size={13} />{selectedEvent.sourceId}</span>
               <span><Clock3 size={13} />{relativeTime(selectedEvent.timestamp)} ago</span>
+              {selectedConvergence && selectedCluster && (
+                <span className="atlasz-convergence-meta">
+                  <Layers3 size={13} />
+                  {selectedCluster.eventIds.length} linked changes · {selectedConvergence.domains.length} domains
+                </span>
+              )}
             </div>
 
             <div className="atlasz-intel-grid">
@@ -329,6 +369,21 @@ export default function WorldShell() {
                   {selectedEvent.affectedAssets.length === 0 && <em>No source-backed asset link</em>}
                 </div>
               </section>
+
+              {selectedConvergence && selectedCluster && (
+                <section>
+                  <div className="atlasz-section-label">CONVERGENCE</div>
+                  <div className="atlasz-convergence-block">
+                    <strong>{Math.round(selectedConvergence.score * 100)}</strong>
+                    <div>
+                      <span>{selectedConvergence.domains.join(' · ')}</span>
+                      <small>
+                        local-derived ranking · {selectedConvergence.independentSourceCount} source group(s)
+                      </small>
+                    </div>
+                  </div>
+                </section>
+              )}
 
               <section>
                 <div className="atlasz-section-label">EVIDENCE STATE</div>
@@ -359,7 +414,12 @@ export default function WorldShell() {
         )}
 
         <div className="atlasz-event-strip">
-          {filteredEvents.slice(0, 8).map((event) => (
+          {(brief.items.length > 0
+            ? brief.items
+                .map((item) => filteredEvents.find((event) => event.id === item.primaryEventId))
+                .filter((event): event is WorldIntelEvent => Boolean(event))
+            : filteredEvents.slice(0, 8)
+          ).map((event) => (
             <button
               type="button"
               key={event.id}
