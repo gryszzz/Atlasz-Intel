@@ -857,3 +857,19 @@ body,
   font-size: 8px;
   line-height: 1.35;
 }
+
+
+.atlasz-eyebrow b {
+  display: inline-grid;
+  min-width: 16px;
+  height: 16px;
+  place-items: center;
+  padding: 0 4px;
+  border: 1px solid rgba(117, 212, 190, 0.16);
+  border-radius: 999px;
+  color: #a9d9cc;
+  background: rgba(117, 212, 190, 0.06);
+  font-size: 8px;
+  font-weight: 650;
+  letter-spacing: 0;
+}
