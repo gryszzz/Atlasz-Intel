@@ -199,8 +199,8 @@ export default function WorldShell() {
         <div className="atlasz-world-brand">
           <div className="atlasz-world-mark">A</div>
           <div>
-            <div className="atlasz-world-wordmark">ATLASZ</div>
-            <div className="atlasz-world-subtitle">WORLD STATE</div>
+            <div className="atlasz-world-wordmark">YSZ</div>
+            <div className="atlasz-world-subtitle">WORLDSTATE</div>
           </div>
         </div>
 
@@ -217,7 +217,7 @@ export default function WorldShell() {
           >
             <RefreshCw size={17} className={loading ? 'atlasz-spin' : undefined} />
           </button>
-          <a className="atlasz-legacy-link" href="?legacy=1" aria-label="Open legacy Atlasz">
+          <a className="atlasz-legacy-link" href="?legacy=1" aria-label="Open legacy interface">
             <ArrowLeft size={14} />
             Legacy
           </a>
