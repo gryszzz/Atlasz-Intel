@@ -1,9 +1,9 @@
 {
-  "name": "atlasz-intel",
+  "name": "ysz-meridian",
   "private": true,
   "version": "0.2.0",
-  "description": "Evidence-first geospatial world-state intelligence for markets, capital, policy, trade, infrastructure, and public-chain flows.",
-  "author": "Atlasz Intel",
+  "description": "Evidence-first geospatial world-systems intelligence for markets, capital, policy, trade, infrastructure, energy, and public-chain flows.",
+  "author": "YSZ Systems",
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -51,7 +51,7 @@
   },
   "build": {
     "appId": "com.atlasz.intel",
-    "productName": "YSZ Worldstate",
+    "productName": "YSZ Meridian",
     "icon": "build/icon.png",
     "npmRebuild": false,
     "directories": {
