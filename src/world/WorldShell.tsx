@@ -106,9 +106,14 @@ function relativeTime(timestamp: number) {
 }
 
 function severityLabel(event: WorldIntelEvent) {
-  if (event.severity === 'critical') return 'critical'
-  if (event.severity === 'elevated') return 'elevated'
-  return 'watch'
+  return event.severity
+}
+
+function severityRank(event: WorldIntelEvent) {
+  if (event.severity === 'critical') return 4
+  if (event.severity === 'elevated') return 3
+  if (event.severity === 'watch') return 2
+  return 1
 }
 
 function eventMatchesWindow(event: WorldIntelEvent, window: (typeof TIME_WINDOWS)[number]) {
@@ -137,9 +142,7 @@ export default function WorldShell() {
         .filter((event) => eventMatchesWindow(event, timeWindow))
         .filter(modeSpec.match)
         .sort((left, right) => {
-          const severityWeight = { critical: 4, elevated: 3, watch: 2, info: 1 }
-          const severityDelta =
-            (severityWeight[right.severity] ?? 0) - (severityWeight[left.severity] ?? 0)
+          const severityDelta = severityRank(right) - severityRank(left)
           if (severityDelta !== 0) return severityDelta
           return right.timestamp - left.timestamp
         }),
