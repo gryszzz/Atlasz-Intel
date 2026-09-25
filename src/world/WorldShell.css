@@ -808,3 +808,52 @@ body,
     display: none;
   }
 }
+
+
+.atlasz-convergence-meta {
+  color: #91b7ad;
+}
+
+.atlasz-convergence-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.atlasz-convergence-block > strong {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  flex: none;
+  border: 1px solid rgba(113, 207, 184, 0.18);
+  border-radius: 13px;
+  color: #b9ded4;
+  background: rgba(93, 179, 159, 0.065);
+  font-size: 14px;
+  font-weight: 620;
+  font-variant-numeric: tabular-nums;
+}
+
+.atlasz-convergence-block div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.atlasz-convergence-block span {
+  overflow: hidden;
+  color: #b5c6c1;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  letter-spacing: 0.06em;
+}
+
+.atlasz-convergence-block small {
+  color: #5d706a;
+  font-size: 8px;
+  line-height: 1.35;
+}
