@@ -13,7 +13,8 @@
     "desktop:build": "npm run build && electron-builder",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "web:build": "tsc -b && vite build --mode web"
   },
   "dependencies": {
     "@xyflow/react": "^12.11.0",
