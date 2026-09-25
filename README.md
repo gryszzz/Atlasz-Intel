@@ -8,7 +8,7 @@
 
 **A geospatial intelligence engine for understanding how markets, capital, policy, trade, energy, infrastructure, public blockchains, cyber events, and the physical world connect and change over time.**
 
-[**Open Meridian →**](https://gryszzz.github.io/Atlasz-Intel/) · [Architecture](docs/atlasz-world-rebuild.md) · [Semantic zoom](docs/semantic-zoom.md) · [Runtime verification](docs/runtime-verification-log.md)
+[**Open Meridian Web →**](https://gryszzz.github.io/Atlasz-Intel/) · [**Desktop builds →**](https://github.com/gryszzz/Atlasz-Intel/actions/workflows/desktop-release.yml) · [Architecture](docs/atlasz-world-rebuild.md) · [Semantic zoom](docs/semantic-zoom.md) · [Runtime verification](docs/runtime-verification-log.md)
 
 </div>
 
@@ -70,6 +70,29 @@ OBSERVATION ──► ENTITY RESOLUTION ──► RELATIONSHIP GRAPH
 **Meridian separates four things that ordinary dashboards blur together:** what was directly observed, what is structurally connected, what is statistically unusual, and what is inferred. Unknown stays a valid state.
 
 ---
+
+## Use Meridian
+
+### Browser
+The web surface is built from the same Meridian codebase and is intended to run through GitHub Pages.
+
+**Web URL:** https://gryszzz.github.io/Atlasz-Intel/
+
+If that URL is not live yet, GitHub Pages still needs to be enabled once under **Settings → Pages → Build and deployment → GitHub Actions**.
+
+### Desktop
+Meridian is also a downloadable Electron desktop application.
+
+The repository's **Build YSZ Meridian Desktop** workflow packages:
+- macOS Intel (`x64`)
+- macOS Apple Silicon (`arm64`)
+- Windows (`x64`)
+- Linux AppImage (`x64`)
+
+[**Open desktop build workflow →**](https://github.com/gryszzz/Atlasz-Intel/actions/workflows/desktop-release.yml)
+
+Desktop packaging remains unsigned until Apple Developer ID signing/notarization is explicitly configured.
+
 
 ## The Real-Data Contract
 

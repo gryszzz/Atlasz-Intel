@@ -1,0 +1,154 @@
+name: Build YSZ Meridian Desktop
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_release:
+        description: Publish a GitHub prerelease after successful packaging
+        required: true
+        default: false
+        type: boolean
+      release_tag:
+        description: Release tag to use when publishing
+        required: true
+        default: meridian-preview
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  mac:
+    name: macOS ${{ matrix.arch }}
+    runs-on: macos-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x64, arm64]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Verify
+        run: |
+          npm run lint
+          npm test
+          npm run build
+      - name: Package
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npx electron-builder --mac dmg zip --${{ matrix.arch }} --publish never
+      - name: Collect
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          find release -maxdepth 1 -type f \( -name "*.dmg" -o -name "*.zip" \) -print -exec cp {} artifacts/ \;
+          test -n "$(find artifacts -type f -maxdepth 1 -print -quit)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: YSZ-Meridian-macOS-${{ matrix.arch }}
+          path: artifacts/*
+          if-no-files-found: error
+          retention-days: 30
+
+  windows:
+    name: Windows x64
+    runs-on: windows-latest
+    timeout-minutes: 35
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Verify
+        run: |
+          npm run lint
+          npm test
+          npm run build
+      - name: Package
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npx electron-builder --win nsis --x64 --publish never
+      - name: Collect
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+          Get-ChildItem release -File | Where-Object { $_.Extension -eq ".exe" } | Copy-Item -Destination artifacts
+          if (-not (Get-ChildItem artifacts -File)) { throw "No Windows installer produced." }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: YSZ-Meridian-Windows-x64
+          path: artifacts/*
+          if-no-files-found: error
+          retention-days: 30
+
+  linux:
+    name: Linux x64
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Verify
+        run: |
+          npm run lint
+          npm test
+          npm run build
+      - name: Package
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npx electron-builder --linux AppImage --x64 --publish never
+      - name: Collect
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          find release -maxdepth 1 -type f -name "*.AppImage" -print -exec cp {} artifacts/ \;
+          test -n "$(find artifacts -type f -maxdepth 1 -print -quit)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: YSZ-Meridian-Linux-x64
+          path: artifacts/*
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    if: ${{ inputs.publish_release }}
+    needs: [mac, windows, linux]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Download all installers
+        uses: actions/download-artifact@v4
+        with:
+          pattern: YSZ-Meridian-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Publish Meridian prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        shell: bash
+        run: |
+          if ! gh release view "$RELEASE_TAG" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG"               --repo "${GITHUB_REPOSITORY}"               --target "${GITHUB_SHA}"               --title "YSZ Meridian Preview"               --notes "Cross-platform preview of YSZ Meridian. macOS builds are unsigned until Developer ID signing/notarization is configured."               --prerelease
+          fi
+
+          gh release upload "$RELEASE_TAG" release-assets/*             --repo "${GITHUB_REPOSITORY}"             --clobber
