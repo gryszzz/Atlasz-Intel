@@ -1,0 +1,13 @@
+.noema-research { margin-top: 20px; padding: 18px; border: 1px solid #354840; border-radius: 12px; background: #101916; color: #dce9e2; }
+.noema-research p, .noema-research li { font-size: 13px; line-height: 1.6; color: #b9cbc2; }
+.noema-research label { display: block; margin: 12px 0 6px; font-size: 13px; }
+.noema-research textarea { box-sizing: border-box; width: 100%; resize: vertical; background: #080e0b; color: #e8f2ec; border: 1px solid #496457; border-radius: 6px; padding: 10px; font: inherit; }
+.noema-research button { margin-top: 10px; padding: 9px 14px; border: 1px solid #6c9e87; border-radius: 6px; background: #253f32; color: #edfff4; cursor: pointer; }
+.noema-research button:disabled { opacity: .55; cursor: default; }
+.noema-research :focus-visible { outline: 2px solid #a1edc5; outline-offset: 3px; }
+.noema-research code { display: block; overflow-wrap: anywhere; font-size: 12px; color: #d2eedf; }
+.noema-research input { display: block; max-width: 100%; margin-top: 8px; }
+.noema-review { margin-top: 20px; border-top: 1px solid #354840; padding-top: 16px; }
+.noema-review blockquote { margin: 14px 0; padding-left: 12px; border-left: 2px solid #6c9e87; font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.noema-review small { display: block; margin-top: 6px; color: #a6b9af; }
+.noema-review h3 { font-size: 13px; margin: 16px 0 5px; }
