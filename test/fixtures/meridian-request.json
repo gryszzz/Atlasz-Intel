@@ -1,0 +1,5 @@
+{
+  "schema": "meridian.noema.request.v1",
+  "payload": "{\"requestId\":\"fixture-only-001\",\"createdAt\":\"2026-01-02T00:00:00.000Z\",\"question\":\"What additional evidence would be needed?\",\"evidence\":{\"eventId\":\"fixture-event\",\"title\":\"Synthetic contract test — not production evidence\",\"summary\":\"Fixture text with Unicode: café, 東京.\",\"sourceId\":\"fixture-source\",\"sourceUrl\":\"https://example.com/fixture\",\"sourceProvenance\":\"media-observation\",\"eventAt\":\"2026-01-01T00:00:00.000Z\",\"sourceRetrievedAt\":null,\"upstreamPayloadHash\":\"upstream-reference-not-verified\",\"freshness\":\"unassessed\"}}",
+  "sha256": "8b34b9af647338b9285cd547edbfad51a0dbe8f2a0b3e7d97e7262f71640f8ec"
+}

@@ -390,3 +390,11 @@ Release assets exclude `node_modules`, `.env`, generated databases, logs, caches
 <br/>
 <sub>Public repo · <a href="https://github.com/gryszzz/Atlasz-Intel">github.com/gryszzz/Meridian-Intel</a> · Real data only.</sub>
 </div>
+
+## Meridian + NOEMA integration
+
+The first file-based evidence-review bridge connects the two independent repositories.
+It exports a Meridian source excerpt, produces an offline NOEMA evidence checklist,
+and imports that review as analysis. It does not yet run an autonomous investigation.
+See the [shared vision](docs/meridian-noema-vision.md) and
+[transfer contract and walkthrough](docs/meridian-noema-contract.md).

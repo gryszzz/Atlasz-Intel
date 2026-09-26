@@ -27,6 +27,7 @@ import { worldEventFromLegacy } from './legacyBridge'
 import { clusterWorldEvents } from './eventClustering'
 import { scoreConvergence } from './convergence'
 import { buildWorldBrief } from './briefing'
+import { NoemaResearchPanel } from './NoemaResearchPanel'
 import './WorldShell.css'
 
 type ModeSpec = {
@@ -404,6 +405,7 @@ export default function WorldShell() {
                 </div>
               </section>
             </div>
+            <NoemaResearchPanel key={selectedEvent.id} event={selectedEvent} />
           </>
         ) : (
           <div className="atlasz-empty-state">
